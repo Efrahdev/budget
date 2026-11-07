@@ -2284,7 +2284,7 @@ function renderSignIn(gate) {
     <p>You sign in once on each phone. After that it stays signed in.</p>
     ${GOOGLE_CLIENT_ID ? `<div id="gBtn" style="min-height:44px"></div><div class="err" id="gErr" hidden></div><p class="hint" style="margin:0">or</p>` : ''}
     <form class="connect" id="mailForm" novalidate>
-      <label class="field"><span>Your Gmail address</span><input id="mEmail" type="email" inputmode="email" autocomplete="email" spellcheck="false" placeholder="name@gmail.com" value="${esc(last)}"></label>
+      <label class="field"><span>Your Gmail address</span><input id="mEmail" type="email" inputmode="email" data-keep-ac autocomplete="email" spellcheck="false" placeholder="name@gmail.com" value="${esc(last)}"></label>
       <div class="err" id="mErr" hidden></div>
       <div><button class="btn primary" type="submit" id="mGo">Email me a sign-in link</button></div>
     </form>
@@ -2401,6 +2401,21 @@ document.addEventListener('click', ev => {
     render();
   }
 });
+
+/* ---------- plain keyboard ----------
+   Chrome shows its autofill bar (saved cards with "scan card", addresses, passwords) above the keyboard when boxes
+   look like a payment or address form (e.g. the vault's CC number / Exp / CVV columns). It ignores autocomplete="off"
+   for card fields but respects a value it does not recognise, so every box the app draws gets one. */
+const NO_AUTOFILL = 'bt-no-autofill';
+function plainKeyboard(root) {
+  if (!root || !root.querySelectorAll) return;
+  root.querySelectorAll('form').forEach(f => { if (f.getAttribute('autocomplete') !== 'off') f.setAttribute('autocomplete', 'off'); });
+  root.querySelectorAll('input:not([type=password]):not([type=hidden]):not([type=checkbox]):not([type=date]):not([type=file]):not([data-keep-ac]), textarea')
+    .forEach(i => { if (i.getAttribute('autocomplete') !== NO_AUTOFILL) i.setAttribute('autocomplete', NO_AUTOFILL); });
+}
+plainKeyboard(document);
+new MutationObserver(list => { for (const m of list) for (const n of m.addedNodes) if (n.nodeType === 1) plainKeyboard(n.parentNode || n); })
+  .observe(document.body, {childList: true, subtree: true});
 
 /* ---------- start ---------- */
 function start() {
