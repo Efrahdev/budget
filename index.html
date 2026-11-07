@@ -321,6 +321,30 @@ body[data-view="vault"] .fab,body[data-view="vault"] #addTop,body[data-view="vau
 .vf .v.masked{letter-spacing:.15em;color:var(--ink-3)}
 .vf .a{display:flex;gap:6px}
 .vacts{display:flex;gap:8px;flex-wrap:wrap;padding-top:10px}
+.vsec{overflow:hidden}
+.vwrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
+.vt{border-collapse:separate;border-spacing:0;width:max-content;min-width:100%;font-size:14px}
+.vt th{position:sticky;top:0;background:var(--sheet);font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-3);font-weight:700;padding:10px 10px 8px;border-bottom:1px solid var(--rule-2);white-space:nowrap;text-align:left}
+.vt td{padding:6px 6px 6px 10px;border-bottom:1px solid var(--rule);white-space:nowrap;vertical-align:middle}
+.vt tbody tr{cursor:pointer}
+.vt tbody tr:hover td{background:color-mix(in srgb,var(--accent-soft) 55%,var(--sheet))}
+.vt tbody tr.on td{background:var(--accent-soft)}
+.vt th:first-child,.vt td:first-child{position:sticky;left:0;z-index:1;background:var(--sheet);box-shadow:inset -1px 0 0 var(--rule);font-weight:600}
+.vt th:first-child{z-index:2}
+.vt td.wrap{white-space:normal;min-width:160px;max-width:280px;overflow-wrap:anywhere}
+.vt .cell{display:inline-flex;align-items:center;gap:2px}
+.vt .cv{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:13.5px}
+.vt td:first-child .cv{font-family:var(--f-body);font-size:14px}
+.vt .cv.masked{letter-spacing:.14em;color:var(--ink-3)}
+.vt .nil{color:var(--rule-2)}
+.vt .cp{border:0;background:none;color:var(--ink-3);cursor:pointer;width:30px;height:30px;display:inline-flex;align-items:center;justify-content:center;border-radius:6px;flex:0 0 auto;font-size:15px}
+.vt .cp:hover{background:var(--rule);color:var(--ink)}
+.vt .cp.done{color:var(--good)}
+.vt .act{position:sticky;right:0;background:inherit;width:36px;padding:0 4px}
+.vt td.act{background:var(--sheet)}
+.vt tbody tr.on td.act{background:var(--accent-soft)}
+.linkbtn{border:0;background:none;color:var(--accent);font:inherit;font-weight:600;cursor:pointer;padding:0}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
 .lockcard{display:flex;flex-direction:column;gap:12px;padding:18px 16px;max-width:560px}
 .lockcard .field input{font-size:16px}
 .warnbox{background:var(--warn-soft);border-radius:8px;padding:10px 12px;font-size:13px;color:var(--ink)}
@@ -1521,7 +1545,7 @@ const VAULT_TABLES = [
    cols: ['Portal / item', 'ID / number', 'Password / note']}
 ];
 const VAULT_ROUNDS = 600000, VAULT_IDLE_MS = 120000, CLIP_MS = 30000;
-const V = {epoch: 0, loaded: false, loading: false, err: '', meta: null, enc: {}, key: null, rows: [], schema: null, open: {}, shown: {}, q: '', last: Date.now(), busy: false};
+const V = {epoch: 0, loaded: false, loading: false, err: '', meta: null, enc: {}, key: null, rows: [], schema: null, open: {}, showAll: {}, q: '', last: Date.now(), busy: false};
 const te = new TextEncoder(), td = new TextDecoder();
 const b64e = u8 => { let x = ''; for (let i = 0; i < u8.length; i++) x += String.fromCharCode(u8[i]); return btoa(x); };
 const b64d = str => Uint8Array.from(atob(str), ch => ch.charCodeAt(0));
@@ -1572,7 +1596,7 @@ async function loadVault() {
 }
 function lockVault(why) {
   V.epoch++; // any unlock or save still in flight is abandoned
-  V.key = null; V.rows = []; V.schema = null; V.shown = {}; V.open = {}; V.q = '';
+  V.key = null; V.rows = []; V.schema = null; V.showAll = {}; V.open = {}; V.q = '';
   $('#vaultScrim').hidden = true; $('#vaultForm').innerHTML = '';
   if ($('#v-vault').innerHTML) renderVault();
   if (why) toast(why);
@@ -1614,32 +1638,36 @@ function renderVault() {
   }
   el.innerHTML = `<div class="vbar"><input id="vQ" type="search" placeholder="Search the vault" aria-label="Search the vault" value="${esc(V.q)}" autocomplete="off">
       <button class="btn" type="button" data-act="v-lock">🔒 Lock</button></div>
+    <p class="hint" style="margin:0">Tap a row to show the whole row. Tap the copy icon next to any value to copy it. Swipe a table sideways to see every column.</p>
     <div id="vLists" style="display:flex;flex-direction:column;gap:16px"></div>
     <div class="row-actions" style="padding:0"><button class="btn sm" type="button" data-act="v-pass">Change passphrase</button>
       <span class="hint" style="align-self:center">Locks after 2 minutes without a tap.</span></div>`;
   renderVaultLists();
 }
+const COPY_ICON = '<svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg>';
+// One table per section. Tap a row to show the whole row; every cell has its own copy button.
 function renderVaultLists() {
   const box = $('#vLists'); if (!box) return;
   const q = V.q.trim().toLowerCase();
   const broken = V.rows.filter(r => r.t === 'broken').length;
   box.innerHTML = VAULT_TABLES.map(t => {
-    const cols = vCols(t.k);
-    let list = V.rows.filter(r => r.t === t.k).sort((a, b) => String(a.c[0] || '').localeCompare(String(b.c[0] || '')));
+    const cols = vCols(t.k), all = !!V.showAll[t.k];
+    let list = V.rows.filter(r => r.t === t.k).sort((a, b) => String(a.c[0] || '').localeCompare(String(b.c[0] || '')) || String(a.c[1] || '').localeCompare(String(b.c[1] || '')));
     const total = list.length;
     if (q) list = list.filter(r => r.c.some(v => String(v || '').toLowerCase().includes(q)));
-    const rowsHtml = list.map(r => {
-      const open = !!V.open[r.id];
-      const sub = t.show.slice(1).map(i => r.c[i]).filter(Boolean).map(esc).join(' · ');
-      return `<div class="vrow"><button class="vhead" type="button" data-act="v-toggle" data-id="${r.id}" aria-expanded="${open}">
-          <span><span class="t1">${esc(r.c[0] || '(no name)')}</span>${sub ? `<br><span class="t2">${sub}</span>` : ''}</span><span class="hint">${open ? '▲' : '▼'}</span></button>
-        ${open ? `<div class="vbody">${cols.map((c, i) => { const v = String(r.c[i] || ''); if (!v) return ''; const key = r.id + ':' + i, vis = t.show.includes(i) || V.shown[key];
-          return `<div class="vf"><span class="k">${esc(c)}</span><span class="v${vis ? '' : ' masked'}">${vis ? esc(v) : '••••••••'}</span>
-            <span class="a">${t.show.includes(i) ? '' : `<button class="btn sm" type="button" data-act="v-show" data-k="${key}">${vis ? 'Hide' : 'Show'}</button>`}<button class="btn sm" type="button" data-act="v-copy" data-id="${r.id}" data-i="${i}">Copy</button></span></div>`; }).join('')}
-          <div class="vacts"><button class="btn sm" type="button" data-act="v-edit" data-id="${r.id}">Edit</button><button class="btn sm danger" type="button" data-act="v-del" data-id="${r.id}">Delete</button></div></div>` : ''}</div>`;
+    const last = cols.length - 1;
+    const body = list.map(r => {
+      const on = all || !!V.open[r.id];
+      return `<tr class="${on ? 'on' : ''}" data-act="v-row" data-id="${r.id}" aria-label="${esc(r.c[0] || '')}: tap to ${on ? 'hide' : 'show'}">${cols.map((c, i) => {
+        const v = String(r.c[i] || '');
+        if (!v) return `<td class="${i === last ? 'wrap' : ''}"><span class="nil">—</span></td>`;
+        const vis = on || t.show.includes(i);
+        return `<td class="${i === last ? 'wrap' : ''}"><span class="cell"><span class="cv${vis ? '' : ' masked'}">${vis ? esc(v) : '••••'}</span><button class="cp" type="button" data-act="v-copy" data-id="${r.id}" data-i="${i}" aria-label="Copy ${esc(c)}" title="Copy ${esc(c)}">${COPY_ICON}</button></span></td>`;
+      }).join('')}<td class="act"><button class="cp" type="button" data-act="v-edit" data-id="${r.id}" aria-label="Edit ${esc(r.c[0] || '')}" title="Edit">✎</button></td></tr>`;
     }).join('');
-    return `<section class="card"><div class="sec-h"><h2>${esc(t.title)}</h2><span class="hint">${total} saved</span></div>
-      ${rowsHtml || `<div class="empty">${q ? 'No match.' : 'Nothing yet. Add your first ' + t.one + '.'}</div>`}
+    return `<section class="card vsec"><div class="sec-h"><h2>${esc(t.title)}</h2><span class="hint">${total} saved${total ? ` · <button class="linkbtn" type="button" data-act="v-showall" data-t="${t.k}">${all ? 'Hide all' : 'Show all'}</button>` : ''}</span></div>
+      ${body ? `<div class="vwrap"><table class="vt"><thead><tr>${cols.map(c => `<th>${esc(c)}</th>`).join('')}<th class="act"><span class="sr">Edit</span></th></tr></thead><tbody>${body}</tbody></table></div>`
+        : `<div class="empty">${q ? 'No match.' : 'Nothing yet. Add your first ' + t.one + ', or paste many at once.'}</div>`}
       <div class="row-actions"><button class="btn sm primary" type="button" data-act="v-add" data-t="${t.k}">+ Add ${t.one}</button><button class="btn sm" type="button" data-act="v-import" data-t="${t.k}">Paste many rows</button><button class="btn sm" type="button" data-act="v-cols" data-t="${t.k}">Rename columns</button></div></section>`;
   }).join('') + (broken ? `<div class="banner warn">${broken} row${broken === 1 ? '' : 's'} could not be opened with this passphrase. They may have been changed outside the app.</div>` : '');
 }
@@ -1650,7 +1678,7 @@ function vEditRow(tk, id) {
     <input type="hidden" id="vfT" value="${tk}"><input type="hidden" id="vfId" value="${r ? r.id : ''}">
     ${cols.map((c, i) => `<label class="field"><span>${esc(c)}${i === 0 ? ' (required)' : ''}</span><input id="vf${i}" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" data-lpignore="true" value="${r ? esc(r.c[i] || '') : ''}"></label>`).join('')}
     <div class="err" id="vfErr" hidden></div>
-    <div class="sheet-actions"><button type="button" class="btn ghost" data-act="v-close">Cancel</button>
+    <div class="sheet-actions">${r ? `<button type="button" class="btn danger left" data-act="v-del" data-id="${r.id}">Delete</button>` : ''}<button type="button" class="btn ghost" data-act="v-close">Cancel</button>
       ${r ? '' : '<button type="button" class="btn" data-act="v-save-again">Save &amp; add another</button>'}
       <button type="submit" class="btn primary" id="vfSave">Save</button></div>`);
 }
@@ -1804,8 +1832,8 @@ async function vImportSave() {
   V.busy = false;
 }
 let clipTimer = null;
-async function vCopy(text) {
-  try { await navigator.clipboard.writeText(text); toast('Copied. Clears in 30 seconds.'); }
+async function vCopy(text, label) {
+  try { await navigator.clipboard.writeText(text); toast((label ? label + ' copied' : 'Copied') + ' · clears in 30 s'); }
   catch (e) { toast("Couldn't copy on this phone", 'bad'); return; }
   clearTimeout(clipTimer); clipTimer = setTimeout(() => { navigator.clipboard.writeText('').catch(() => {}); }, CLIP_MS);
 }
@@ -1821,9 +1849,20 @@ document.addEventListener('click', ev => {
   if (a === 'v-retry') { V.err = ''; V.loaded = false; renderVault(); return; }
   if (!V.key && a !== 'v-close') return;
   if (a === 'v-lock') lockVault('Vault locked');
-  else if (a === 'v-toggle') { V.open[b.dataset.id] = !V.open[b.dataset.id]; renderVaultLists(); }
-  else if (a === 'v-show') { V.shown[b.dataset.k] = !V.shown[b.dataset.k]; renderVaultLists(); }
-  else if (a === 'v-copy') { const r = V.rows.find(x => x.id === b.dataset.id); if (r) vCopy(String(r.c[+b.dataset.i] || '')); }
+  else if (a === 'v-row') {
+    if (window.getSelection && String(window.getSelection())) return; // let people select text without toggling
+    const r = V.rows.find(x => x.id === b.dataset.id); if (!r) return;
+    if (V.showAll[r.t]) { V.showAll[r.t] = false; V.rows.filter(x => x.t === r.t).forEach(x => { V.open[x.id] = x.id !== r.id; }); }
+    else V.open[r.id] = !V.open[r.id];
+    renderVaultLists();
+  }
+  else if (a === 'v-showall') { const k = b.dataset.t; V.showAll[k] = !V.showAll[k]; if (!V.showAll[k]) V.rows.forEach(x => { if (x.t === k) V.open[x.id] = false; }); renderVaultLists(); }
+  else if (a === 'v-copy') {
+    const r = V.rows.find(x => x.id === b.dataset.id); if (!r) return;
+    const label = vCols(r.t)[+b.dataset.i] || 'value';
+    vCopy(String(r.c[+b.dataset.i] || ''), label);
+    b.classList.add('done'); setTimeout(() => b.classList.remove('done'), 1200);
+  }
   else if (a === 'v-add') vEditRow(b.dataset.t, null);
   else if (a === 'v-edit') { const r = V.rows.find(x => x.id === b.dataset.id); if (r) vEditRow(r.t, r.id); }
   else if (a === 'v-save-again') vSaveRow(true);
@@ -1836,7 +1875,7 @@ document.addEventListener('click', ev => {
   else if (a === 'v-pass-save') vSavePass();
   else if (a === 'v-del') {
     if (!arm(b, 'vdel' + b.dataset.id, 'Tap again to delete')) return;
-    vCall([{t: 'vdel', id: b.dataset.id}]).then(() => vDecryptAll()).then(() => { toast('Deleted'); renderVaultLists(); }).catch(() => toast("Couldn't delete. Try again.", 'bad'));
+    vCall([{t: 'vdel', id: b.dataset.id}]).then(() => vDecryptAll()).then(() => { $('#vaultScrim').hidden = true; $('#vaultForm').innerHTML = ''; toast('Deleted'); renderVaultLists(); }).catch(() => toast("Couldn't delete. Try again.", 'bad'));
   }
 });
 document.addEventListener('input', ev => { if (ev.target && ev.target.id === 'vQ') { V.q = ev.target.value; renderVaultLists(); } else if (ev.target && ev.target.id === 'viText') vImportPreview(); });
