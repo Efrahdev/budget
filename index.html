@@ -1659,7 +1659,7 @@ const VAULT_TABLES = [
    alias: [['cc', 'card', 'cardname', 'bank'], ['name', 'nameoncard', 'holder'], ['ccnumber', 'cardnumber', 'cardno', 'number', 'ccno', 'cc'],
      ['exp', 'expiry', 'validthru', 'valid'], ['cvv', 'cvc'], ['stmt', 'statement', 'statementdate', 'stmtdate'], ['pw', 'password', 'pass'],
      ['custid', 'customerid', 'cid', 'custidnote'], ['note', 'notes', 'remarks']]},
-  {k: 'banks', title: 'Bank accounts', one: 'account', many: 'bank accounts', show: [0, 1], layout: 2, notes: 9, delAll: true,
+  {k: 'banks', title: 'Savings accounts', one: 'account', many: 'savings accounts', show: [0, 1], layout: 2, notes: 9, delAll: true,
    cols: ['Account', 'Name', 'Acc', 'Cust ID', 'PW', 'IFSC', 'Card no', 'Exp', 'CVV', 'Notes'],
    alias: [['account', 'bank', 'accountname'], ['name', 'holder', 'accountholder'], ['acc', 'accno', 'accountno', 'accountnumber', 'acno', 'acnumber'],
      ['custid', 'customerid', 'cid'], ['pw', 'password', 'pass'], ['ifsc', 'ifsccode'], ['cardno', 'card', 'cardnumber', 'debitcard', 'debitcardno'],
@@ -1779,6 +1779,7 @@ function renderVault() {
   }
   el.innerHTML = `<div class="vbar"><input id="vQ" type="search" placeholder="Search the vault" aria-label="Search the vault" value="${esc(V.q)}" autocomplete="off">
       <button class="btn" type="button" data-act="v-lock">🔒 Lock</button></div>
+    <div class="chips" id="vTabs" role="group" aria-label="Show"></div>
     <p class="hint" style="margin:0">Tap a row to show the whole row. Tap the copy icon next to any value to copy it. Swipe a table sideways to see every column.</p>
     <div id="vLists" style="display:flex;flex-direction:column;gap:16px"></div>
     <div class="row-actions" style="padding:0"><button class="btn sm" type="button" data-act="v-pass">Change passphrase</button>
@@ -1791,7 +1792,13 @@ function renderVaultLists() {
   const box = $('#vLists'); if (!box) return;
   const q = V.q.trim().toLowerCase();
   const broken = V.rows.filter(r => r.t === 'broken').length;
-  box.innerHTML = VAULT_TABLES.map(t => {
+  // Filter buttons: All, or one table on its own. The choice is remembered on this phone (it is not secret).
+  const tab = ['cards', 'banks', 'personal'].includes(readPref().vaultTab) ? readPref().vaultTab : 'all';
+  const count = k => V.rows.filter(r => r.t === k).length;
+  const tabBtn = (k, label, n) => `<button type="button" class="chipb" data-act="v-tab" data-t="${k}" aria-pressed="${tab === k}">${esc(label)} · ${n}</button>`;
+  const tabs = $('#vTabs');
+  if (tabs) tabs.innerHTML = tabBtn('all', 'All', V.rows.filter(r => r.t !== 'broken').length) + VAULT_TABLES.map(t => tabBtn(t.k, t.k === 'personal' ? 'Personal' : t.title, count(t.k))).join('');
+  box.innerHTML = VAULT_TABLES.filter(t => tab === 'all' || t.k === tab).map(t => {
     const cols = vCols(t.k), all = !!V.showAll[t.k];
     let list = V.rows.filter(r => r.t === t.k).sort((a, b) => String(a.c[0] || '').localeCompare(String(b.c[0] || '')) || String(a.c[1] || '').localeCompare(String(b.c[1] || '')));
     const total = list.length;
@@ -2067,6 +2074,7 @@ document.addEventListener('click', ev => {
   if (a === 'v-retry') { V.err = ''; V.loaded = false; renderVault(); return; }
   if (!V.key && a !== 'v-close') return;
   if (a === 'v-lock') lockVault('Vault locked');
+  else if (a === 'v-tab') { writePref({vaultTab: b.dataset.t}); renderVaultLists(); window.scrollTo({top: 0}); }
   else if (a === 'v-row') {
     if (window.getSelection && String(window.getSelection())) return; // let people select text without toggling
     const r = V.rows.find(x => x.id === b.dataset.id); if (!r) return;
