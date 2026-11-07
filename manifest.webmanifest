@@ -1,0 +1,21 @@
+{
+  "name": "Budget Tracker",
+  "short_name": "Budget",
+  "description": "Household budget, credit cards and net worth, synced to Google Sheets.",
+  "id": "./",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#f2f3ef",
+  "theme_color": "#2c3a8c",
+  "lang": "en-GB",
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icons/maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ],
+  "shortcuts": [
+    { "name": "Add entry", "short_name": "Add", "url": "./#entries", "icons": [{ "src": "icons/icon-192.png", "sizes": "192x192" }] }
+  ]
+}
