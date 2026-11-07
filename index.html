@@ -1646,7 +1646,9 @@ window.addEventListener('hashchange', () => {
   if (lg) { history.replaceState(null, '', location.pathname + '#overview'); if (!Sync.session) useLoginLink(lg[1]); setView('overview'); return; }
   setView(location.hash.slice(1));
 });
-let rz; window.addEventListener('resize', () => { clearTimeout(rz); rz = setTimeout(() => { if (state.config) setView(state.view); }, 200); });
+// Only the charts depend on screen width. Never redraw other screens on resize: the phone keyboard opening
+// is a resize, and redrawing a screen with a text box would close the keyboard again.
+let rz; window.addEventListener('resize', () => { clearTimeout(rz); rz = setTimeout(() => { if (state.config && (state.view === 'trend' || state.view === 'wealth')) setView(state.view); }, 200); });
 
 /* ---------- vault ----------
    Zero-knowledge: everything is encrypted here, on the phone, before it is sent.
@@ -1736,6 +1738,7 @@ async function loadVault() {
   V.loading = false; renderVault();
 }
 function lockVault(why) {
+  const el = $('#v-vault'); if (el) delete el.dataset.screen;
   V.epoch++; // any unlock or save still in flight is abandoned
   V.key = null; V.rows = []; V.schema = null; V.showAll = {}; V.open = {}; V.q = '';
   $('#vaultScrim').hidden = true; $('#vaultForm').innerHTML = '';
@@ -1744,8 +1747,11 @@ function lockVault(why) {
 }
 function renderVault() {
   const el = $('#v-vault');
-  if (!(Sync.me && Sync.me.role === 'Owner')) { el.innerHTML = '<div class="card empty">Only the owner can open the vault.</div>'; return; }
-  if (!V.loaded && !V.loading && !V.err) { loadVault(); return; }
+  const screen = !(Sync.me && Sync.me.role === 'Owner') ? 'owner' : !V.loaded && !V.loading && !V.err ? 'load' : V.loading ? 'loading' : V.err ? 'err-' + V.err : !V.meta ? 'create' : !V.key ? 'locked' : 'open';
+  if (screen === 'load') { loadVault(); return; }
+  if (el.dataset.screen === screen && el.innerHTML) return; // same screen already showing: leave the text boxes (and keyboard) alone
+  el.dataset.screen = screen;
+  if (screen === 'owner') { el.innerHTML = '<div class="card empty">Only the owner can open the vault.</div>'; return; }
   if (V.loading) { el.innerHTML = '<div class="card empty">Opening the vault…</div>'; return; }
   if (V.err) {
     el.innerHTML = `<div class="card lockcard"><h2>Vault</h2><p class="muted" style="margin:0">${V.err === 'old_script'
@@ -1774,7 +1780,6 @@ function renderVault() {
         <div><button class="btn primary" type="submit" id="vGo">Unlock</button></div>
       </form>
       <p class="hint" style="margin:0">It locks itself after ${VAULT_IDLE_MIN} minutes without a tap. Nothing readable is saved on this phone.</p></div>`;
-    setTimeout(() => { const i = $('#vPass'); if (i && state.view === 'vault' && !$('#vUnlock').contains(document.activeElement)) i.focus(); }, 30);
     return;
   }
   el.innerHTML = `<div class="vbar"><input id="vQ" type="search" placeholder="Search the vault" aria-label="Search the vault" value="${esc(V.q)}" autocomplete="off">
@@ -1793,14 +1798,18 @@ function renderVaultLists() {
   const q = V.q.trim().toLowerCase();
   const broken = V.rows.filter(r => r.t === 'broken').length;
   // Filter buttons: All, or one table on its own. The choice is remembered on this phone (it is not secret).
-  const tab = ['cards', 'banks', 'personal'].includes(readPref().vaultTab) ? readPref().vaultTab : 'all';
-  const count = k => V.rows.filter(r => r.t === k).length;
+  const SUBS = {aadhaar: {label: 'Aadhaar', test: r => /a{1,2}dh?a{1,2}r/i.test(String(r.c[0] || ''))},
+                voter: {label: 'Voter', test: r => /voter|epic/i.test(String(r.c[0] || ''))}};
+  const tab = ['cards', 'banks', 'personal', 'aadhaar', 'voter'].includes(readPref().vaultTab) ? readPref().vaultTab : 'all';
+  const sub = SUBS[tab];
+  const count = k => SUBS[k] ? V.rows.filter(r => r.t === 'personal' && SUBS[k].test(r)).length : V.rows.filter(r => r.t === k).length;
   const tabBtn = (k, label, n) => `<button type="button" class="chipb" data-act="v-tab" data-t="${k}" aria-pressed="${tab === k}">${esc(label)} · ${n}</button>`;
   const tabs = $('#vTabs');
-  if (tabs) tabs.innerHTML = tabBtn('all', 'All', V.rows.filter(r => r.t !== 'broken').length) + VAULT_TABLES.map(t => tabBtn(t.k, t.k === 'personal' ? 'Personal' : t.title, count(t.k))).join('');
-  box.innerHTML = VAULT_TABLES.filter(t => tab === 'all' || t.k === tab).map(t => {
+  if (tabs) tabs.innerHTML = tabBtn('all', 'All', V.rows.filter(r => r.t !== 'broken').length) + VAULT_TABLES.map(t => tabBtn(t.k, t.k === 'personal' ? 'Personal' : t.title, count(t.k))).join('')
+    + Object.entries(SUBS).map(([k, x]) => tabBtn(k, x.label, count(k))).join('');
+  box.innerHTML = VAULT_TABLES.filter(t => tab === 'all' || t.k === tab || (sub && t.k === 'personal')).map(t => {
     const cols = vCols(t.k), all = !!V.showAll[t.k];
-    let list = V.rows.filter(r => r.t === t.k).sort((a, b) => String(a.c[0] || '').localeCompare(String(b.c[0] || '')) || String(a.c[1] || '').localeCompare(String(b.c[1] || '')));
+    let list = V.rows.filter(r => r.t === t.k && (!sub || sub.test(r))).sort((a, b) => String(a.c[0] || '').localeCompare(String(b.c[0] || '')) || String(a.c[1] || '').localeCompare(String(b.c[1] || '')));
     const total = list.length;
     if (q) list = list.filter(r => r.c.some(v => String(v || '').toLowerCase().includes(q)));
     const last = cols.length - 1;
@@ -1813,7 +1822,7 @@ function renderVaultLists() {
         return `<td class="${i === last ? 'wrap' : ''}"><span class="cell"><span class="cv${vis ? '' : ' masked'}">${vis ? esc(v) : '••••'}</span><button class="cp" type="button" data-act="v-copy" data-id="${r.id}" data-i="${i}" aria-label="Copy ${esc(c)}" title="Copy ${esc(c)}">${COPY_ICON}</button></span></td>`;
       }).join('')}<td class="act"><button class="cp" type="button" data-act="v-edit" data-id="${r.id}" aria-label="Edit ${esc(r.c[0] || '')}" title="Edit">✎</button></td></tr>`;
     }).join('');
-    return `<section class="card vsec"><div class="sec-h"><h2>${esc(t.title)}</h2><span class="hint">${total} saved${total ? ` · <button class="linkbtn" type="button" data-act="v-showall" data-t="${t.k}">${all ? 'Hide all' : 'Show all'}</button>` : ''}</span></div>
+    return `<section class="card vsec"><div class="sec-h"><h2>${esc(sub ? sub.label : t.title)}</h2><span class="hint">${total} saved${total ? ` · <button class="linkbtn" type="button" data-act="v-showall" data-t="${t.k}">${all ? 'Hide all' : 'Show all'}</button>` : ''}</span></div>
       ${body ? `<div class="vwrap"><table class="vt"><thead><tr>${cols.map(c => `<th>${esc(c)}</th>`).join('')}<th class="act"><span class="sr">Edit</span></th></tr></thead><tbody>${body}</tbody></table></div>`
         : `<div class="empty">${q ? 'No match.' : 'Nothing yet. Add your first ' + t.one + ', or paste many at once.'}</div>`}
       <div class="row-actions"><button class="btn sm primary" type="button" data-act="v-add" data-t="${t.k}">+ Add ${t.one}</button><button class="btn sm" type="button" data-act="v-import" data-t="${t.k}">Paste many rows</button><button class="btn sm" type="button" data-act="v-cols" data-t="${t.k}">Rename columns</button>${t.delAll && total ? `<button class="btn sm danger" type="button" data-act="v-delall" data-t="${t.k}">Delete all</button>` : ''}</div></section>`;
@@ -1920,7 +1929,7 @@ async function vSavePass() {
     const ep = V.epoch;
     await vCall(ops);
     if (ep !== V.epoch) return; // locked meanwhile: the new passphrase is saved, open it again with that
-    V.key = key; await vDecryptAll(); $('#vaultScrim').hidden = true; toast('Passphrase changed'); renderVault();
+    V.key = key; await vDecryptAll(); $('#vaultScrim').hidden = true; toast('Passphrase changed'); renderVaultLists();
   } catch (e) { err.textContent = e && e.code === 'wrong' ? 'The current passphrase is wrong.' : "Couldn't change it. Nothing was changed. Try again."; err.hidden = false; go.disabled = false; go.textContent = 'Change passphrase'; }
 }
 // Paste rows copied from Excel, Google Sheets or a note: one row per line, columns split by tabs
