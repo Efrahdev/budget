@@ -799,14 +799,8 @@ function renderOverview(X) {
   const tiles = cats.map(c => { const spent = T.byCat[c.id] || 0, budget = budgetOf(c, spent); return (budget > 0 || spent) ? tile(c.name, spent, budget, !!c.unplanned) : ''; }).join('')
     + (unknown ? tile('Unlisted', unknown, 0, false) : '');
 
-  const big = list.filter(t => X.typeOf(t) === 'Expense' && !t.refund).sort((a, b) => b.amount - a.amount).slice(0, 5);
-  const bigHtml = big.length ? big.map(t => `<div class="li"><div class="l"><div class="t1">${esc((X.cm[t.cat] || {}).name || 'Unlisted')}</div>
-      <div class="t2">${fmtDay(parseYmd(t.date))}${t.note ? ' · ' + esc(t.note) : ''}</div></div><div class="amt num">${rs(t.amount)}</div></div>`).join('')
-    : `<div class="empty">Nothing yet.</div>`;
-
   $('#v-overview').innerHTML = `${kpis}${tiles ? `<div class="hgrid">${tiles}</div>` : '<div class="card empty">No entries in ' + cycleLabel(key) + ' yet.</div>'}
-    ${cardStripHtml(X)}
-    <section class="card list"><div class="sec-h"><h2>Biggest items</h2></div>${bigHtml}</section>`;
+    ${cardStripHtml(X)}`;
 }
 
 /* ---------- entries ---------- */
