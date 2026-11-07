@@ -1513,8 +1513,8 @@ let rz; window.addEventListener('resize', () => { clearTimeout(rz); rz = setTime
    12-byte IV per save, and the row ID bound in as associated data so rows can't be swapped.
    The key is non-extractable and lives only in memory; nothing readable is ever stored on the phone. */
 const VAULT_TABLES = [
-  {k: 'cards', title: 'Credit cards', one: 'card', show: [0, 1],
-   cols: ['Card', 'Bank', 'Card number', 'Name on card', 'Valid thru (MM/YY)', 'CVV', 'Card PIN', 'Login / user ID', 'Password', 'Notes']},
+  {k: 'cards', title: 'Credit cards', one: 'card', show: [0, 1], layout: 2,
+   cols: ['CC', 'Name', 'CC number', 'Exp', 'CVV', 'Stmt', 'PW', 'Cust ID', 'Note']},
   {k: 'banks', title: 'Bank accounts', one: 'account', show: [0, 1],
    cols: ['Account', 'Bank', 'Account holder', 'Account number', 'IFSC', 'Customer ID', 'Net-banking user ID', 'Password', 'MPIN / UPI PIN', 'Notes']},
   {k: 'personal', title: 'Personal information', one: 'item', show: [0, 1],
@@ -1540,7 +1540,14 @@ async function vOpen(key, id, sealed) {
   return JSON.parse(td.decode(await crypto.subtle.decrypt({name: 'AES-GCM', iv: b64d(iv), additionalData: te.encode(id)}, key, b64d(ct))));
 }
 const vId = () => 'r' + Array.from(crypto.getRandomValues(new Uint8Array(9)), b => b.toString(16).padStart(2, '0')).join('');
-function vCols(k) { const t = VAULT_TABLES.find(x => x.k === k); const named = V.schema && V.schema[k]; return t.cols.map((c, i) => (named && named[i]) || c); }
+function vCols(k) { const t = VAULT_TABLES.find(x => x.k === k); const named = V.schema && V.schema[k]; const ok = named && named.length === t.cols.length; return t.cols.map((c, i) => (ok && named[i]) || c); }
+// Cards saved with the first 10-column layout are moved into the current 9 columns. Nothing is dropped:
+// bank, card PIN and login go into Note.
+function vCardRow(r) {
+  if (r.t !== 'cards' || r.L === 2) return r;
+  const o = r.c, extra = [['Bank', o[1]], ['Card PIN', o[6]], ['Login', o[7]]].filter(x => x[1]).map(x => x[0] + ': ' + x[1]);
+  return Object.assign({}, r, {L: 2, c: [o[0] || '', o[3] || '', o[2] || '', o[4] || '', o[5] || '', '', o[8] || '', '', [o[9], ...extra].filter(Boolean).join(' | ')]});
+}
 async function vCall(ops) {
   const j = await call(ops, {vault: true});
   if (!Array.isArray(j.vault)) throw {code: 'old_script'};
@@ -1553,7 +1560,7 @@ async function vDecryptAll() {
   if (V.enc._schema) { try { V.schema = (await vOpen(V.key, '_schema', V.enc._schema)).cols || null; } catch (e) {} }
   for (const [id, data] of Object.entries(V.enc)) {
     if (id === '_schema') continue;
-    try { const r = await vOpen(V.key, id, data); V.rows.push({id, t: r.t, c: Array.isArray(r.c) ? r.c : [], at: r.at || 0}); }
+    try { const r = await vOpen(V.key, id, data); V.rows.push(vCardRow({id, t: r.t, c: Array.isArray(r.c) ? r.c : [], at: r.at || 0, L: r.L})); }
     catch (e) { V.rows.push({id, t: 'broken', c: [], at: 0}); }
   }
 }
@@ -1655,7 +1662,7 @@ async function vSaveRow(again) {
   document.querySelectorAll('#vaultForm button').forEach(b => { b.disabled = true; });
   try {
     const ep = V.epoch;
-    const data = await vSeal(V.key, id, {t: tk, c, at: Date.now()});
+    const data = await vSeal(V.key, id, {t: tk, c, at: Date.now(), L: tk === 'cards' ? 2 : undefined});
     await vCall([{t: 'vput', id, data}]);
     if (ep !== V.epoch) { V.busy = false; return; }
     if (V.enc[id] !== data) throw {code: 'not_saved'};
@@ -1733,7 +1740,7 @@ async function vSavePass() {
     const salt = crypto.getRandomValues(new Uint8Array(16)), key = await vDerive(p1, salt, VAULT_ROUNDS);
     const ops = [{t: 'vput', id: '_meta', data: 'meta.' + btoa(JSON.stringify({v: 1, kdf: 'PBKDF2-SHA256', rounds: VAULT_ROUNDS, salt: b64e(salt), check: await vSeal(key, '_check', {ok: 'budget-vault'})}))}];
     if (V.schema) ops.push({t: 'vput', id: '_schema', data: await vSeal(key, '_schema', {cols: V.schema})});
-    for (const r of V.rows) if (r.t !== 'broken') ops.push({t: 'vput', id: r.id, data: await vSeal(key, r.id, {t: r.t, c: r.c, at: r.at})});
+    for (const r of V.rows) if (r.t !== 'broken') ops.push({t: 'vput', id: r.id, data: await vSeal(key, r.id, {t: r.t, c: r.c, at: r.at, L: r.L})});
     const ep = V.epoch;
     await vCall(ops);
     if (ep !== V.epoch) return; // locked meanwhile: the new passphrase is saved, open it again with that
@@ -1743,9 +1750,12 @@ async function vSavePass() {
 // Paste rows copied from Excel, Google Sheets or a note: one row per line, columns split by tabs
 // (or by 2+ spaces). Everything is encrypted on this phone before it is sent.
 function vParse(text, n) {
-  const lines = String(text).replace(/\r/g, '').split('\n').map(l => l.replace(/\s+$/, '')).filter(l => l.trim());
+  // Trailing tabs are just empty last cells, so drop them before deciding how columns are separated.
+  const lines = String(text).replace(/\r/g, '').split('\n').map(l => l.replace(/[\t ]+$/, '')).filter(l => l.trim());
+  const runs = lines.join('\n').match(/\t+/g) || [];
+  const doubled = runs.length > 0 && runs.every(x => x.length >= 2);
   return lines.map(l => {
-    const parts = (l.includes('\t') ? l.split(/\t+/) : l.split(/ {2,}/)).map(x => x.trim());
+    const parts = (l.includes('\t') ? l.split(doubled ? '\t\t' : '\t') : l.split(/ {2,}/)).map(x => x.trim());
     const c = parts.slice(0, n); if (parts.length > n) c[n - 1] = parts.slice(n - 1).join(' ');
     while (c.length < n) c.push('');
     return c;
@@ -1770,7 +1780,7 @@ function vImportRows() {
 function vImportPreview() {
   const box = $('#viPrev'), go = $('#viGo'); if (!box) return;
   const first = $('#viText').value.split('\n')[0] || '';
-  if (/^\s*(portal|item|name|card|account)\b/i.test(first) && !$('#viHead').dataset.touched) $('#viHead').checked = true;
+  if (/^\s*(portal|item|name|card|account|cc|bank)\b/i.test(first) && !$('#viHead').dataset.touched) $('#viHead').checked = true;
   const rows = vImportRows();
   go.disabled = !rows.length; go.textContent = rows.length ? `Add ${rows.length} row${rows.length === 1 ? '' : 's'}` : 'Add rows';
   box.hidden = !rows.length;
@@ -1782,7 +1792,7 @@ async function vImportSave() {
   V.busy = true; go.disabled = true; go.textContent = 'Encrypting…'; err.hidden = true;
   try {
     const ep = V.epoch, ops = [], now = Date.now();
-    for (let i = 0; i < rows.length; i++) { const id = vId(); ops.push({t: 'vput', id, data: await vSeal(V.key, id, {t: tk, c: rows[i], at: now + i})}); }
+    for (let i = 0; i < rows.length; i++) { const id = vId(); ops.push({t: 'vput', id, data: await vSeal(V.key, id, {t: tk, c: rows[i], at: now + i, L: tk === 'cards' ? 2 : undefined})}); }
     go.textContent = 'Saving…';
     await vCall(ops);
     if (ep !== V.epoch) { V.busy = false; return; }
