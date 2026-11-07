@@ -704,7 +704,8 @@ function takeReply(j) {
 // Drop this phone's sign-in but keep any unsynced changes, so they go up after the next sign-in.
 function forgetSignIn(reason) {
   Sync.session = ''; Sync.key = ''; Sync.me = null; Sync.users = null; Sync.err = '';
-  lockVault(); V.loaded = false; V.meta = null; V.enc = {};
+  lockVault('', true); V.loaded = false; V.meta = null; V.enc = {}; V.pending = [];
+  try { localStorage.removeItem(LS_VAULT); } catch (e) {}
   state.connErr = reason === 'not_allowed' ? 'This Google account is no longer on the family list.' : reason === 'bad_key' ? 'That set-up link has been switched off. Sign in with Google.' : '';
   // Hide the saved copy of the family's data until someone signs in again.
   state.config = null; state.cycles = {}; state.balances = {}; state.cardfix = {}; state.got.config = false; state.dirty = false; state.draft = null;
@@ -1672,7 +1673,7 @@ const VAULT_TABLES = [
 ];
 // One place for these rules: every check and message below reads from here.
 const VAULT_ROUNDS = 600000, VAULT_MIN_LEN = 6, VAULT_IDLE_MIN = 5, VAULT_IDLE_MS = VAULT_IDLE_MIN * 60000, CLIP_MS = 30000;
-const V = {epoch: 0, loaded: false, loading: false, err: '', meta: null, enc: {}, key: null, rows: [], schema: null, open: {}, showAll: {}, q: '', last: Date.now(), busy: false};
+const V = {pending: [], epoch: 0, loaded: false, loading: false, err: '', meta: null, enc: {}, key: null, rows: [], schema: null, open: {}, showAll: {}, q: '', last: Date.now(), busy: false};
 const te = new TextEncoder(), td = new TextDecoder();
 const b64e = u8 => { let x = ''; for (let i = 0; i < u8.length; i++) x += String.fromCharCode(u8[i]); return btoa(x); };
 const b64d = str => Uint8Array.from(atob(str), ch => ch.charCodeAt(0));
@@ -1720,8 +1721,51 @@ async function vCall(ops) {
   if (!Array.isArray(j.vault)) throw {code: 'old_script'};
   V.enc = {}; V.meta = null;
   j.vault.forEach(r => { if (r.id === '_meta') { try { V.meta = JSON.parse(atob(r.data.slice(5))); } catch (e) {} } else V.enc[r.id] = r.data; });
+  (V.pending || []).forEach(vApplyLocal); // changes still on their way to the sheet
+  vSaveCache();
   return j;
 }
+/* Open vault (no passphrase), as the owner asked. Rows use the same storage format as before, but with a
+   key built into the app, so every phone opens the vault straight away without asking for anything.
+   A copy is kept on the phone so the vault opens instantly; changes show at once and go to the sheet in
+   the background (kept and retried if the phone is offline). */
+const OPEN_META = 'meta.' + btoa(JSON.stringify({v: 2, mode: 'open'}));
+const LS_VAULT = 'budgetTracker.vault.v1';
+let openKeyP = null;
+const vOpenKey = () => openKeyP || (openKeyP = crypto.subtle.digest('SHA-256', te.encode('budget-tracker/open-vault/v1')).then(raw => crypto.subtle.importKey('raw', raw, 'AES-GCM', false, ['encrypt', 'decrypt'])));
+const isOpenMode = () => !!(V.meta && V.meta.mode === 'open');
+function vApplyLocal(op) { if (!op || op.id === '_meta') return; if (op.t === 'vput') V.enc[op.id] = op.data; else if (op.t === 'vdel') delete V.enc[op.id]; }
+function vSaveCache() {
+  try { if (isOpenMode() && signedIn()) localStorage.setItem(LS_VAULT, JSON.stringify({enc: V.enc, meta: V.meta, pending: V.pending || []})); else localStorage.removeItem(LS_VAULT); } catch (e) {}
+}
+function vLoadCache() {
+  try { const c = JSON.parse(localStorage.getItem(LS_VAULT) || 'null'); if (!c || !c.meta || c.meta.mode !== 'open') return false;
+    V.enc = c.enc || {}; V.meta = c.meta; V.pending = Array.isArray(c.pending) ? c.pending : []; return true; } catch (e) { return false; }
+}
+let vFlushing = false, vRetry = null;
+async function vQueue(ops) {
+  ops.forEach(o => { vApplyLocal(o); V.pending.push(o); });
+  vSaveCache(); await vDecryptAll(); renderVaultLists(); vFlush();
+}
+async function vFlush() {
+  if (vFlushing || !V.pending.length) return;
+  clearTimeout(vRetry); vRetry = null;
+  vFlushing = true; vStatus();
+  const sent = V.pending.slice(0, 300);
+  try {
+    await call(sent, {vault: true}).then(j => {
+      if (!Array.isArray(j.vault)) throw {code: 'old_script'};
+      V.pending.splice(0, sent.length);
+      V.enc = {}; j.vault.forEach(r => { if (r.id === '_meta') { try { V.meta = JSON.parse(atob(r.data.slice(5))); } catch (e) {} } else V.enc[r.id] = r.data; });
+      V.pending.forEach(vApplyLocal); vSaveCache();
+    });
+    if (V.key) { await vDecryptAll(); renderVaultLists(); }
+  } catch (e) { clearTimeout(vRetry); vRetry = setTimeout(vFlush, 15000); }
+  vFlushing = false; vStatus();
+  if (V.pending.length && !vRetry) setTimeout(vFlush, 300);
+}
+function vStatus() { const el = $('#vSync'); if (el) el.textContent = V.pending.length ? `Saving ${V.pending.length} change${V.pending.length === 1 ? '' : 's'} to the sheet…` : ''; }
+window.addEventListener('online', () => { clearTimeout(vRetry); vRetry = null; vFlush(); });
 async function vDecryptAll() {
   V.schema = null; V.rows = [];
   if (V.enc._schema) { try { V.schema = (await vOpen(V.key, '_schema', V.enc._schema)).cols || null; } catch (e) {} }
@@ -1732,17 +1776,27 @@ async function vDecryptAll() {
   }
 }
 async function loadVault() {
+  if (!signedIn()) return;
+  if (vLoadCache()) { // instant: show the copy on this phone, then refresh from the sheet in the background
+    V.loaded = true; V.key = await vOpenKey(); await vDecryptAll(); renderVault();
+    try { if (V.pending.length) await vFlush(); else await vCall([]); if (V.key && isOpenMode()) { await vDecryptAll(); renderVaultLists(); } else renderVault(); } catch (e) {}
+    return;
+  }
   V.loading = true; V.err = ''; renderVault();
-  try { await vCall([]); V.loaded = true; if (V.key) await vDecryptAll(); }
-  catch (e) { V.err = e && e.code === 'old_script' ? 'old_script' : 'net'; }
+  try {
+    await vCall([]);
+    if (!V.meta) await vCall([{t: 'vput', id: '_meta', data: OPEN_META}]); // new vault: open from the start
+    V.loaded = true;
+    if (isOpenMode()) { V.key = await vOpenKey(); await vDecryptAll(); vSaveCache(); }
+  } catch (e) { V.err = e && e.code === 'old_script' ? 'old_script' : 'net'; }
   V.loading = false; renderVault();
 }
-function lockVault(why) {
+function lockVault(why, quiet) {
   const el = $('#v-vault'); if (el) delete el.dataset.screen;
   V.epoch++; // any unlock or save still in flight is abandoned
-  V.key = null; V.rows = []; V.schema = null; V.showAll = {}; V.open = {}; V.q = '';
+  V.key = null; V.rows = []; V.schema = null; V.showAll = {}; V.open = {}; V.q = ''; V.loaded = false;
   $('#vaultScrim').hidden = true; $('#vaultForm').innerHTML = '';
-  if ($('#v-vault').innerHTML) renderVault();
+  if (!quiet && $('#v-vault').innerHTML) renderVault();
   if (why) toast(why);
 }
 function renderVault() {
@@ -1773,23 +1827,23 @@ function renderVault() {
     return;
   }
   if (!V.key) {
-    el.innerHTML = `<div class="card lockcard"><h2>Vault is locked</h2>
+    el.innerHTML = `<div class="card lockcard"><h2>Remove the vault passphrase</h2>
+      <p style="margin:0">Enter your current passphrase <b>one last time</b>. The vault then opens straight away on every phone, with nothing to type.</p>
       <form id="vUnlock" class="connect" novalidate autocomplete="off">
         <label class="field"><span>Master passphrase</span><input id="vPass" type="password" autocomplete="current-password" spellcheck="false"></label>
         <div class="err" id="vErr" hidden></div>
-        <div><button class="btn primary" type="submit" id="vGo">Unlock</button></div>
-      </form>
-      <p class="hint" style="margin:0">It locks itself after ${VAULT_IDLE_MIN} minutes without a tap. Nothing readable is saved on this phone.</p></div>`;
+        <div><button class="btn primary" type="submit" id="vGo">Unlock and remove passphrase</button></div>
+      </form></div>`;
     return;
   }
+  const open = isOpenMode();
   el.innerHTML = `<div class="vbar"><input id="vQ" type="search" placeholder="Search the vault" aria-label="Search the vault" value="${esc(V.q)}" autocomplete="off">
-      <button class="btn" type="button" data-act="v-lock">🔒 Lock</button></div>
+      ${open ? '' : '<button class="btn" type="button" data-act="v-lock">🔒 Lock</button>'}</div>
     <div class="chips" id="vTabs" role="group" aria-label="Show"></div>
-    <p class="hint" style="margin:0">Tap a row to show the whole row. Tap the copy icon next to any value to copy it. Swipe a table sideways to see every column.</p>
+    <p class="hint" style="margin:0">Tap the copy icon next to any value to copy it. Swipe a table sideways to see every column. <span id="vSync"></span></p>
     <div id="vLists" style="display:flex;flex-direction:column;gap:16px"></div>
-    <div class="row-actions" style="padding:0"><button class="btn sm" type="button" data-act="v-pass">Change passphrase</button>
-      <span class="hint" style="align-self:center">Locks after ${VAULT_IDLE_MIN} minutes without a tap.</span></div>`;
-  renderVaultLists();
+    ${open ? '' : `<div class="row-actions" style="padding:0"><button class="btn sm" type="button" data-act="v-pass">Change passphrase</button></div>`}`;
+  renderVaultLists(); vStatus();
 }
 const COPY_ICON = '<svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg>';
 // One table per section. Tap a row to show the whole row; every cell has its own copy button.
@@ -1814,7 +1868,7 @@ function renderVaultLists() {
     if (q) list = list.filter(r => r.c.some(v => String(v || '').toLowerCase().includes(q)));
     const last = cols.length - 1;
     const body = list.map(r => {
-      const on = all || !!V.open[r.id];
+      const on = all || isOpenMode() || !!V.open[r.id];
       return `<tr class="${on ? 'on' : ''}" data-act="v-row" data-id="${r.id}" aria-label="${esc(r.c[0] || '')}: tap to ${on ? 'hide' : 'show'}">${cols.map((c, i) => {
         const v = String(r.c[i] || '');
         if (!v) return `<td class="${i === last ? 'wrap' : ''}"><span class="nil">—</span></td>`;
@@ -1822,7 +1876,7 @@ function renderVaultLists() {
         return `<td class="${i === last ? 'wrap' : ''}"><span class="cell"><span class="cv${vis ? '' : ' masked'}">${vis ? esc(v) : '••••'}</span><button class="cp" type="button" data-act="v-copy" data-id="${r.id}" data-i="${i}" aria-label="Copy ${esc(c)}" title="Copy ${esc(c)}">${COPY_ICON}</button></span></td>`;
       }).join('')}<td class="act"><button class="cp" type="button" data-act="v-edit" data-id="${r.id}" aria-label="Edit ${esc(r.c[0] || '')}" title="Edit">✎</button></td></tr>`;
     }).join('');
-    return `<section class="card vsec"><div class="sec-h"><h2>${esc(sub ? sub.label : t.title)}</h2><span class="hint">${total} saved${total ? ` · <button class="linkbtn" type="button" data-act="v-showall" data-t="${t.k}">${all ? 'Hide all' : 'Show all'}</button>` : ''}</span></div>
+    return `<section class="card vsec"><div class="sec-h"><h2>${esc(sub ? sub.label : t.title)}</h2><span class="hint">${total} saved${total && !isOpenMode() ? ` · <button class="linkbtn" type="button" data-act="v-showall" data-t="${t.k}">${all ? 'Hide all' : 'Show all'}</button>` : ''}</span></div>
       ${body ? `<div class="vwrap"><table class="vt"><thead><tr>${cols.map(c => `<th>${esc(c)}</th>`).join('')}<th class="act"><span class="sr">Edit</span></th></tr></thead><tbody>${body}</tbody></table></div>`
         : `<div class="empty">${q ? 'No match.' : 'Nothing yet. Add your first ' + t.one + ', or paste many at once.'}</div>`}
       <div class="row-actions"><button class="btn sm primary" type="button" data-act="v-add" data-t="${t.k}">+ Add ${t.one}</button><button class="btn sm" type="button" data-act="v-import" data-t="${t.k}">Paste many rows</button><button class="btn sm" type="button" data-act="v-cols" data-t="${t.k}">Rename columns</button>${t.delAll && total ? `<button class="btn sm danger" type="button" data-act="v-delall" data-t="${t.k}">Delete all</button>` : ''}</div></section>`;
@@ -1843,22 +1897,11 @@ async function vSaveRow(again) {
   const tk = $('#vfT').value, id = $('#vfId').value || vId(), n = vCols(tk).length, err = $('#vfErr');
   const c = Array.from({length: n}, (_, i) => $('#vf' + i).value.trim());
   if (!c[0]) { err.textContent = 'Fill in the first box (a name for this row).'; err.hidden = false; return; }
-  if (V.busy) return; V.busy = true; err.hidden = true;
-  document.querySelectorAll('#vaultForm button').forEach(b => { b.disabled = true; });
-  try {
-    const ep = V.epoch;
-    const data = await vSeal(V.key, id, {t: tk, c, at: Date.now(), L: vLayout(tk)});
-    await vCall([{t: 'vput', id, data}]);
-    if (ep !== V.epoch) { V.busy = false; return; }
-    if (V.enc[id] !== data) throw {code: 'not_saved'};
-    await vDecryptAll(); toast('Saved, encrypted');
-    if (again) vEditRow(tk, null); else { $('#vaultScrim').hidden = true; $('#vaultForm').innerHTML = ''; }
-    renderVaultLists();
-  } catch (e) {
-    err.textContent = e && e.code === 'old_script' ? 'The sheet needs the latest script (vault version).' : "Couldn't save. Nothing was changed. Check the connection and try again.";
-    err.hidden = false;
-  }
-  V.busy = false; document.querySelectorAll('#vaultForm button').forEach(b => { b.disabled = false; });
+  err.hidden = true;
+  const data = await vSeal(V.key, id, {t: tk, c, at: Date.now(), L: vLayout(tk)});
+  if (again) vEditRow(tk, null); else { $('#vaultScrim').hidden = true; $('#vaultForm').innerHTML = ''; }
+  toast('Saved');
+  await vQueue([{t: 'vput', id, data}]);
 }
 async function vCreate(ev) {
   ev.preventDefault();
@@ -1887,7 +1930,16 @@ async function vUnlock(ev) {
     if (ep !== V.epoch) return;
     V.key = key; V.last = Date.now();
     try { await vCall([]); } catch (e) {} // pick up rows saved from other devices
-    await vDecryptAll(); renderVault();
+    await vDecryptAll();
+    // Remove the protection: re-save every row with the built-in key and mark the vault open.
+    go.textContent = 'Removing protection…';
+    const open = await vOpenKey(), ops = [];
+    if (V.schema) ops.push({t: 'vput', id: '_schema', data: await vSeal(open, '_schema', {cols: V.schema})});
+    for (const r of V.rows) if (r.t !== 'broken') ops.push({t: 'vput', id: r.id, data: await vSeal(open, r.id, {t: r.t, c: r.c, at: r.at, L: r.L})});
+    ops.push({t: 'vput', id: '_meta', data: OPEN_META});
+    try { await vCall(ops); } catch (e) { err.textContent = "Unlocked, but couldn't remove the protection yet. Check the connection; it will try again next time."; err.hidden = false; renderVault(); return; }
+    if (!isOpenMode()) { renderVault(); return; }
+    V.key = open; await vDecryptAll(); vSaveCache(); toast('Protection removed. The vault now opens straight away.'); renderVault();
   } catch (e) { err.textContent = 'Wrong passphrase.'; err.hidden = false; go.disabled = false; go.textContent = 'Unlock'; $('#vPass').select(); }
 }
 function vColsForm(tk) {
@@ -1901,8 +1953,9 @@ async function vSaveCols() {
   const tk = $('#vcT').value, t = VAULT_TABLES.find(x => x.k === tk), err = $('#vfErr');
   const names = t.cols.map((d, i) => $('#vc' + i).value.trim() || d);
   const schema = Object.assign({}, V.schema || {}, {[vSchemaKey(tk)]: names});
-  try { const data = await vSeal(V.key, '_schema', {cols: schema}); await vCall([{t: 'vput', id: '_schema', data}]); await vDecryptAll(); $('#vaultScrim').hidden = true; toast('Column names saved'); renderVaultLists(); }
-  catch (e) { err.textContent = "Couldn't save. Check the connection."; err.hidden = false; }
+  const data = await vSeal(V.key, '_schema', {cols: schema});
+  $('#vaultScrim').hidden = true; toast('Column names saved');
+  await vQueue([{t: 'vput', id: '_schema', data}]);
 }
 function vPassForm() {
   vForm(`<h3>Change passphrase</h3>
@@ -2017,19 +2070,13 @@ function vImportPreview() {
 async function vImportSave() {
   const tk = $('#viT').value, rows = vImportRows(), err = $('#vfErr'), go = $('#viGo');
   if (!rows.length || V.busy) return;
-  V.busy = true; go.disabled = true; go.textContent = 'Encrypting…'; err.hidden = true;
-  try {
-    const ep = V.epoch, ops = [], now = Date.now();
-    for (let i = 0; i < rows.length; i++) { const id = vId(); ops.push({t: 'vput', id, data: await vSeal(V.key, id, {t: tk, c: rows[i], at: now + i, L: vLayout(tk)})}); }
-    go.textContent = 'Saving…';
-    await vCall(ops);
-    if (ep !== V.epoch) { V.busy = false; return; }
-    const missing = ops.filter(o => V.enc[o.id] !== o.data).length;
-    if (missing) throw {code: 'not_saved'};
-    await vDecryptAll(); $('#vaultScrim').hidden = true; $('#vaultForm').innerHTML = '';
-    toast(`${rows.length} rows added, encrypted`); renderVaultLists();
-  } catch (e) { err.textContent = "Couldn't save the rows. Nothing was added. Check the connection and try again."; err.hidden = false; go.disabled = false; go.textContent = `Add ${rows.length} rows`; }
+  V.busy = true; go.disabled = true; err.hidden = true;
+  const ops = [], now = Date.now();
+  for (let i = 0; i < rows.length; i++) { const id = vId(); ops.push({t: 'vput', id, data: await vSeal(V.key, id, {t: tk, c: rows[i], at: now + i, L: vLayout(tk)})}); }
+  $('#vaultScrim').hidden = true; $('#vaultForm').innerHTML = '';
+  toast(`${rows.length} rows added`);
   V.busy = false;
+  await vQueue(ops);
 }
 // Delete every row of one table. You must type DELETE; only that table's rows are touched.
 function vDelAllForm(tk) {
@@ -2048,27 +2095,15 @@ async function vDelAll() {
   if ($('#vdConfirm').value.trim() !== 'DELETE' || V.busy) return;
   const ids = V.rows.filter(r => r.t === tk).map(r => r.id);
   if (!ids.length) return;
-  const keepOthers = Object.keys(V.enc).filter(id => !ids.includes(id));
-  V.busy = true; go.disabled = true; go.textContent = 'Deleting…'; err.hidden = true;
-  try {
-    const ep = V.epoch;
-    await vCall(ids.map(id => ({t: 'vdel', id})));
-    if (ep !== V.epoch) { V.busy = false; return; }
-    if (ids.some(id => id in V.enc)) throw {code: 'not_deleted'};
-    if (keepOthers.some(id => !(id in V.enc)) || !V.meta) throw {code: 'check'}; // other rows and the passphrase setup must still be there
-    await vDecryptAll(); $('#vaultScrim').hidden = true; $('#vaultForm').innerHTML = '';
-    toast(`Deleted ${ids.length} ${ids.length === 1 ? 'row' : 'rows'}`); renderVaultLists();
-  } catch (e) {
-    try { await vDecryptAll(); renderVaultLists(); } catch (x) {}
-    err.textContent = e && e.code === 'check' ? 'Something unexpected changed. Reload the app and check the vault.' : "Couldn't delete. Check the connection and try again."; err.hidden = false;
-    go.disabled = false; go.textContent = 'Try again';
-  }
-  V.busy = false;
+  $('#vaultScrim').hidden = true; $('#vaultForm').innerHTML = '';
+  toast(`Deleted ${ids.length} ${ids.length === 1 ? 'row' : 'rows'}`);
+  await vQueue(ids.map(id => ({t: 'vdel', id})));
 }
 let clipTimer = null;
 async function vCopy(text, label) {
-  try { await navigator.clipboard.writeText(text); toast((label ? label + ' copied' : 'Copied') + ' · clears in 30 s'); }
+  try { await navigator.clipboard.writeText(text); toast((label ? label + ' copied' : 'Copied') + (isOpenMode() ? '' : ' · clears in 30 s')); }
   catch (e) { toast("Couldn't copy on this phone", 'bad'); return; }
+  if (isOpenMode()) return;
   clearTimeout(clipTimer); clipTimer = setTimeout(() => { navigator.clipboard.writeText('').catch(() => {}); }, CLIP_MS);
 }
 document.addEventListener('submit', ev => {
@@ -2112,16 +2147,17 @@ document.addEventListener('click', ev => {
   else if (a === 'v-pass-save') vSavePass();
   else if (a === 'v-del') {
     if (!arm(b, 'vdel' + b.dataset.id, 'Tap again to delete')) return;
-    vCall([{t: 'vdel', id: b.dataset.id}]).then(() => vDecryptAll()).then(() => { $('#vaultScrim').hidden = true; $('#vaultForm').innerHTML = ''; toast('Deleted'); renderVaultLists(); }).catch(() => toast("Couldn't delete. Try again.", 'bad'));
+    $('#vaultScrim').hidden = true; $('#vaultForm').innerHTML = ''; toast('Deleted');
+    vQueue([{t: 'vdel', id: b.dataset.id}]);
   }
 });
 document.addEventListener('input', ev => { if (ev.target && ev.target.id === 'vQ') { V.q = ev.target.value; renderVaultLists(); } else if (ev.target && ev.target.id === 'viText') vImportPreview(); else if (ev.target && ev.target.id === 'vdConfirm') { const g = $('#vdGo'); if (g) g.disabled = ev.target.value.trim() !== 'DELETE'; } });
 document.addEventListener('change', ev => { if (ev.target && ev.target.id === 'viHead') { ev.target.dataset.touched = '1'; vImportPreview(); } });
 ['pointerdown', 'keydown'].forEach(t => document.addEventListener(t, () => { V.last = Date.now(); }, true));
-function vIdleCheck() { if (V.key && Date.now() - V.last > VAULT_IDLE_MS) lockVault(`Vault locked after ${VAULT_IDLE_MIN} minutes idle`); }
+function vIdleCheck() { if (V.key && !isOpenMode() && Date.now() - V.last > VAULT_IDLE_MS) lockVault(`Vault locked after ${VAULT_IDLE_MIN} minutes idle`); }
 setInterval(vIdleCheck, 5000);
 document.addEventListener('visibilitychange', vIdleCheck);
-window.addEventListener('pagehide', () => { if (V.key) lockVault(); });
+window.addEventListener('pagehide', () => { if (V.key && !isOpenMode()) lockVault(); });
 
 /* ---------- sign-in ---------- */
 let gisReady = null;
@@ -2261,8 +2297,9 @@ document.addEventListener('click', ev => {
     if (Sync.outbox.length && !arm(b, 'disc', Sync.outbox.length + ' unsynced, tap again')) return;
     if (Sync.session) call([{t: 'signout'}]).catch(() => {});
     try { if (window.google && google.accounts) google.accounts.id.disableAutoSelect(); } catch (e) {}
-    try { localStorage.removeItem(LS_CONN); localStorage.removeItem(LS_CACHE); localStorage.removeItem(LS_OUT); } catch (e) {}
-    lockVault(); V.loaded = false; V.meta = null; V.enc = {};
+    try { localStorage.removeItem(LS_CONN); localStorage.removeItem(LS_CACHE); localStorage.removeItem(LS_OUT); localStorage.removeItem(LS_VAULT); } catch (e) {}
+    V.pending = [];
+    lockVault('', true); V.loaded = false; V.meta = null; V.enc = {};
     Sync.key = ''; Sync.session = ''; Sync.me = null; Sync.users = null; Sync.outbox = []; Sync.last = 0;
     state.config = null; state.cycles = {}; state.balances = {}; state.cardfix = {}; state.got.config = false; state.dirty = false; state.draft = null;
     render();
