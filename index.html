@@ -343,6 +343,8 @@ body[data-view="vault"] .fab,body[data-view="vault"] #addTop,body[data-view="vau
 .vt .act{position:sticky;right:0;background:inherit;width:36px;padding:0 4px}
 .vt td.act{background:var(--sheet)}
 .vt tbody tr.on td.act{background:var(--accent-soft)}
+.prev-t td{cursor:default;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:12.5px}
+.prev-t td:first-child{font-family:var(--f-body)}
 .linkbtn{border:0;background:none;color:var(--accent);font:inherit;font-weight:600;cursor:pointer;padding:0}
 .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
 .lockcard{display:flex;flex-direction:column;gap:12px;padding:18px 16px;max-width:560px}
@@ -1537,12 +1539,19 @@ let rz; window.addEventListener('resize', () => { clearTimeout(rz); rz = setTime
    12-byte IV per save, and the row ID bound in as associated data so rows can't be swapped.
    The key is non-extractable and lives only in memory; nothing readable is ever stored on the phone. */
 const VAULT_TABLES = [
-  {k: 'cards', title: 'Credit cards', one: 'card', show: [0, 1], layout: 2,
-   cols: ['CC', 'Name', 'CC number', 'Exp', 'CVV', 'Stmt', 'PW', 'Cust ID', 'Note']},
-  {k: 'banks', title: 'Bank accounts', one: 'account', show: [0, 1],
-   cols: ['Account', 'Bank', 'Account holder', 'Account number', 'IFSC', 'Customer ID', 'Net-banking user ID', 'Password', 'MPIN / UPI PIN', 'Notes']},
-  {k: 'personal', title: 'Personal information', one: 'item', show: [0, 1],
-   cols: ['Portal / item', 'ID / number', 'Password / note']}
+  {k: 'cards', title: 'Credit cards', one: 'card', show: [0, 1], layout: 2, notes: 8,
+   cols: ['CC', 'Name', 'CC number', 'Exp', 'CVV', 'Stmt', 'PW', 'Cust ID', 'Note'],
+   alias: [['cc', 'card', 'cardname', 'bank'], ['name', 'nameoncard', 'holder'], ['ccnumber', 'cardnumber', 'cardno', 'number', 'ccno', 'cc'],
+     ['exp', 'expiry', 'validthru', 'valid'], ['cvv', 'cvc'], ['stmt', 'statement', 'statementdate', 'stmtdate'], ['pw', 'password', 'pass'],
+     ['custid', 'customerid', 'cid', 'custidnote'], ['note', 'notes', 'remarks']]},
+  {k: 'banks', title: 'Bank accounts', one: 'account', show: [0, 1], layout: 2, notes: 9,
+   cols: ['Account', 'Name', 'Acc', 'Cust ID', 'PW', 'IFSC', 'Card no', 'Exp', 'CVV', 'Notes'],
+   alias: [['account', 'bank', 'accountname'], ['name', 'holder', 'accountholder'], ['acc', 'accno', 'accountno', 'accountnumber', 'acno', 'acnumber'],
+     ['custid', 'customerid', 'cid'], ['pw', 'password', 'pass'], ['ifsc', 'ifsccode'], ['cardno', 'card', 'cardnumber', 'debitcard', 'debitcardno'],
+     ['exp', 'expiry', 'validthru'], ['cvv', 'cvc'], ['notes', 'note', 'remarks']]},
+  {k: 'personal', title: 'Personal information', one: 'item', show: [0, 1], notes: 2,
+   cols: ['Portal / item', 'ID / number', 'Password / note'],
+   alias: [['portal', 'item', 'site'], ['id', 'idnumber', 'number', 'user', 'userid', 'username', 'login'], ['pw', 'password', 'pass', 'passwordnote', 'note', 'notes']]}
 ];
 // One place for these rules: every check and message below reads from here.
 const VAULT_ROUNDS = 600000, VAULT_MIN_LEN = 6, VAULT_IDLE_MIN = 5, VAULT_IDLE_MS = VAULT_IDLE_MIN * 60000, CLIP_MS = 30000;
@@ -1565,13 +1574,29 @@ async function vOpen(key, id, sealed) {
   return JSON.parse(td.decode(await crypto.subtle.decrypt({name: 'AES-GCM', iv: b64d(iv), additionalData: te.encode(id)}, key, b64d(ct))));
 }
 const vId = () => 'r' + Array.from(crypto.getRandomValues(new Uint8Array(9)), b => b.toString(16).padStart(2, '0')).join('');
-function vCols(k) { const t = VAULT_TABLES.find(x => x.k === k); const named = V.schema && V.schema[k]; const ok = named && named.length === t.cols.length; return t.cols.map((c, i) => (ok && named[i]) || c); }
-// Cards saved with the first 10-column layout are moved into the current 9 columns. Nothing is dropped:
-// bank, card PIN and login go into Note.
-function vCardRow(r) {
-  if (r.t !== 'cards' || r.L === 2) return r;
-  const o = r.c, extra = [['Bank', o[1]], ['Card PIN', o[6]], ['Login', o[7]]].filter(x => x[1]).map(x => x[0] + ': ' + x[1]);
-  return Object.assign({}, r, {L: 2, c: [o[0] || '', o[3] || '', o[2] || '', o[4] || '', o[5] || '', '', o[8] || '', '', [o[9], ...extra].filter(Boolean).join(' | ')]});
+const vLayout = k => (VAULT_TABLES.find(x => x.k === k) || {}).layout;
+const vSchemaKey = k => vLayout(k) ? k + '@' + vLayout(k) : k;
+function vCols(k) {
+  const t = VAULT_TABLES.find(x => x.k === k), sc = V.schema || {};
+  let named = sc[vSchemaKey(k)];
+  if (!named && k === 'cards' && Array.isArray(sc.cards) && sc.cards.length === 9) named = sc.cards; // renamed before names were stored per layout
+  if (!named && !t.layout) named = sc[k];
+  const ok = Array.isArray(named) && named.length === t.cols.length;
+  return t.cols.map((c, i) => (ok && named[i]) || c);
+}
+// Rows saved with an older column layout are moved into the current one. Nothing is dropped:
+// values with no column of their own go, labelled, into Note (cards) or Notes (bank accounts).
+function vMigrate(r) {
+  const o = r.c, tag = list => list.filter(x => x[1]).map(x => x[0] + ': ' + x[1]);
+  if (r.t === 'cards' && r.L !== 2) {
+    return Object.assign({}, r, {L: 2, c: [o[0] || '', o[3] || '', o[2] || '', o[4] || '', o[5] || '', '', o[8] || '', '',
+      [o[9], ...tag([['Bank', o[1]], ['Card PIN', o[6]], ['Login', o[7]]])].filter(Boolean).join(' | ')]});
+  }
+  if (r.t === 'banks' && r.L !== 2) {
+    return Object.assign({}, r, {L: 2, c: [o[0] || '', o[2] || '', o[3] || '', o[5] || '', o[7] || '', o[4] || '', '', '', '',
+      [o[9], ...tag([['Bank', o[1]], ['Net-banking ID', o[6]], ['MPIN/UPI PIN', o[8]]])].filter(Boolean).join(' | ')]});
+  }
+  return r;
 }
 async function vCall(ops) {
   const j = await call(ops, {vault: true});
@@ -1585,7 +1610,7 @@ async function vDecryptAll() {
   if (V.enc._schema) { try { V.schema = (await vOpen(V.key, '_schema', V.enc._schema)).cols || null; } catch (e) {} }
   for (const [id, data] of Object.entries(V.enc)) {
     if (id === '_schema') continue;
-    try { const r = await vOpen(V.key, id, data); V.rows.push(vCardRow({id, t: r.t, c: Array.isArray(r.c) ? r.c : [], at: r.at || 0, L: r.L})); }
+    try { const r = await vOpen(V.key, id, data); V.rows.push(vMigrate({id, t: r.t, c: Array.isArray(r.c) ? r.c : [], at: r.at || 0, L: r.L})); }
     catch (e) { V.rows.push({id, t: 'broken', c: [], at: 0}); }
   }
 }
@@ -1691,7 +1716,7 @@ async function vSaveRow(again) {
   document.querySelectorAll('#vaultForm button').forEach(b => { b.disabled = true; });
   try {
     const ep = V.epoch;
-    const data = await vSeal(V.key, id, {t: tk, c, at: Date.now(), L: tk === 'cards' ? 2 : undefined});
+    const data = await vSeal(V.key, id, {t: tk, c, at: Date.now(), L: vLayout(tk)});
     await vCall([{t: 'vput', id, data}]);
     if (ep !== V.epoch) { V.busy = false; return; }
     if (V.enc[id] !== data) throw {code: 'not_saved'};
@@ -1744,7 +1769,7 @@ function vColsForm(tk) {
 async function vSaveCols() {
   const tk = $('#vcT').value, t = VAULT_TABLES.find(x => x.k === tk), err = $('#vfErr');
   const names = t.cols.map((d, i) => $('#vc' + i).value.trim() || d);
-  const schema = Object.assign({}, V.schema || {}, {[tk]: names});
+  const schema = Object.assign({}, V.schema || {}, {[vSchemaKey(tk)]: names});
   try { const data = await vSeal(V.key, '_schema', {cols: schema}); await vCall([{t: 'vput', id: '_schema', data}]); await vDecryptAll(); $('#vaultScrim').hidden = true; toast('Column names saved'); renderVaultLists(); }
   catch (e) { err.textContent = "Couldn't save. Check the connection."; err.hidden = false; }
 }
@@ -1778,17 +1803,50 @@ async function vSavePass() {
 }
 // Paste rows copied from Excel, Google Sheets or a note: one row per line, columns split by tabs
 // (or by 2+ spaces). Everything is encrypted on this phone before it is sent.
-function vParse(text, n) {
+const vNorm = x => String(x || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+function vSplit(text) {
   // Trailing tabs are just empty last cells, so drop them before deciding how columns are separated.
   const lines = String(text).replace(/\r/g, '').split('\n').map(l => l.replace(/[\t ]+$/, '')).filter(l => l.trim());
   const runs = lines.join('\n').match(/\t+/g) || [];
   const doubled = runs.length > 0 && runs.every(x => x.length >= 2);
-  return lines.map(l => {
-    const parts = (l.includes('\t') ? l.split(doubled ? '\t\t' : '\t') : l.split(/ {2,}/)).map(x => x.trim());
-    const c = parts.slice(0, n); if (parts.length > n) c[n - 1] = parts.slice(n - 1).join(' ');
-    while (c.length < n) c.push('');
-    return c;
-  }).filter(c => c[0] && c.slice(1).some(Boolean));
+  return lines.map(l => (l.includes('\t') ? l.split(doubled ? '\t\t' : '\t') : l.split(/ {2,}/)).map(x => x.trim()));
+}
+// Reads a heading row: which pasted column belongs to which table column.
+// -1 = blank heading (e.g. the empty half of a merged cell): ignored. -2 = heading not recognised: kept in notes.
+function vHeaderMap(cells, tk) {
+  const t = VAULT_TABLES.find(x => x.k === tk), cols = vCols(tk), used = new Set();
+  const names = cols.map((c, i) => new Set([vNorm(c), vNorm(t.cols[i]), ...((t.alias || [])[i] || [])]));
+  let hits = 0;
+  const map = (cells || []).map(h => {
+    const k = vNorm(h); if (!k) return -1;
+    const i = names.findIndex((set, j) => !used.has(j) && set.has(k));
+    if (i < 0) return -2;
+    used.add(i); hits++; return i;
+  });
+  return hits >= 2 ? map : null;
+}
+// headerOn: the first line is a heading row. If it is recognised, columns are matched by name; if not, it is just skipped.
+function vParse(text, tk, headerOn) {
+  const t = VAULT_TABLES.find(x => x.k === tk), n = vCols(tk).length, notes = t.notes != null ? t.notes : n - 1;
+  const lines = vSplit(text), head = headerOn ? lines[0] : null, map = head ? vHeaderMap(head, tk) : null;
+  const out = [], skipped = [], overflow = [];
+  for (let li = headerOn ? 1 : 0; li < lines.length; li++) {
+    const parts = lines[li], c = new Array(n).fill(''), extra = [];
+    parts.forEach((v, j) => {
+      if (!v) return;
+      if (map) {
+        const m = j < map.length ? map[j] : -2;
+        if (m >= 0) c[m] = v;
+        else extra.push(m === -2 && head[j] ? head[j] + ': ' + v : v);
+      } else if (j < n) c[j] = v;
+      else extra.push(v);
+    });
+    if (extra.length) { c[notes] = [c[notes], ...extra].filter(Boolean).join(' | '); overflow.push(li + 1); }
+    if (c[0] && c.slice(1).some(Boolean)) out.push(c); else skipped.push(li + 1);
+  }
+  out.skipped = skipped; out.overflow = overflow; out.byName = !!map;
+  out.unknown = map ? head.filter((h, j) => map[j] === -2) : [];
+  return out;
 }
 function vImportForm(tk) {
   const t = VAULT_TABLES.find(x => x.k === tk), cols = vCols(tk);
@@ -1796,24 +1854,34 @@ function vImportForm(tk) {
     <p class="muted" style="margin:0;font-size:13px">Copy the rows from Excel, Google Sheets or a note and paste them here, one row per line. Columns in order: <b>${cols.map(esc).join(' · ')}</b>.</p>
     <input type="hidden" id="viT" value="${tk}">
     <label class="field"><span>Rows</span><textarea id="viText" rows="8" autocomplete="off" autocapitalize="off" spellcheck="false"></textarea></label>
-    <label class="ck-line"><input id="viHead" type="checkbox"> The first line is a heading row (skip it)</label>
+    <label class="ck-line"><input id="viHead" type="checkbox"> The first line is a heading row</label>
     <div class="banner" id="viPrev" hidden></div>
     <div class="err" id="vfErr" hidden></div>
     <div class="sheet-actions"><button type="button" class="btn ghost" data-act="v-close">Cancel</button><button type="button" class="btn primary" data-act="v-import-save" id="viGo" disabled>Add rows</button></div>`);
 }
 function vImportRows() {
-  const n = vCols($('#viT').value).length; let rows = vParse($('#viText').value, n);
-  if ($('#viHead').checked) rows = rows.slice(1);
-  return rows;
+  const tk = $('#viT').value, text = $('#viText').value, head = $('#viHead');
+  if (!head.dataset.touched) head.checked = !!vHeaderMap(vSplit(text)[0], tk); // tick it automatically when the headings are recognised
+  return vParse(text, tk, head.checked);
 }
 function vImportPreview() {
   const box = $('#viPrev'), go = $('#viGo'); if (!box) return;
-  const first = $('#viText').value.split('\n')[0] || '';
-  if (/^\s*(portal|item|name|card|account|cc|bank)\b/i.test(first) && !$('#viHead').dataset.touched) $('#viHead').checked = true;
   const rows = vImportRows();
   go.disabled = !rows.length; go.textContent = rows.length ? `Add ${rows.length} row${rows.length === 1 ? '' : 's'}` : 'Add rows';
-  box.hidden = !rows.length;
-  box.innerHTML = rows.length ? `<b>${rows.length} row${rows.length === 1 ? '' : 's'} found.</b> First few: ` + rows.slice(0, 4).map(r => esc(r[0]) + ' · ' + esc(r[1] || '—') + (r.length > 2 ? ' · ' + (r[2] ? '••••' : '—') : '')).join('; ') + (rows.length > 4 ? '…' : '') : '';
+  const tk = $('#viT').value, t = VAULT_TABLES.find(x => x.k === tk), cols = vCols(tk);
+  const warn = [];
+  if (rows.skipped.length) warn.push(`Line${rows.skipped.length === 1 ? '' : 's'} ${rows.skipped.join(', ')} will be skipped: the first column (${esc(cols[0])}) is empty or the line has nothing else.`);
+  const notesName = esc(cols[t.notes != null ? t.notes : cols.length - 1]);
+  if (rows.overflow.length) warn.push(`Line${rows.overflow.length === 1 ? '' : 's'} ${rows.overflow.join(', ')} ha${rows.overflow.length === 1 ? 's' : 've'} values with no matching column. They were kept in ${notesName}. Check below.`);
+  if (rows.unknown.length) warn.push(`Heading${rows.unknown.length === 1 ? '' : 's'} not recognised: ${rows.unknown.map(esc).join(', ')}. Values under ${rows.unknown.length === 1 ? 'it' : 'them'} go into ${notesName}.`);
+  const how = !rows.length ? '' : rows.byName ? 'Columns matched by your headings.' : $('#viHead').checked ? 'Headings not recognised, so columns are matched by position.' : 'No heading row, so columns are matched by position. Include your heading row to match by name.';
+  box.hidden = !rows.length && !warn.length;
+  // A small preview under the table's own headings, so you can see every value sits in the right column.
+  const sample = rows.slice(0, 3).map(r => `<tr>${r.map((v, i) => `<td>${!v ? '<span class="nil">—</span>' : t.show.includes(i) ? esc(v) : esc(v.slice(0, 2)) + '••'}</td>`).join('')}</tr>`).join('');
+  box.innerHTML = (rows.length ? `<b>${rows.length} row${rows.length === 1 ? '' : 's'} will be added.</b> ${how} Check they line up:
+    <div class="vwrap" style="margin-top:8px"><table class="vt prev-t"><thead><tr>${cols.map(c => `<th>${esc(c)}</th>`).join('')}</tr></thead><tbody>${sample}</tbody></table></div>
+    ${rows.length > 3 ? `<span class="hint">…and ${rows.length - 3} more.</span>` : ''}` : '')
+    + (warn.length ? `<div class="warnbox" style="margin-top:8px">${warn.join('<br>')}</div>` : '');
 }
 async function vImportSave() {
   const tk = $('#viT').value, rows = vImportRows(), err = $('#vfErr'), go = $('#viGo');
@@ -1821,7 +1889,7 @@ async function vImportSave() {
   V.busy = true; go.disabled = true; go.textContent = 'Encrypting…'; err.hidden = true;
   try {
     const ep = V.epoch, ops = [], now = Date.now();
-    for (let i = 0; i < rows.length; i++) { const id = vId(); ops.push({t: 'vput', id, data: await vSeal(V.key, id, {t: tk, c: rows[i], at: now + i, L: tk === 'cards' ? 2 : undefined})}); }
+    for (let i = 0; i < rows.length; i++) { const id = vId(); ops.push({t: 'vput', id, data: await vSeal(V.key, id, {t: tk, c: rows[i], at: now + i, L: vLayout(tk)})}); }
     go.textContent = 'Saving…';
     await vCall(ops);
     if (ep !== V.epoch) { V.busy = false; return; }
