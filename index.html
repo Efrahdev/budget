@@ -1539,12 +1539,12 @@ let rz; window.addEventListener('resize', () => { clearTimeout(rz); rz = setTime
    12-byte IV per save, and the row ID bound in as associated data so rows can't be swapped.
    The key is non-extractable and lives only in memory; nothing readable is ever stored on the phone. */
 const VAULT_TABLES = [
-  {k: 'cards', title: 'Credit cards', one: 'card', show: [0, 1], layout: 2, notes: 8,
+  {k: 'cards', title: 'Credit cards', one: 'card', many: 'credit cards', show: [0, 1], layout: 2, notes: 8, delAll: true,
    cols: ['CC', 'Name', 'CC number', 'Exp', 'CVV', 'Stmt', 'PW', 'Cust ID', 'Note'],
    alias: [['cc', 'card', 'cardname', 'bank'], ['name', 'nameoncard', 'holder'], ['ccnumber', 'cardnumber', 'cardno', 'number', 'ccno', 'cc'],
      ['exp', 'expiry', 'validthru', 'valid'], ['cvv', 'cvc'], ['stmt', 'statement', 'statementdate', 'stmtdate'], ['pw', 'password', 'pass'],
      ['custid', 'customerid', 'cid', 'custidnote'], ['note', 'notes', 'remarks']]},
-  {k: 'banks', title: 'Bank accounts', one: 'account', show: [0, 1], layout: 2, notes: 9,
+  {k: 'banks', title: 'Bank accounts', one: 'account', many: 'bank accounts', show: [0, 1], layout: 2, notes: 9, delAll: true,
    cols: ['Account', 'Name', 'Acc', 'Cust ID', 'PW', 'IFSC', 'Card no', 'Exp', 'CVV', 'Notes'],
    alias: [['account', 'bank', 'accountname'], ['name', 'holder', 'accountholder'], ['acc', 'accno', 'accountno', 'accountnumber', 'acno', 'acnumber'],
      ['custid', 'customerid', 'cid'], ['pw', 'password', 'pass'], ['ifsc', 'ifsccode'], ['cardno', 'card', 'cardnumber', 'debitcard', 'debitcardno'],
@@ -1694,7 +1694,7 @@ function renderVaultLists() {
     return `<section class="card vsec"><div class="sec-h"><h2>${esc(t.title)}</h2><span class="hint">${total} saved${total ? ` · <button class="linkbtn" type="button" data-act="v-showall" data-t="${t.k}">${all ? 'Hide all' : 'Show all'}</button>` : ''}</span></div>
       ${body ? `<div class="vwrap"><table class="vt"><thead><tr>${cols.map(c => `<th>${esc(c)}</th>`).join('')}<th class="act"><span class="sr">Edit</span></th></tr></thead><tbody>${body}</tbody></table></div>`
         : `<div class="empty">${q ? 'No match.' : 'Nothing yet. Add your first ' + t.one + ', or paste many at once.'}</div>`}
-      <div class="row-actions"><button class="btn sm primary" type="button" data-act="v-add" data-t="${t.k}">+ Add ${t.one}</button><button class="btn sm" type="button" data-act="v-import" data-t="${t.k}">Paste many rows</button><button class="btn sm" type="button" data-act="v-cols" data-t="${t.k}">Rename columns</button></div></section>`;
+      <div class="row-actions"><button class="btn sm primary" type="button" data-act="v-add" data-t="${t.k}">+ Add ${t.one}</button><button class="btn sm" type="button" data-act="v-import" data-t="${t.k}">Paste many rows</button><button class="btn sm" type="button" data-act="v-cols" data-t="${t.k}">Rename columns</button>${t.delAll && total ? `<button class="btn sm danger" type="button" data-act="v-delall" data-t="${t.k}">Delete all</button>` : ''}</div></section>`;
   }).join('') + (broken ? `<div class="banner warn">${broken} row${broken === 1 ? '' : 's'} could not be opened with this passphrase. They may have been changed outside the app.</div>` : '');
 }
 function vForm(html) { const f = $('#vaultForm'); f.innerHTML = html; $('#vaultScrim').hidden = false; setTimeout(() => { const i = f.querySelector('input'); if (i) i.focus(); }, 30); }
@@ -1900,6 +1900,40 @@ async function vImportSave() {
   } catch (e) { err.textContent = "Couldn't save the rows. Nothing was added. Check the connection and try again."; err.hidden = false; go.disabled = false; go.textContent = `Add ${rows.length} rows`; }
   V.busy = false;
 }
+// Delete every row of one table. You must type DELETE; only that table's rows are touched.
+function vDelAllForm(tk) {
+  const t = VAULT_TABLES.find(x => x.k === tk), n = V.rows.filter(r => r.t === tk).length;
+  if (!t || !t.delAll || !n) return;
+  vForm(`<h3>Delete all ${esc(t.many)}?</h3>
+    <input type="hidden" id="vdT" value="${tk}">
+    <p style="margin:0">This removes <b>all ${n} ${esc(n === 1 ? t.one : t.many)}</b> from the vault${V.q ? ', including any hidden by your search' : ''}. Your other tables and your passphrase are not touched.</p>
+    <div class="warnbox">This can't be undone in the app. Paste the rows again afterwards if you need them.</div>
+    <label class="field"><span>Type <b>DELETE</b> to confirm</span><input id="vdConfirm" type="text" autocomplete="off" autocapitalize="characters" spellcheck="false"></label>
+    <div class="err" id="vfErr" hidden></div>
+    <div class="sheet-actions"><button type="button" class="btn ghost" data-act="v-close">Cancel</button><button type="button" class="btn danger" data-act="v-delall-go" id="vdGo" disabled>Delete ${n} ${esc(n === 1 ? t.one : t.many)}</button></div>`);
+}
+async function vDelAll() {
+  const tk = $('#vdT').value, err = $('#vfErr'), go = $('#vdGo');
+  if ($('#vdConfirm').value.trim() !== 'DELETE' || V.busy) return;
+  const ids = V.rows.filter(r => r.t === tk).map(r => r.id);
+  if (!ids.length) return;
+  const keepOthers = Object.keys(V.enc).filter(id => !ids.includes(id));
+  V.busy = true; go.disabled = true; go.textContent = 'Deleting…'; err.hidden = true;
+  try {
+    const ep = V.epoch;
+    await vCall(ids.map(id => ({t: 'vdel', id})));
+    if (ep !== V.epoch) { V.busy = false; return; }
+    if (ids.some(id => id in V.enc)) throw {code: 'not_deleted'};
+    if (keepOthers.some(id => !(id in V.enc)) || !V.meta) throw {code: 'check'}; // other rows and the passphrase setup must still be there
+    await vDecryptAll(); $('#vaultScrim').hidden = true; $('#vaultForm').innerHTML = '';
+    toast(`Deleted ${ids.length} ${ids.length === 1 ? 'row' : 'rows'}`); renderVaultLists();
+  } catch (e) {
+    try { await vDecryptAll(); renderVaultLists(); } catch (x) {}
+    err.textContent = e && e.code === 'check' ? 'Something unexpected changed. Reload the app and check the vault.' : "Couldn't delete. Check the connection and try again."; err.hidden = false;
+    go.disabled = false; go.textContent = 'Try again';
+  }
+  V.busy = false;
+}
 let clipTimer = null;
 async function vCopy(text, label) {
   try { await navigator.clipboard.writeText(text); toast((label ? label + ' copied' : 'Copied') + ' · clears in 30 s'); }
@@ -1939,6 +1973,8 @@ document.addEventListener('click', ev => {
   else if (a === 'v-cols') vColsForm(b.dataset.t);
   else if (a === 'v-import') vImportForm(b.dataset.t);
   else if (a === 'v-import-save') vImportSave();
+  else if (a === 'v-delall') vDelAllForm(b.dataset.t);
+  else if (a === 'v-delall-go') vDelAll();
   else if (a === 'v-cols-save') vSaveCols();
   else if (a === 'v-pass') vPassForm();
   else if (a === 'v-pass-save') vSavePass();
@@ -1947,7 +1983,7 @@ document.addEventListener('click', ev => {
     vCall([{t: 'vdel', id: b.dataset.id}]).then(() => vDecryptAll()).then(() => { $('#vaultScrim').hidden = true; $('#vaultForm').innerHTML = ''; toast('Deleted'); renderVaultLists(); }).catch(() => toast("Couldn't delete. Try again.", 'bad'));
   }
 });
-document.addEventListener('input', ev => { if (ev.target && ev.target.id === 'vQ') { V.q = ev.target.value; renderVaultLists(); } else if (ev.target && ev.target.id === 'viText') vImportPreview(); });
+document.addEventListener('input', ev => { if (ev.target && ev.target.id === 'vQ') { V.q = ev.target.value; renderVaultLists(); } else if (ev.target && ev.target.id === 'viText') vImportPreview(); else if (ev.target && ev.target.id === 'vdConfirm') { const g = $('#vdGo'); if (g) g.disabled = ev.target.value.trim() !== 'DELETE'; } });
 document.addEventListener('change', ev => { if (ev.target && ev.target.id === 'viHead') { ev.target.dataset.touched = '1'; vImportPreview(); } });
 ['pointerdown', 'keydown'].forEach(t => document.addEventListener(t, () => { V.last = Date.now(); }, true));
 function vIdleCheck() { if (V.key && Date.now() - V.last > VAULT_IDLE_MS) lockVault(`Vault locked after ${VAULT_IDLE_MIN} minutes idle`); }
