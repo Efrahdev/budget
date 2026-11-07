@@ -31,8 +31,9 @@ Card, bank and personal details live in three tables in the app's **Vault** tab:
 - **Zero-knowledge:** each row is encrypted on the phone with **AES-256-GCM**. The key comes from your master passphrase through **PBKDF2-SHA256, 600,000 rounds**. The sheet's `Vault` tab and the Apps Script only ever see scrambled text, and the script rejects anything that isn't encrypted.
 - The key is non-extractable and kept only in memory. Nothing readable is saved on the phone.
 - Values stay masked until you tap **Show**. **Copy** clears the clipboard after 30 seconds.
-- The vault locks after 2 minutes without a tap, when the page closes, and on sign-out.
+- The vault locks after 5 minutes without a tap, when the page closes, and on sign-out.
 - Only Owners can read or write the Vault, and the script enforces this too.
+- Master passphrase: at least 6 characters.
 - **There is no passphrase recovery.** Keep the passphrase on paper somewhere safe.
 
 ## One-time setup
