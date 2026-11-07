@@ -246,7 +246,7 @@ tr.sum td{font-weight:700;border-top:1px solid var(--rule-2)}
 .field>label{font-size:12px;font-weight:600;color:var(--ink-2)}
 .field small.ok{color:var(--good);font-weight:600}.field small.bad{color:var(--bad);font-weight:600}
 .pick{position:absolute;width:1px;height:1px;opacity:0;pointer-events:none;border:0;padding:0}
-.chips{display:flex;gap:6px;overflow-x:auto;padding:2px 0 4px;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+.chips{position:relative;display:flex;gap:6px;overflow-x:auto;padding:2px 0 4px;scrollbar-width:none;-webkit-overflow-scrolling:touch}
 .chips::-webkit-scrollbar{display:none}
 .chipb{flex:0 0 auto;border:1px solid var(--rule-2);background:var(--sheet);color:var(--ink);border-radius:999px;padding:6px 12px;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap}
 .chipb[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
@@ -255,6 +255,13 @@ tr.sum td{font-weight:700;border-top:1px solid var(--rule-2)}
 .segb{border:0;background:var(--sheet);color:var(--ink);padding:8px 22px;font-weight:600;min-height:38px;cursor:pointer}
 .segb+.segb{border-left:1px solid var(--rule-2)}
 .segb[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink)}
+.seg3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));width:100%}
+.seg3 .segb{padding:9px 6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.field input.mini{min-height:34px;padding:5px 9px;font-size:14px}
+.sublbl{display:block;font-size:12px;font-weight:600;color:var(--ink-2);margin:6px 0 2px}
+#ePayHint{color:var(--ink-2)}
+.emore summary{cursor:pointer;font-size:13px;font-weight:600;color:var(--ink-3)}
+.htile.cashtile{background:var(--accent-soft);border-color:transparent}
 .cardhint{margin:0;font-size:13px;color:var(--ink);background:var(--accent-soft);border-radius:8px;padding:8px 10px}
 .ctiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,430px),1fr));gap:16px}
 .ctile{background:var(--sheet);border:1px solid var(--rule);border-radius:14px;box-shadow:var(--shade);overflow:hidden;display:flex;flex-direction:column;min-width:0}
@@ -443,34 +450,35 @@ body[data-view="vault"] .fab,body[data-view="vault"] #addTop,body[data-view="vau
     <h3 id="entryTitle">Add entry</h3>
     <label class="field"><span>Amount (₹)</span>
       <input id="eAmt" class="amount-in" type="text" inputmode="text" enterkeyhint="next" autocomplete="off" autocorrect="off" spellcheck="false" placeholder="0">
-      <small>Type or dictate. You can add up items, like 220+260 or "220 plus 260".</small>
     </label>
-    <div class="field"><label for="eDateText">Date</label>
-      <div class="dline"><input id="eDateText" type="text" inputmode="text" enterkeyhint="next" autocomplete="off" autocorrect="off" spellcheck="false" placeholder="Today" aria-describedby="eDateShow">
-        <button type="button" class="btn sm" data-act="e-date" data-d="0">Today</button><button type="button" class="btn sm" data-act="e-date" data-d="-1">Yesterday</button>
-        <button type="button" class="icon-btn" data-act="e-cal" aria-label="Pick a date from the calendar" title="Calendar">📅</button></div>
-      <input id="eDate" type="hidden"><input id="eDatePick" type="date" class="pick" tabindex="-1" aria-hidden="true">
-      <small id="eDateShow"></small>
-    </div>
-    <div class="field"><label for="eCatText">Category</label>
-      <input id="eCatText" type="text" inputmode="text" enterkeyhint="next" autocomplete="off" autocorrect="off" spellcheck="false" placeholder="Say or type, e.g. groceries" aria-describedby="eCatShow">
+    <div class="field"><span id="eCatLbl">Category</span>
+      <div class="chips" id="eCatChips" role="group" aria-labelledby="eCatLbl"></div>
+      <input id="eCatText" type="text" inputmode="text" enterkeyhint="done" autocomplete="off" autocorrect="off" spellcheck="false" placeholder="…or say or type one" aria-describedby="eCatShow" class="mini">
       <select id="eCat" hidden aria-hidden="true" tabindex="-1"></select>
       <small id="eCatShow"></small>
-      <div class="chips" id="eCatChips" role="group" aria-label="Categories"></div>
     </div>
-    <div class="two">
-      <div class="field"><span id="eCardLbl">Paid by credit card?</span>
-        <div class="seg" id="eCardSeg" role="group" aria-labelledby="eCardLbl"><button type="button" class="segb" data-act="e-card" data-v="no" aria-pressed="true">No</button><button type="button" class="segb" data-act="e-card" data-v="yes" aria-pressed="false">Yes</button></div></div>
-      <label class="field" id="eCardWrap" hidden><span>Which card</span><select id="eCard"></select></label>
-      <label class="field" id="eAcctWrap"><span id="eAcctLbl">Paid from / into</span><select id="eAcct"></select></label>
+    <div class="field"><span id="ePayLbl">Paid with</span>
+      <div class="seg seg3" id="ePaySeg" role="group" aria-labelledby="ePayLbl">
+        <button type="button" class="segb" data-act="e-pay" data-v="cash" aria-pressed="true">Cash</button><button type="button" class="segb" data-act="e-pay" data-v="bank" aria-pressed="false">Bank</button><button type="button" class="segb" data-act="e-pay" data-v="card" aria-pressed="false">Card</button>
+      </div>
+      <div class="chips" id="ePayChips" role="group" aria-label="Which one" hidden></div>
+      <div id="ePayCardBox" hidden><span class="sublbl">Card being paid</span><div class="chips" id="ePayCardChips" role="group" aria-label="Card being paid"></div></div>
+      <small id="ePayHint"></small>
     </div>
-    <p class="cardhint" id="eCardHint" hidden></p>
-    <div class="two">
-      <label class="field"><span>Note</span><input id="eNote" type="text" autocomplete="off" placeholder="What was it?"></label>
-      <label class="field"><span>For whom (optional)</span><input id="eMember" type="text" list="dlMembers" autocomplete="off"></label>
+    <div class="field"><span id="eDateLbl">Date</span>
+      <div class="seg seg3" id="eDateSeg" role="group" aria-labelledby="eDateLbl">
+        <button type="button" class="segb" data-act="e-date" data-d="0" aria-pressed="true">Today</button><button type="button" class="segb" data-act="e-date" data-d="-1" aria-pressed="false">Yesterday</button><button type="button" class="segb" data-act="e-cal" id="eCalBtn" aria-pressed="false">📅 Other day</button>
+      </div>
+      <input id="eDate" type="hidden"><input id="eDatePick" type="date" class="pick" tabindex="-1" aria-hidden="true">
     </div>
-    <label class="field"><span>Tag (optional)</span><input id="eTag" type="text" list="dlTags" autocomplete="off" placeholder="Trip, one-off, reimbursable"></label>
-    <label class="ck-line"><input id="eRefund" type="checkbox"> This is a refund. It reduces spending in its category.</label>
+    <label class="field"><span>Note</span><input id="eNote" type="text" autocomplete="off" enterkeyhint="done" placeholder="What was it? (optional)"></label>
+    <details class="emore" id="eMore"><summary>More: for whom, tag, refund</summary>
+      <div class="two" style="margin-top:10px">
+        <label class="field"><span>For whom</span><input id="eMember" type="text" list="dlMembers" autocomplete="off"></label>
+        <label class="field"><span>Tag</span><input id="eTag" type="text" list="dlTags" autocomplete="off" placeholder="Trip, one-off"></label>
+      </div>
+      <label class="ck-line" style="margin-top:8px"><input id="eRefund" type="checkbox"> This is a refund (reduces spending in its category)</label>
+    </details>
     <div class="err" id="eErr" hidden></div>
     <div class="sheet-actions">
       <button type="button" class="btn danger left" id="eDel" hidden>Delete</button>
@@ -697,6 +705,7 @@ async function flush() {
 function takeReply(j) {
   fromServer(j.data);
   if (j.me) Sync.me = j.me;
+  if (Sync.me && Sync.me.role === 'Owner' && !V.loaded && !V.loading && !V.err) setTimeout(() => { if (!V.loaded && !V.loading) loadVault(); }, 0);
   Sync.users = j.users || null;
   if (j.session) Sync.session = j.session;
   saveConn();
@@ -832,7 +841,10 @@ function renderOverview(X) {
       <div class="hb" role="img" aria-label="${esc(name)}: ${rs(spent)}${budget > 0 && !unplanned ? ' of ' + rs(budget) : ''}"><i class="${tone}" style="width:${w}%"></i></div>
       <div class="hs${over ? ' over' : ''}">${unplanned ? 'as spent' : !budget ? 'no budget' : over ? '+' + rs(spent - budget) + ' over ' + rs(budget) : 'of ' + rs(budget)}</div></div>`;
   };
-  const tiles = cats.map(c => { const spent = T.byCat[c.id] || 0, budget = budgetOf(c, spent); return (budget > 0 || spent) ? tile(c.name, spent, budget, !!c.unplanned) : ''; }).join('')
+  const ch = cashInHand(X), cs = state.config.cashStart || {};
+  const cashTile = ch.any ? `<div class="htile cashtile"><div class="hn">Cash in hand</div><div class="ha num">${rs(ch.v)}</div>
+      <div class="hs">${/^\d{4}-\d{2}-\d{2}$/.test(cs.date || '') ? 'started ' + rs(+cs.amount || 0) + ' on ' + fmtDM(cs.date) : 'set your starting cash in Setup'}</div></div>` : '';
+  const tiles = cashTile + cats.map(c => { const spent = T.byCat[c.id] || 0, budget = budgetOf(c, spent); return (budget > 0 || spent) ? tile(c.name, spent, budget, !!c.unplanned) : ''; }).join('')
     + (unknown ? tile('Unlisted', unknown, 0, false) : '');
 
   $('#v-overview').innerHTML = `${kpis}${tiles ? `<div class="hgrid">${tiles}</div>` : '<div class="card empty">No entries in ' + cycleLabel(key) + ' yet.</div>'}
@@ -895,7 +907,7 @@ function lineChart(series, W, H) {
   return s + '</svg>';
 }
 function renderWealth(X) {
-  const accts = state.config.accounts;
+  const accts = state.config.accounts.filter(a => !a.pay);
   let nw = 0, liquid = 0, debts = 0, hasAny = false;
   accts.forEach(a => { const L = X.latest[a.id]; if (!L) return; hasAny = true;
     if (a.counted !== false) { nw += L.v; if (L.v < 0) debts += L.v; if (a.liquid) liquid += L.v; } });
@@ -1010,7 +1022,7 @@ function renderSetup(X) {
       <input class="c-budget num" id="c-budget-${esc(c.id)}" type="number" min="0" step="100" inputmode="numeric" value="${c.type === 'Expense' && !c.unplanned ? (+c.budget || 0) : ''}" data-k="budget" aria-label="Monthly budget" ${c.type !== 'Expense' ? 'disabled placeholder="—"' : c.unplanned ? 'disabled placeholder="= spend" title="Unplanned: the budget each month is what you spend"' : ''}>
       <button class="icon-btn c-del" type="button" data-act="del-cat" data-i="${i}" ${used[c.id] ? `disabled title="Used by ${used[c.id]} entries"` : 'title="Remove"'} aria-label="Remove category">×</button>
     </div>`).join('');
-  const accRows = d.accounts.map((a, i) => `<div class="edrow acc-row" data-i="${i}">
+  const accRows = d.accounts.map((a, i) => a.pay ? '' : `<div class="edrow acc-row" data-i="${i}">
       <input class="a-name" id="a-name-${esc(a.id)}" type="text" value="${esc(a.name)}" data-k="name" aria-label="Account name">
       <input class="a-owner" id="a-owner-${esc(a.id)}" type="text" value="${esc(a.owner)}" data-k="owner" aria-label="Owner" placeholder="Owner">
       <select class="a-cls" id="a-cls-${esc(a.id)}" data-k="cls" aria-label="Kind">${opt(CLASSES, a.cls)}</select>
@@ -1019,31 +1031,21 @@ function renderSetup(X) {
       <input class="a-mat" id="a-mat-${esc(a.id)}" type="text" value="${esc(a.matures)}" data-k="matures" aria-label="Matures" placeholder="Matures">
       <button class="icon-btn a-del" type="button" data-act="del-acct" data-i="${i}" aria-label="Remove account">×</button>
     </div>`).join('');
-  d.cards = d.cards || [];
-  const usedCard = {}; X.txns.forEach(t => { if (t.card) usedCard[t.card] = (usedCard[t.card] || 0) + 1; });
-  const dayOpt = v => Array.from({length: 31}, (_, i) => i + 1).map(n => `<option value="${n}"${n === +v ? ' selected' : ''}>${n}</option>`).join('');
-  const cardRows = d.cards.map((c, i) => `<div class="edrow card-row" data-i="${i}">
-      <label class="f k-name"><span class="fl">Card name</span><input id="k-name-${esc(c.id)}" type="text" value="${esc(c.name)}" data-k="name" placeholder="e.g. HDFC Millennia" aria-label="Card name"></label>
-      <label class="f k-sd"><span class="fl">Statement day</span><select id="k-sd-${esc(c.id)}" data-k="stmtDay" aria-label="Statement day">${dayOpt(c.stmtDay)}</select></label>
-      <label class="f k-dd"><span class="fl">Pay-by day</span><select id="k-dd-${esc(c.id)}" data-k="dueDay" aria-label="Payment due day">${dayOpt(c.dueDay)}</select></label>
-      <details class="k-more"><summary class="hint">Optional: credit limit and money already owed</summary><div class="kgrid">
-        <label class="f"><span class="fl2">Credit limit ₹</span><input id="k-lim-${esc(c.id)}" type="number" min="0" step="1000" inputmode="numeric" value="${c.limit == null ? '' : esc(c.limit)}" data-k="limit" placeholder="Optional" aria-label="Credit limit"></label>
-        <label class="f"><span class="fl2">Last bill still unpaid ₹</span><input id="k-ob-${esc(c.id)}" type="number" min="0" step="1" inputmode="numeric" value="${+c.openBilled ? esc(c.openBilled) : ''}" data-k="openBilled" placeholder="0" aria-label="Last bill still unpaid"></label>
-        <label class="f"><span class="fl2">Spent since that bill ₹</span><input id="k-ou-${esc(c.id)}" type="number" min="0" step="1" inputmode="numeric" value="${+c.openUnbilled ? esc(c.openUnbilled) : ''}" data-k="openUnbilled" placeholder="0" aria-label="Spent since that bill"></label>
-        <label class="f"><span class="fl2">Amounts as of</span><input id="k-od-${esc(c.id)}" type="date" value="${esc(c.openDate || '')}" data-k="openDate" aria-label="Amounts as of"></label>
-      </div><p class="hint" style="margin:6px 0 0">Only for money already owed on the "as of" date that you won't add as entries.</p></details>
-      <button class="icon-btn k-del" type="button" data-act="del-cardrow" data-i="${i}" ${usedCard[c.id] ? `disabled title="Used by ${usedCard[c.id]} entries"` : 'title="Remove"'} aria-label="Remove card">×</button>
-    </div>`).join('');
   const days = Array.from({length: 28}, (_, i) => i + 1);
   $('#v-setup').innerHTML = `
     <section class="card"><div class="sec-h"><h2>Cycle</h2></div><div class="ed" style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;padding-top:12px">
       <label for="sDay">Each cycle starts on day</label>
       <select id="sDay" style="border:1px solid var(--rule-2);background:var(--sheet);border-radius:7px;padding:6px 8px">${days.map(n => `<option${n === +d.cycleStartDay ? ' selected' : ''}>${n}</option>`).join('')}</select>
       <span class="hint">Set it to your salary day. A cycle is named after the month it ends in.</span></div></section>
+    <section class="card"><div class="sec-h"><h2>Cash in hand</h2><span class="hint">Your starting cash. Cash entries from that day are added or taken off.</span></div>
+      <div class="ed" style="display:flex;gap:12px;flex-wrap:wrap;padding-top:12px">
+        <label class="field" style="flex:1 1 140px"><span>Starting cash ₹</span><input id="sCashAmt" type="text" inputmode="decimal" autocomplete="off" value="${d.cashStart && d.cashStart.amount != null ? esc(d.cashStart.amount) : ''}" placeholder="0"></label>
+        <label class="field" style="flex:1 1 140px"><span>As of</span><input id="sCashDate" type="date" value="${esc((d.cashStart && d.cashStart.date) || '')}"></label>
+      </div></section>
     <section class="card"><div class="sec-h"><h2>Categories and monthly budgets</h2><span class="hint">These names show as the tiles on Overview, in this order.</span></div>
       <div class="ed" id="catEd"><div class="edrow cat-row edhead"><span>Name</span><span>Type</span><span>Budget ₹</span><span></span></div>${catRows}</div>
       <div class="row-actions"><button class="btn sm" type="button" data-act="add-cat">+ Add category</button></div></section>
-    <section class="card"><div class="sec-h"><h2>Accounts</h2><span class="hint">Liquid = usable within days. Untick Counted for money you hold for someone else.</span></div>
+    <section class="card"><div class="sec-h"><h2>Accounts</h2><span class="hint">For net worth. Bank accounts and cards you pay with come from the Vault.</span></div>
       <div class="ed" id="accEd"><div class="edrow acc-row edhead"><span>Name</span><span>Owner</span><span>Kind</span><span></span><span></span><span>Matures</span><span></span></div>${accRows}</div>
       <div class="row-actions"><button class="btn sm" type="button" data-act="add-acct">+ Add account</button></div></section>
     ${accountHtml()}
@@ -1054,10 +1056,6 @@ function renderSetup(X) {
         <button class="btn" type="button" data-act="export-csv">Export entries (CSV)</button>
         <button class="btn danger" type="button" data-act="import">Restore a backup</button>
       </div></section>
-    <section class="card" id="cardSetup"><div class="sec-h"><h2>Credit cards</h2><span class="hint">${(d.cards || []).length ? '<a href="#cards">See card bills</a>' : 'A friendly name is enough. Never type the card number.'}</span></div>
-      <div class="ed" id="cardEd"><div class="edrow card-row edhead"><span>Card name</span><span>Statement day</span><span>Pay-by day</span><span></span></div>${cardRows || '<p class="muted" style="margin:12px 0">No cards yet. Add one below.</p>'}</div>
-      <p class="hint" style="margin:0;padding:0 16px 4px">Statement day is the "Statement date" on your bill; pay-by day is the "Payment due date". When you add an expense and choose <b>Paid by credit card? Yes</b>, it is put on the right bill from its date.</p>
-      <div class="row-actions"><button class="btn sm" type="button" data-act="add-cardrow">+ Add card</button></div></section>
     <div id="saveSlot"></div>`;
   renderSaveBar();
   if (focusId) { const el = document.getElementById(focusId); if (el) { el.focus(); try { if (sel != null && el.setSelectionRange) el.setSelectionRange(sel, sel); } catch (e) {} } }
@@ -1107,8 +1105,9 @@ function cardInfo(t, X) {
   if (isCardPay(t.cat, X.cm)) return 'Paid to ' + c.name;
   return c.name + ' · bill of ' + fmtDM(stmtFor(t.date, dayOf(c.stmtDay, 1)));
 }
+const dueOf = (card, sd) => card && +card.dueDay ? dueFor(sd, dayOf(card.dueDay, 1)) : addDays(sd, 20);
 function cardLedger(card, X) {
-  const S = dayOf(card.stmtDay, 1), D = dayOf(card.dueDay, 1), today = todayStr();
+  const S = dayOf(card.stmtDay, 1), D = +card.dueDay ? dayOf(card.dueDay, 1) : null, today = todayStr();
   const charges = [], pays = [];
   X.txns.forEach(t => {
     if (t.card !== card.id) return;
@@ -1129,7 +1128,7 @@ function cardLedger(card, X) {
     const opening = (sd === sd0 ? openB : 0) + (sd === sd1 ? openU : 0);
     const calc = r2(items.reduce((a, c) => a + c.v, 0) + opening);
     const own = typeof fix[sd] === 'number';
-    stmts.push({sd, start: addDays(stepStmt(sd, S, -1), 1), due: dueFor(sd, D), items, opening, calc, own, billed: own ? fix[sd] : calc, closed: sd < today});
+    stmts.push({sd, start: addDays(stepStmt(sd, S, -1), 1), due: dueOf(card, sd), items, opening, calc, own, billed: own ? fix[sd] : calc, closed: sd < today});
     sd = stepStmt(sd, S, 1);
   }
   let pool = pays.reduce((a, p) => a + p.v, 0) + stmts.reduce((a, s) => a + (s.billed < 0 ? -s.billed : 0), 0);
@@ -1203,7 +1202,7 @@ function tileHtml(L) {
       <td class="n">${rs(s.paid)}</td><td class="n">${rs(s.left)}</td><td><span class="chip ${st.c}">${st.t}</span></td><td class="from">${from}</td></tr>`;
   }).join('');
   return `<article class="ctile">
-    <header class="ct-h"><div><div class="ct-name">${esc(c.name)}</div><div class="ct-sub">Bill on the ${ordinal(L.S)} · pay by the ${ordinal(L.D)}</div></div>
+    <header class="ct-h"><div><div class="ct-name">${esc(c.name)}</div><div class="ct-sub">Bill on the ${ordinal(L.S)} · ${L.D ? 'pay by the ' + ordinal(L.D) : 'pay within about 20 days'}</div></div>
       <div class="ct-owed"><span class="lbl">Total owed</span><span class="v num">${rs(L.owed)}</span></div></header>
     ${lim ? `<div class="ct-limit"><div class="bar" role="img" aria-label="${pct(used / lim)} of limit used"><span class="fill ${used / lim > 0.8 ? 'bad' : used / lim > 0.5 ? 'warn' : 'good'}" style="width:${Math.min(1, used / lim) * 100}%"></span></div><span class="s">${rs(used)} of ${rs(lim)} limit used (${pct(used / lim)}) · ${rs(Math.max(0, lim - used))} available</span></div>` : ''}
     <div class="ct-grid"><div class="ct-box">${billBox}</div><div class="ct-box">${nextBox}</div></div>
@@ -1219,8 +1218,8 @@ function renderCards(X) {
   const cards = cardList();
   if (!cards.length) {
     $('#v-cards').innerHTML = `<section class="card"><div class="empty" style="display:flex;flex-direction:column;gap:12px;align-items:flex-start"><b>No cards yet</b>
-      <span>Add your credit cards at the bottom of the Setup tab: a friendly name, the statement day and the pay-by day. Then choose <b>Paid by credit card? Yes</b> when you add an expense, and it goes on the right bill.</span>
-      <a class="btn primary" href="#setup" data-act="e-gocards">Add cards in Setup</a></div></section>`;
+      <span>Your cards come from the Vault's Credit cards table. Then choose <b>Paid with: Card</b> when you add an expense, and it goes on the right bill.</span>
+      <a class="btn primary" href="#vault">Open the Vault</a></div></section>`;
     return;
   }
   const Ls = cards.map(c => cardLedger(c, X));
@@ -1241,37 +1240,83 @@ function renderCards(X) {
   Ls.forEach(L => {
     const g = {}; L.charges.filter(ch => cycleKeyOf(ch.date) === state.cur).forEach(ch => { g[ch.sd] = (g[ch.sd] || 0) + ch.v; });
     Object.keys(g).sort().forEach(sd => { tot += g[sd]; const s = L.stmts.find(x => x.sd === sd), st = s ? stStatus(s) : null;
-      rowsB.push(`<tr><td>${esc(L.card.name)}</td><td>${fmtDate(sd)}</td><td>${fmtDate(dueFor(sd, L.D))}</td><td class="n">${rs(g[sd])}</td><td>${st ? `<span class="chip ${st.c}">${st.t}</span>` : ''}</td></tr>`); });
+      rowsB.push(`<tr><td>${esc(L.card.name)}</td><td>${fmtDate(sd)}</td><td>${fmtDate(dueOf(L.card, sd))}</td><td class="n">${rs(g[sd])}</td><td>${st ? `<span class="chip ${st.c}">${st.t}</span>` : ''}</td></tr>`); });
   });
   const bridge = `<section class="card"><div class="sec-h"><h2>${cycleLabel(state.cur)} budget cycle on your cards</h2><span class="hint">Which bill each spend lands on</span></div>
     ${rowsB.length ? `<div class="tscroll"><table><thead><tr><th>Card</th><th>Lands on bill of</th><th>Pay by</th><th class="n">Spent this budget cycle</th><th>Bill status</th></tr></thead>
       <tbody>${rowsB.join('')}<tr class="sum"><td colspan="3">Total on cards in ${cycleLabel(state.cur)}</td><td class="n">${rs(tot)}</td><td></td></tr></tbody></table></div>`
       : `<div class="empty">No card spends in ${cycleLabel(state.cur)} yet. Pick a card when you add an entry.</div>`}</section>`;
   $('#v-cards').innerHTML = `<a class="hint" href="#overview">‹ Back to Overview</a><p class="lede">${lede}</p>${kpis}<div class="ctiles">${Ls.map(tileHtml).join('')}</div>${bridge}
-    <p class="hint" style="margin:0">Your budget counts a card spend on the day you spend. Your bank collects it on the bill shown here. Paying a card bill is a transfer, not new spending, so nothing counts twice. Add or change cards in <a href="#setup">Setup</a>.</p>`;
+    <p class="hint" style="margin:0">Your budget counts a card spend on the day you spend. Your bank collects it on the bill shown here. Paying a card bill is a transfer, not new spending, so nothing counts twice. Your cards come from the <a href="#vault">Vault</a>.</p>`;
   if (focusId) { const el = document.getElementById(focusId); if (el) el.focus(); }
 }
-function updCardHint() {
-  if (!state.config) return;
-  const X = ctx(), cat = $('#eCat').value, date = $('#eDate').value, pay = isCardPay(cat, X.cm), cards = cardList();
-  if (pay && cardYN !== 'yes') { cardYN = 'yes'; document.querySelectorAll('#eCardSeg .segb').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.v === 'yes'))); if (cards.length && !cards.some(c => c.id === $('#eCard').value)) $('#eCard').value = cards[0].id; }
-  const card = cardYN === 'yes' ? cards.find(c => c.id === $('#eCard').value) : null;
-  $('#eCardLbl').textContent = pay ? 'Card being paid' : 'Paid by credit card?';
-  $('#eCardSeg').hidden = pay;
-  $('#eCardWrap').hidden = cardYN !== 'yes' || !cards.length;
-  $('#eAcctLbl').textContent = pay ? 'Paid from (bank)' : 'Paid from / into';
-  $('#eAcctWrap').hidden = !!card && !pay;
-  let h = '';
-  if (cardYN === 'yes' && !cards.length) h = 'No credit cards set up yet. Add yours at the bottom of the Setup tab (name and statement day), or choose No.';
-  else if (pay && !card) h = 'Choose the card you are paying.';
-  else if (pay && card) h = 'This payment reduces what you owe on ' + card.name + '. It is a transfer, so it does not count as spending.';
-  else if (card && /^\d{4}-\d{2}-\d{2}$/.test(date)) {
-    const S = dayOf(card.stmtDay, 1), D = dayOf(card.dueDay, 1), sd = stmtFor(date, S), from = addDays(stepStmt(sd, S, -1), 1);
-    h = 'Goes on the ' + card.name + ' bill of ' + fmtDate(sd) + ' (spends ' + fmtDM(from) + ' – ' + fmtDM(sd) + '). Pay by ' + fmtDate(dueFor(sd, D)) + '.';
-  }
-  const el = $('#eCardHint'); el.textContent = h; el.hidden = !h;
-  if (cardYN === 'yes' && !cards.length) el.insertAdjacentHTML('beforeend', ' <button type="button" class="linkbtn" data-act="e-gocards">Add a card</button>');
+function chipsShow(box, reset) {
+  if (!box) return;
+  if (reset) box.scrollLeft = 0;
+  const on = box.querySelector('[aria-pressed="true"]'); if (!on) return;
+  const l = on.offsetLeft, r = l + on.offsetWidth;
+  if (l < box.scrollLeft) box.scrollLeft = Math.max(0, l - 8);
+  else if (r > box.scrollLeft + box.clientWidth) box.scrollLeft = r - box.clientWidth + 8;
 }
+// ---- How it was paid: Cash (nothing more to pick), Bank (pick an account), Card (pick a card).
+// Bank accounts and cards come from the vault (copied as names only into Setup data, so every phone has them).
+let payMode = 'cash', payAcct = '', payCard = '';
+function payBanks() {
+  const am = {}; state.config.accounts.forEach(a => { am[a.id] = a; });
+  const list = (state.config.payBanks || []).map(id => am[id]).filter(Boolean);
+  return list.length ? list : state.config.accounts.filter(a => a.cls === 'Bank' && !a.pay);
+}
+const isAtm = (cat, cm) => { const c = cm[cat]; return !!c && c.type === 'Transfer' && (c.id === 'atm' || /\batm\b|cash withdraw/i.test(c.name)); };
+// Cash in hand: starting cash (Setup) plus cash received, minus cash spent, plus ATM withdrawals, from the start date on.
+function cashInHand(X) {
+  const cs = state.config.cashStart || {}, from = /^\d{4}-\d{2}-\d{2}$/.test(cs.date || '') ? cs.date : '';
+  let v = +cs.amount || 0, any = !!from;
+  X.txns.forEach(t => {
+    if (from && t.date < from) return;
+    const ty = X.typeOf(t), atm = isAtm(t.cat, X.cm);
+    if (t.acct === 'cash') { any = true; if (ty === 'Income') v += t.amount; else if (ty === 'Expense') v += t.refund ? t.amount : -t.amount; else if (!atm) v -= t.amount; }
+    else if (ty === 'Transfer' && atm) { any = true; v += t.amount; }
+  });
+  return {v, any};
+}
+function renderPay() {
+  if (!state.config) return;
+  const X = ctx(), cat = $('#eCat').value, c = X.cm[cat], ty = (c && c.type) || 'Expense', pay = isCardPay(cat, X.cm), date = $('#eDate').value;
+  if (pay && payMode !== 'bank') payMode = 'bank'; // paying a card bill: the money leaves a bank account
+  $('#ePayLbl').textContent = pay ? 'Paid from' : ty === 'Income' ? 'Received in' : ty === 'Transfer' ? 'From' : 'Paid with';
+  document.querySelectorAll('#ePaySeg .segb').forEach(b => { b.setAttribute('aria-pressed', String(b.dataset.v === payMode)); b.hidden = pay && b.dataset.v !== 'bank'; });
+  $('#ePaySeg').classList.toggle('seg3', !pay);
+  let banks = payBanks(), cards = cardList();
+  // Keep an entry's own account/card selectable when editing, even if it is not in today's lists.
+  if (payAcct && !banks.some(a => a.id === payAcct) && X.am[payAcct] && payAcct !== 'cash') banks = [X.am[payAcct]].concat(banks);
+  if (payCard && !cards.some(k => k.id === payCard)) cards = [{id: payCard, name: cardName(payCard) || 'Removed card'}].concat(cards);
+  const pref = readPref();
+  if ((payMode === 'bank' || pay) && !banks.some(a => a.id === payAcct)) payAcct = (banks.find(a => a.id === pref.bank) || banks[0] || {}).id || '';
+  if ((payMode === 'card' || pay) && !cards.some(k => k.id === payCard)) payCard = (cards.find(k => k.id === pref.card) || cards[0] || {}).id || '';
+  const chip = (id, label, act, on) => `<button type="button" class="chipb" data-act="${act}" data-id="${esc(id)}" aria-pressed="${on}">${esc(label)}</button>`;
+  const pc = $('#ePayChips'), keep = pc.dataset.mode === payMode ? pc.scrollLeft : 0;
+  pc.dataset.mode = payMode;
+  if (payMode === 'bank') { pc.innerHTML = banks.map(a => chip(a.id, a.name, 'e-acct', a.id === payAcct)).join(''); pc.hidden = !banks.length; }
+  else if (payMode === 'card') { pc.innerHTML = cards.map(k => chip(k.id, k.name, 'e-cardpick', k.id === payCard)).join(''); pc.hidden = !cards.length; }
+  else { pc.innerHTML = ''; pc.hidden = true; }
+  $('#ePayCardBox').hidden = !pay;
+  $('#ePayCardChips').innerHTML = pay ? cards.map(k => chip(k.id, k.name, 'e-cardpick', k.id === payCard)).join('') : '';
+  let h = '';
+  const card = cards.find(k => k.id === payCard);
+  if (!payMode) h = 'Payment not recorded for this entry. Tap Cash, Bank or Card to set it.';
+  else if (payMode === 'cash') { const ch = cashInHand(X); h = ch.any ? 'Cash in hand: ' + rs(ch.v) : ''; }
+  else if (payMode === 'bank' && !banks.length) h = "No bank accounts yet. Add them in the vault's Savings accounts.";
+  else if ((payMode === 'card' || pay) && !cards.length) h = "No cards yet. Add them in the vault's Credit cards.";
+  else if (pay) h = card ? 'Reduces what you owe on ' + card.name + '. A transfer, so not counted as spending.' : 'Choose the card you are paying.';
+  else if (payMode === 'card' && card && card.stmtDay && /^\d{4}-\d{2}-\d{2}$/.test(date)) {
+    const S = dayOf(card.stmtDay, 1), sd = stmtFor(date, S);
+    h = 'Goes on the bill of ' + fmtDate(sd) + ' · pay by ' + fmtDate(dueOf(card, sd)) + '.';
+  }
+  $('#ePayHint').textContent = h; $('#ePayHint').hidden = !h;
+  pc.scrollLeft = keep; chipsShow(pc); chipsShow($('#ePayCardChips'));
+}
+function updCardHint() { renderPay(); }
+function setPay(mode) { payMode = mode; if (mode === 'cash') { payCard = ''; } renderPay(); }
 
 /* ---------- views ---------- */
 function setView(v) {
@@ -1350,14 +1395,16 @@ function parseDateText(s) {
   return null;
 }
 const dateWords = iso => { const d = parseYmd(iso); return WDAYS[d.getDay()].slice(0, 1).toUpperCase() + WDAYS[d.getDay()].slice(1, 3) + ', ' + fmtDate(iso); };
-function setEntryDate(iso, fromText) {
-  $('#eDate').value = iso || '';
-  const show = $('#eDateShow');
-  if (iso) { show.textContent = '✓ ' + dateWords(iso); show.className = 'ok'; }
-  else { show.textContent = 'Not a date I understand. Try "yesterday", "5 Nov" or "05/11".'; show.className = 'bad'; }
-  if (!fromText) $('#eDateText').value = !iso || iso === todayStr() ? '' : iso === ymd(new Date(parseYmd(todayStr()).getTime() - 864e5)) ? 'Yesterday' : fmtDate(iso);
-  updCardHint();
+function setEntryDate(iso) {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(iso || '')) iso = todayStr();
+  $('#eDate').value = iso;
+  const today = todayStr(), yday = ymd(new Date(parseYmd(today).getTime() - 864e5)), which = iso === today ? '0' : iso === yday ? '-1' : 'cal';
+  document.querySelectorAll('#eDateSeg .segb').forEach(b => b.setAttribute('aria-pressed', String((b.dataset.d || 'cal') === which)));
+  const d = parseYmd(iso);
+  $('#eCalBtn').textContent = which === 'cal' ? '📅 ' + fmtDay(d) + (d.getFullYear() !== parseYmd(today).getFullYear() ? ' ' + d.getFullYear() : '') : '📅 Other day';
+  renderPay();
 }
+
 // Extra words that point to each starting category (matched by its ID, so renaming a category keeps them).
 const CAT_WORDS = {
   groc: 'grocery groceries food household kirana vegetable vegetables sabzi milk fruit fruits ration supermarket',
@@ -1383,10 +1430,12 @@ function matchCategory(text) {
 function setCat(id, fromText) {
   const c = state.config.categories.find(x => x.id === id), show = $('#eCatShow');
   $('#eCat').value = c ? c.id : '';
-  if (c) { show.textContent = '✓ ' + c.name; show.className = 'ok'; if (!fromText) $('#eCatText').value = c.name; }
+  if (c && fromText) { show.textContent = '✓ ' + c.name; show.className = 'ok'; }
+  else if (c) { show.textContent = ''; show.className = ''; $('#eCatText').value = ''; }
   else if (fromText && $('#eCatText').value.trim()) { show.textContent = 'No category matches that. Tap one below.'; show.className = 'bad'; }
   else { show.textContent = ''; show.className = ''; }
   document.querySelectorAll('#eCatChips .chipb').forEach(b => b.setAttribute('aria-pressed', String(!!c && b.dataset.id === c.id)));
+  chipsShow($('#eCatChips'));
   updCardHint();
 }
 // Quick-pick buttons: the pinned ones first (config.chips, in that order), then the other spending
@@ -1397,56 +1446,58 @@ function fillCatChips() {
   const spend = pins.concat(cats.filter(c => c.type === 'Expense' && !pins.includes(c))), rest = cats.filter(c => c.type !== 'Expense');
   $('#eCatChips').innerHTML = spend.map(chip).join('') + (rest.length ? '<span class="chipsep" aria-hidden="true"></span>' + rest.map(chip).join('') : '');
 }
-let cardYN = 'no';
-function setCardYN(v) {
-  cardYN = v === 'yes' ? 'yes' : 'no';
-  document.querySelectorAll('#eCardSeg .segb').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.v === cardYN)));
-  const cards = cardList();
-  if (cardYN === 'yes' && cards.length && !cards.some(c => c.id === $('#eCard').value)) {
-    const last = readPref().card; $('#eCard').value = cards.some(c => c.id === last) ? last : cards[0].id;
-  }
-  updCardHint();
-}
 
 /* ---------- entry sheet ---------- */
 let editing = null, delArmed = false;
 function openEntry(t) {
   const X = ctx(); editing = t || null; delArmed = false;
   fillCatOptions($('#eCat'), X, false); fillCatChips();
-  $('#eAcct').innerHTML = '<option value="">Not recorded</option>' + state.config.accounts.map(a => `<option value="${esc(a.id)}">${esc(a.name)}</option>`).join('');
   const pref = readPref();
   $('#entryTitle').textContent = t ? 'Edit entry' : 'Add entry';
   $('#eAmt').value = t ? String(t.amount) : '';
   const startCat = t ? t.cat : (pref.cat && X.cm[pref.cat] ? pref.cat : (state.config.categories[0] || {}).id || '');
-  $('#eAcct').value = t ? (t.acct || '') : (pref.acct && X.am[pref.acct] ? pref.acct : '');
   $('#eNote').value = t ? t.note || '' : ''; $('#eMember').value = t ? t.member || '' : ''; $('#eTag').value = t ? t.tag || '' : '';
   $('#eRefund').checked = !!(t && t.refund);
-  $('#eCard').innerHTML = cardList().map(c => `<option value="${esc(c.id)}">${esc(c.name)}</option>`).join('');
-  $('#eCard').value = t && t.card ? t.card : '';
-  cardYN = t && t.card ? 'yes' : 'no'; // new entries default to No
-  setEntryDate(t ? t.date : todayStr()); setCat(startCat); setCardYN(cardYN);
+  $('#eMore').open = !!(t && (t.member || t.tag || t.refund));
+  // How it was paid. New entries start on Cash; an edited entry shows what it was.
+  payAcct = ''; payCard = '';
+  if (!t) payMode = 'cash';
+  else if (isCardPay(t.cat, X.cm)) { payMode = 'bank'; payAcct = t.acct || ''; payCard = t.card || ''; }
+  else if (t.card) { payMode = 'card'; payCard = t.card; }
+  else if (t.acct === 'cash') payMode = 'cash';
+  else if (t.acct) { payMode = 'bank'; payAcct = t.acct; }
+  else payMode = ''; // older entry with no payment recorded: left as it is unless you pick one
+  $('#eCat').value = startCat; $('#eCatText').value = '';
+  ['#eCatChips', '#ePayChips', '#ePayCardChips'].forEach(sel => { $(sel).scrollLeft = 0; delete $(sel).dataset.mode; });
+  $('#entryScrim').hidden = false; // shown first so the rows can measure themselves
+  setCat(startCat); setEntryDate(t ? t.date : todayStr());
   $('#eDel').hidden = !t; $('#eDel').classList.remove('armed'); $('#eDel').textContent = 'Delete';
   $('#eAgain').hidden = !!t; $('#eErr').hidden = true;
   $('#entryScrim').hidden = false; setTimeout(() => { if (!$('#entryForm').contains(document.activeElement)) $('#eAmt').focus(); }, 30);
 }
 function closeEntry() { $('#entryScrim').hidden = true; editing = null; }
 async function saveEntry(again) {
-  const amt = parseAmount($('#eAmt').value), date = $('#eDate').value, cat = $('#eCat').value;
-  const err = $('#eErr');
-  if (!(amt > 0)) { err.textContent = 'Type an amount above zero, like 450 or 220+260.'; err.hidden = false; $('#eAmt').focus(); return; }
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) { err.textContent = 'Say or type a date, like "yesterday" or "5 Nov".'; err.hidden = false; $('#eDateText').focus(); return; }
-  if (!cat) { err.textContent = 'Say or type a category, or tap one.'; err.hidden = false; $('#eCatText').focus(); return; }
-  const pay = isCardPay(cat, ctx().cm), card = cardYN === 'yes' ? $('#eCard').value : '';
-  if (cardYN === 'yes' && !card) { err.textContent = cardList().length ? (pay ? 'Choose the card you are paying.' : 'Choose the card, or pick No.') : 'Add your card at the bottom of Setup first, or pick No.'; err.hidden = false; return; }
-  const t = {id: editing ? editing.id : newId(), date, amount: amt, cat, acct: card && !pay ? '' : $('#eAcct').value, note: $('#eNote').value.trim(),
-    member: $('#eMember').value.trim(), tag: $('#eTag').value.trim(), at: editing ? editing.at : Date.now(),
-    refund: $('#eRefund').checked, card};
+  const amt = parseAmount($('#eAmt').value), date = $('#eDate').value, cat = $('#eCat').value, err = $('#eErr'), X = ctx();
+  const fail = (m, el) => { err.textContent = m; err.hidden = false; if (el) el.focus(); };
+  if (!(amt > 0)) return fail('Type an amount above zero, like 450 or 220+260.', $('#eAmt'));
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) return fail('Choose a date.');
+  if (!cat) return fail('Tap a category.');
+  const pay = isCardPay(cat, X.cm);
+  let acct = '', card = '';
+  if (pay) { if (!payCard) return fail('Choose the card you are paying.'); if (!payAcct) return fail('Choose the bank account you paid from.'); acct = payAcct; card = payCard; }
+  else if (payMode === 'cash') acct = 'cash';
+  else if (payMode === 'bank') { if (!payAcct) return fail("Choose the bank account (add accounts in the vault's Savings accounts)."); acct = payAcct; }
+  else if (payMode === 'card') { if (!payCard) return fail("Choose the card (add cards in the vault's Credit cards)."); card = payCard; }
+  else { acct = editing ? editing.acct || '' : ''; card = editing ? editing.card || '' : ''; }
+  const t = {id: editing ? editing.id : newId(), date, amount: amt, cat, acct, card, note: $('#eNote').value.trim(),
+    member: $('#eMember').value.trim(), tag: $('#eTag').value.trim(), at: editing ? editing.at : Date.now(), refund: $('#eRefund').checked};
   const wasEditing = editing;
-  try { await API.putTxn(t, wasEditing ? wasEditing._doc : null); } catch (e) { err.textContent = writeErr(e); err.hidden = false; return; }
-  writePref({cat, acct: t.acct, card: card || readPref().card || ''});
+  try { await API.putTxn(t, wasEditing ? wasEditing._doc : null); } catch (e) { return fail(writeErr(e)); }
+  const pref = readPref();
+  writePref({cat, bank: (payMode === 'bank' || pay) && payAcct ? payAcct : pref.bank || '', card: card || pref.card || ''});
   const k = cycleKeyOf(date);
   toast(k === state.cur ? 'Saved' : 'Saved in ' + cycleLabel(k));
-  if (again) { $('#eAmt').value = ''; $('#eNote').value = ''; $('#eRefund').checked = false; err.hidden = true; $('#eAmt').focus(); }
+  if (again) { $('#eAmt').value = ''; $('#eNote').value = ''; $('#eRefund').checked = false; err.hidden = true; renderPay(); $('#eAmt').focus(); }
   else closeEntry();
 }
 
@@ -1454,7 +1505,7 @@ async function saveEntry(again) {
 function openBalances() {
   const X = ctx();
   $('#bDate').value = todayStr(); $('#bErr').hidden = true;
-  $('#balGrid').innerHTML = state.config.accounts.map(a => { const L = X.latest[a.id];
+  $('#balGrid').innerHTML = state.config.accounts.filter(a => !a.pay).map(a => { const L = X.latest[a.id];
     return `<div class="balrow"><div><div class="bn">${esc(a.name)}</div><div class="bm">${esc([a.owner, a.cls].filter(Boolean).join(' · '))}${L ? ' · last ' + rs(L.v) : ''}</div></div>
       <input id="bal-${esc(a.id)}" data-id="${esc(a.id)}" type="text" inputmode="numeric" value="${L ? L.v : ''}" aria-label="Balance for ${esc(a.name)}"></div>`; }).join('')
     || '<p class="muted">Add accounts in Setup first.</p>';
@@ -1535,7 +1586,7 @@ document.addEventListener('click', async ev => {
   else if (act === 'pay-card') {
     const X = ctx(), pc = state.config.categories.find(c => isCardPay(c.id, X.cm));
     if (!pc) { toast('Add a Transfer category called "Card bill payment" in Setup first', 'bad'); return; }
-    openEntry(); $('#eCard').value = b.dataset.card; setCat(pc.id); setCardYN('yes'); $('#eAmt').value = b.dataset.amt; $('#eNote').value = 'Card bill payment';
+    openEntry(); payCard = b.dataset.card; payMode = 'bank'; setCat(pc.id); $('#eAmt').value = b.dataset.amt; $('#eNote').value = 'Card bill payment';
   }
   else if (act === 'add-cardrow') {
     const c = {id: newId(), name: '', stmtDay: 15, dueDay: 4, limit: null, openBilled: 0, openUnbilled: 0, openDate: todayStr()};
@@ -1570,6 +1621,11 @@ document.addEventListener('click', async ev => {
       c.openBilled = Math.max(0, +c.openBilled || 0); c.openUnbilled = Math.max(0, +c.openUnbilled || 0);
       if (!/^\d{4}-\d{2}-\d{2}$/.test(c.openDate || '')) c.openDate = todayStr();
     });
+    if (d.cashStart && (String(d.cashStart.amount || '').trim() !== '' || d.cashStart.date)) {
+      const v = parseSigned(d.cashStart.amount);
+      if (v === null || isNaN(v)) problem = 'Starting cash must be a number, like 12000.';
+      else d.cashStart = {amount: v, date: /^\d{4}-\d{2}-\d{2}$/.test(d.cashStart.date || '') ? d.cashStart.date : todayStr()};
+    } else delete d.cashStart;
     if (problem) { state.setupErr = problem; renderSaveBar(); return; }
     try { await API.saveConfig(clone(d)); state.dirty = false; state.setupErr = ''; state.draft = null; toast('Setup saved'); render(); } catch (e) { state.setupErr = writeErr(e); renderSaveBar(); }
   }
@@ -1615,23 +1671,26 @@ $('#main').addEventListener('input', ev => {
   markDirty();
 });
 $('#main').addEventListener('change', ev => {
-  if (ev.target.id === 'sDay' && state.draft) { state.draft.cycleStartDay = +ev.target.value; state.dirty = true; renderSetup(ctx()); }
+  if ((ev.target.id === 'sCashAmt' || ev.target.id === 'sCashDate') && state.draft) {
+    state.draft.cashStart = {amount: $('#sCashAmt').value.trim(), date: $('#sCashDate').value}; markDirty();
+  }
+  else if (ev.target.id === 'sDay' && state.draft) { state.draft.cycleStartDay = +ev.target.value; state.dirty = true; renderSetup(ctx()); }
   else if (ev.target.type === 'checkbox' && ev.target.closest('.edrow')) { /* handled by input */ }
 });
-$('#eCard').addEventListener('change', updCardHint);
-$('#eDateText').addEventListener('input', ev => setEntryDate(parseDateText(ev.target.value), true));
 $('#eCatText').addEventListener('input', ev => setCat(matchCategory(ev.target.value), true));
 $('#eDatePick').addEventListener('change', ev => { if (/^\d{4}-\d{2}-\d{2}$/.test(ev.target.value)) setEntryDate(ev.target.value); });
-// Enter moves to the next box instead of saving half an entry (handy when dictating).
-[['eAmt', 'eDateText'], ['eDateText', 'eCatText'], ['eCatText', 'eNote']].forEach(([a, b]) => $('#' + a).addEventListener('keydown', ev => { if (ev.key === 'Enter') { ev.preventDefault(); $('#' + b).focus(); } }));
+// Enter on the amount or category box closes the keyboard (so the buttons are in view) instead of saving early.
+['eAmt', 'eCatText'].forEach(id => $('#' + id).addEventListener('keydown', ev => { if (ev.key === 'Enter') { ev.preventDefault(); ev.target.blur(); } }));
 document.addEventListener('click', ev => {
   const b = ev.target.closest('[data-act^="e-"]'); if (!b) return;
   const a = b.dataset.act;
   if (a === 'e-date') setEntryDate(ymd(new Date(parseYmd(todayStr()).getTime() + (+b.dataset.d) * 864e5)));
   else if (a === 'e-cal') { const pk = $('#eDatePick'); pk.value = $('#eDate').value || todayStr(); try { pk.showPicker(); } catch (e) { pk.focus(); pk.click(); } }
   else if (a === 'e-chip') setCat(b.dataset.id);
-  else if (a === 'e-card') setCardYN(b.dataset.v);
-  else if (a === 'e-gocards') { closeEntry(); location.hash = '#setup'; setTimeout(() => { const el = $('#cardSetup'); if (el) el.scrollIntoView({behavior: 'smooth'}); }, 80); }
+  else if (a === 'e-pay') setPay(b.dataset.v);
+  else if (a === 'e-acct') { payAcct = b.dataset.id; renderPay(); }
+  else if (a === 'e-cardpick') { payCard = b.dataset.id; renderPay(); }
+  else if (a === 'e-gocards') { closeEntry(); location.hash = '#vault'; }
 });
 $('#main').addEventListener('change', async ev => {
   const el = ev.target; if (!el.classList || !el.classList.contains('mt') || !el.dataset.card) return;
@@ -1641,6 +1700,7 @@ $('#main').addEventListener('change', async ev => {
   if ((typeof cur === 'number' ? cur : null) === v) return;
   try { await API.putFix(el.dataset.card, el.dataset.sd, v); toast(v === null ? 'Using the calculated amount' : 'Your figure saved'); } catch (e) { toast(writeErr(e), 'bad'); }
 });
+document.addEventListener('input', ev => { if ((ev.target.id === 'sCashAmt' || ev.target.id === 'sCashDate') && state.draft) { state.draft.cashStart = {amount: $('#sCashAmt').value.trim(), date: $('#sCashDate').value}; markDirty(); } });
 document.addEventListener('toggle', ev => { const d = ev.target; if (d && d.matches && d.matches('details.ct-hist')) state.openHist[d.dataset.card] = d.open; }, true);
 window.addEventListener('hashchange', () => {
   const lg = location.hash.match(/^#login=([a-f0-9]{20,80})$/);
@@ -1766,6 +1826,41 @@ async function vFlush() {
 }
 function vStatus() { const el = $('#vSync'); if (el) el.textContent = V.pending.length ? `Saving ${V.pending.length} change${V.pending.length === 1 ? '' : 's'} to the sheet…` : ''; }
 window.addEventListener('online', () => { clearTimeout(vRetry); vRetry = null; vFlush(); });
+// Bank accounts and cards to pay with come from the vault. Only names (plus last 4 digits when two names are the
+// same) and statement days are copied into Setup data, so family phones can use them without vault access.
+const nkey = x => cnorm(x).split(' ').filter(Boolean).sort().join(' ');
+const parseStmtDay = v => { const m = String(v || '').match(/\d{1,2}/), d = m ? +m[0] : 0; return d >= 1 && d <= 31 ? d : 0; };
+const last4 = v => { const d = String(v || '').replace(/\D/g, ''); return d.length >= 4 ? d.slice(-4) : ''; };
+function vaultPayLists() {
+  const byName = (a, b) => String(a.c[0] || '').localeCompare(String(b.c[0] || '')) || String(a.c[1] || '').localeCompare(String(b.c[1] || ''));
+  const label = (list, base, num) => { const n = {}; list.forEach(x => { const k = base(x); n[k] = (n[k] || 0) + 1; });
+    return list.map(x => { const k = base(x); return {r: x, label: n[k] > 1 && last4(num(x)) ? k + ' ··' + last4(num(x)) : k}; }); };
+  const cards = label(V.rows.filter(r => r.t === 'cards' && String(r.c[0] || '').trim()).sort(byName), r => [r.c[0], r.c[1]].map(x => String(x || '').trim()).filter(Boolean).join(' '), r => r.c[2]);
+  const banks = label(V.rows.filter(r => r.t === 'banks' && String(r.c[0] || '').trim()).sort(byName), r => String(r.c[0]).trim(), r => r.c[2] || r.c[1]);
+  return {cards, banks};
+}
+function syncPayMethods() {
+  if (!state.config || state.dirty || !isOpenMode() || !V.key || !(Sync.me && Sync.me.role === 'Owner')) return;
+  const {cards, banks} = vaultPayLists(), cfg = clone(state.config), before = JSON.stringify([cfg.cards || [], cfg.accounts, cfg.payBanks || []]);
+  const oldCards = cfg.cards || [];
+  cfg.cards = cards.map(({r, label}) => { const prev = oldCards.find(k => k.id === r.id) || {};
+    return {id: r.id, name: label, stmtDay: parseStmtDay(r.c[5]) || +prev.stmtDay || 1, dueDay: +prev.dueDay || null, src: 'vault'}; });
+  const used = new Set(state.txnsAcctIds || []);
+  Object.values(state.cycles || {}).forEach(doc => Object.values((doc && doc.txns) || {}).forEach(t => { if (t && t.acct) used.add(t.acct); }));
+  const ids = new Set(banks.map(b => b.r.id));
+  cfg.accounts.forEach(a => { if (a.vault && !ids.has(a.vault)) delete a.vault; });
+  cfg.accounts = cfg.accounts.filter(a => !(a.pay && !a.vault && !used.has(a.id)));
+  banks.forEach(({r, label}) => {
+    let a = cfg.accounts.find(x => x.vault === r.id) || cfg.accounts.find(x => !x.vault && !x.pay && nkey(x.name) === nkey(label));
+    if (a) { a.vault = r.id; if (a.pay) a.name = label; }
+    else cfg.accounts.push({id: r.id, name: label, owner: '', cls: 'Bank', liquid: true, counted: false, matures: '', pay: true, vault: r.id});
+  });
+  // Order: HDFC ARHAAN, AMMI, HDFC EFRAH first, then the rest as in the vault.
+  const prio = name => { const k = ' ' + nkey(name) + ' '; return / hdfc /.test(k) && / arhaan /.test(k) ? 0 : / ammi /.test(k) ? 1 : / hdfc /.test(k) && / efrah /.test(k) ? 2 : 3; };
+  const linked = banks.map(({r}, i) => ({a: cfg.accounts.find(x => x.vault === r.id), i})).filter(x => x.a);
+  cfg.payBanks = linked.sort((x, y) => prio(x.a.name) - prio(y.a.name) || x.i - y.i).map(x => x.a.id);
+  if (JSON.stringify([cfg.cards, cfg.accounts, cfg.payBanks]) !== before) API.saveConfig(cfg);
+}
 async function vDecryptAll() {
   V.schema = null; V.rows = [];
   if (V.enc._schema) { try { V.schema = (await vOpen(V.key, '_schema', V.enc._schema)).cols || null; } catch (e) {} }
@@ -1774,6 +1869,7 @@ async function vDecryptAll() {
     try { const r = await vOpen(V.key, id, data); V.rows.push(vMigrate({id, t: r.t, c: Array.isArray(r.c) ? r.c : [], at: r.at || 0, L: r.L})); }
     catch (e) { V.rows.push({id, t: 'broken', c: [], at: 0}); }
   }
+  try { syncPayMethods(); } catch (e) {}
 }
 async function loadVault() {
   if (!signedIn()) return;
