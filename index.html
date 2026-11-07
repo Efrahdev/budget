@@ -123,6 +123,15 @@ h2{margin:0;font-family:var(--f-display);font-stretch:85%;font-size:13px;font-we
 .grp .gval{font-size:14px;margin-top:2px}
 .grp .gsub{font-size:12px;color:var(--ink-3)}
 @media (max-width:640px){.groups{grid-template-columns:repeat(2,minmax(0,1fr))}.grp:nth-child(3){border-left:0}.grp:nth-child(n+3){border-top:1px solid var(--rule)}}
+.hgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
+.htile{background:var(--sheet);border:1px solid var(--rule);border-radius:var(--r);box-shadow:var(--shade);padding:12px 14px;display:flex;flex-direction:column;gap:6px;min-width:0}
+.htile .hn{font-size:12px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--ink-2);line-height:1.25;overflow-wrap:anywhere}
+.htile .ha{font-family:var(--f-display);font-stretch:88%;font-weight:700;font-size:22px;line-height:1.1}
+.htile .hb{height:6px;border-radius:3px;background:var(--rule);overflow:hidden}
+.htile .hb i{display:block;height:100%;border-radius:3px;background:var(--ink-3)}
+.htile .hb i.good{background:var(--good)}.htile .hb i.warn{background:var(--warn)}.htile .hb i.bad{background:var(--bad)}.htile .hb i.u{background:var(--accent)}
+.htile .hs{font-size:12px;color:var(--ink-3)}.htile .hs.over{color:var(--bad);font-weight:600}
+@media (max-width:640px){.hgrid{grid-template-columns:repeat(2,minmax(0,1fr))}.htile .ha{font-size:20px}}
 .dot{width:9px;height:9px;border-radius:2px;display:inline-block;flex:0 0 auto}
 .g-Fixed{background:var(--s1)}.g-Variable{background:var(--s2)}.g-Discretionary{background:var(--s3)}.g-Sinking{background:var(--s4)}
 
@@ -201,7 +210,7 @@ td.n,th.n{text-align:right}
 .ed{padding:6px 16px 14px}
 .edrow{display:grid;gap:8px;align-items:center;padding:8px 0;border-top:1px solid var(--rule)}
 .edrow:first-child{border-top:0}
-.cat-row{grid-template-columns:minmax(0,2.2fr) minmax(0,1.1fr) minmax(0,1.3fr) minmax(0,1fr) auto}
+.cat-row{grid-template-columns:minmax(0,2.4fr) minmax(0,1.1fr) minmax(0,1fr) auto}
 .acc-row{grid-template-columns:minmax(0,1.8fr) minmax(0,1fr) minmax(0,1fr) auto auto minmax(0,1.3fr) auto}
 .edhead{font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-3);font-weight:700;padding:10px 0 4px;border-top:0}
 .edrow input[type=text],.edrow input[type=number],.edrow input[type=date],.edrow select,.field input,.field select,.field textarea{width:100%;border:1px solid var(--rule-2);background:var(--sheet);border-radius:7px;padding:7px 9px;min-height:36px;min-width:0}
@@ -211,7 +220,7 @@ td.n,th.n{text-align:right}
 .icon-btn.armed{background:var(--bad);color:var(--sheet);border-color:var(--bad)}
 @media (max-width:760px){
   .edhead{display:none}
-  .cat-row{grid-template-columns:repeat(3,minmax(0,1fr));grid-template-areas:"name name del" "type group budget"}
+  .cat-row{grid-template-columns:repeat(3,minmax(0,1fr));grid-template-areas:"name name del" "type budget budget"}
   .cat-row .c-name{grid-area:name}.cat-row .c-type{grid-area:type}.cat-row .c-group{grid-area:group}.cat-row .c-budget{grid-area:budget}.cat-row .c-del{grid-area:del}
   .acc-row{grid-template-columns:repeat(3,minmax(0,1fr));grid-template-areas:"name name del" "owner cls cls" "liq cnt cnt" "mat mat mat"}
   .c-del,.a-del{justify-self:end}
@@ -764,86 +773,47 @@ function renderBanner() {
 /* ---------- overview ---------- */
 // Unplanned categories (e.g. Discretionary) have no budget up front: each cycle, their budget is what was spent.
 const budgetOf = (c, spent) => c.unplanned ? Math.max(0, spent || 0) : (+c.budget || 0);
-function paceInfo(group, spent, budget, e) {
-  if (!(budget > 0)) return {chip: spent > 0 ? 'No budget' : '—', cls: '', fill: ''};
-  if (group === 'Variable' || group === 'Discretionary') {
-    if (e.f === 0) return {chip: 'Not started', cls: '', fill: ''};
-    if (e.f >= 1) return spent <= budget ? {chip: 'Within budget', cls: 'good', fill: 'good'} : {chip: 'Over by ' + rs(spent - budget), cls: 'bad', fill: 'bad'};
-    if (spent === 0) return {chip: 'Nothing spent yet', cls: '', fill: ''};
-    if (spent > budget) return {chip: 'Over by ' + rs(spent - budget), cls: 'bad', fill: 'bad'};
-    const p = spent / (budget * e.f);
-    if (p <= 0.9) return {chip: pct(p) + ' pace · On track', cls: 'good', fill: 'good', p};
-    if (p <= 1.1) return {chip: pct(p) + ' pace · Close', cls: 'warn', fill: 'warn', p};
-    return {chip: pct(p) + ' pace · Too fast', cls: 'bad', fill: 'bad', p};
-  }
-  if (group === 'Sinking') return {chip: 'Yearly bill · ' + rs(budget) + '/mo', cls: '', fill: ''};
-  if (spent >= budget) return {chip: 'Paid', cls: 'good', fill: 'good'};
-  return spent > 0 ? {chip: 'Part paid', cls: 'warn', fill: 'warn'} : {chip: 'Due', cls: '', fill: ''};
-}
 function renderOverview(X) {
   const key = state.cur, e = elapsed(key), list = X.byCycle[key] || [], T = cycleTotals(list, X);
   const cats = state.config.categories.filter(c => c.type === 'Expense');
   const budgetTotal = cats.reduce((a, c) => a + budgetOf(c, T.byCat[c.id]), 0);
   const saved = T.inc - T.exp, rate = T.inc > 0 ? saved / T.inc : null;
-  const rows = cats.map(c => ({c, spent: T.byCat[c.id] || 0, budget: budgetOf(c, T.byCat[c.id])})).filter(r => r.budget > 0 || r.spent > 0)
-    .sort((a, b) => GROUPS.indexOf(a.c.group) - GROUPS.indexOf(b.c.group) || b.budget - a.budget);
   const unknown = Object.keys(T.byCat).filter(id => !X.cm[id]).reduce((a, id) => a + T.byCat[id], 0);
 
-  // headline
-  let lede = '';
-  const hot = rows.filter(r => !r.c.unplanned && (r.c.group === 'Variable' || r.c.group === 'Discretionary') && r.budget > 0 && e.f > 0 && e.f < 1)
-    .map(r => ({r, p: r.spent / (r.budget * e.f)})).filter(x => x.p > 1.1).sort((a, b) => b.p - a.p);
-  if (!list.length) lede = `No entries in ${cycleLabel(key)} yet. Tap <b>Add entry</b> to log your first one.`;
-  else if (e.f >= 1) lede = `${cycleLabel(key)} is closed. You spent <b>${rs(T.exp)}</b> against a budget of <b>${rs(budgetTotal)}</b>${T.inc > 0 ? ` and saved <b>${pct(rate)}</b> of income` : ''}.`;
-  else if (rows.some(r => r.budget > 0 && r.spent > r.budget && !r.c.unplanned && (r.c.group === 'Variable' || r.c.group === 'Discretionary'))) {
-    const o = rows.filter(r => r.budget > 0 && r.spent > r.budget && !r.c.unplanned && (r.c.group === 'Variable' || r.c.group === 'Discretionary')).sort((a, b) => (b.spent - b.budget) - (a.spent - a.budget))[0];
-    const h2 = hot.find(x => x.r.spent <= x.r.budget);
-    lede = `<b>${esc(o.c.name)}</b> is already <b>${rs(o.spent - o.budget)}</b> over its ${rs(o.budget)} budget, on day ${e.day} of ${e.days}.` + (h2 ? ` <b>${esc(h2.r.c.name)}</b> is running at <b>${pct(h2.p)}</b> of pace and heads for about <b>${rs(h2.r.spent / e.f)}</b> against ${rs(h2.r.budget)}.` : '');
-  }
-  else if (hot.length) { const h = hot[0]; lede = `<b>${esc(h.r.c.name)}</b> is running at <b>${pct(h.p)}</b> of pace. At this rate it ends near <b>${rs(h.r.spent / e.f)}</b> against a budget of ${rs(h.r.budget)}.`; }
-  else lede = `Day ${e.day} of ${e.days}. Spending is within pace in every everyday category.`;
-
   const kpis = `<div class="card kpis">
-    <div class="kpi"><span class="lbl">Income</span><span class="val">${rs(T.inc)}</span><span class="sub">${T.inc > 0 ? 'Salary, interest, refunds' : 'Add your salary to see savings'}</span></div>
+    <div class="kpi"><span class="lbl">Income</span><span class="val">${rs(T.inc)}</span></div>
     <div class="kpi"><span class="lbl">Spent</span><span class="val">${rs(T.exp)}</span><span class="sub">of ${rs(budgetTotal)} budget</span></div>
-    <div class="kpi"><span class="lbl">Saved</span><span class="val">${T.inc > 0 ? rs(saved) : '—'}</span><span class="sub">${T.inc > 0 ? 'Income minus spending' : 'Needs income entries'}</span></div>
-    <div class="kpi"><span class="lbl">Savings rate</span><span class="val">${pct(rate)}</span><span class="sub">${T.trf > 0 ? rs(T.trf) + ' moved, not spent' : 'Share of income kept'}</span></div>
+    <div class="kpi"><span class="lbl">Saved</span><span class="val">${T.inc > 0 ? rs(saved) : '—'}</span></div>
+    <div class="kpi"><span class="lbl">Savings rate</span><span class="val">${pct(rate)}</span></div>
   </div>`;
 
-  const gBudget = {}; cats.forEach(c => { gBudget[c.group] = (gBudget[c.group] || 0) + budgetOf(c, T.byCat[c.id]); });
-  const groups = `<div class="card groups">${GROUPS.map(g => `<div class="grp"><div class="gname"><i class="dot g-${g}"></i>${g}</div>
-    <div class="gval num">${rs(T.byGroup[g] || 0)}</div><div class="gsub">of ${rs(gBudget[g] || 0)}</div></div>`).join('')}</div>`;
-
-  const rowHtml = rows.map(({c, spent, budget}) => {
-    const pi = c.unplanned ? {chip: 'Unplanned · budget = spend', cls: '', fill: ''} : paceInfo(c.group, spent, budget, e);
-    const w = budget > 0 ? Math.min(spent / budget, 1) * 100 : (spent > 0 ? 100 : 0);
-    const showTick = !c.unplanned && (c.group === 'Variable' || c.group === 'Discretionary') && budget > 0 && e.f > 0 && e.f < 1;
-    const left = budget - spent;
-    const onTrack = (pi.p != null) ? `<span>On track for <b>${rs(spent / e.f)}</b></span>` : '';
-    return `<div class="crow">
-      <div class="crow-top"><span class="cname"><i class="dot g-${esc(c.group)}"></i>${esc(c.name)}</span><span class="chip ${pi.cls}">${esc(pi.chip)}</span></div>
-      <div class="bar" role="img" aria-label="${esc(c.name)}: ${rs(spent)} of ${rs(budget)}"><span class="fill ${pi.fill}" style="width:${w}%"></span>${showTick ? `<span class="tick" style="left:${e.f * 100}%" title="Today"></span>` : ''}</div>
-      <div class="crow-meta">${c.unplanned ? `<span><b>${rs(spent)}</b> spent</span><span>Budget set to match, because it was unforeseen</span>` : `<span><b>${rs(spent)}</b> of ${rs(budget)}</span><span>${budget > 0 ? (left >= 0 ? rs(left) + ' left' : rs(-left) + ' over') : ''}</span>${onTrack}`}</div>
-    </div>`;
-  }).join('') + (unknown ? `<div class="crow"><div class="crow-top"><span class="cname">Unlisted category</span><span class="chip">${rs(unknown)}</span></div></div>` : '');
+  // One tile per category, named exactly as in Setup, in Setup order.
+  const tile = (name, spent, budget, unplanned) => {
+    const over = !unplanned && budget > 0 && spent > budget;
+    const w = unplanned ? 100 : budget > 0 ? Math.min(spent / budget, 1) * 100 : (spent > 0 ? 100 : 0);
+    const tone = unplanned ? 'u' : !budget ? 'u' : over ? 'bad' : spent >= budget * 0.9 ? 'warn' : 'good';
+    return `<div class="htile"><div class="hn">${esc(name)}</div><div class="ha num">${rs(spent)}</div>
+      <div class="hb" role="img" aria-label="${esc(name)}: ${rs(spent)}${budget > 0 && !unplanned ? ' of ' + rs(budget) : ''}"><i class="${tone}" style="width:${w}%"></i></div>
+      <div class="hs${over ? ' over' : ''}">${unplanned ? 'as spent' : !budget ? 'no budget' : over ? '+' + rs(spent - budget) + ' over ' + rs(budget) : 'of ' + rs(budget)}</div></div>`;
+  };
+  const tiles = cats.map(c => { const spent = T.byCat[c.id] || 0, budget = budgetOf(c, spent); return (budget > 0 || spent) ? tile(c.name, spent, budget, !!c.unplanned) : ''; }).join('')
+    + (unknown ? tile('Unlisted', unknown, 0, false) : '');
 
   const big = list.filter(t => X.typeOf(t) === 'Expense' && !t.refund).sort((a, b) => b.amount - a.amount).slice(0, 5);
   const bigHtml = big.length ? big.map(t => `<div class="li"><div class="l"><div class="t1">${esc((X.cm[t.cat] || {}).name || 'Unlisted')}</div>
       <div class="t2">${fmtDay(parseYmd(t.date))}${t.note ? ' · ' + esc(t.note) : ''}</div></div><div class="amt num">${rs(t.amount)}</div></div>`).join('')
     : `<div class="empty">Nothing yet.</div>`;
 
-  $('#v-overview').innerHTML = `<p class="lede">${lede}</p>${cardStripHtml(X)}${kpis}${groups}
-    <section class="card"><div class="sec-h"><h2>Budget by category</h2><span class="hint">The dark tick on a bar marks today. Fill past it means you are ahead of pace.</span></div>
-      ${rowHtml || `<div class="empty">Set budgets in Setup to see them here.</div>`}</section>
-    <section class="card list"><div class="sec-h"><h2>Biggest items this cycle</h2></div>${bigHtml}</section>`;
+  $('#v-overview').innerHTML = `${kpis}${tiles ? `<div class="hgrid">${tiles}</div>` : '<div class="card empty">No entries in ' + cycleLabel(key) + ' yet.</div>'}
+    ${cardStripHtml(X)}
+    <section class="card list"><div class="sec-h"><h2>Biggest items</h2></div>${bigHtml}</section>`;
 }
 
 /* ---------- entries ---------- */
 function fillCatOptions(sel, X, withAll, value) {
   const c = state.config.categories; let h = withAll ? '<option value="">All categories</option>' : '';
-  GROUPS.forEach(g => { const xs = c.filter(x => x.type === 'Expense' && x.group === g); if (xs.length) h += `<optgroup label="${g}">` + xs.map(x => `<option value="${esc(x.id)}">${esc(x.name)}</option>`).join('') + '</optgroup>'; });
-  const other = c.filter(x => x.type === 'Expense' && !GROUPS.includes(x.group));
-  if (other.length) h += '<optgroup label="Other spending">' + other.map(x => `<option value="${esc(x.id)}">${esc(x.name)}</option>`).join('') + '</optgroup>';
+  const spend = c.filter(x => x.type === 'Expense');
+  if (spend.length) h += '<optgroup label="Spending">' + spend.map(x => `<option value="${esc(x.id)}">${esc(x.name)}</option>`).join('') + '</optgroup>';
   ['Income', 'Transfer'].forEach(ty => { const xs = c.filter(x => x.type === ty); if (xs.length) h += `<optgroup label="${ty === 'Transfer' ? 'Transfer (not spending)' : ty}">` + xs.map(x => `<option value="${esc(x.id)}">${esc(x.name)}</option>`).join('') + '</optgroup>'; });
   sel.innerHTML = h; if (value != null) sel.value = value;
 }
@@ -949,41 +919,43 @@ function renderTrend(X) {
   const max = niceMax(Math.max(1, ...rows.map(r => Math.max(r.exp, r.inc))));
   const y = v => padT + (max - v) * (H - padT - padB) / max;
   const slot = (W - padL - padR) / rows.length, bw = Math.min(46, slot * 0.62);
-  let s = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Spending by group and income for each cycle">`;
+  let s = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Spending and income for each cycle">`;
   for (let i = 0; i <= 4; i++) { const v = max * i / 4; s += `<line class="${i ? 'grid' : 'base'}" x1="${padL}" x2="${W - padR}" y1="${y(v)}" y2="${y(v)}"/><text class="ax" x="${padL - 8}" y="${y(v) + 4}" text-anchor="end">${rsShort(v)}</text>`; }
   rows.forEach((r, i) => {
     const cx = padL + slot * i + slot / 2, x0 = cx - bw / 2; let acc = 0;
-    const segs = GROUPS.map(g => ({g, v: r.byGroup[g] || 0})).filter(z => z.v > 0);
+    const segs = r.exp > 0 ? [{v: r.exp}] : [];
     segs.forEach((z, j) => {
       const y1 = y(acc + z.v), y0 = y(acc); acc += z.v;
       const h = Math.max(0, y0 - y1 - (j < segs.length - 1 ? 2 : 0));
       const top = j === segs.length - 1;
-      if (top && h > 4) s += `<path d="M${x0} ${y1 + h} V${y1 + 4} Q${x0} ${y1} ${x0 + 4} ${y1} H${x0 + bw - 4} Q${x0 + bw} ${y1} ${x0 + bw} ${y1 + 4} V${y1 + h} Z" style="fill:var(--s${GROUPS.indexOf(z.g) + 1})"/>`;
-      else s += `<rect x="${x0}" y="${y1}" width="${bw}" height="${h}" style="fill:var(--s${GROUPS.indexOf(z.g) + 1})"/>`;
+      if (top && h > 4) s += `<path d="M${x0} ${y1 + h} V${y1 + 4} Q${x0} ${y1} ${x0 + 4} ${y1} H${x0 + bw - 4} Q${x0 + bw} ${y1} ${x0 + bw} ${y1 + 4} V${y1 + h} Z" style="fill:var(--s1)"/>`;
+      else s += `<rect x="${x0}" y="${y1}" width="${bw}" height="${h}" style="fill:var(--s1)"/>`;
     });
     if (r.inc > 0) s += `<line class="incm" x1="${x0 - 4}" x2="${x0 + bw + 4}" y1="${y(r.inc)}" y2="${y(r.inc)}"/><circle class="incd" cx="${cx}" cy="${y(r.inc)}" r="4"/>`;
     s += `<text class="ax" x="${cx}" y="${H - 8}" text-anchor="middle">${cycleLabel(r.k)}</text>`;
     s += `<rect class="hit" data-i="${i}" x="${padL + slot * i}" y="${padT}" width="${slot}" height="${H - padT - padB}"/>`;
   });
   s += '</svg>';
-  const table = `<div class="tscroll"><table><thead><tr><th>Cycle</th><th class="n">Income</th><th class="n">Spent</th><th class="n">Saved</th><th class="n">Savings rate</th>${GROUPS.map(g => `<th class="n">${g}</th>`).join('')}</tr></thead><tbody>
-    ${rows.slice().reverse().map(r => `<tr><td>${cycleLabel(r.k)}</td><td class="n">${rs(r.inc)}</td><td class="n">${rs(r.exp)}</td><td class="n">${r.inc > 0 ? rs(r.inc - r.exp) : '—'}</td><td class="n">${r.inc > 0 ? pct((r.inc - r.exp) / r.inc) : '—'}</td>${GROUPS.map(g => `<td class="n">${rs(r.byGroup[g] || 0)}</td>`).join('')}</tr>`).join('')}</tbody></table></div>`;
+  const table = `<div class="tscroll"><table><thead><tr><th>Cycle</th><th class="n">Income</th><th class="n">Spent</th><th class="n">Saved</th><th class="n">Savings rate</th></tr></thead><tbody>
+    ${rows.slice().reverse().map(r => `<tr><td>${cycleLabel(r.k)}</td><td class="n">${rs(r.inc)}</td><td class="n">${rs(r.exp)}</td><td class="n">${r.inc > 0 ? rs(r.inc - r.exp) : '—'}</td><td class="n">${r.inc > 0 ? pct((r.inc - r.exp) / r.inc) : '—'}</td></tr>`).join('')}</tbody></table></div>`;
   const last6 = keys.slice(-6);
   const catRows = state.config.categories.filter(c => c.type === 'Expense').map(c => ({c, vals: last6.map(k => cycleTotals(X.byCycle[k], X).byCat[c.id] || 0)}))
     .filter(r => r.vals.some(v => v > 0)).sort((a, b) => b.vals.reduce((p, q) => p + q, 0) - a.vals.reduce((p, q) => p + q, 0));
   const catTable = catRows.length ? `<div class="tscroll"><table><thead><tr><th>Category</th>${last6.map(k => `<th class="n">${cycleLabel(k)}</th>`).join('')}</tr></thead><tbody>
     ${catRows.map(r => `<tr><td>${esc(r.c.name)}</td>${r.vals.map(v => `<td class="n">${v ? rs(v) : '—'}</td>`).join('')}</tr>`).join('')}</tbody></table></div>` : '<div class="empty">No spending yet.</div>';
-  $('#v-trend').innerHTML = `${keys.length < 3 ? '<p class="lede">The trend fills in as cycles pass. Each bar is one cycle, split into fixed, everyday, optional and yearly costs.</p>' : ''}
+  $('#v-trend').innerHTML = `${keys.length < 3 ? '<p class="hint" style="margin:0">One bar per cycle. Fills in as cycles pass.</p>' : ''}
     <section class="card"><div class="sec-h"><h2>Spending and income by cycle</h2><span class="hint">Last ${rows.length} cycle${rows.length > 1 ? 's' : ''}</span></div>
       <div class="chart" id="trendChart">${s}<div class="tip" id="trendTip" hidden></div></div>
-      <div class="legend">${GROUPS.map(g => `<span><i class="dot g-${g}"></i>${g}</span>`).join('')}<span><i class="incl"></i>Income</span></div></section>
+      <div class="legend"><span><i class="dot" style="background:var(--s1)"></i>Spent</span><span><i class="incl"></i>Income</span></div></section>
     <section class="card"><div class="sec-h"><h2>Cycle totals</h2></div>${table}</section>
     <section class="card"><div class="sec-h"><h2>Categories, last six cycles</h2></div>${catTable}</section>`;
   const chartEl = $('#trendChart'), tip = $('#trendTip');
   chartEl.querySelectorAll('.hit').forEach(h => {
     h.addEventListener('pointerenter', ev => {
       const r = rows[+h.dataset.i];
-      tip.innerHTML = `<div class="h">${cycleLabel(r.k)}</div>` + GROUPS.slice().reverse().map(g => `<div class="r"><span><i class="dot g-${g}"></i>${g}</span><span class="num">${rs(r.byGroup[g] || 0)}</span></div>`).join('')
+      // Top categories for this cycle, by their own names.
+      const top = Object.entries(r.byCat).filter(([, v]) => v > 0).sort((a, b) => b[1] - a[1]).slice(0, 5);
+      tip.innerHTML = `<div class="h">${cycleLabel(r.k)}</div>` + top.map(([id, v]) => `<div class="r"><span>${esc((X.cm[id] || {}).name || 'Unlisted')}</span><span class="num">${rs(v)}</span></div>`).join('')
         + `<div class="r"><span>Total spent</span><span class="num"><b>${rs(r.exp)}</b></span></div><div class="r"><span><i class="incl"></i>Income</span><span class="num">${rs(r.inc)}</span></div>`;
       tip.hidden = false;
       const box = chartEl.getBoundingClientRect(), hb = h.getBoundingClientRect();
@@ -1005,7 +977,6 @@ function renderSetup(X) {
   const catRows = d.categories.map((c, i) => `<div class="edrow cat-row" data-i="${i}">
       <input class="c-name" id="c-name-${esc(c.id)}" type="text" value="${esc(c.name)}" data-k="name" aria-label="Category name">
       <select class="c-type" id="c-type-${esc(c.id)}" data-k="type" aria-label="Type">${opt(TYPES, c.type)}</select>
-      <select class="c-group" id="c-group-${esc(c.id)}" data-k="group" aria-label="Group" ${c.type !== 'Expense' ? 'disabled' : ''}>${c.type === 'Expense' ? opt(GROUPS, c.group) : '<option>—</option>'}</select>
       <input class="c-budget num" id="c-budget-${esc(c.id)}" type="number" min="0" step="100" inputmode="numeric" value="${c.type === 'Expense' && !c.unplanned ? (+c.budget || 0) : ''}" data-k="budget" aria-label="Monthly budget" ${c.type !== 'Expense' ? 'disabled placeholder="—"' : c.unplanned ? 'disabled placeholder="= spend" title="Unplanned: the budget each month is what you spend"' : ''}>
       <button class="icon-btn c-del" type="button" data-act="del-cat" data-i="${i}" ${used[c.id] ? `disabled title="Used by ${used[c.id]} entries"` : 'title="Remove"'} aria-label="Remove category">×</button>
     </div>`).join('');
@@ -1037,8 +1008,8 @@ function renderSetup(X) {
       <label for="sDay">Each cycle starts on day</label>
       <select id="sDay" style="border:1px solid var(--rule-2);background:var(--sheet);border-radius:7px;padding:6px 8px">${days.map(n => `<option${n === +d.cycleStartDay ? ' selected' : ''}>${n}</option>`).join('')}</select>
       <span class="hint">Set it to your salary day. A cycle is named after the month it ends in.</span></div></section>
-    <section class="card"><div class="sec-h"><h2>Categories and monthly budgets</h2><span class="hint">Fixed = same bill each month. Sinking = a yearly bill, budget it at ÷ 12.</span></div>
-      <div class="ed" id="catEd"><div class="edrow cat-row edhead"><span>Name</span><span>Type</span><span>Group</span><span>Budget ₹</span><span></span></div>${catRows}</div>
+    <section class="card"><div class="sec-h"><h2>Categories and monthly budgets</h2><span class="hint">These names show as the tiles on Overview, in this order.</span></div>
+      <div class="ed" id="catEd"><div class="edrow cat-row edhead"><span>Name</span><span>Type</span><span>Budget ₹</span><span></span></div>${catRows}</div>
       <div class="row-actions"><button class="btn sm" type="button" data-act="add-cat">+ Add category</button></div></section>
     <section class="card"><div class="sec-h"><h2>Accounts</h2><span class="hint">Liquid = usable within days. Untick Counted for money you hold for someone else.</span></div>
       <div class="ed" id="accEd"><div class="edrow acc-row edhead"><span>Name</span><span>Owner</span><span>Kind</span><span></span><span></span><span>Matures</span><span></span></div>${accRows}</div>
@@ -1381,9 +1352,9 @@ async function offerFile(filename, text, mime) {
 function showCopy(title, text) { $('#copyTitle').textContent = title; $('#copyText').value = text; $('#copyScrim').hidden = false; setTimeout(() => { $('#copyText').select(); }, 30); }
 function toCSV(X) {
   const q = v => { v = String(v ?? ''); return /[",\n]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v; };
-  const head = ['Date', 'Cycle', 'Type', 'Group', 'Category', 'Amount', 'Account', 'Note', 'For whom', 'Tag', 'Card', 'Card bill date'];
+  const head = ['Date', 'Cycle', 'Type', 'Category', 'Amount', 'Account', 'Note', 'For whom', 'Tag', 'Card', 'Card bill date'];
   const rows = X.txns.slice().sort((a, b) => a.date < b.date ? -1 : a.date > b.date ? 1 : 0).map(t => { const c = X.cm[t.cat] || {};
-    return [t.date, cycleLabel(cycleKeyOf(t.date)), X.typeOf(t), c.type === 'Expense' ? c.group : '', c.name || 'Unlisted', t.refund ? -t.amount : t.amount, (X.am[t.acct] || {}).name || '', t.note, t.member, t.tag, cardName(t.card), cardBillDate(t, X)].map(q).join(','); });
+    return [t.date, cycleLabel(cycleKeyOf(t.date)), X.typeOf(t), c.name || 'Unlisted', t.refund ? -t.amount : t.amount, (X.am[t.acct] || {}).name || '', t.note, t.member, t.tag, cardName(t.card), cardBillDate(t, X)].map(q).join(','); });
   return [head.join(',')].concat(rows).join('\n');
 }
 let pendingImport = null;
