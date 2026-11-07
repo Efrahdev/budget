@@ -424,8 +424,8 @@ body[data-view="vault"] .fab,body[data-view="vault"] #addTop,body[data-view="vau
   <form class="sheet" id="entryForm" novalidate>
     <h3 id="entryTitle">Add entry</h3>
     <label class="field"><span>Amount (₹)</span>
-      <input id="eAmt" class="amount-in" type="text" inputmode="decimal" autocomplete="off" placeholder="0">
-      <small>You can add up items here, like 220+260+100.</small>
+      <input id="eAmt" class="amount-in" type="text" inputmode="text" enterkeyhint="next" autocomplete="off" autocorrect="off" spellcheck="false" placeholder="0">
+      <small>Type or dictate. You can add up items, like 220+260 or "220 plus 260".</small>
     </label>
     <div class="two">
       <label class="field"><span>Date</span><input id="eDate" type="date"></label>
@@ -560,8 +560,14 @@ function elapsed(key) {
   if (t > end) return {f: 1, day: days, days};
   const day = dayDiff(start, t) + 1; return {f: day / days, day, days};
 }
+// Accepts typed or dictated amounts: "450", "₹450", "Rs. 450", "450 rupees", "450/-", "220 plus 260".
 function parseAmount(s) {
-  s = String(s || '').replace(/[,\s₹]/g, '');
+  s = String(s || '').toLowerCase()
+    .replace(/\bplus\b|\band\b/g, '+')
+    .replace(/\b(rupees?|rs\.?|inr|only)(?![a-z])/g, '')
+    .replace(/\/-/g, '')
+    .replace(/[,\s₹]/g, '')
+    .replace(/\.$/, '');
   if (!/^\d+(\.\d+)?(\+\d+(\.\d+)?)*$/.test(s)) return NaN;
   return Math.round(s.split('+').reduce((a, b) => a + parseFloat(b), 0) * 100) / 100;
 }
