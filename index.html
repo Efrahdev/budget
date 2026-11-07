@@ -1361,7 +1361,7 @@ function setEntryDate(iso, fromText) {
 const CAT_WORDS = {
   groc: 'grocery groceries food household kirana vegetable vegetables sabzi milk fruit fruits ration supermarket',
   misc: 'misc miscellaneous other others', disc: 'discretionary travel trip holiday vacation flight hotel shopping',
-  school: 'school fee fees tuition', car: 'car bike petrol fuel diesel parking toll', med: 'medical medicine medicines doctor hospital pharmacy chemist',
+  school: 'school fee fees tuition', schtr: 'transport bus van pool cab', car: 'car bike petrol fuel diesel parking toll', med: 'medical medicine medicines doctor hospital pharmacy chemist',
   office: 'office', emi: 'emi', maid: 'maid help cook', cesc: 'electricity power cesc light', maint: 'maintenance society',
   salary: 'salary', interest: 'interest', reimb: 'reimbursement reimbursed', cardpay: 'card bill', lend: 'lent loan given repaid',
   tosave: 'savings saving fd deposit', atm: 'atm withdrawal'
@@ -1373,7 +1373,7 @@ function matchCategory(text) {
   let best = '', top = 0;
   state.config.categories.forEach(c => {
     const n = cnorm(c.name), nw = n.split(' '), syn = (CAT_WORDS[c.id] || '').split(' ').filter(Boolean);
-    let sc = n === q ? 100 : n.startsWith(q) && q.length >= 2 ? 80 : (q.length >= 3 && (n.includes(q) || q.includes(n))) ? 60 : 0;
+    let sc = n === q || (c.short && cnorm(c.short) === q) ? 100 : n.startsWith(q) && q.length >= 2 ? 80 : (q.length >= 3 && (n.includes(q) || q.includes(n))) ? 60 : 0;
     qw.forEach(w => { if (syn.includes(w)) sc += 30; else if (w.length >= 3 && nw.some(x => x.startsWith(w))) sc += 20; });
     if (sc > top) { top = sc; best = c.id; }
   });
@@ -1388,9 +1388,12 @@ function setCat(id, fromText) {
   document.querySelectorAll('#eCatChips .chipb').forEach(b => b.setAttribute('aria-pressed', String(!!c && b.dataset.id === c.id)));
   updCardHint();
 }
+// Quick-pick buttons: the pinned ones first (config.chips, in that order), then the other spending
+// categories in Setup order, then income and transfers. A category's short label (c.short) is used if set.
 function fillCatChips() {
-  const cats = state.config.categories, chip = c => `<button type="button" class="chipb" data-act="e-chip" data-id="${esc(c.id)}" aria-pressed="false">${esc(c.name)}</button>`;
-  const spend = cats.filter(c => c.type === 'Expense'), rest = cats.filter(c => c.type !== 'Expense');
+  const cats = state.config.categories, chip = c => `<button type="button" class="chipb" data-act="e-chip" data-id="${esc(c.id)}" aria-pressed="false" title="${esc(c.name)}">${esc(c.short || c.name)}</button>`;
+  const pins = (state.config.chips || []).map(id => cats.find(c => c.id === id && c.type === 'Expense')).filter(Boolean);
+  const spend = pins.concat(cats.filter(c => c.type === 'Expense' && !pins.includes(c))), rest = cats.filter(c => c.type !== 'Expense');
   $('#eCatChips').innerHTML = spend.map(chip).join('') + (rest.length ? '<span class="chipsep" aria-hidden="true"></span>' + rest.map(chip).join('') : '');
 }
 let cardYN = 'no';
