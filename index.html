@@ -762,6 +762,8 @@ function renderBanner() {
 }
 
 /* ---------- overview ---------- */
+// Unplanned categories (e.g. Discretionary) have no budget up front: each cycle, their budget is what was spent.
+const budgetOf = (c, spent) => c.unplanned ? Math.max(0, spent || 0) : (+c.budget || 0);
 function paceInfo(group, spent, budget, e) {
   if (!(budget > 0)) return {chip: spent > 0 ? 'No budget' : '—', cls: '', fill: ''};
   if (group === 'Variable' || group === 'Discretionary') {
@@ -781,20 +783,20 @@ function paceInfo(group, spent, budget, e) {
 function renderOverview(X) {
   const key = state.cur, e = elapsed(key), list = X.byCycle[key] || [], T = cycleTotals(list, X);
   const cats = state.config.categories.filter(c => c.type === 'Expense');
-  const budgetTotal = cats.reduce((a, c) => a + (+c.budget || 0), 0);
+  const budgetTotal = cats.reduce((a, c) => a + budgetOf(c, T.byCat[c.id]), 0);
   const saved = T.inc - T.exp, rate = T.inc > 0 ? saved / T.inc : null;
-  const rows = cats.map(c => ({c, spent: T.byCat[c.id] || 0, budget: +c.budget || 0})).filter(r => r.budget > 0 || r.spent > 0)
+  const rows = cats.map(c => ({c, spent: T.byCat[c.id] || 0, budget: budgetOf(c, T.byCat[c.id])})).filter(r => r.budget > 0 || r.spent > 0)
     .sort((a, b) => GROUPS.indexOf(a.c.group) - GROUPS.indexOf(b.c.group) || b.budget - a.budget);
   const unknown = Object.keys(T.byCat).filter(id => !X.cm[id]).reduce((a, id) => a + T.byCat[id], 0);
 
   // headline
   let lede = '';
-  const hot = rows.filter(r => (r.c.group === 'Variable' || r.c.group === 'Discretionary') && r.budget > 0 && e.f > 0 && e.f < 1)
+  const hot = rows.filter(r => !r.c.unplanned && (r.c.group === 'Variable' || r.c.group === 'Discretionary') && r.budget > 0 && e.f > 0 && e.f < 1)
     .map(r => ({r, p: r.spent / (r.budget * e.f)})).filter(x => x.p > 1.1).sort((a, b) => b.p - a.p);
   if (!list.length) lede = `No entries in ${cycleLabel(key)} yet. Tap <b>Add entry</b> to log your first one.`;
   else if (e.f >= 1) lede = `${cycleLabel(key)} is closed. You spent <b>${rs(T.exp)}</b> against a budget of <b>${rs(budgetTotal)}</b>${T.inc > 0 ? ` and saved <b>${pct(rate)}</b> of income` : ''}.`;
-  else if (rows.some(r => r.budget > 0 && r.spent > r.budget && (r.c.group === 'Variable' || r.c.group === 'Discretionary'))) {
-    const o = rows.filter(r => r.budget > 0 && r.spent > r.budget && (r.c.group === 'Variable' || r.c.group === 'Discretionary')).sort((a, b) => (b.spent - b.budget) - (a.spent - a.budget))[0];
+  else if (rows.some(r => r.budget > 0 && r.spent > r.budget && !r.c.unplanned && (r.c.group === 'Variable' || r.c.group === 'Discretionary'))) {
+    const o = rows.filter(r => r.budget > 0 && r.spent > r.budget && !r.c.unplanned && (r.c.group === 'Variable' || r.c.group === 'Discretionary')).sort((a, b) => (b.spent - b.budget) - (a.spent - a.budget))[0];
     const h2 = hot.find(x => x.r.spent <= x.r.budget);
     lede = `<b>${esc(o.c.name)}</b> is already <b>${rs(o.spent - o.budget)}</b> over its ${rs(o.budget)} budget, on day ${e.day} of ${e.days}.` + (h2 ? ` <b>${esc(h2.r.c.name)}</b> is running at <b>${pct(h2.p)}</b> of pace and heads for about <b>${rs(h2.r.spent / e.f)}</b> against ${rs(h2.r.budget)}.` : '');
   }
@@ -808,20 +810,20 @@ function renderOverview(X) {
     <div class="kpi"><span class="lbl">Savings rate</span><span class="val">${pct(rate)}</span><span class="sub">${T.trf > 0 ? rs(T.trf) + ' moved, not spent' : 'Share of income kept'}</span></div>
   </div>`;
 
-  const gBudget = {}; cats.forEach(c => { gBudget[c.group] = (gBudget[c.group] || 0) + (+c.budget || 0); });
+  const gBudget = {}; cats.forEach(c => { gBudget[c.group] = (gBudget[c.group] || 0) + budgetOf(c, T.byCat[c.id]); });
   const groups = `<div class="card groups">${GROUPS.map(g => `<div class="grp"><div class="gname"><i class="dot g-${g}"></i>${g}</div>
     <div class="gval num">${rs(T.byGroup[g] || 0)}</div><div class="gsub">of ${rs(gBudget[g] || 0)}</div></div>`).join('')}</div>`;
 
   const rowHtml = rows.map(({c, spent, budget}) => {
-    const pi = paceInfo(c.group, spent, budget, e);
+    const pi = c.unplanned ? {chip: 'Unplanned · budget = spend', cls: '', fill: ''} : paceInfo(c.group, spent, budget, e);
     const w = budget > 0 ? Math.min(spent / budget, 1) * 100 : (spent > 0 ? 100 : 0);
-    const showTick = (c.group === 'Variable' || c.group === 'Discretionary') && budget > 0 && e.f > 0 && e.f < 1;
+    const showTick = !c.unplanned && (c.group === 'Variable' || c.group === 'Discretionary') && budget > 0 && e.f > 0 && e.f < 1;
     const left = budget - spent;
     const onTrack = (pi.p != null) ? `<span>On track for <b>${rs(spent / e.f)}</b></span>` : '';
     return `<div class="crow">
       <div class="crow-top"><span class="cname"><i class="dot g-${esc(c.group)}"></i>${esc(c.name)}</span><span class="chip ${pi.cls}">${esc(pi.chip)}</span></div>
       <div class="bar" role="img" aria-label="${esc(c.name)}: ${rs(spent)} of ${rs(budget)}"><span class="fill ${pi.fill}" style="width:${w}%"></span>${showTick ? `<span class="tick" style="left:${e.f * 100}%" title="Today"></span>` : ''}</div>
-      <div class="crow-meta"><span><b>${rs(spent)}</b> of ${rs(budget)}</span><span>${budget > 0 ? (left >= 0 ? rs(left) + ' left' : rs(-left) + ' over') : ''}</span>${onTrack}</div>
+      <div class="crow-meta">${c.unplanned ? `<span><b>${rs(spent)}</b> spent</span><span>Budget set to match, because it was unforeseen</span>` : `<span><b>${rs(spent)}</b> of ${rs(budget)}</span><span>${budget > 0 ? (left >= 0 ? rs(left) + ' left' : rs(-left) + ' over') : ''}</span>${onTrack}`}</div>
     </div>`;
   }).join('') + (unknown ? `<div class="crow"><div class="crow-top"><span class="cname">Unlisted category</span><span class="chip">${rs(unknown)}</span></div></div>` : '');
 
@@ -873,7 +875,7 @@ function avgSpend(X) {
   const closed = Object.keys(X.byCycle).filter(k => k < nowKey).sort().slice(-6);
   const vals = closed.map(k => cycleTotals(X.byCycle[k], X).exp).filter(v => v > 0);
   if (vals.length) return {v: vals.reduce((a, b) => a + b, 0) / vals.length, basis: `average of the last ${vals.length} closed cycle${vals.length > 1 ? 's' : ''}`};
-  const b = state.config.categories.filter(c => c.type === 'Expense').reduce((a, c) => a + (+c.budget || 0), 0);
+  const b = state.config.categories.filter(c => c.type === 'Expense' && !c.unplanned).reduce((a, c) => a + (+c.budget || 0), 0);
   return {v: b, basis: 'your monthly budget, until a full cycle closes'};
 }
 function lineChart(series, W, H) {
@@ -1004,7 +1006,7 @@ function renderSetup(X) {
       <input class="c-name" id="c-name-${esc(c.id)}" type="text" value="${esc(c.name)}" data-k="name" aria-label="Category name">
       <select class="c-type" id="c-type-${esc(c.id)}" data-k="type" aria-label="Type">${opt(TYPES, c.type)}</select>
       <select class="c-group" id="c-group-${esc(c.id)}" data-k="group" aria-label="Group" ${c.type !== 'Expense' ? 'disabled' : ''}>${c.type === 'Expense' ? opt(GROUPS, c.group) : '<option>—</option>'}</select>
-      <input class="c-budget num" id="c-budget-${esc(c.id)}" type="number" min="0" step="100" inputmode="numeric" value="${c.type === 'Expense' ? (+c.budget || 0) : ''}" data-k="budget" aria-label="Monthly budget" ${c.type !== 'Expense' ? 'disabled placeholder="—"' : ''}>
+      <input class="c-budget num" id="c-budget-${esc(c.id)}" type="number" min="0" step="100" inputmode="numeric" value="${c.type === 'Expense' && !c.unplanned ? (+c.budget || 0) : ''}" data-k="budget" aria-label="Monthly budget" ${c.type !== 'Expense' ? 'disabled placeholder="—"' : c.unplanned ? 'disabled placeholder="= spend" title="Unplanned: the budget each month is what you spend"' : ''}>
       <button class="icon-btn c-del" type="button" data-act="del-cat" data-i="${i}" ${used[c.id] ? `disabled title="Used by ${used[c.id]} entries"` : 'title="Remove"'} aria-label="Remove category">×</button>
     </div>`).join('');
   const accRows = d.accounts.map((a, i) => `<div class="edrow acc-row" data-i="${i}">
@@ -1456,7 +1458,7 @@ document.addEventListener('click', async ev => {
   else if (act === 'discard-setup') { state.dirty = false; state.setupErr = ''; state.draft = null; render(); }
   else if (act === 'save-setup') {
     const d = state.draft, names = new Set(); let problem = '';
-    d.categories.forEach(c => { c.name = String(c.name || '').trim(); if (!c.name) problem = 'Every category needs a name.'; else if (names.has(c.name.toLowerCase())) problem = 'Two categories are called "' + c.name + '".'; names.add(c.name.toLowerCase()); if (c.type !== 'Expense') { c.group = ''; c.budget = 0; } else { c.budget = Math.max(0, +c.budget || 0); if (!GROUPS.includes(c.group)) c.group = 'Variable'; } });
+    d.categories.forEach(c => { c.name = String(c.name || '').trim(); if (!c.name) problem = 'Every category needs a name.'; else if (names.has(c.name.toLowerCase())) problem = 'Two categories are called "' + c.name + '".'; names.add(c.name.toLowerCase()); if (c.type !== 'Expense') { c.group = ''; c.budget = 0; delete c.unplanned; } else { c.budget = c.unplanned ? 0 : Math.max(0, +c.budget || 0); if (!GROUPS.includes(c.group)) c.group = 'Variable'; } });
     d.accounts.forEach(a => { a.name = String(a.name || '').trim(); if (!a.name) problem = 'Every account needs a name.'; });
     const cnames = new Set();
     (d.cards = d.cards || []).forEach(c => {
