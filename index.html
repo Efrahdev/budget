@@ -240,6 +240,21 @@ td.n,th.n{text-align:right}
 tr.sum td{font-weight:700;border-top:1px solid var(--rule-2)}
 .addcard input{border:1px solid var(--rule-2);background:var(--sheet);border-radius:8px;padding:7px 10px;min-height:38px;min-width:0;flex:1 1 160px;max-width:280px}
 .sheet.wide{max-width:900px}
+.dline{display:flex;gap:6px;align-items:center}
+.dline input{flex:1 1 auto;min-width:0}
+.dline .btn.sm{min-height:36px}
+.field>label{font-size:12px;font-weight:600;color:var(--ink-2)}
+.field small.ok{color:var(--good);font-weight:600}.field small.bad{color:var(--bad);font-weight:600}
+.pick{position:absolute;width:1px;height:1px;opacity:0;pointer-events:none;border:0;padding:0}
+.chips{display:flex;gap:6px;overflow-x:auto;padding:2px 0 4px;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+.chips::-webkit-scrollbar{display:none}
+.chipb{flex:0 0 auto;border:1px solid var(--rule-2);background:var(--sheet);color:var(--ink);border-radius:999px;padding:6px 12px;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap}
+.chipb[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.chipsep{flex:0 0 1px;background:var(--rule-2);margin:4px 2px}
+.seg{display:inline-flex;border:1px solid var(--rule-2);border-radius:8px;overflow:hidden;align-self:flex-start}
+.segb{border:0;background:var(--sheet);color:var(--ink);padding:8px 22px;font-weight:600;min-height:38px;cursor:pointer}
+.segb+.segb{border-left:1px solid var(--rule-2)}
+.segb[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink)}
 .cardhint{margin:0;font-size:13px;color:var(--ink);background:var(--accent-soft);border-radius:8px;padding:8px 10px}
 .ctiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,430px),1fr));gap:16px}
 .ctile{background:var(--sheet);border:1px solid var(--rule);border-radius:14px;box-shadow:var(--shade);overflow:hidden;display:flex;flex-direction:column;min-width:0}
@@ -260,12 +275,16 @@ details.ct-hist{border-top:1px solid var(--rule)}
 details.ct-hist summary{padding:12px 16px;cursor:pointer;font-weight:600;font-size:13px;color:var(--accent)}
 td.from{white-space:normal;min-width:180px;color:var(--ink-2)}
 @media (max-width:480px){.ct-grid{grid-template-columns:1fr}.ct-box+.ct-box{border-left:0;border-top:1px solid var(--rule)}}
-.card-row{grid-template-columns:minmax(0,1.5fr) 82px 82px minmax(0,1fr) minmax(0,1fr) minmax(0,1fr) minmax(0,1.2fr) auto}
+.card-row{grid-template-columns:minmax(0,2fr) 120px 120px auto}
+.card-row .k-more{grid-column:1/-1}
+.card-row .kgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px;padding-top:8px}
+.edrow .fl2{display:block;font-size:11px;color:var(--ink-3);font-weight:600;margin-bottom:3px}
 .edrow .fl{display:none}
 .edrow label.f{display:block;min-width:0}
 @media (max-width:760px){
-  .card-row{grid-template-columns:repeat(3,minmax(0,1fr));grid-template-areas:"name name del" "sd dd lim" "ob ou od"}
-  .card-row .k-name{grid-area:name}.card-row .k-sd{grid-area:sd}.card-row .k-dd{grid-area:dd}.card-row .k-lim{grid-area:lim}.card-row .k-ob{grid-area:ob}.card-row .k-ou{grid-area:ou}.card-row .k-od{grid-area:od}.card-row .k-del{grid-area:del;justify-self:end}
+  .card-row{grid-template-columns:repeat(2,minmax(0,1fr)) auto;grid-template-areas:"name name del" "sd dd ."}
+  .card-row .k-name{grid-area:name}.card-row .k-sd{grid-area:sd}.card-row .k-dd{grid-area:dd}.card-row .k-del{grid-area:del;justify-self:end}
+  .card-row .k-more{grid-area:auto;grid-column:1/-1}
   .edrow .fl{display:block;font-size:11px;color:var(--ink-3);font-weight:600;margin-bottom:3px}
 }
 .srow{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(110px,auto) auto;grid-template-areas:"main own num act";gap:8px 16px;align-items:center;padding:12px 16px;border-top:1px solid var(--rule)}
@@ -380,7 +399,6 @@ body[data-view="vault"] .fab,body[data-view="vault"] #addTop,body[data-view="vau
     <nav class="tabs" aria-label="Sections">
       <a href="#overview" data-v="overview">Overview</a>
       <a href="#entries" data-v="entries">Entries</a>
-      <a href="#cards" data-v="cards">Cards</a>
       <a href="#wealth" data-v="wealth">Wealth</a>
       <a href="#trend" data-v="trend">Trend</a>
       <a href="#vault" data-v="vault" id="vaultTab" hidden>Vault</a>
@@ -427,12 +445,23 @@ body[data-view="vault"] .fab,body[data-view="vault"] #addTop,body[data-view="vau
       <input id="eAmt" class="amount-in" type="text" inputmode="text" enterkeyhint="next" autocomplete="off" autocorrect="off" spellcheck="false" placeholder="0">
       <small>Type or dictate. You can add up items, like 220+260 or "220 plus 260".</small>
     </label>
-    <div class="two">
-      <label class="field"><span>Date</span><input id="eDate" type="date"></label>
-      <label class="field"><span>Category</span><select id="eCat"></select></label>
+    <div class="field"><label for="eDateText">Date</label>
+      <div class="dline"><input id="eDateText" type="text" inputmode="text" enterkeyhint="next" autocomplete="off" autocorrect="off" spellcheck="false" placeholder="Today" aria-describedby="eDateShow">
+        <button type="button" class="btn sm" data-act="e-date" data-d="0">Today</button><button type="button" class="btn sm" data-act="e-date" data-d="-1">Yesterday</button>
+        <button type="button" class="icon-btn" data-act="e-cal" aria-label="Pick a date from the calendar" title="Calendar">📅</button></div>
+      <input id="eDate" type="hidden"><input id="eDatePick" type="date" class="pick" tabindex="-1" aria-hidden="true">
+      <small id="eDateShow"></small>
+    </div>
+    <div class="field"><label for="eCatText">Category</label>
+      <input id="eCatText" type="text" inputmode="text" enterkeyhint="next" autocomplete="off" autocorrect="off" spellcheck="false" placeholder="Say or type, e.g. groceries" aria-describedby="eCatShow">
+      <select id="eCat" hidden aria-hidden="true" tabindex="-1"></select>
+      <small id="eCatShow"></small>
+      <div class="chips" id="eCatChips" role="group" aria-label="Categories"></div>
     </div>
     <div class="two">
-      <label class="field"><span id="eCardLbl">Paid by credit card?</span><select id="eCard"></select></label>
+      <div class="field"><span id="eCardLbl">Paid by credit card?</span>
+        <div class="seg" id="eCardSeg" role="group" aria-labelledby="eCardLbl"><button type="button" class="segb" data-act="e-card" data-v="no" aria-pressed="true">No</button><button type="button" class="segb" data-act="e-card" data-v="yes" aria-pressed="false">Yes</button></div></div>
+      <label class="field" id="eCardWrap" hidden><span>Which card</span><select id="eCard"></select></label>
       <label class="field" id="eAcctWrap"><span id="eAcctLbl">Paid from / into</span><select id="eAcct"></select></label>
     </div>
     <p class="cardhint" id="eCardHint" hidden></p>
@@ -996,10 +1025,12 @@ function renderSetup(X) {
       <label class="f k-name"><span class="fl">Card name</span><input id="k-name-${esc(c.id)}" type="text" value="${esc(c.name)}" data-k="name" placeholder="e.g. HDFC Millennia" aria-label="Card name"></label>
       <label class="f k-sd"><span class="fl">Statement day</span><select id="k-sd-${esc(c.id)}" data-k="stmtDay" aria-label="Statement day">${dayOpt(c.stmtDay)}</select></label>
       <label class="f k-dd"><span class="fl">Pay-by day</span><select id="k-dd-${esc(c.id)}" data-k="dueDay" aria-label="Payment due day">${dayOpt(c.dueDay)}</select></label>
-      <label class="f k-lim"><span class="fl">Credit limit ₹</span><input id="k-lim-${esc(c.id)}" type="number" min="0" step="1000" inputmode="numeric" value="${c.limit == null ? '' : esc(c.limit)}" data-k="limit" placeholder="Optional" aria-label="Credit limit"></label>
-      <label class="f k-ob"><span class="fl">Last bill unpaid ₹</span><input id="k-ob-${esc(c.id)}" type="number" min="0" step="1" inputmode="numeric" value="${+c.openBilled ? esc(c.openBilled) : ''}" data-k="openBilled" placeholder="0" aria-label="Last bill still unpaid"></label>
-      <label class="f k-ou"><span class="fl">Spent since that bill ₹</span><input id="k-ou-${esc(c.id)}" type="number" min="0" step="1" inputmode="numeric" value="${+c.openUnbilled ? esc(c.openUnbilled) : ''}" data-k="openUnbilled" placeholder="0" aria-label="Spent since that bill"></label>
-      <label class="f k-od"><span class="fl">As of</span><input id="k-od-${esc(c.id)}" type="date" value="${esc(c.openDate || '')}" data-k="openDate" aria-label="Amounts as of"></label>
+      <details class="k-more"><summary class="hint">Optional: credit limit and money already owed</summary><div class="kgrid">
+        <label class="f"><span class="fl2">Credit limit ₹</span><input id="k-lim-${esc(c.id)}" type="number" min="0" step="1000" inputmode="numeric" value="${c.limit == null ? '' : esc(c.limit)}" data-k="limit" placeholder="Optional" aria-label="Credit limit"></label>
+        <label class="f"><span class="fl2">Last bill still unpaid ₹</span><input id="k-ob-${esc(c.id)}" type="number" min="0" step="1" inputmode="numeric" value="${+c.openBilled ? esc(c.openBilled) : ''}" data-k="openBilled" placeholder="0" aria-label="Last bill still unpaid"></label>
+        <label class="f"><span class="fl2">Spent since that bill ₹</span><input id="k-ou-${esc(c.id)}" type="number" min="0" step="1" inputmode="numeric" value="${+c.openUnbilled ? esc(c.openUnbilled) : ''}" data-k="openUnbilled" placeholder="0" aria-label="Spent since that bill"></label>
+        <label class="f"><span class="fl2">Amounts as of</span><input id="k-od-${esc(c.id)}" type="date" value="${esc(c.openDate || '')}" data-k="openDate" aria-label="Amounts as of"></label>
+      </div><p class="hint" style="margin:6px 0 0">Only for money already owed on the "as of" date that you won't add as entries.</p></details>
       <button class="icon-btn k-del" type="button" data-act="del-cardrow" data-i="${i}" ${usedCard[c.id] ? `disabled title="Used by ${usedCard[c.id]} entries"` : 'title="Remove"'} aria-label="Remove card">×</button>
     </div>`).join('');
   const days = Array.from({length: 28}, (_, i) => i + 1);
@@ -1014,10 +1045,6 @@ function renderSetup(X) {
     <section class="card"><div class="sec-h"><h2>Accounts</h2><span class="hint">Liquid = usable within days. Untick Counted for money you hold for someone else.</span></div>
       <div class="ed" id="accEd"><div class="edrow acc-row edhead"><span>Name</span><span>Owner</span><span>Kind</span><span></span><span></span><span>Matures</span><span></span></div>${accRows}</div>
       <div class="row-actions"><button class="btn sm" type="button" data-act="add-acct">+ Add account</button></div></section>
-    <section class="card"><div class="sec-h"><h2>Credit cards</h2><span class="hint">A friendly name is enough. Never type the card number.</span></div>
-      <div class="ed" id="cardEd"><div class="edrow card-row edhead"><span>Card name</span><span>Statement day</span><span>Pay-by day</span><span>Credit limit ₹</span><span>Last bill unpaid ₹</span><span>Spent since ₹</span><span>As of</span><span></span></div>${cardRows || '<p class="muted" style="margin:12px 0">No cards yet. Add one below.</p>'}</div>
-      <p class="hint" style="margin:0;padding:0 16px 4px">Statement day is the "Statement date" printed on your bill. Pay-by day is the "Payment due date". Fill the three boxes on the right only for money you already owed on the "As of" date that you will not enter as entries.</p>
-      <div class="row-actions"><button class="btn sm" type="button" data-act="add-cardrow">+ Add card</button></div></section>
     ${accountHtml()}
     <section class="card"><div class="sec-h"><h2>Backup</h2><span class="hint">Your data lives in Google Sheets. A backup file is a spare copy.</span></div>
       <div class="row-actions">
@@ -1026,6 +1053,10 @@ function renderSetup(X) {
         <button class="btn" type="button" data-act="export-csv">Export entries (CSV)</button>
         <button class="btn danger" type="button" data-act="import">Restore a backup</button>
       </div></section>
+    <section class="card" id="cardSetup"><div class="sec-h"><h2>Credit cards</h2><span class="hint">${(d.cards || []).length ? '<a href="#cards">See card bills</a>' : 'A friendly name is enough. Never type the card number.'}</span></div>
+      <div class="ed" id="cardEd"><div class="edrow card-row edhead"><span>Card name</span><span>Statement day</span><span>Pay-by day</span><span></span></div>${cardRows || '<p class="muted" style="margin:12px 0">No cards yet. Add one below.</p>'}</div>
+      <p class="hint" style="margin:0;padding:0 16px 4px">Statement day is the "Statement date" on your bill; pay-by day is the "Payment due date". When you add an expense and choose <b>Paid by credit card? Yes</b>, it is put on the right bill from its date.</p>
+      <div class="row-actions"><button class="btn sm" type="button" data-act="add-cardrow">+ Add card</button></div></section>
     <div id="saveSlot"></div>`;
   renderSaveBar();
   if (focusId) { const el = document.getElementById(focusId); if (el) { el.focus(); try { if (sel != null && el.setSelectionRange) el.setSelectionRange(sel, sel); } catch (e) {} } }
@@ -1144,7 +1175,7 @@ function cardStripHtml(X) {
   const rows = up.map(({L, s}) => { const st = stStatus(s);
     return `<div class="li"><div class="l"><div class="t1">${esc(L.card.name)}</div><div class="t2">Bill of ${fmtDM(s.sd)} · pay by ${fmtDate(s.due)}</div></div>
       <div style="text-align:right;display:flex;flex-direction:column;align-items:flex-end;gap:3px"><div class="amt num">${rs(s.left)}</div><span class="chip ${st.c}">${st.t}</span></div></div>`; }).join('');
-  return `<section class="card list"><div class="sec-h"><h2>Card bills to pay</h2><a class="hint" href="#cards">Open Cards</a></div>
+  return `<section class="card list"><div class="sec-h"><h2>Card bills to pay</h2><a class="hint" href="#cards">Card bills</a></div>
     ${rows || '<div class="empty">No card bill is waiting to be paid.</div>'}
     <div class="foot"><span>Coming on next bills <b class="num">${rs(coming)}</b></span>${Ls.filter(L => L.nextSt).map(L => `<span>${esc(L.card.name)} bills on ${fmtDM(L.nextSt.sd)}</span>`).join('')}</div></section>`;
 }
@@ -1187,8 +1218,8 @@ function renderCards(X) {
   const cards = cardList();
   if (!cards.length) {
     $('#v-cards').innerHTML = `<section class="card"><div class="empty" style="display:flex;flex-direction:column;gap:12px;align-items:flex-start"><b>No cards yet</b>
-      <span>Add each credit card in Setup → Credit cards: a friendly name, the day your statement is made, and the day the bill must be paid. Then pick the card when you add an entry. The tracker puts each spend on the right bill.</span>
-      <a class="btn primary" href="#setup">Add cards in Setup</a></div></section>`;
+      <span>Add your credit cards at the bottom of the Setup tab: a friendly name, the statement day and the pay-by day. Then choose <b>Paid by credit card? Yes</b> when you add an expense, and it goes on the right bill.</span>
+      <a class="btn primary" href="#setup" data-act="e-gocards">Add cards in Setup</a></div></section>`;
     return;
   }
   const Ls = cards.map(c => cardLedger(c, X));
@@ -1215,24 +1246,30 @@ function renderCards(X) {
     ${rowsB.length ? `<div class="tscroll"><table><thead><tr><th>Card</th><th>Lands on bill of</th><th>Pay by</th><th class="n">Spent this budget cycle</th><th>Bill status</th></tr></thead>
       <tbody>${rowsB.join('')}<tr class="sum"><td colspan="3">Total on cards in ${cycleLabel(state.cur)}</td><td class="n">${rs(tot)}</td><td></td></tr></tbody></table></div>`
       : `<div class="empty">No card spends in ${cycleLabel(state.cur)} yet. Pick a card when you add an entry.</div>`}</section>`;
-  $('#v-cards').innerHTML = `<p class="lede">${lede}</p>${kpis}<div class="ctiles">${Ls.map(tileHtml).join('')}</div>${bridge}
+  $('#v-cards').innerHTML = `<a class="hint" href="#overview">‹ Back to Overview</a><p class="lede">${lede}</p>${kpis}<div class="ctiles">${Ls.map(tileHtml).join('')}</div>${bridge}
     <p class="hint" style="margin:0">Your budget counts a card spend on the day you spend. Your bank collects it on the bill shown here. Paying a card bill is a transfer, not new spending, so nothing counts twice. Add or change cards in <a href="#setup">Setup</a>.</p>`;
   if (focusId) { const el = document.getElementById(focusId); if (el) el.focus(); }
 }
 function updCardHint() {
   if (!state.config) return;
-  const X = ctx(), card = cardList().find(c => c.id === $('#eCard').value), cat = $('#eCat').value, date = $('#eDate').value, pay = isCardPay(cat, X.cm);
+  const X = ctx(), cat = $('#eCat').value, date = $('#eDate').value, pay = isCardPay(cat, X.cm), cards = cardList();
+  if (pay && cardYN !== 'yes') { cardYN = 'yes'; document.querySelectorAll('#eCardSeg .segb').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.v === 'yes'))); if (cards.length && !cards.some(c => c.id === $('#eCard').value)) $('#eCard').value = cards[0].id; }
+  const card = cardYN === 'yes' ? cards.find(c => c.id === $('#eCard').value) : null;
   $('#eCardLbl').textContent = pay ? 'Card being paid' : 'Paid by credit card?';
+  $('#eCardSeg').hidden = pay;
+  $('#eCardWrap').hidden = cardYN !== 'yes' || !cards.length;
   $('#eAcctLbl').textContent = pay ? 'Paid from (bank)' : 'Paid from / into';
   $('#eAcctWrap').hidden = !!card && !pay;
   let h = '';
-  if (pay && !card) h = 'Choose the card you are paying.';
+  if (cardYN === 'yes' && !cards.length) h = 'No credit cards set up yet. Add yours at the bottom of the Setup tab (name and statement day), or choose No.';
+  else if (pay && !card) h = 'Choose the card you are paying.';
   else if (pay && card) h = 'This payment reduces what you owe on ' + card.name + '. It is a transfer, so it does not count as spending.';
   else if (card && /^\d{4}-\d{2}-\d{2}$/.test(date)) {
     const S = dayOf(card.stmtDay, 1), D = dayOf(card.dueDay, 1), sd = stmtFor(date, S), from = addDays(stepStmt(sd, S, -1), 1);
     h = 'Goes on the ' + card.name + ' bill of ' + fmtDate(sd) + ' (spends ' + fmtDM(from) + ' – ' + fmtDM(sd) + '). Pay by ' + fmtDate(dueFor(sd, D)) + '.';
   }
   const el = $('#eCardHint'); el.textContent = h; el.hidden = !h;
+  if (cardYN === 'yes' && !cards.length) el.insertAdjacentHTML('beforeend', ' <button type="button" class="linkbtn" data-act="e-gocards">Add a card</button>');
 }
 
 /* ---------- views ---------- */
@@ -1279,42 +1316,130 @@ function fillDatalists(X) {
   $('#dlTags').innerHTML = [...tags].map(m => `<option value="${esc(m)}">`).join('');
 }
 
+/* ---------- dictation-friendly date and category ---------- */
+const WDAYS = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
+const MONTHS = ['january', 'february', 'march', 'april', 'may', 'june', 'july', 'august', 'september', 'october', 'november', 'december'];
+const NUMW = {a: 1, an: 1, one: 1, two: 2, three: 3, four: 4, five: 5, six: 6, seven: 7, eight: 8, nine: 9, ten: 10};
+function mkDate(y, m, d) { if (!(m >= 1 && m <= 12 && d >= 1 && d <= new Date(y, m, 0).getDate())) return null; return y + '-' + pad(m) + '-' + pad(d); }
+function mkGuess(d, m, yTxt) {
+  if (yTxt) { let y = +yTxt; if (y < 100) y += 2000; return mkDate(y, m, d); }
+  const t = parseYmd(todayStr()), y = t.getFullYear(); let r = mkDate(y, m, d);
+  if (r && dayDiff(t, parseYmd(r)) > 31) r = mkDate(y - 1, m, d); // a date well in the future without a year means last year
+  return r;
+}
+// Understands what people type or dictate: today, yesterday, 3 days ago, last Friday, 5th November, Nov 5, 05/11, 5-11-26, 2026-11-05.
+function parseDateText(s) {
+  const t = parseYmd(todayStr()), back = n => { const d = new Date(t); d.setDate(d.getDate() - n); return ymd(d); };
+  s = String(s || '').toLowerCase().replace(/,/g, ' ').replace(/\s+/g, ' ').trim().replace(/\.$/, '');
+  if (!s || /^(today|now)$/.test(s)) return todayStr();
+  if (s === 'yesterday') return back(1);
+  if (s === 'day before yesterday') return back(2);
+  if (s === 'last week') return back(7);
+  let m = s.match(/^(\d+|a|an|one|two|three|four|five|six|seven|eight|nine|ten) (days?|weeks?) ago$/);
+  if (m) { const n = NUMW[m[1]] || +m[1]; return back(m[2].startsWith('week') ? 7 * n : n); }
+  m = s.match(/^(last |this |on |past )?(sun|mon|tue|wed|thu|fri|sat)[a-z]*$/);
+  if (m) { const i = WDAYS.findIndex(w => w.startsWith(m[2])); let n = (t.getDay() - i + 7) % 7; if (m[1] === 'last ' && n === 0) n = 7; return back(n); }
+  m = s.match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/); if (m) return mkDate(+m[1], +m[2], +m[3]);
+  m = s.match(/^(\d{1,2})[\/.\- ](\d{1,2})(?:[\/.\- ](\d{2}|\d{4}))?$/); if (m) return mkGuess(+m[1], +m[2], m[3]); // Indian order: day/month/year
+  const mi = w => w.length >= 3 ? MONTHS.findIndex(x => x.startsWith(w.slice(0, 3))) : -1;
+  m = s.match(/^(?:on )?(?:the )?(\d{1,2})(?:st|nd|rd|th)?(?: of)? ([a-z]+)(?: (\d{2}|\d{4}))?$/); if (m && mi(m[2]) >= 0) return mkGuess(+m[1], mi(m[2]) + 1, m[3]);
+  m = s.match(/^(?:on )?([a-z]+) (?:the )?(\d{1,2})(?:st|nd|rd|th)?(?: (\d{2}|\d{4}))?$/); if (m && mi(m[1]) >= 0) return mkGuess(+m[2], mi(m[1]) + 1, m[3]);
+  m = s.match(/^(?:on )?(?:the )?(\d{1,2})(?:st|nd|rd|th)$/);
+  if (m) { let y = t.getFullYear(), mo = t.getMonth() + 1, r = mkDate(y, mo, +m[1]); if (r && r > todayStr()) { mo--; if (!mo) { mo = 12; y--; } r = mkDate(y, mo, +m[1]); } return r; }
+  return null;
+}
+const dateWords = iso => { const d = parseYmd(iso); return WDAYS[d.getDay()].slice(0, 1).toUpperCase() + WDAYS[d.getDay()].slice(1, 3) + ', ' + fmtDate(iso); };
+function setEntryDate(iso, fromText) {
+  $('#eDate').value = iso || '';
+  const show = $('#eDateShow');
+  if (iso) { show.textContent = '✓ ' + dateWords(iso); show.className = 'ok'; }
+  else { show.textContent = 'Not a date I understand. Try "yesterday", "5 Nov" or "05/11".'; show.className = 'bad'; }
+  if (!fromText) $('#eDateText').value = !iso || iso === todayStr() ? '' : iso === ymd(new Date(parseYmd(todayStr()).getTime() - 864e5)) ? 'Yesterday' : fmtDate(iso);
+  updCardHint();
+}
+// Extra words that point to each starting category (matched by its ID, so renaming a category keeps them).
+const CAT_WORDS = {
+  groc: 'grocery groceries food household kirana vegetable vegetables sabzi milk fruit fruits ration supermarket',
+  misc: 'misc miscellaneous other others', disc: 'discretionary travel trip holiday vacation flight hotel shopping',
+  school: 'school fee fees tuition', car: 'car bike petrol fuel diesel parking toll', med: 'medical medicine medicines doctor hospital pharmacy chemist',
+  office: 'office', emi: 'emi', maid: 'maid help cook', cesc: 'electricity power cesc light', maint: 'maintenance society',
+  salary: 'salary', interest: 'interest', reimb: 'reimbursement reimbursed', cardpay: 'card bill', lend: 'lent loan given repaid',
+  tosave: 'savings saving fd deposit', atm: 'atm withdrawal'
+};
+const cnorm = x => String(x || '').toLowerCase().replace(/&/g, ' and ').replace(/[^a-z0-9 ]/g, ' ').replace(/\s+/g, ' ').trim();
+function matchCategory(text) {
+  const q = cnorm(text); if (!q) return '';
+  const qw = q.split(' ').filter(w => w.length >= 2 && !['and', 'the', 'for', 'of'].includes(w));
+  let best = '', top = 0;
+  state.config.categories.forEach(c => {
+    const n = cnorm(c.name), nw = n.split(' '), syn = (CAT_WORDS[c.id] || '').split(' ').filter(Boolean);
+    let sc = n === q ? 100 : n.startsWith(q) && q.length >= 2 ? 80 : (q.length >= 3 && (n.includes(q) || q.includes(n))) ? 60 : 0;
+    qw.forEach(w => { if (syn.includes(w)) sc += 30; else if (w.length >= 3 && nw.some(x => x.startsWith(w))) sc += 20; });
+    if (sc > top) { top = sc; best = c.id; }
+  });
+  return best;
+}
+function setCat(id, fromText) {
+  const c = state.config.categories.find(x => x.id === id), show = $('#eCatShow');
+  $('#eCat').value = c ? c.id : '';
+  if (c) { show.textContent = '✓ ' + c.name; show.className = 'ok'; if (!fromText) $('#eCatText').value = c.name; }
+  else if (fromText && $('#eCatText').value.trim()) { show.textContent = 'No category matches that. Tap one below.'; show.className = 'bad'; }
+  else { show.textContent = ''; show.className = ''; }
+  document.querySelectorAll('#eCatChips .chipb').forEach(b => b.setAttribute('aria-pressed', String(!!c && b.dataset.id === c.id)));
+  updCardHint();
+}
+function fillCatChips() {
+  const cats = state.config.categories, chip = c => `<button type="button" class="chipb" data-act="e-chip" data-id="${esc(c.id)}" aria-pressed="false">${esc(c.name)}</button>`;
+  const spend = cats.filter(c => c.type === 'Expense'), rest = cats.filter(c => c.type !== 'Expense');
+  $('#eCatChips').innerHTML = spend.map(chip).join('') + (rest.length ? '<span class="chipsep" aria-hidden="true"></span>' + rest.map(chip).join('') : '');
+}
+let cardYN = 'no';
+function setCardYN(v) {
+  cardYN = v === 'yes' ? 'yes' : 'no';
+  document.querySelectorAll('#eCardSeg .segb').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.v === cardYN)));
+  const cards = cardList();
+  if (cardYN === 'yes' && cards.length && !cards.some(c => c.id === $('#eCard').value)) {
+    const last = readPref().card; $('#eCard').value = cards.some(c => c.id === last) ? last : cards[0].id;
+  }
+  updCardHint();
+}
+
 /* ---------- entry sheet ---------- */
 let editing = null, delArmed = false;
 function openEntry(t) {
   const X = ctx(); editing = t || null; delArmed = false;
-  fillCatOptions($('#eCat'), X, false);
+  fillCatOptions($('#eCat'), X, false); fillCatChips();
   $('#eAcct').innerHTML = '<option value="">Not recorded</option>' + state.config.accounts.map(a => `<option value="${esc(a.id)}">${esc(a.name)}</option>`).join('');
   const pref = readPref();
   $('#entryTitle').textContent = t ? 'Edit entry' : 'Add entry';
   $('#eAmt').value = t ? String(t.amount) : '';
-  $('#eDate').value = t ? t.date : todayStr();
-  $('#eCat').value = t ? t.cat : (pref.cat && X.cm[pref.cat] ? pref.cat : (state.config.categories[0] || {}).id || '');
+  const startCat = t ? t.cat : (pref.cat && X.cm[pref.cat] ? pref.cat : (state.config.categories[0] || {}).id || '');
   $('#eAcct').value = t ? (t.acct || '') : (pref.acct && X.am[pref.acct] ? pref.acct : '');
   $('#eNote').value = t ? t.note || '' : ''; $('#eMember').value = t ? t.member || '' : ''; $('#eTag').value = t ? t.tag || '' : '';
   $('#eRefund').checked = !!(t && t.refund);
-  $('#eCard').innerHTML = '<option value="">No, not a card</option>' + cardList().map(c => `<option value="${esc(c.id)}">${esc(c.name)}</option>`).join('');
-  $('#eCard').value = t ? (t.card || '') : '';
-  updCardHint();
+  $('#eCard').innerHTML = cardList().map(c => `<option value="${esc(c.id)}">${esc(c.name)}</option>`).join('');
+  $('#eCard').value = t && t.card ? t.card : '';
+  cardYN = t && t.card ? 'yes' : 'no'; // new entries default to No
+  setEntryDate(t ? t.date : todayStr()); setCat(startCat); setCardYN(cardYN);
   $('#eDel').hidden = !t; $('#eDel').classList.remove('armed'); $('#eDel').textContent = 'Delete';
   $('#eAgain').hidden = !!t; $('#eErr').hidden = true;
-  $('#entryScrim').hidden = false; setTimeout(() => $('#eAmt').focus(), 30);
+  $('#entryScrim').hidden = false; setTimeout(() => { if (!$('#entryForm').contains(document.activeElement)) $('#eAmt').focus(); }, 30);
 }
 function closeEntry() { $('#entryScrim').hidden = true; editing = null; }
 async function saveEntry(again) {
   const amt = parseAmount($('#eAmt').value), date = $('#eDate').value, cat = $('#eCat').value;
   const err = $('#eErr');
   if (!(amt > 0)) { err.textContent = 'Type an amount above zero, like 450 or 220+260.'; err.hidden = false; $('#eAmt').focus(); return; }
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) { err.textContent = 'Choose a date.'; err.hidden = false; return; }
-  if (!cat) { err.textContent = 'Choose a category.'; err.hidden = false; return; }
-  const card = $('#eCard').value, pay = isCardPay(cat, ctx().cm);
-  if (pay && !card) { err.textContent = 'Choose the card you are paying.'; err.hidden = false; $('#eCard').focus(); return; }
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) { err.textContent = 'Say or type a date, like "yesterday" or "5 Nov".'; err.hidden = false; $('#eDateText').focus(); return; }
+  if (!cat) { err.textContent = 'Say or type a category, or tap one.'; err.hidden = false; $('#eCatText').focus(); return; }
+  const pay = isCardPay(cat, ctx().cm), card = cardYN === 'yes' ? $('#eCard').value : '';
+  if (cardYN === 'yes' && !card) { err.textContent = cardList().length ? (pay ? 'Choose the card you are paying.' : 'Choose the card, or pick No.') : 'Add your card at the bottom of Setup first, or pick No.'; err.hidden = false; return; }
   const t = {id: editing ? editing.id : newId(), date, amount: amt, cat, acct: card && !pay ? '' : $('#eAcct').value, note: $('#eNote').value.trim(),
     member: $('#eMember').value.trim(), tag: $('#eTag').value.trim(), at: editing ? editing.at : Date.now(),
     refund: $('#eRefund').checked, card};
   const wasEditing = editing;
   try { await API.putTxn(t, wasEditing ? wasEditing._doc : null); } catch (e) { err.textContent = writeErr(e); err.hidden = false; return; }
-  writePref({cat, acct: t.acct});
+  writePref({cat, acct: t.acct, card: card || readPref().card || ''});
   const k = cycleKeyOf(date);
   toast(k === state.cur ? 'Saved' : 'Saved in ' + cycleLabel(k));
   if (again) { $('#eAmt').value = ''; $('#eNote').value = ''; $('#eRefund').checked = false; err.hidden = true; $('#eAmt').focus(); }
@@ -1406,7 +1531,7 @@ document.addEventListener('click', async ev => {
   else if (act === 'pay-card') {
     const X = ctx(), pc = state.config.categories.find(c => isCardPay(c.id, X.cm));
     if (!pc) { toast('Add a Transfer category called "Card bill payment" in Setup first', 'bad'); return; }
-    openEntry(); $('#eCat').value = pc.id; $('#eCard').value = b.dataset.card; $('#eAmt').value = b.dataset.amt; $('#eNote').value = 'Card bill payment'; updCardHint();
+    openEntry(); $('#eCard').value = b.dataset.card; setCat(pc.id); setCardYN('yes'); $('#eAmt').value = b.dataset.amt; $('#eNote').value = 'Card bill payment';
   }
   else if (act === 'add-cardrow') {
     const c = {id: newId(), name: '', stmtDay: 15, dueDay: 4, limit: null, openBilled: 0, openUnbilled: 0, openDate: todayStr()};
@@ -1489,7 +1614,21 @@ $('#main').addEventListener('change', ev => {
   if (ev.target.id === 'sDay' && state.draft) { state.draft.cycleStartDay = +ev.target.value; state.dirty = true; renderSetup(ctx()); }
   else if (ev.target.type === 'checkbox' && ev.target.closest('.edrow')) { /* handled by input */ }
 });
-['eCard', 'eDate', 'eCat'].forEach(id => $('#' + id).addEventListener('change', updCardHint));
+$('#eCard').addEventListener('change', updCardHint);
+$('#eDateText').addEventListener('input', ev => setEntryDate(parseDateText(ev.target.value), true));
+$('#eCatText').addEventListener('input', ev => setCat(matchCategory(ev.target.value), true));
+$('#eDatePick').addEventListener('change', ev => { if (/^\d{4}-\d{2}-\d{2}$/.test(ev.target.value)) setEntryDate(ev.target.value); });
+// Enter moves to the next box instead of saving half an entry (handy when dictating).
+[['eAmt', 'eDateText'], ['eDateText', 'eCatText'], ['eCatText', 'eNote']].forEach(([a, b]) => $('#' + a).addEventListener('keydown', ev => { if (ev.key === 'Enter') { ev.preventDefault(); $('#' + b).focus(); } }));
+document.addEventListener('click', ev => {
+  const b = ev.target.closest('[data-act^="e-"]'); if (!b) return;
+  const a = b.dataset.act;
+  if (a === 'e-date') setEntryDate(ymd(new Date(parseYmd(todayStr()).getTime() + (+b.dataset.d) * 864e5)));
+  else if (a === 'e-cal') { const pk = $('#eDatePick'); pk.value = $('#eDate').value || todayStr(); try { pk.showPicker(); } catch (e) { pk.focus(); pk.click(); } }
+  else if (a === 'e-chip') setCat(b.dataset.id);
+  else if (a === 'e-card') setCardYN(b.dataset.v);
+  else if (a === 'e-gocards') { closeEntry(); location.hash = '#setup'; setTimeout(() => { const el = $('#cardSetup'); if (el) el.scrollIntoView({behavior: 'smooth'}); }, 80); }
+});
 $('#main').addEventListener('change', async ev => {
   const el = ev.target; if (!el.classList || !el.classList.contains('mt') || !el.dataset.card) return;
   const raw = el.value.trim(), v = raw === '' ? null : parseSigned(raw);
@@ -1632,7 +1771,7 @@ function renderVault() {
         <div><button class="btn primary" type="submit" id="vGo">Unlock</button></div>
       </form>
       <p class="hint" style="margin:0">It locks itself after ${VAULT_IDLE_MIN} minutes without a tap. Nothing readable is saved on this phone.</p></div>`;
-    setTimeout(() => { const i = $('#vPass'); if (i && state.view === 'vault') i.focus(); }, 30);
+    setTimeout(() => { const i = $('#vPass'); if (i && state.view === 'vault' && !$('#vUnlock').contains(document.activeElement)) i.focus(); }, 30);
     return;
   }
   el.innerHTML = `<div class="vbar"><input id="vQ" type="search" placeholder="Search the vault" aria-label="Search the vault" value="${esc(V.q)}" autocomplete="off">
@@ -1670,7 +1809,7 @@ function renderVaultLists() {
       <div class="row-actions"><button class="btn sm primary" type="button" data-act="v-add" data-t="${t.k}">+ Add ${t.one}</button><button class="btn sm" type="button" data-act="v-import" data-t="${t.k}">Paste many rows</button><button class="btn sm" type="button" data-act="v-cols" data-t="${t.k}">Rename columns</button>${t.delAll && total ? `<button class="btn sm danger" type="button" data-act="v-delall" data-t="${t.k}">Delete all</button>` : ''}</div></section>`;
   }).join('') + (broken ? `<div class="banner warn">${broken} row${broken === 1 ? '' : 's'} could not be opened with this passphrase. They may have been changed outside the app.</div>` : '');
 }
-function vForm(html) { const f = $('#vaultForm'); f.innerHTML = html; $('#vaultScrim').hidden = false; setTimeout(() => { const i = f.querySelector('input'); if (i) i.focus(); }, 30); }
+function vForm(html) { const f = $('#vaultForm'); f.innerHTML = html; $('#vaultScrim').hidden = false; setTimeout(() => { const i = f.querySelector('input:not([type=hidden])'); if (i && !f.contains(document.activeElement)) i.focus(); }, 30); }
 function vEditRow(tk, id) {
   const t = VAULT_TABLES.find(x => x.k === tk), cols = vCols(tk), r = id ? V.rows.find(x => x.id === id) : null;
   vForm(`<h3>${r ? 'Edit' : 'Add'} ${esc(t.one)}</h3>
