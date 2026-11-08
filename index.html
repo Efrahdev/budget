@@ -255,6 +255,12 @@ tr.sum td{font-weight:700;border-top:1px solid var(--rule-2)}
 .segb{border:0;background:var(--sheet);color:var(--ink);padding:8px 22px;font-weight:600;min-height:38px;cursor:pointer}
 .segb+.segb{border-left:1px solid var(--rule-2)}
 .segb[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink)}
+.tbox{display:block;width:100%;border:1px solid var(--rule-2);background:var(--sheet);color:var(--ink);border-radius:7px;padding:7px 9px;min-height:36px;line-height:1.4;white-space:nowrap;overflow-x:auto;overflow-y:hidden;cursor:text;-webkit-user-select:text;user-select:text;scrollbar-width:none}
+.tbox::-webkit-scrollbar{display:none}
+.tbox:empty::before{content:attr(data-placeholder);color:var(--ink-3);pointer-events:none}
+.tbox:focus{outline:2px solid var(--accent);outline-offset:1px;border-color:var(--accent)}
+.tbox.amount-in{min-height:58px;line-height:40px}
+.tbox.mini{min-height:34px;padding:5px 9px;font-size:14px}
 .seg3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));width:100%}
 .seg3 .segb{padding:9px 6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .field input.mini{min-height:34px;padding:5px 9px;font-size:14px}
@@ -448,12 +454,12 @@ body[data-view="vault"] .fab,body[data-view="vault"] #addTop,body[data-view="vau
 <div class="scrim" id="entryScrim" hidden>
   <form class="sheet" id="entryForm" novalidate>
     <h3 id="entryTitle">Add entry</h3>
-    <label class="field"><span>Amount (₹)</span>
-      <input id="eAmt" class="amount-in" type="text" inputmode="text" enterkeyhint="next" autocomplete="off" autocorrect="off" spellcheck="false" placeholder="0">
-    </label>
+    <div class="field" data-focus="eAmt"><span id="eAmtLbl">Amount (₹)</span>
+      <div id="eAmt" class="tbox amount-in" role="textbox" aria-labelledby="eAmtLbl" inputmode="text" enterkeyhint="next" autocorrect="off" spellcheck="false" data-placeholder="0"></div>
+    </div>
     <div class="field"><span id="eCatLbl">Category</span>
       <div class="chips" id="eCatChips" role="group" aria-labelledby="eCatLbl"></div>
-      <input id="eCatText" type="text" inputmode="text" enterkeyhint="done" autocomplete="off" autocorrect="off" spellcheck="false" placeholder="…or say or type one" aria-describedby="eCatShow" class="mini">
+      <div id="eCatText" class="tbox mini" role="textbox" aria-labelledby="eCatLbl" aria-describedby="eCatShow" inputmode="text" enterkeyhint="done" autocorrect="off" spellcheck="false" data-placeholder="…or say or type one"></div>
       <select id="eCat" hidden aria-hidden="true" tabindex="-1"></select>
       <small id="eCatShow"></small>
     </div>
@@ -471,11 +477,11 @@ body[data-view="vault"] .fab,body[data-view="vault"] #addTop,body[data-view="vau
       </div>
       <input id="eDate" type="hidden"><input id="eDatePick" type="date" class="pick" tabindex="-1" aria-hidden="true">
     </div>
-    <label class="field"><span>Note</span><input id="eNote" type="text" autocomplete="off" enterkeyhint="done" placeholder="What was it? (optional)"></label>
+    <div class="field" data-focus="eNote"><span id="eNoteLbl">Note</span><div id="eNote" class="tbox" role="textbox" aria-labelledby="eNoteLbl" inputmode="text" enterkeyhint="done" data-placeholder="What was it? (optional)"></div></div>
     <details class="emore" id="eMore"><summary>More: for whom, tag, refund</summary>
       <div class="two" style="margin-top:10px">
-        <label class="field"><span>For whom</span><input id="eMember" type="text" list="dlMembers" autocomplete="off"></label>
-        <label class="field"><span>Tag</span><input id="eTag" type="text" list="dlTags" autocomplete="off" placeholder="Trip, one-off"></label>
+        <div class="field" data-focus="eMember"><span id="eMemberLbl">For whom</span><div id="eMember" class="tbox" role="textbox" aria-labelledby="eMemberLbl" inputmode="text" enterkeyhint="done" data-placeholder=""></div></div>
+        <div class="field" data-focus="eTag"><span id="eTagLbl">Tag</span><div id="eTag" class="tbox" role="textbox" aria-labelledby="eTagLbl" inputmode="text" enterkeyhint="done" data-placeholder="Trip, one-off"></div></div>
       </div>
       <label class="ck-line" style="margin-top:8px"><input id="eRefund" type="checkbox"> This is a refund (reduces spending in its category)</label>
     </details>
@@ -1447,6 +1453,32 @@ function fillCatChips() {
   $('#eCatChips').innerHTML = spend.map(chip).join('') + (rest.length ? '<span class="chipsep" aria-hidden="true"></span>' + rest.map(chip).join('') : '');
 }
 
+/* ---------- entry form text boxes ----------
+   Built as editable areas rather than <input> boxes: Chrome and Android autofill only offer saved cards,
+   addresses and passwords on real form boxes, so these get the plain keyboard (with dictation). */
+function makeTextBox(el) {
+  el.setAttribute('contenteditable', 'plaintext-only');
+  if (el.contentEditable !== 'plaintext-only') el.setAttribute('contenteditable', 'true');
+  Object.defineProperty(el, 'value', {configurable: true,
+    get() { return (el.textContent || '').replace(/\s*\n\s*/g, ' '); },
+    set(v) { el.textContent = v == null ? '' : String(v); }});
+  el.addEventListener('input', () => {
+    if (!el.textContent) el.innerHTML = '';                       // keeps the placeholder showing when emptied
+    else if (/\n/.test(el.textContent)) { el.textContent = el.value; focusBox(el); } // one line only
+  });
+  el.addEventListener('paste', ev => {                             // plain text only, on one line
+    if (el.getAttribute('contenteditable') !== 'true') return;
+    ev.preventDefault(); document.execCommand('insertText', false, ((ev.clipboardData && ev.clipboardData.getData('text/plain')) || '').replace(/\s*\n\s*/g, ' '));
+  });
+}
+function focusBox(el) { // focus with the cursor at the end
+  if (!el) return; el.focus();
+  try { const r = document.createRange(); r.selectNodeContents(el); r.collapse(false); const s = getSelection(); s.removeAllRanges(); s.addRange(r); } catch (e) {}
+}
+['eAmt', 'eCatText', 'eNote', 'eMember', 'eTag'].forEach(id => makeTextBox($('#' + id)));
+// Tapping a box's label puts the cursor in the box, like a normal form.
+document.querySelectorAll('#entryForm [data-focus]').forEach(f => f.addEventListener('click', ev => { if (!ev.target.closest('.tbox, button, a, details')) focusBox($('#' + f.dataset.focus)); }));
+
 /* ---------- entry sheet ---------- */
 let editing = null, delArmed = false;
 function openEntry(t) {
@@ -1473,12 +1505,12 @@ function openEntry(t) {
   setCat(startCat); setEntryDate(t ? t.date : todayStr());
   $('#eDel').hidden = !t; $('#eDel').classList.remove('armed'); $('#eDel').textContent = 'Delete';
   $('#eAgain').hidden = !!t; $('#eErr').hidden = true;
-  $('#entryScrim').hidden = false; setTimeout(() => { if (!$('#entryForm').contains(document.activeElement)) $('#eAmt').focus(); }, 30);
+  $('#entryScrim').hidden = false; setTimeout(() => { if (!$('#entryForm').contains(document.activeElement)) focusBox($('#eAmt')); }, 30);
 }
 function closeEntry() { $('#entryScrim').hidden = true; editing = null; }
 async function saveEntry(again) {
   const amt = parseAmount($('#eAmt').value), date = $('#eDate').value, cat = $('#eCat').value, err = $('#eErr'), X = ctx();
-  const fail = (m, el) => { err.textContent = m; err.hidden = false; if (el) el.focus(); };
+  const fail = (m, el) => { err.textContent = m; err.hidden = false; if (el) focusBox(el); };
   if (!(amt > 0)) return fail('Type an amount above zero, like 450 or 220+260.', $('#eAmt'));
   if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) return fail('Choose a date.');
   if (!cat) return fail('Tap a category.');
@@ -1497,7 +1529,7 @@ async function saveEntry(again) {
   writePref({cat, bank: (payMode === 'bank' || pay) && payAcct ? payAcct : pref.bank || '', card: card || pref.card || ''});
   const k = cycleKeyOf(date);
   toast(k === state.cur ? 'Saved' : 'Saved in ' + cycleLabel(k));
-  if (again) { $('#eAmt').value = ''; $('#eNote').value = ''; $('#eRefund').checked = false; err.hidden = true; renderPay(); $('#eAmt').focus(); }
+  if (again) { $('#eAmt').value = ''; $('#eNote').value = ''; $('#eRefund').checked = false; err.hidden = true; renderPay(); focusBox($('#eAmt')); }
   else closeEntry();
 }
 
@@ -1680,7 +1712,8 @@ $('#main').addEventListener('change', ev => {
 $('#eCatText').addEventListener('input', ev => setCat(matchCategory(ev.target.value), true));
 $('#eDatePick').addEventListener('change', ev => { if (/^\d{4}-\d{2}-\d{2}$/.test(ev.target.value)) setEntryDate(ev.target.value); });
 // Enter on the amount or category box closes the keyboard (so the buttons are in view) instead of saving early.
-['eAmt', 'eCatText'].forEach(id => $('#' + id).addEventListener('keydown', ev => { if (ev.key === 'Enter') { ev.preventDefault(); ev.target.blur(); } }));
+['eAmt', 'eCatText', 'eMember', 'eTag'].forEach(id => $('#' + id).addEventListener('keydown', ev => { if (ev.key === 'Enter') { ev.preventDefault(); ev.currentTarget.blur(); } }));
+$('#eNote').addEventListener('keydown', ev => { if (ev.key === 'Enter') { ev.preventDefault(); saveEntry(false); } });
 document.addEventListener('click', ev => {
   const b = ev.target.closest('[data-act^="e-"]'); if (!b) return;
   const a = b.dataset.act;
