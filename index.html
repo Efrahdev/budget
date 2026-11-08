@@ -428,6 +428,19 @@ body[data-view="vault"] .fab,body[data-view="vault"] #addTop,body[data-view="vau
 .wrow .chev{width:10px;flex:0 0 10px;color:var(--ink-3);text-align:center}
 .wrow.go{cursor:pointer}.wrow.go:active{background:var(--accent-soft)}
 .wtot{background:var(--paper);border-top:1px solid var(--rule-2)!important}.wtot .t1{font-weight:800}.wtot .amt{font-weight:800}
+/* typed boxes (see the keyboard rules in the script) */
+.tin{-webkit-user-select:text;user-select:text;cursor:text}
+.tin.multi{white-space:pre-wrap;overflow-wrap:anywhere;overflow-y:auto;min-height:96px;max-height:40vh}
+.tin.secret{-webkit-text-security:disc}
+.tin[data-type=number],.balrow .tin,.mt.tin,#fdRate{text-align:right}
+.filters .tin{flex:1 1 180px;width:auto;min-height:38px;padding:7px 10px;border-radius:8px;min-width:0}
+.addcard .tin{flex:1 1 160px;max-width:280px;width:auto;min-height:38px;padding:7px 10px;border-radius:8px;min-width:0}
+.dline .tin{flex:1 1 auto;min-width:0;width:auto}
+.vbar .tin{flex:1 1 200px;width:auto;min-height:38px;padding:7px 10px;border-radius:8px;min-width:0}
+.connect .field .tin{font-size:15px}.lockcard .field .tin{font-size:16px}
+#fdRate{display:inline-block;width:64px;min-height:30px;padding:4px 6px}
+.mt.tin{display:inline-block;width:112px;min-height:32px;padding:5px 8px;border-radius:6px}
+.mt.set.tin{border-color:var(--accent);background:var(--accent-soft)}
 </style>
 </head>
 <body>
@@ -609,6 +622,81 @@ const state = {
 /* ---------- helpers ---------- */
 const $ = (s, el = document) => el.querySelector(s);
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+/* ---------- keyboard rules for every text box (house rule, applies to the whole app) ----------
+   1. No Android/Google autofill bar, ever. Chrome offers autofill (passwords, addresses, cards) on <input> and
+      <textarea> whatever autocomplete says, so every typed box is turned into a plain editable box that Chrome
+      never autofills. It still has .value, fires 'input', and fires 'change' when you leave it or press Enter.
+      This runs by itself on anything the app draws (innerHTML is watched), so a new box can't slip through.
+   2. Never redraw a screen while someone is typing in it: the phone keyboard opening is a resize, and a sync
+      can arrive at any moment; redrawing would delete the box and close the keyboard. Redraws wait until
+      you leave the box. */
+const KEEP_INPUT = /^(checkbox|radio|file|hidden|date|datetime-local|month|week|time|color|range|button|submit|reset|image)$/;
+const SKIP_ATTR = /^(type|value|autocomplete|min|max|step|size|maxlength|minlength|name|pattern|required|readonly|list|form|autocorrect|autocapitalize|spellcheck|inputmode|enterkeyhint|placeholder|rows|cols|wrap|data-lpignore|data-keep-ac)$/;
+function toTextBox(inp) {
+  const tag = inp.tagName, type = tag === 'TEXTAREA' ? 'textarea' : (inp.getAttribute('type') || 'text').toLowerCase();
+  if (tag === 'INPUT' && KEEP_INPUT.test(type)) return;
+  if (inp.hasAttribute('readonly')) return; // read-only boxes never open the keyboard
+  const multi = tag === 'TEXTAREA', box = document.createElement('div');
+  for (const a of [...inp.attributes]) if (!SKIP_ATTR.test(a.name)) box.setAttribute(a.name, a.value);
+  box.classList.add('tbox', 'tin'); if (multi) box.classList.add('multi'); if (type === 'password') box.classList.add('secret');
+  box.setAttribute('role', 'textbox'); if (multi) box.setAttribute('aria-multiline', 'true');
+  box.setAttribute('inputmode', inp.getAttribute('inputmode') || ({number: 'decimal', email: 'email', tel: 'tel', url: 'url', search: 'search'}[type] || 'text'));
+  box.setAttribute('enterkeyhint', inp.getAttribute('enterkeyhint') || (multi ? 'enter' : type === 'search' ? 'search' : 'done'));
+  box.setAttribute('autocorrect', 'off'); box.setAttribute('spellcheck', 'false');
+  box.setAttribute('autocapitalize', type === 'password' || type === 'email' || type === 'url' ? 'off' : inp.getAttribute('autocapitalize') || 'off');
+  if (inp.getAttribute('placeholder')) box.dataset.placeholder = inp.getAttribute('placeholder');
+  if (!box.hasAttribute('aria-label') && inp.getAttribute('placeholder') && !inp.closest('label')) box.setAttribute('aria-label', inp.getAttribute('placeholder'));
+  box.dataset.type = type;
+  if (multi) makeMultiBox(box); else makeTextBox(box);
+  const v = tag === 'TEXTAREA' ? inp.value : inp.getAttribute('value');
+  box.value = v || '';
+  Object.defineProperty(box, 'type', {configurable: true, get: () => type});
+  Object.defineProperty(box, 'placeholder', {configurable: true, get: () => box.dataset.placeholder || '', set: p => { box.dataset.placeholder = p; }});
+  box.select = () => { box.focus(); try { const r = document.createRange(); r.selectNodeContents(box); const s = getSelection(); s.removeAllRanges(); s.addRange(r); } catch (e) {} };
+  inp.replaceWith(box);
+}
+function makeMultiBox(el) { // several lines allowed (pasting tables, backups)
+  el.setAttribute('contenteditable', 'plaintext-only');
+  if (el.contentEditable !== 'plaintext-only') el.setAttribute('contenteditable', 'true');
+  Object.defineProperty(el, 'value', {configurable: true, get() { return (el.innerText || '').replace(/\n$/, ''); }, set(v) { el.textContent = v == null ? '' : String(v); }});
+  el.addEventListener('input', () => { if (!el.textContent) el.innerHTML = ''; });
+  el.addEventListener('paste', ev => { if (el.getAttribute('contenteditable') !== 'true') return; ev.preventDefault(); document.execCommand('insertText', false, (ev.clipboardData && ev.clipboardData.getData('text/plain')) || ''); });
+}
+function noAutofill(root) {
+  if (!root || !root.querySelectorAll) return;
+  if (root.matches && root.matches('input, textarea')) { toTextBox(root); return; }
+  root.querySelectorAll('input, textarea').forEach(toTextBox);
+  root.querySelectorAll('form').forEach(f => f.setAttribute('autocomplete', 'off'));
+}
+{ // watch every innerHTML the app writes, so boxes are converted before any code touches them
+  const d = Object.getOwnPropertyDescriptor(Element.prototype, 'innerHTML');
+  Object.defineProperty(Element.prototype, 'innerHTML', {configurable: true, enumerable: d.enumerable, get() { return d.get.call(this); },
+    set(v) { d.set.call(this, v); if (typeof v === 'string' && /<(input|textarea)\b/i.test(v)) noAutofill(this); }});
+}
+// 'change' when you leave a box or press Enter, like a normal input. Enter submits the form if it has a submit button.
+const boxStart = new WeakMap();
+document.addEventListener('focusin', ev => { const t = ev.target; if (t && t.classList && t.classList.contains('tin')) boxStart.set(t, t.value); });
+function boxChanged(t) { if (boxStart.has(t) && boxStart.get(t) !== t.value) { boxStart.set(t, t.value); t.dispatchEvent(new Event('change', {bubbles: true})); } }
+document.addEventListener('focusout', ev => { const t = ev.target; if (t && t.classList && t.classList.contains('tin')) boxChanged(t); });
+document.addEventListener('keydown', ev => {
+  const t = ev.target; if (ev.key !== 'Enter' || ev.defaultPrevented || !t || !t.classList || !t.classList.contains('tin') || t.classList.contains('multi')) return;
+  ev.preventDefault(); boxChanged(t);
+  const f = t.closest('form'), sub = f && f.querySelector('[type=submit]:not([disabled])');
+  if (sub) f.requestSubmit(sub); else t.blur();
+});
+// Is someone typing inside this part of the page? Then leave it alone.
+const EDITING = '[contenteditable="true"],[contenteditable="plaintext-only"],input:not([type=checkbox]):not([type=radio]):not([type=button]):not([type=submit]),textarea,select';
+function typingIn(root) {
+  const a = document.activeElement, r = typeof root === 'string' ? document.querySelector(root) : root;
+  return !!(a && r && a !== document.body && r.contains(a) && a.matches && a.matches(EDITING));
+}
+let heldRedraw = false; // a redraw was skipped while typing; do it once the box is left
+document.addEventListener('focusout', () => {
+  if (!heldRedraw) return;
+  setTimeout(() => { if (!heldRedraw || typingIn('#main') || typingIn('#gate')) return; heldRedraw = false; render(); }, 80);
+});
+function holdIfTyping(root) { if (typingIn(root)) { heldRedraw = true; return true; } return false; }
+
 const INR = new Intl.NumberFormat('en-IN', {maximumFractionDigits: 0});
 const rs = n => { const v = Math.round(n || 0); return (v < 0 ? '−' : '') + '₹' + INR.format(Math.abs(v)); };
 const rsShort = n => { const a = Math.abs(n || 0), s = n < 0 ? '−' : '';
@@ -1299,7 +1387,7 @@ function closeWhy() { $('#whyScrim').hidden = true; W$.stack = []; }
 document.addEventListener('click', ev => {
   const b = ev.target.closest('[data-act]'); if (!b) return;
   const act = b.dataset.act;
-  if (act === 'why') { if (ev.target.closest('a, input, button:not([data-act="why"]), details')) return; openWhy(b.dataset.k, false); }
+  if (act === 'why') { if (ev.target.closest('a, input, .tin, button:not([data-act="why"]), details')) return; openWhy(b.dataset.k, false); }
   else if (act === 'why-go') openWhy(b.dataset.k, true);
   else if (act === 'why-back') { W$.stack.pop(); $('#whyBox').dataset.k = ''; whyShow(); }
   else if (act === 'why-close') closeWhy();
@@ -1418,7 +1506,7 @@ function renderSetup(X) {
       </div></section>
     <div id="saveSlot"></div>`;
   renderSaveBar();
-  if (focusId) { const el = document.getElementById(focusId); if (el) { el.focus(); try { if (sel != null && el.setSelectionRange) el.setSelectionRange(sel, sel); } catch (e) {} } }
+  if (focusId) { const el = document.getElementById(focusId); if (el) { if (el.classList.contains('tin')) focusBox(el); else { el.focus(); try { if (sel != null && el.setSelectionRange) el.setSelectionRange(sel, sel); } catch (e) {} } } }
 }
 function renderSaveBar() {
   const slot = $('#saveSlot'); if (!slot) return;
@@ -1608,7 +1696,7 @@ function renderCards(X) {
       : `<div class="empty">No card spends in ${cycleLabel(state.cur)} yet. Pick a card when you add an entry.</div>`}</section>`;
   $('#v-cards').innerHTML = `<a class="hint" href="#overview">‹ Back to Overview</a><p class="lede">${lede}</p>${kpis}<div class="ctiles">${Ls.map(tileHtml).join('')}</div>${bridge}
     <p class="hint" style="margin:0">Your budget counts a card spend on the day you spend. Your bank collects it on the bill shown here. Paying a card bill is a transfer, not new spending, so nothing counts twice. Your cards come from the <a href="#vault">Vault</a>.</p>`;
-  if (focusId) { const el = document.getElementById(focusId); if (el) el.focus(); }
+  if (focusId) { const el = document.getElementById(focusId); if (el) { if (el.classList.contains('tin')) focusBox(el); else el.focus(); } }
 }
 function chipsShow(box, reset) {
   if (!box) return;
@@ -1684,8 +1772,8 @@ function setView(v) {
   document.body.dataset.view = state.view;
   VIEWS.forEach(n => { $('#v-' + n).hidden = !state.config || n !== state.view; });
   document.querySelectorAll('.tabs a').forEach(a => a.setAttribute('aria-current', a.dataset.v === state.view ? 'page' : 'false'));
-  if (state.config && (state.view === 'trend' || state.view === 'wealth')) { const X = ctx(); state.view === 'trend' ? renderTrend(X) : renderWealth(X); }
-  if (state.config && state.view === 'vault') renderVault();
+  if (state.config && (state.view === 'trend' || state.view === 'wealth') && !holdIfTyping('#v-' + state.view)) { const X = ctx(); state.view === 'trend' ? renderTrend(X) : renderWealth(X); }
+  if (state.config && state.view === 'vault' && !holdIfTyping('#v-vault')) renderVault();
 }
 function render() {
   const X = state.config ? ctx() : null;
@@ -1695,7 +1783,7 @@ function render() {
     VIEWS.forEach(n => { $('#v-' + n).hidden = true; }); closeWhy();
     const known = state.got.config;
     gate.hidden = false;
-    if (!signedIn()) { renderSignIn(gate); return; }
+    if (!signedIn()) { if (!holdIfTyping(gate)) renderSignIn(gate); return; }
     gate.innerHTML = Sync.err && !known
       ? `<h2>Can't reach Google Sheets</h2><p>${esc(state.connErr || 'Check the internet connection, then try again.')}</p><div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn primary" type="button" data-act="sync-now">Try again</button><button class="btn" type="button" data-act="disconnect">Sign out</button></div>`
       : !known
@@ -1709,8 +1797,13 @@ function render() {
   const isOwner = !!(Sync.me && Sync.me.role === 'Owner');
   $('#vaultTab').hidden = !isOwner;
   if (!isOwner && state.view === 'vault') state.view = 'overview';
-  renderOverview(X); renderEntries(X); renderCards(X); renderWealth(X); renderTrend(X);
-  if (!state.dirty) { state.draft = clone(state.config); renderSetup(X); }
+  // A screen someone is typing in is left alone; it is redrawn when they leave the box.
+  if (!holdIfTyping('#v-overview')) renderOverview(X);
+  if (!holdIfTyping('#v-entries')) renderEntries(X);
+  if (!holdIfTyping('#v-cards')) renderCards(X);
+  if (!holdIfTyping('#v-wealth')) renderWealth(X);
+  renderTrend(X);
+  if (!state.dirty && !holdIfTyping('#v-setup')) { state.draft = clone(state.config); renderSetup(X); }
   fillDatalists(X);
   setView(state.view);
   if (!$('#whyScrim').hidden) whyShow(); // keep an open breakdown up to date after a sync
@@ -1831,6 +1924,7 @@ function focusBox(el) { // focus with the cursor at the end
   try { const r = document.createRange(); r.selectNodeContents(el); r.collapse(false); const s = getSelection(); s.removeAllRanges(); s.addRange(r); } catch (e) {}
 }
 ['eAmt', 'eCatText', 'eNote', 'eMember', 'eTag'].forEach(id => makeTextBox($('#' + id)));
+noAutofill(document.body); // the boxes already on the page (search, restore backup)
 // Tapping a box's label puts the cursor in the box, like a normal form.
 document.querySelectorAll('#entryForm [data-focus]').forEach(f => f.addEventListener('click', ev => { if (!ev.target.closest('.tbox, button, a, details')) focusBox($('#' + f.dataset.focus)); }));
 
@@ -1923,7 +2017,7 @@ async function saveBalances() {
   const date = $('#bDate').value, err = $('#bErr');
   if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) { err.textContent = 'Choose a date.'; err.hidden = false; return; }
   const values = {}; let bad = '';
-  document.querySelectorAll('#balGrid input').forEach(inp => { const v = parseSigned(inp.value); if (v === null) return; if (isNaN(v)) bad = inp.getAttribute('aria-label'); else values[inp.dataset.id] = v; });
+  document.querySelectorAll('#balGrid .tin').forEach(inp => { const v = parseSigned(inp.value); if (v === null) return; if (isNaN(v)) bad = inp.getAttribute('aria-label'); else values[inp.dataset.id] = v; });
   if (bad) { err.textContent = bad + ' is not a number.'; err.hidden = false; return; }
   try { await API.putBalance(date, values); } catch (e) { err.textContent = writeErr(e); err.hidden = false; return; }
   $('#balScrim').hidden = true; toast('Balances saved');
@@ -1999,7 +2093,7 @@ document.addEventListener('click', async ev => {
   else if (act === 'add-cardrow') {
     const c = {id: newId(), name: '', stmtDay: 15, dueDay: 4, limit: null, openBilled: 0, openUnbilled: 0, openDate: todayStr()};
     state.draft.cards = state.draft.cards || []; state.draft.cards.push(c); state.dirty = true; renderSetup(ctx());
-    const el = document.getElementById('k-name-' + c.id); if (el) el.focus();
+    const el = document.getElementById('k-name-' + c.id); if (el) focusBox(el);
   }
   else if (act === 'del-cardrow') { if (!arm(b, 'card' + b.dataset.i, '✓')) return; state.draft.cards.splice(+b.dataset.i, 1); state.dirty = true; renderSetup(ctx()); }
   else if (act === 'add') openEntry();
@@ -2118,7 +2212,7 @@ window.addEventListener('hashchange', () => {
 });
 // Only the charts depend on screen width. Never redraw other screens on resize: the phone keyboard opening
 // is a resize, and redrawing a screen with a text box would close the keyboard again.
-let rz; window.addEventListener('resize', () => { clearTimeout(rz); rz = setTimeout(() => { if (state.config && (state.view === 'trend' || state.view === 'wealth')) setView(state.view); }, 200); });
+let rz; window.addEventListener('resize', () => { clearTimeout(rz); rz = setTimeout(() => { if (state.config && (state.view === 'trend' || state.view === 'wealth') && !holdIfTyping('#v-' + state.view)) setView(state.view); }, 200); });
 
 /* ---------- vault ----------
    Zero-knowledge: everything is encrypted here, on the phone, before it is sent.
@@ -2387,7 +2481,7 @@ function renderVaultLists() {
       <div class="row-actions"><button class="btn sm primary" type="button" data-act="v-add" data-t="${t.k}">+ Add ${t.one}</button><button class="btn sm" type="button" data-act="v-import" data-t="${t.k}">Paste many rows</button><button class="btn sm" type="button" data-act="v-cols" data-t="${t.k}">Rename columns</button>${t.delAll && total ? `<button class="btn sm danger" type="button" data-act="v-delall" data-t="${t.k}">Delete all</button>` : ''}</div></section>`;
   }).join('') + (broken ? `<div class="banner warn">${broken} row${broken === 1 ? '' : 's'} could not be opened with this passphrase. They may have been changed outside the app.</div>` : '');
 }
-function vForm(html) { const f = $('#vaultForm'); f.innerHTML = html; $('#vaultScrim').hidden = false; setTimeout(() => { const i = f.querySelector('input:not([type=hidden])'); if (i && !f.contains(document.activeElement)) i.focus(); }, 30); }
+function vForm(html) { const f = $('#vaultForm'); f.innerHTML = html; $('#vaultScrim').hidden = false; setTimeout(() => { const i = f.querySelector('.tin, input:not([type=hidden]):not([type=checkbox])'); if (i && !f.contains(document.activeElement)) i.focus(); }, 30); }
 function vEditRow(tk, id) {
   const t = VAULT_TABLES.find(x => x.k === tk), cols = vCols(tk), r = id ? V.rows.find(x => x.id === id) : null;
   vForm(`<h3>${r ? 'Edit' : 'Add'} ${esc(t.one)}</h3>
@@ -2815,15 +2909,8 @@ document.addEventListener('click', ev => {
    Chrome shows its autofill bar (saved cards with "scan card", addresses, passwords) above the keyboard when boxes
    look like a payment or address form (e.g. the vault's CC number / Exp / CVV columns). It ignores autocomplete="off"
    for card fields but respects a value it does not recognise, so every box the app draws gets one. */
-const NO_AUTOFILL = 'bt-no-autofill';
-function plainKeyboard(root) {
-  if (!root || !root.querySelectorAll) return;
-  root.querySelectorAll('form').forEach(f => { if (f.getAttribute('autocomplete') !== 'off') f.setAttribute('autocomplete', 'off'); });
-  root.querySelectorAll('input:not([type=password]):not([type=hidden]):not([type=checkbox]):not([type=date]):not([type=file]):not([data-keep-ac]), textarea')
-    .forEach(i => { if (i.getAttribute('autocomplete') !== NO_AUTOFILL) i.setAttribute('autocomplete', NO_AUTOFILL); });
-}
-plainKeyboard(document);
-new MutationObserver(list => { for (const m of list) for (const n of m.addedNodes) if (n.nodeType === 1) plainKeyboard(n.parentNode || n); })
+// Anything added to the page some other way than innerHTML also follows the keyboard rules.
+new MutationObserver(list => { for (const m of list) for (const n of m.addedNodes) if (n.nodeType === 1 && (n.matches('input, textarea') || n.querySelector('input, textarea'))) noAutofill(n.parentNode || n); })
   .observe(document.body, {childList: true, subtree: true});
 
 /* ---------- start ---------- */
