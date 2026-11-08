@@ -1719,7 +1719,7 @@ function renderWealth(X) {
   const branch = (key, title, sub, total, rows) => `<details class="wtree" data-tree="${esc(key)}"${state.openTree && state.openTree[key] ? ' open' : ''}><summary class="li"><div class="l"><div class="t1">${esc(title)}</div><div class="t2">${esc(sub)}</div></div>
       <div class="wt-r"><span class="amt num">${rs(total)}</span><span class="wt-chev" aria-hidden="true">▾</span></div></summary>${rows}</details>`;
   const cardTwigs = () => cardLs.map(L => `<div class="li tap twig"${whyAttr('card:' + L.card.id)}><div class="l"><div class="t1">${esc(L.card.name)}</div>
-      <div class="t2">${L.dueNow > 0.5 ? `Billed ${rs(L.dueNow)}${L.unpaid[0] ? ', pay by ' + fmtDM(L.unpaid[0].due) : ''}` : 'Nothing billed to pay'}${L.nextSt ? ` · Next bill ${fmtDM(L.nextSt.sd)}: ${rs(L.nextSt.left)}` : ''}${L.laterAmt > 0.5 ? ` · later ${rs(L.laterAmt)}` : ''}</div></div>
+      <div class="t2">${L.dueNow > 0.5 ? `Billed ${rs(L.dueNow)}${L.unpaid[0] ? ', Pay By ' + fmtDM(L.unpaid[0].due) : ''}` : 'Nothing billed to pay'}${L.nextSt ? ` · Next Stmt Date ${fmtDM(L.nextSt.sd)}: ${rs(L.nextSt.left)}` : ''}${L.laterAmt > 0.5 ? ` · later ${rs(L.laterAmt)}` : ''}</div></div>
       <div class="amt num">${rs(-L.owed)}</div></div>`).join('');
   const sections = groupsDef.map(([title, test], gi) => {
     const xs = accts.filter(test), extra = title === 'Liabilities' && cardLs.length > 0; if (!xs.length && !extra) return '';
@@ -2247,14 +2247,14 @@ function whyCard(id, X) {
     items: L.before.length ? L.before.slice().sort(byDateDesc).map(t => Object.assign(entLine(t, X, 0), {text: rs(t.amount)})) : undefined});
   L.stmts.slice().reverse().forEach(s => {
     if (!s.items.length) return; const st = stStatus(s);
-    lines.push({label: (s.closed ? 'Bill of ' : 'Next bill, ') + fmtDM(s.sd), sub: `${s.items.length} spend${s.items.length === 1 ? '' : 's'} · ${st.t}`, v: sum(s.items, i => i.v),
+    lines.push({label: (s.closed ? 'Stmt Date ' : 'Next Stmt Date ') + fmtDM(s.sd), sub: `${s.items.length} spend${s.items.length === 1 ? '' : 's'} · ${st.t}`, v: sum(s.items, i => i.v),
       items: s.items.slice().sort((a, b) => byDateDesc(a.t, b.t)).map(i => entLine(i.t, X, i.v))});
   });
-  L.stmts.filter(s => s.own && Math.abs(s.billed - s.calc) > 0.004).forEach(s => lines.push({label: 'Your figure on bill of ' + fmtDM(s.sd), sub: `Bank's bill ${rs(s.billed)} instead of ${rs(s.calc)} worked out`, v: s.billed - s.calc}));
+  L.stmts.filter(s => s.own && Math.abs(s.billed - s.calc) > 0.004).forEach(s => lines.push({label: 'Your figure for Stmt Date ' + fmtDM(s.sd), sub: `Bank's bill ${rs(s.billed)} instead of ${rs(s.calc)} worked out`, v: s.billed - s.calc}));
   if (L.pays.length) lines.push({label: 'Payments made', sub: L.pays.length + ' payment' + (L.pays.length === 1 ? '' : 's'), v: -sum(L.pays, p => p.v),
     items: L.pays.slice().sort((a, b) => byDateDesc(a.t, b.t)).map(p => entLine(p.t, X, -p.v))});
-  const split = [{label: 'Billed, to pay', sub: L.unpaid.length ? L.unpaid.map(s => 'bill of ' + fmtDM(s.sd)).join(', ') : 'nothing waiting', v: L.dueNow}];
-  if (L.nextSt) split.push({label: 'On the next bill', sub: 'bills on ' + fmtDate(L.nextSt.sd), v: L.nextSt.left});
+  const split = [{label: 'Billed, to pay', sub: L.unpaid.length ? L.unpaid.map(s => 'Stmt Date ' + fmtDM(s.sd)).join(', ') : 'nothing waiting', v: L.dueNow}];
+  if (L.nextSt) split.push({label: 'On the next bill', sub: 'Stmt Date ' + fmtDate(L.nextSt.sd), v: L.nextSt.left});
   if (L.laterAmt > 0.004) split.push({label: 'On later bills', v: L.laterAmt});
   if (L.credit > 0.004) split.push({label: 'Paid ahead', sub: 'reduces your next bill', v: -L.credit});
   return {title: card.name, head: 'Total owed', value: rs(L.owed), sections: [
@@ -2421,10 +2421,10 @@ function whyBuild(k) {
   if (kind === 'c-owed' || kind === 'c-due' || kind === 'c-next') {
     if (!W0.cardLs.length) return null;
     if (kind === 'c-owed') return {title: 'Total owed on cards', head: 'Billed plus not yet billed', value: rs(W0.cardOwed), sections: [{title: 'Each card', lines: cardLines(W0, false), total: {label: 'Total owed', v: W0.cardOwed}}]};
-    if (kind === 'c-due') { const xs = W0.cardLs.flatMap(L => L.unpaid.map(s => ({label: L.card.name, sub: 'bill of ' + fmtDM(s.sd) + ' · pay by ' + fmtDate(s.due) + (s.paid > 0.004 ? ' · ' + rs(s.paid) + ' already paid' : ''), v: s.left, k: 'card:' + L.card.id})));
+    if (kind === 'c-due') { const xs = W0.cardLs.flatMap(L => L.unpaid.map(s => ({label: L.card.name, sub: 'Stmt Date ' + fmtDM(s.sd) + ' · Pay By ' + fmtDate(s.due) + (s.paid > 0.004 ? ' · ' + rs(s.paid) + ' already paid' : ''), v: s.left, k: 'card:' + L.card.id})));
       const v = sum(W0.cardLs, L => L.dueNow);
       return {title: 'Billed, to pay', head: 'Bills already made', value: rs(v), sections: [{title: 'Unpaid bills', lines: xs.length ? xs : [{label: 'No bill is waiting', text: ''}], total: {label: 'Billed, to pay', v}}]}; }
-    const xs = W0.cardLs.filter(L => L.nextSt).map(L => ({label: L.card.name, sub: 'bills on ' + fmtDate(L.nextSt.sd) + ' · ' + L.nextSt.items.length + ' spends', v: L.nextSt.left, k: 'card:' + L.card.id}));
+    const xs = W0.cardLs.filter(L => L.nextSt).map(L => ({label: L.card.name, sub: 'Stmt Date ' + fmtDate(L.nextSt.sd) + ' · ' + L.nextSt.items.length + ' spends', v: L.nextSt.left, k: 'card:' + L.card.id}));
     const v = sum(W0.cardLs, L => L.nextSt ? L.nextSt.left : 0);
     return {title: 'On next bills', head: 'Spent since the last bills', value: rs(v), sections: [{title: 'Each card', lines: xs, total: {label: 'On next bills', v}}]};
   }
@@ -2735,8 +2735,8 @@ function cardRowHtml(k, i) {
   const amt = v => (v === '' || v == null || !isFinite(+String(v).replace(/[,₹\s]/g, ''))) ? esc(v || '') : (+String(v).replace(/[,₹\s]/g, '') ? INR.format(Math.round(+String(v).replace(/[,₹\s]/g, ''))) : '');
   return `<div class="edrow card-row" data-i="${i}">
       <label class="f k-name"><span class="fl2">Name</span><input id="k-name-${id}" type="text" value="${esc(k.name)}" data-k="name" aria-label="Card name"></label>
-      <label class="f k-sd"><span class="fl2">Bill on</span><select id="k-sd-${id}" data-k="stmtDay" aria-label="Statement day">${days(k.stmtDay)}</select></label>
-      <label class="f k-dd"><span class="fl2">Pay by</span><select id="k-dd-${id}" data-k="dueDay" aria-label="Pay-by day">${days(k.dueDay, 'About 20 days later')}</select></label>
+      <label class="f k-sd"><span class="fl2">Stmt Date</span><select id="k-sd-${id}" data-k="stmtDay" aria-label="Stmt Date">${days(k.stmtDay)}</select></label>
+      <label class="f k-dd"><span class="fl2">Pay By</span><select id="k-dd-${id}" data-k="dueDay" aria-label="Pay By">${days(k.dueDay, 'About 20 days later')}</select></label>
       <button class="icon-btn k-del" type="button" data-act="del-cardrow" data-i="${i}" aria-label="Remove card" title="Remove card">×</button>
       <details class="k-more"><summary class="hint">Limit, and what you owed when you started</summary><div class="kgrid">
         <label class="f"><span class="fl2">Limit ₹</span><input id="k-lim-${id}" type="text" inputmode="numeric" value="${amt(k.limit)}" data-k="limit" placeholder="—"></label>
@@ -2770,7 +2770,7 @@ function adjustHtml(X) {
   const list = X.txns.filter(t => t.tag === ADJ_TAG).sort((a, b) => a.date < b.date ? 1 : a.date > b.date ? -1 : (b.at || 0) - (a.at || 0)).slice(0, 40);
   const row = t => { const cardOnly = isCardAdj(t.cat, X.cm), c = X.cm[t.cat];
     return `<div class="li adjrow"><div class="l"><div class="t1">${cardOnly ? 'Card bill only' : esc(c ? c.name : 'Unlisted')}${t.card ? ' · ' + esc(cardName(t.card)) : ''}</div>
-      <div class="t2">${cardOnly ? 'bill of ' + fmtDate(t.date) : 'counts in ' + cycleLabel(cycleKeyOf(t.date)) + ' · ' + fmtDM(t.date)}${t.note && t.note !== ADJ_TAG ? ' · ' + esc(t.note) : ''}</div></div>
+      <div class="t2">${cardOnly ? 'Stmt Date ' + fmtDate(t.date) : 'counts in ' + cycleLabel(cycleKeyOf(t.date)) + ' · ' + fmtDM(t.date)}${t.note && t.note !== ADJ_TAG ? ' · ' + esc(t.note) : ''}</div></div>
       <div style="display:flex;gap:10px;align-items:center"><span class="amt num${t.refund ? ' neg' : ''}">${t.refund ? '− ' : '+ '}${rs(t.amount)}</span><button class="icon-btn" type="button" data-act="adj-del" data-id="${esc(t.id)}" data-doc="${esc(t._doc)}" aria-label="Delete adjustment">×</button></div></div>`; };
   return `<section class="card adjcard"><div class="sec-h"><h2>Adjustments</h2><span class="hint">One-off corrections. Saved as entries tagged “Adjustment”.</span></div>
     <div class="adjform">
@@ -2785,7 +2785,7 @@ function adjustHtml(X) {
         <label class="f"><span class="fl2">On a card?</span><select id="adjCard1"><option value="">No card</option>${cards.map(k => `<option value="${esc(k.id)}"${k.id === A.card1 ? ' selected' : ''}>${esc(k.name)}</option>`).join('')}</select></label>`
         : cards.length ? `
         <label class="f"><span class="fl2">Card</span><select id="adjCard2">${cards.map(k => `<option value="${esc(k.id)}"${k.id === A.card2 ? ' selected' : ''}>${esc(k.name)}</option>`).join('')}</select></label>
-        <label class="f"><span class="fl2">Bill</span><select id="adjBill">${bills.map(sd => `<option value="${sd}"${sd === A.bill ? ' selected' : ''}>${billLabel(sd)}</option>`).join('')}</select></label>` : '<p class="hint">No cards yet.</p>'}
+        <label class="f"><span class="fl2">Stmt Date</span><select id="adjBill">${bills.map(sd => `<option value="${sd}"${sd === A.bill ? ' selected' : ''}>${billLabel(sd)}</option>`).join('')}</select></label>` : '<p class="hint">No cards yet.</p>'}
         <label class="f adjnote"><span class="fl2">Note</span><input id="adjNote" type="text" value="${esc(A.note)}" placeholder="${A.kind === 'month' ? 'e.g. one-off from June' : 'e.g. EMI 3 of 6, phone'}"></label>
       </div>
       <div class="row-actions" style="padding:0"><button class="btn primary" type="button" data-act="adj-add">Add adjustment</button></div>
@@ -2824,7 +2824,7 @@ document.addEventListener('click', async ev => {
       cfg.categories.push(cat); await API.saveConfig(cfg);
     }
     await API.putTxn(Object.assign(base, {date: A.bill, cat: cat.id, card: A.card2}));
-    toast((A.sign < 0 ? 'Taken off ' : 'Added to ') + cardName(A.card2) + ' bill of ' + fmtDM(A.bill));
+    toast((A.sign < 0 ? 'Taken off ' : 'Added to ') + cardName(A.card2) + ' bill, Stmt Date ' + fmtDM(A.bill));
   }
   A.amt = ''; A.note = ''; A.sign = 1; renderSetup(ctx());
 });
@@ -2909,7 +2909,7 @@ function cardInfo(t, X) {
   if (!t.card) return '';
   const c = cardList().find(x => x.id === t.card); if (!c) return 'Removed card';
   if (isCardPay(t.cat, X.cm)) return 'Paid to ' + c.name;
-  return c.name + ' · bill of ' + fmtDM(stmtFor(t.date, dayOf(c.stmtDay, 1)));
+  return c.name + ' · Stmt Date ' + fmtDM(stmtFor(t.date, dayOf(c.stmtDay, 1)));
 }
 const dueOf = (card, sd) => card && +card.dueDay ? dueFor(sd, dayOf(card.dueDay, 1)) : addDays(sd, 20);
 function cardLedger(card, X) {
@@ -2967,7 +2967,7 @@ function cardOwedAsOf(L, d) {
   return v;
 }
 function stStatus(s) {
-  if (!s.closed) return {t: 'Bills on ' + fmtDM(s.sd), c: ''};
+  if (!s.closed) return {t: 'Stmt Date ' + fmtDM(s.sd), c: ''};
   if (s.billed <= 0) return {t: 'Nothing to pay', c: 'good'};
   if (s.left <= 0.005) return s.onTime ? {t: 'Paid', c: 'good'} : {t: 'Paid late', c: 'warn'};
   const days = dayDiff(parseYmd(todayStr()), parseYmd(s.due));
@@ -2997,7 +2997,7 @@ function cardStripHtml(X) {
       <div class="cckpi"${whyAttr('c-owed')}><span class="lbl">Total owed</span><span class="v fit">${rs(owed)}</span><span class="sub">on ${cards.length} card${cards.length === 1 ? '' : 's'}</span></div>
     </div>${split}
     ${up.length ? `<div class="ccg">Pay now</div>` + up.map(({L, s, st}) => row(L, s.due, st.c || 'soonish', `${sdot(st.c)}${st.t} · bill ${fmtDM(s.sd)}`, s.left)).join('') : `<div class="ccok">${sdot('good')}No card bill is waiting to be paid.</div>`}
-    ${coming.length ? `<div class="ccg">Coming up</div>` + coming.map(L => row(L, L.nextSt.sd, 'next', `Bills ${fmtDM(L.nextSt.sd)} · pay by ${fmtDM(L.nextSt.due)}`, L.nextSt.left)).join('') : ''}
+    ${coming.length ? `<div class="ccg">Coming up</div>` + coming.map(L => row(L, L.nextSt.sd, 'next', `Stmt Date ${fmtDM(L.nextSt.sd)} · Pay By ${fmtDM(L.nextSt.due)}`, L.nextSt.left)).join('') : ''}
     ${idle ? `<div class="ccfoot">${idle} card${idle === 1 ? ' has' : 's have'} nothing due</div>` : ''}
   </section>`;
 }
@@ -3007,13 +3007,13 @@ function tileHtml(L) {
   let billBox;
   if (first) { const st = stStatus(first);
     billBox = `<span class="lbl">Billed · to pay</span><span class="v num">${rs(L.dueNow)}</span><span class="chip ${st.c}">${st.t}</span>
-      <span class="s">${L.unpaid.length > 1 ? L.unpaid.length + ' bills unpaid. Oldest: ' : ''}bill of ${fmtDM(first.sd)}, pay by ${fmtDate(first.due)}</span>
+      <span class="s">${L.unpaid.length > 1 ? L.unpaid.length + ' bills unpaid. Oldest: ' : ''}Stmt Date ${fmtDM(first.sd)}, Pay By ${fmtDate(first.due)}</span>
       <button class="btn sm primary" type="button" data-act="pay-card" data-card="${esc(c.id)}" data-amt="${r2(L.dueNow)}">Record payment</button>`; }
   else if (lastClosed) { const st = stStatus(lastClosed);
-    billBox = `<span class="lbl">Last bill</span><span class="v num">${rs(lastClosed.billed)}</span><span class="chip ${st.c}">${st.t}</span><span class="s">Bill of ${fmtDM(lastClosed.sd)}, pay by ${fmtDate(lastClosed.due)}</span>`; }
+    billBox = `<span class="lbl">Last bill</span><span class="v num">${rs(lastClosed.billed)}</span><span class="chip ${st.c}">${st.t}</span><span class="s">Stmt Date ${fmtDM(lastClosed.sd)}, Pay By ${fmtDate(lastClosed.due)}</span>`; }
   else billBox = `<span class="lbl">Billed · to pay</span><span class="v num">${rs(0)}</span><span class="s">No bill made since you started tracking.</span>`;
-  const nextBox = n ? `<span class="lbl">Next bill</span><span class="v num">${rs(n.left)}</span><span class="chip">Bills on ${fmtDM(n.sd)}</span>
-      <span class="s">Spends ${fmtDM(n.start)} – ${fmtDM(n.sd)} · pay by ${fmtDate(n.due)}</span>
+  const nextBox = n ? `<span class="lbl">Next bill</span><span class="v num">${rs(n.left)}</span><span class="chip">Stmt Date ${fmtDM(n.sd)}</span>
+      <span class="s">Spends ${fmtDM(n.start)} – ${fmtDM(n.sd)} · Pay By ${fmtDate(n.due)}</span>
       <span class="s">${n.items.length} entr${n.items.length === 1 ? 'y' : 'ies'} so far${n.opening ? ' + ' + rs(n.opening) + ' carried in' : ''}${n.paid > 0.005 ? ' · ' + rs(n.paid) + ' paid ahead' : ''}</span>` : '';
   const hist = L.stmts.slice().reverse().slice(0, 8).map(s => {
     const st = stStatus(s), byCyc = {};
@@ -3024,14 +3024,14 @@ function tileHtml(L) {
       <td class="n">${rs(s.paid)}</td><td class="n">${rs(s.left)}</td><td><span class="chip ${st.c}">${st.t}</span></td><td class="from">${from}</td></tr>`;
   }).join('');
   return `<article class="ctile">
-    <header class="ct-h"${whyAttr('card:' + c.id)}><div><div class="ct-name">${esc(c.name)}</div><div class="ct-sub">Bill on the ${ordinal(L.S)} · ${L.D ? 'pay by the ' + ordinal(L.D) : 'pay within about 20 days'}</div></div>
+    <header class="ct-h"${whyAttr('card:' + c.id)}><div><div class="ct-name">${esc(c.name)}</div><div class="ct-sub">Stmt Date ${ordinal(L.S)} · ${L.D ? 'Pay By ' + ordinal(L.D) : 'pay within about 20 days'}</div></div>
       <div class="ct-owed"><span class="lbl">Total owed</span><span class="v num">${rs(L.owed)}</span></div></header>
     ${lim ? `<div class="ct-limit"><div class="bar" role="img" aria-label="${pct(used / lim)} of limit used"><span class="fill ${used / lim > 0.8 ? 'bad' : used / lim > 0.5 ? 'warn' : 'good'}" style="width:${Math.min(1, used / lim) * 100}%"></span></div><span class="s">${rs(used)} of ${rs(lim)} limit used (${pct(used / lim)}) · ${rs(Math.max(0, lim - used))} available</span></div>` : ''}
     <div class="ct-grid"><div class="ct-box">${billBox}</div><div class="ct-box">${nextBox}</div></div>
     ${L.laterAmt > 0.005 ? `<div class="ct-extra">Later bills: <b>${rs(L.laterAmt)}</b>, from entries dated after ${fmtDM(n.sd)}.</div>` : ''}
     ${L.credit > 0.005 ? `<div class="ct-extra">You have paid <b>${rs(L.credit)}</b> more than you owe. It will reduce your next bill.</div>` : ''}
     <details class="ct-hist" data-card="${esc(c.id)}"${state.openHist[c.id] ? ' open' : ''}><summary>Bills and what is on them</summary>
-      <div class="tscroll"><table><thead><tr><th>Bill date</th><th>Spends</th><th>Pay by</th><th class="n">Calculated</th><th class="n">Your figure</th><th class="n">Paid</th><th class="n">Left</th><th>Status</th><th>From budget cycles</th></tr></thead><tbody>${hist}</tbody></table></div>
+      <div class="tscroll"><table><thead><tr><th>Stmt Date</th><th>Spends</th><th>Pay By</th><th class="n">Calculated</th><th class="n">Your figure</th><th class="n">Paid</th><th class="n">Left</th><th>Status</th><th>From budget cycles</th></tr></thead><tbody>${hist}</tbody></table></div>
       <p class="hint" style="margin:0;padding:8px 16px 12px">Type in Your figure if your bank's bill shows a different amount, for example because of fees. Clear the box to use the calculated amount.</p></details>
   </article>`;
 }
@@ -3065,7 +3065,7 @@ function renderCards(X) {
       rowsB.push(`<tr><td>${esc(L.card.name)}</td><td>${fmtDate(sd)}</td><td>${fmtDate(dueOf(L.card, sd))}</td><td class="n">${rs(g[sd])}</td><td>${st ? `<span class="chip ${st.c}">${st.t}</span>` : ''}</td></tr>`); });
   });
   const bridge = `<section class="card"><div class="sec-h"><h2>${cycleLabel(state.cur)} budget cycle on your cards</h2><span class="hint">Which bill each spend lands on</span></div>
-    ${rowsB.length ? `<div class="tscroll"><table><thead><tr><th>Card</th><th>Lands on bill of</th><th>Pay by</th><th class="n">Spent this budget cycle</th><th>Bill status</th></tr></thead>
+    ${rowsB.length ? `<div class="tscroll"><table><thead><tr><th>Card</th><th>Stmt Date</th><th>Pay By</th><th class="n">Spent this budget cycle</th><th>Bill status</th></tr></thead>
       <tbody>${rowsB.join('')}<tr class="sum"><td colspan="3">Total on cards in ${cycleLabel(state.cur)}</td><td class="n">${rs(tot)}</td><td></td></tr></tbody></table></div>`
       : `<div class="empty">No card spends in ${cycleLabel(state.cur)} yet. Pick a card when you add an entry.</div>`}</section>`;
   $('#v-cards').innerHTML = `<a class="hint" href="#overview">‹ Back to Overview</a><p class="lede">${lede}</p>${kpis}<div class="ctiles">${Ls.map(tileHtml).join('')}</div>${bridge}
@@ -3129,7 +3129,7 @@ function renderPay() {
   else if (pay) h = card ? 'Reduces what you owe on ' + card.name + '. A transfer, so not counted as spending.' + (payAcct ? ' ' + acctHint(X, X.res(payAcct)) : '') : 'Choose the card you are paying.';
   else if (payMode === 'card' && card && card.stmtDay && /^\d{4}-\d{2}-\d{2}$/.test(date)) {
     const S = dayOf(card.stmtDay, 1), sd = stmtFor(date, S);
-    h = 'Goes on the bill of ' + fmtDate(sd) + ' · pay by ' + fmtDate(dueOf(card, sd)) + '.';
+    h = 'Stmt Date ' + fmtDate(sd) + ' · Pay By ' + fmtDate(dueOf(card, sd)) + '.';
   }
   $('#ePayHint').textContent = h; $('#ePayHint').hidden = !h;
   $('#eRefundLbl').textContent = ty === 'Transfer' && !pay ? 'Money coming in (e.g. a loan repaid to you), not going out' : 'This is a refund (reduces spending in its category)';
@@ -3368,7 +3368,7 @@ function impactLines(oldT, newT, X0, X1) {
     const u = uses.find(x => x.X === X1); if (!u) return;
     const L = cardLedger(k, X1);
     if (L.before.some(t => t.id === u.t.id)) warn.push(k.name + ': dated before ' + fmtDM(L.openDate) + ', so it is inside what you owed when you started tracking (Setup → Credit cards).');
-    else { const st = L.stmts.find(s => s.own && s.items.some(i => i.t.id === u.t.id)); if (st) warn.push(k.name + ': you typed the bill of ' + fmtDM(st.sd) + ' yourself (' + rs(st.billed) + '), so it stays. Clear that figure in Card bills to use the entries.'); }
+    else { const st = L.stmts.find(s => s.own && s.items.some(i => i.t.id === u.t.id)); if (st) warn.push(k.name + ': you typed the bill for Stmt Date ' + fmtDM(st.sd) + ' yourself (' + rs(st.billed) + '), so it stays. Clear that figure in Card bills to use the entries.'); }
   });
   return {out, warn};
 }
@@ -3652,7 +3652,7 @@ let rz; window.addEventListener('resize', () => { clearTimeout(rz); rz = setTime
    The key is non-extractable and lives only in memory; nothing readable is ever stored on the phone. */
 const VAULT_TABLES = [
   {k: 'cards', title: 'Credit cards', one: 'card', many: 'credit cards', show: [0, 1], layout: 2, notes: 8, delAll: true,
-   cols: ['CC', 'Name', 'CC number', 'Exp', 'CVV', 'Stmt', 'PW', 'Cust ID', 'Note'],
+   cols: ['CC', 'Name', 'CC number', 'Exp', 'CVV', 'Stmt Date', 'PW', 'Cust ID', 'Note'],
    alias: [['cc', 'card', 'cardname', 'bank'], ['name', 'nameoncard', 'holder'], ['ccnumber', 'cardnumber', 'cardno', 'number', 'ccno', 'cc'],
      ['exp', 'expiry', 'validthru', 'valid'], ['cvv', 'cvc'], ['stmt', 'statement', 'statementdate', 'stmtdate'], ['pw', 'password', 'pass'],
      ['custid', 'customerid', 'cid', 'custidnote'], ['note', 'notes', 'remarks']]},
@@ -3694,7 +3694,8 @@ function vCols(k) {
   if (!named && k === 'cards' && Array.isArray(sc.cards) && sc.cards.length === 9) named = sc.cards; // renamed before names were stored per layout
   if (!named && !t.layout) named = sc[k];
   const ok = Array.isArray(named) && named.length === t.cols.length;
-  return t.cols.map((c, i) => (ok && named[i]) || c);
+  // Card statement column is always shown as "Stmt Date" (owner's wording), even if saved earlier as "Stmt".
+  return t.cols.map((c, i) => { const n = (ok && named[i]) || c; return k === 'cards' && i === 5 && /^\s*stmt\.?\s*$/i.test(n) ? 'Stmt Date' : n; });
 }
 // Rows saved with an older column layout are moved into the current one. Nothing is dropped:
 // values with no column of their own go, labelled, into Note (cards) or Notes (bank accounts).
@@ -3763,6 +3764,8 @@ window.addEventListener('online', () => { clearTimeout(vRetry); vRetry = null; v
 // Bank accounts and cards to pay with come from the vault. Only names (plus last 4 digits when two names are the
 // same) and statement days are copied into Setup data, so family phones can use them without vault access.
 const nkey = x => cnorm(x).split(' ').filter(Boolean).sort().join(' ');
+// Pay By on a Vault card face: the card's pay-by day from Setup (blank there = about 20 days after the Stmt Date).
+const vPayBy = id => { const k = cardList().find(c => c.id === id); return k && +k.dueDay ? `<em>Pay By ${ordinal(+k.dueDay)}</em>` : ''; };
 const parseStmtDay = v => { const m = String(v || '').match(/\d{1,2}/), d = m ? +m[0] : 0; return d >= 1 && d <= 31 ? d : 0; };
 const last4 = v => { const d = String(v || '').replace(/\D/g, ''); return d.length >= 4 ? d.slice(-4) : ''; };
 function vaultPayLists() {
@@ -3924,7 +3927,7 @@ function vCardFace(r) { // a credit card that looks like the card
       <div class="vcc-top"><span class="vcc-bank">${esc(r.c[0] || 'Card')}</span>${net ? `<span class="vcc-net n-${net.toLowerCase()}">${net}</span>` : ''}</div>
       ${on ? vOnCard(r, VAULT_TABLES[0], [0]) : `<div class="vcc-chip" aria-hidden="true"></div>
       <div class="vcc-num">•••• •••• •••• <b>${esc(vLast4(r.c[2]) || '····')}</b></div>
-      <div class="vcc-bot"><span class="vcc-name">${esc(r.c[1] || '')}</span><span class="vcc-meta">${r.c[3] ? `<small>VALID THRU</small>${esc(r.c[3])}` : ''}${stmt ? `<em>Bill ${ordinal(stmt)}</em>` : ''}</span></div>`}
+      <div class="vcc-bot"><span class="vcc-name">${esc(r.c[1] || '')}</span><span class="vcc-meta">${r.c[3] ? `<small>VALID THRU</small>${esc(r.c[3])}` : ''}${stmt ? `<em>Stmt Date ${ordinal(stmt)}</em>` : ''}${vPayBy(r.id)}</span></div>`}
     </div></div>`;
 }
 function vBankFace(r) { // a bank account drawn exactly like the credit cards: bank colours, emblem, last 4 digits, holder, IFSC
