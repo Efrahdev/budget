@@ -246,6 +246,12 @@ td.n,th.n{text-align:right}
   .c-del,.a-del{justify-self:end}
   .acc-row .a-name{grid-area:name}.acc-row .a-owner{grid-area:owner}.acc-row .a-cls{grid-area:cls}.acc-row .a-liq{grid-area:liq}.acc-row .a-cnt{grid-area:cnt}.acc-row .a-mat{grid-area:mat}.acc-row .a-del{grid-area:del}
 }
+.plink{padding:4px 16px 14px;border-top:1px solid var(--rule)}
+.plink .pl-h{font-weight:700;padding-top:10px}
+.plink .hint{margin:2px 0 6px}
+.plrow{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.3fr);gap:10px;align-items:center;padding:6px 0}
+.plrow .pl-n{font-weight:600;overflow-wrap:anywhere}
+.plrow select{width:100%;border:1px solid var(--rule-2);background:var(--sheet);color:var(--ink);border-radius:7px;padding:6px 8px;font:inherit}
 .savebar{position:sticky;bottom:calc(12px + env(safe-area-inset-bottom,0px));display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap;background:var(--ink);color:var(--paper);padding:10px 14px;border-radius:var(--r);box-shadow:var(--shade);z-index:6}
 .savebar .btn{border-color:transparent}
 .savebar .btn.ghost{color:var(--paper)}
@@ -365,6 +371,8 @@ textarea{resize:vertical}
 @media (min-width:641px){.fab{display:none}}
 .toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(88px + env(safe-area-inset-bottom,0px));z-index:50;background:var(--ink);color:var(--paper);padding:10px 16px;border-radius:999px;font-size:calc(15.5px*var(--fs,1));font-weight:600;box-shadow:var(--shade);max-width:calc(100% - 32px)}
 .toast.bad{background:var(--bad);color:#fff}
+.toast.long{border-radius:14px;white-space:pre-line;text-align:left;line-height:1.4;width:max-content}
+.toast.warn{background:var(--warn-soft);color:var(--warn-ink);border:1px solid var(--warn)}
 .gate{padding:40px 0;display:flex;flex-direction:column;gap:14px;align-items:flex-start;max-width:62ch}
 .gate h2{font-size:calc(16.5px*var(--fs,1))}
 .gate p{margin:0;color:var(--ink-2)}
@@ -986,7 +994,7 @@ body[data-view="notes"] .fab,body[data-view="disc"] .fab{display:none}
         <div class="field" data-focus="eMember"><span id="eMemberLbl">For whom</span><div id="eMember" class="tbox" role="textbox" aria-labelledby="eMemberLbl" inputmode="text" enterkeyhint="done" data-placeholder=""></div></div>
         <div class="field" data-focus="eTag"><span id="eTagLbl">Tag</span><div id="eTag" class="tbox" role="textbox" aria-labelledby="eTagLbl" inputmode="text" enterkeyhint="done" data-placeholder="Trip, one-off"></div></div>
       </div>
-      <label class="ck-line" style="margin-top:8px"><input id="eRefund" type="checkbox"> This is a refund (reduces spending in its category)</label>
+      <label class="ck-line" style="margin-top:8px"><input id="eRefund" type="checkbox"> <span id="eRefundLbl">This is a refund (reduces spending in its category)</span></label>
     </details>
     <div class="err" id="eErr" hidden></div>
     <div class="sheet-actions">
@@ -1238,9 +1246,9 @@ function parseSigned(s) {
   if (s === '') return null;
   return /^-?\d+(\.\d+)?$/.test(s) ? parseFloat(s) : NaN;
 }
-function toast(msg, kind) {
-  const t = $('#toast'); t.textContent = msg; t.className = 'toast' + (kind ? ' ' + kind : ''); t.hidden = false;
-  clearTimeout(toast._t); toast._t = setTimeout(() => { t.hidden = true; }, 2600);
+function toast(msg, kind, ms) {
+  const t = $('#toast'); t.textContent = msg; t.className = 'toast' + (kind ? ' ' + kind : '') + (/\n/.test(msg) ? ' long' : ''); t.hidden = false;
+  clearTimeout(toast._t); toast._t = setTimeout(() => { t.hidden = true; }, ms || 2600);
 }
 function writeErr(e) {
   const c = e && e.code;
@@ -1385,29 +1393,71 @@ function ctx() {
     for (const [id, x] of Object.entries(t)) if (x && x.date && isFinite(x.amount)) txns.push(Object.assign({}, x, {id, _doc: k}));
   }
   const typeOf = t => (cm[t.cat] && cm[t.cat].type) || 'Expense';
+  const res = acctResolver(c), cashMain = res.cashMain;
+  txns.forEach(t => { t._acct = res(t.acct); });
   const byCycle = {};
   txns.forEach(t => { const k = cycleKeyOf(t.date); (byCycle[k] = byCycle[k] || []).push(t); });
   const snaps = Object.values(state.balances || {}).filter(b => b && b.date).sort((a, b) => a.date < b.date ? -1 : 1);
-  const latest = {}; // acctId -> {v, date}
+  const latest = {}; // acctId -> {v, date, at}
   const nwSeries = []; const run = {};
   snaps.forEach(s => {
-    for (const [id, v] of Object.entries(s.values || {})) if (typeof v === 'number') { run[id] = v; latest[id] = {v, date: s.date}; }
+    const vals = s.values || {};
+    for (const [id, v] of Object.entries(vals)) if (typeof v === 'number' && !isTimeKey(id)) { run[id] = v; latest[id] = {v, date: s.date, at: +vals[TIME_KEY + id] || 0}; }
     let nw = 0; for (const [id, v] of Object.entries(run)) if (am[id] && am[id].counted !== false) nw += v;
     nwSeries.push({date: s.date, nw});
   });
-  // Bank and cash balances move with entries: the last recorded balance, plus income and refunds, minus spends,
-  // card-bill payments and other money out, dated after that record. Recording a balance re-ties it.
-  const cashMain = c.accounts.find(a => a.cls === 'Cash' && !a.pay && a.id === 'cash') || c.accounts.find(a => a.cls === 'Cash' && !a.pay);
-  c.accounts.filter(a => !a.pay && (a.cls === 'Bank' || a.cls === 'Cash')).forEach(a => {
-    const L = latest[a.id]; if (!L) return;
-    const moves = [];
-    txns.forEach(t => { if (t.date <= L.date) return; const ty = typeOf(t), atm = isAtm(t.cat, cm);
-      if (t.acct === a.id) moves.push({t, v: ty === 'Income' ? t.amount : ty === 'Expense' ? (t.refund ? t.amount : -t.amount) : (a.cls === 'Cash' && atm ? 0 : -t.amount)});
-      else if (a === cashMain && ty === 'Transfer' && atm && t.acct && t.acct !== a.id) moves.push({t, v: t.amount}); }); // ATM cash comes into cash in hand
-    const kept = moves.filter(m => m.v), delta = kept.reduce((x, m) => x + m.v, 0);
-    latest[a.id] = {v: L.v + delta, date: L.date, rec: L.v, moves: kept, delta};
+  const X = {cm, am, txns, typeOf, byCycle, snaps, latest, nwSeries, res, cashMain};
+  // Bank and cash balances move with entries: the last recorded balance, plus every entry made after that record
+  // (income and refunds in, spends, card-bill payments and other money out). One rule, in moneyMoves(); recording
+  // a balance re-ties it. "After the record" = a later date, or the same day but entered after you recorded it.
+  const live = {};
+  c.accounts.forEach(a => { if (isLiveAcct(a) && latest[a.id]) live[a.id] = []; });
+  txns.forEach(t => moneyMoves(t, X).forEach(m => { const L = latest[m.id]; if (live[m.id] && m.v && afterRecord(t, L)) live[m.id].push({t, v: m.v}); }));
+  Object.entries(live).forEach(([id, moves]) => {
+    const L = latest[id], delta = r2(moves.reduce((x, m) => x + m.v, 0));
+    latest[id] = {v: r2(L.v + delta), date: L.date, at: L.at, rec: L.v, moves, delta};
   });
-  return {cm, am, txns, typeOf, byCycle, snaps, latest, nwSeries};
+  return X;
+}
+// Balances recorded today also carry the moment they were typed ("time:<account id>" beside the figure), so entries
+// made later the same day still move the balance. A balance for an earlier day counts as the end of that day.
+const TIME_KEY = 'time:', isTimeKey = id => String(id).startsWith(TIME_KEY);
+const isLiveAcct = a => !!a && !a.pay && (a.cls === 'Bank' || a.cls === 'Cash');
+// The sheet keeps an entry's "Created at" to the whole second, so the same second counts as after.
+function afterRecord(t, L) { return t.date > L.date || (t.date === L.date && !!L.at && Math.floor((+t.at || 0) / 1000) >= Math.floor(L.at / 1000)); }
+// Which account an entry's money really sits in. Cash entries say 'cash' (the Cash account, whatever its id); a Bank
+// button from the Vault can be a stand-in ("pay") account linked to a Wealth account. Everything goes through this.
+function acctResolver(c) {
+  const am = {}; c.accounts.forEach(a => { am[a.id] = a; });
+  const cashMain = c.accounts.find(a => a.cls === 'Cash' && !a.pay && a.id === 'cash') || c.accounts.find(a => a.cls === 'Cash' && !a.pay) || null;
+  const byVault = {}; c.accounts.forEach(a => { if (a.vault && !a.pay && !byVault[a.vault]) byVault[a.vault] = a.id; });
+  const f = id => {
+    if (!id) return '';
+    if (id === 'cash') return cashMain ? cashMain.id : 'cash';
+    const a = am[id]; if (!a || !a.pay) return id;
+    if (a.vault && byVault[a.vault]) return byVault[a.vault];
+    if (a.into && am[a.into] && !am[a.into].pay) return a.into;
+    return id;
+  };
+  f.cashMain = cashMain;
+  return f;
+}
+// What one entry does to bank and cash balances: a list of {id, v} (v > 0 money in, v < 0 money out).
+// Card spends and card refunds touch only the card (cardLedger); a card-bill payment takes money out of the bank.
+function moneyMoves(t, X) {
+  const amt = +t.amount || 0, id = t._acct !== undefined ? t._acct : X.res(t.acct);
+  if (!amt || !id) return [];
+  const ty = X.typeOf(t), pay = isCardPay(t.cat, X.cm);
+  if (t.card && !pay) return [];
+  if (ty === 'Income') return [{id, v: amt}];
+  if (ty === 'Expense') return [{id, v: t.refund ? amt : -amt}];
+  if (pay) return [{id, v: -amt}];
+  if (isAtm(t.cat, X.cm)) { // cash out of a bank into cash in hand
+    const cash = X.cashMain ? X.cashMain.id : '';
+    if (id === cash || (X.am[id] && X.am[id].cls === 'Cash')) return [];
+    return cash ? [{id, v: -amt}, {id: cash, v: amt}] : [{id, v: -amt}];
+  }
+  return [{id, v: t.refund ? amt : -amt}]; // other transfers: out, or in when marked as money back (e.g. a loan repaid)
 }
 function cycleTotals(list, X) {
   let inc = 0, exp = 0, trf = 0; const byCat = {}, byGroup = {Fixed: 0, Variable: 0, Discretionary: 0, Sinking: 0};
@@ -1532,7 +1582,7 @@ function renderEntries(X) {
   const fc = $('#fCat'), keep = fc.value; fillCatOptions(fc, X, true, keep);
   const ft = $('#fType').value, q = $('#fQ').value.trim().toLowerCase();
   // Payment filter: cash, any bank account, any card (cards and accounts are the same objects as everywhere else).
-  const fp = $('#fPay'), keepP = fp.value, usedA = new Set(), usedK = new Set(); X.txns.forEach(t => { if (t.acct && t.acct !== 'cash') usedA.add(t.acct); if (t.card) usedK.add(t.card); });
+  const fp = $('#fPay'), keepP = fp.value, usedA = new Set(), usedK = new Set(); X.txns.forEach(t => { if (t.acct && t.acct !== 'cash') usedA.add(t._acct); if (t.card) usedK.add(t.card); });
   const banks = payBanks().concat([...usedA].filter(id => X.am[id] && !payBanks().some(a => a.id === id)).map(id => X.am[id]));
   const cardsF = cardList().concat([...usedK].filter(id => !cardList().some(k => k.id === id)).map(id => ({id, name: cardName(id)})));
   fp.innerHTML = '<option value="">All payments</option><option value="cash">Cash</option>' + (banks.length ? '<optgroup label="Bank accounts">' + banks.map(a => `<option value="a:${esc(a.id)}">${esc(a.name)} · bank</option>`).join('') + '</optgroup>' : '')
@@ -1541,7 +1591,7 @@ function renderEntries(X) {
   let list = (X.byCycle[state.cur] || []).slice();
   if (fp.value === 'cash') list = list.filter(t => t.acct === 'cash');
   else if (fp.value === 'none') list = list.filter(t => !t.acct && !t.card);
-  else if (fp.value.startsWith('a:')) list = list.filter(t => t.acct === fp.value.slice(2));
+  else if (fp.value.startsWith('a:')) list = list.filter(t => t.acct !== 'cash' && t._acct === fp.value.slice(2));
   else if (fp.value.startsWith('k:')) list = list.filter(t => t.card === fp.value.slice(2));
   if (fc.value) list = list.filter(t => t.cat === fc.value);
   if (ft) list = list.filter(t => X.typeOf(t) === ft);
@@ -1687,7 +1737,7 @@ function renderWealth(X) {
       <div class="li tap"${whyAttr('w-left')}><div class="l"><div class="t1">${esc(cycleLabel(bl.key))} budget left</div><div class="t2">Left in each budgeted category · taken off net worth</div></div><div class="amt num">${rs(-bl.left)}</div></div></section>`;
   }
   const snapsHtml = X.snaps.slice().reverse().map(s => { const p = series.find(z => z.date === s.date);
-    return `<div class="li tap"${whyAttr('w-snap:' + s.date)}><div class="l"><div class="t1">${fmtDay(parseYmd(s.date))} ${parseYmd(s.date).getFullYear()}</div><div class="t2">${Object.keys(s.values || {}).length} accounts</div></div>
+    return `<div class="li tap"${whyAttr('w-snap:' + s.date)}><div class="l"><div class="t1">${fmtDay(parseYmd(s.date))} ${parseYmd(s.date).getFullYear()}</div><div class="t2">${Object.keys(s.values || {}).filter(id => !isTimeKey(id)).length} accounts</div></div>
       <div style="display:flex;gap:10px;align-items:center"><span class="amt num">${p ? rs(p.nw) : ''}</span><button class="icon-btn" type="button" data-act="del-snap" data-date="${esc(s.date)}" aria-label="Delete snapshot">×</button></div></div>`; }).join('');
   // Order: summary, assets and debts first; the chart and recording balances at the bottom.
   $('#v-wealth').innerHTML = `${kpis}${tabs}
@@ -2193,7 +2243,8 @@ function spendLines(list, X) { return list.slice().sort(byDateDesc).map(t => ent
 function whyCard(id, X) {
   const card = cardList().find(c => c.id === id); if (!card) return null;
   const L = cardLedger(card, X), lines = [];
-  if (L.sd0 && (L.openB || L.openU)) lines.push({label: 'Owed when you started tracking', sub: `On ${fmtDate(L.openDate)}: ${rs(L.openB)} billed + ${rs(L.openU)} not yet billed`, v: L.openB + L.openU});
+  if (L.sd0 && (L.openB || L.openU)) lines.push({label: 'Owed when you started tracking', sub: `On ${fmtDate(L.openDate)}: ${rs(L.openB)} billed + ${rs(L.openU)} not yet billed` + (L.before.length ? ` · holds ${L.before.length} earlier entr${L.before.length === 1 ? 'y' : 'ies'}` : ''), v: L.openB + L.openU,
+    items: L.before.length ? L.before.slice().sort(byDateDesc).map(t => Object.assign(entLine(t, X, 0), {text: rs(t.amount)})) : undefined});
   L.stmts.slice().reverse().forEach(s => {
     if (!s.items.length) return; const st = stStatus(s);
     lines.push({label: (s.closed ? 'Bill of ' : 'Next bill, ') + fmtDM(s.sd), sub: `${s.items.length} spend${s.items.length === 1 ? '' : 's'} · ${st.t}`, v: sum(s.items, i => i.v),
@@ -2226,9 +2277,9 @@ function whyAcct(id, X) {
   // Bank and cash: today's balance = the last recorded balance + every entry since (added, not just shown).
   const live = L && L.moves;
   if (live) secs.unshift({title: "How today's balance is worked out", note: L.moves.length ? '' : 'No entries since the last record.',
-    lines: [{label: 'Recorded on ' + fmtDate(L.date), sub: 'what you entered in Record balances', v: L.rec}].concat(L.moves.slice().sort((x, y) => byDateDesc(x.t, y.t)).map(m => entLine(m.t, X, m.v))),
+    lines: [{label: 'Recorded on ' + fmtDate(L.date) + (L.at ? ' at ' + fmtTime(L.at) : ''), sub: L.at ? 'what you entered · entries made after this count' : 'what you entered · entries dated after this day count', v: L.rec}].concat(L.moves.slice().sort((x, y) => byDateDesc(x.t, y.t)).map(m => entLine(m.t, X, m.v))),
     total: {label: 'Balance now', v: L.v}});
-  else if (L) { const mv = X.txns.filter(t => t.acct === a.id && t.date > L.date).sort(byDateDesc).map(t => { const ty = X.typeOf(t); return entLine(t, X, ty === 'Income' || (ty === 'Expense' && t.refund) ? t.amount : -t.amount); });
+  else if (L) { const mv = X.txns.filter(t => t._acct === a.id && t.date > L.date).sort(byDateDesc).map(t => { const ty = X.typeOf(t); return entLine(t, X, ty === 'Income' || (ty === 'Expense' && t.refund) ? t.amount : -t.amount); });
     if (mv.length) secs.push({title: 'Entries since ' + fmtDM(L.date), note: 'This kind of account keeps the balance you record.', lines: mv, total: {label: 'Money in − money out', v: sum(mv, l => l.v)}}); }
   secs.push({title: 'How it counts', lines: how});
   return {title: a.name, head: live ? 'Balance now' : L ? 'Balance on ' + fmtDate(L.date) : 'Balance', value: L ? rs(L.v) : '—', sections: secs, btn: {act: 'set-one', id: a.id, label: L ? 'Update balance' : 'Record a balance'}};
@@ -2662,7 +2713,7 @@ function renderSetup(X) {
       <div class="row-actions"><button class="btn sm" type="button" data-act="add-cat">+ Add category</button></div></section>
     <section class="card"><div class="sec-h"><h2>Accounts</h2><span class="hint">For net worth. Bank accounts and cards you pay with come from the Vault.</span></div>
       <div class="ed" id="accEd"><div class="edrow acc-row edhead"><span>Name</span><span>Owner</span><span>Kind</span><span></span><span></span><span>Matures</span><span></span></div>${accRows}</div>
-      <div class="row-actions"><button class="btn sm" type="button" data-act="add-acct">+ Add account</button></div></section>
+      <div class="row-actions"><button class="btn sm" type="button" data-act="add-acct">+ Add account</button></div>${payLinkHtml(d)}</section>
     <section class="card"><div class="sec-h"><h2>Credit cards</h2><span class="hint">One list for the Vault, Add entry and Card bills. New Vault cards appear here; your edits here stay.</span></div>
       <div class="ed" id="cardEd">${(d.cards || []).map((k, i) => cardRowHtml(k, i)).join('') || '<div class="empty">No cards yet. Add them in the Vault\'s Credit cards table.</div>'}</div></section>
     ${adjustHtml(X)}
@@ -2784,6 +2835,42 @@ function renderSaveBar() {
 }
 function markDirty() { if (!state.dirty) { state.dirty = true; renderSaveBar(); } }
 
+/* ---------- Setup: which Wealth account each Bank button moves ----------
+   Bank buttons on Add entry come from the Vault. Each one is linked to a Wealth account (a.vault = Vault row id), so
+   an entry paid with it moves that account's balance. Unlinked, it is a stand-in account (pay: true) with no balance. */
+function vaultBankIds(cfg) {
+  const ids = []; (cfg.payBanks || []).forEach(id => { const a = cfg.accounts.find(x => x.id === id); if (a && a.vault && !ids.includes(a.vault)) ids.push(a.vault); });
+  cfg.accounts.forEach(a => { if (a.vault && !ids.includes(a.vault)) ids.push(a.vault); });
+  return ids;
+}
+function vaultBankLabel(cfg, v) {
+  const stand = cfg.accounts.find(x => x.pay && x.vault === v), mine = cfg.accounts.find(x => !x.pay && x.vault === v);
+  let fromVault = ''; try { const r = (V.rows || []).find(x => x.id === v); if (r) fromVault = String(r.c[0] || '').trim(); } catch (e) {}
+  return (stand && stand.name) || (mine && mine.vaultName) || fromVault || (mine && mine.name) || 'Vault bank';
+}
+function linkVaultBank(cfg, v, targetId) {
+  const label = vaultBankLabel(cfg, v), target = targetId ? cfg.accounts.find(x => x.id === targetId && !x.pay) : null;
+  if (target && target.vault && target.vault !== v) linkVaultBank(cfg, target.vault, ''); // one Vault bank per Wealth account
+  const oldMine = cfg.accounts.find(x => x.vault === v && !x.pay);
+  let stand = cfg.accounts.find(x => x.pay && x.vault === v);
+  if (oldMine && oldMine !== target) { delete oldMine.vault; delete oldMine.vaultName; }
+  if (target) { target.vault = v; target.vaultName = label; if (stand) { stand.into = target.id; delete stand.solo; } } // past entries made with the stand-in count too
+  else {
+    if (!stand) { stand = {id: cfg.accounts.some(x => x.id === v) ? newId() : v, name: label, owner: '', cls: 'Bank', liquid: true, counted: false, matures: '', pay: true, vault: v}; cfg.accounts.push(stand); }
+    delete stand.into; stand.solo = true; // you chose "Not in Wealth": never linked by guess again
+  }
+  const btn = target ? target.id : stand.id, was = [oldMine && oldMine.id, stand && stand.id].filter(Boolean);
+  if ((cfg.payBanks || []).length) { cfg.payBanks = [...new Set(cfg.payBanks.map(id => was.includes(id) ? btn : id))]; if (!cfg.payBanks.includes(btn)) cfg.payBanks.push(btn); }
+}
+function payLinkHtml(d) {
+  const vs = vaultBankIds(d); if (!vs.length) return '';
+  const banks = d.accounts.filter(a => !a.pay && a.cls === 'Bank');
+  return `<div class="plink"><div class="pl-h">Bank buttons on Add entry</div><p class="hint">An entry paid with a button moves the balance of the account you pick here.</p>
+    ${vs.map(v => { const cur = (d.accounts.find(x => !x.pay && x.vault === v) || {}).id || '';
+      return `<label class="plrow"><span class="pl-n">${esc(vaultBankLabel(d, v))}</span><select class="pl-sel" data-pl="${esc(v)}" aria-label="Account moved by ${esc(vaultBankLabel(d, v))}">
+        <option value=""${cur ? '' : ' selected'}>Not in Wealth</option>${banks.map(a => `<option value="${esc(a.id)}"${a.id === cur ? ' selected' : ''}>${esc(a.name)}</option>`).join('')}</select></label>`; }).join('')}</div>`;
+}
+
 /* ---------- credit cards ----------
    A card has a statement day S and a pay-by day D. A spend dated t lands on the first
    statement date on or after t. Each bill covers the day after the previous statement
@@ -2808,6 +2895,7 @@ function dueFor(sdStr, D) {
 const addDays = (s, n) => { const d = parseYmd(s); d.setDate(d.getDate() + n); return ymd(d); };
 const fmtDate = s => { const d = parseYmd(s); return d.getDate() + ' ' + MON[d.getMonth()] + ' ' + d.getFullYear(); };
 const fmtDM = s => fmtDay(parseYmd(s));
+const fmtTime = ms => { const d = new Date(ms); return String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0'); };
 const ordinal = n => { const v = n % 100; return n + ((v >= 11 && v <= 13) ? 'th' : ({1: 'st', 2: 'nd', 3: 'rd'}[n % 10] || 'th')); };
 const r2 = v => Math.round(v * 100) / 100;
 function cardList() { return (state.config && Array.isArray(state.config.cards)) ? state.config.cards : []; }
@@ -2826,14 +2914,16 @@ function cardInfo(t, X) {
 const dueOf = (card, sd) => card && +card.dueDay ? dueFor(sd, dayOf(card.dueDay, 1)) : addDays(sd, 20);
 function cardLedger(card, X) {
   const S = dayOf(card.stmtDay, 1), D = +card.dueDay ? dayOf(card.dueDay, 1) : null, today = todayStr();
-  const charges = [], pays = [];
+  const charges = [], pays = [], before = [];
+  const openB = +card.openBilled || 0, openU = +card.openUnbilled || 0;
+  const openDate = /^\d{4}-\d{2}-\d{2}$/.test(card.openDate || '') ? card.openDate : null;
   X.txns.forEach(t => {
     if (t.card !== card.id) return;
+    // What you owed when you started tracking already holds everything dated before that day.
+    if (openDate && (openB || openU) && t.date < openDate) { before.push(t); return; }
     if (isCardPay(t.cat, X.cm)) pays.push({date: t.date, v: t.amount, t});
     else { const credit = t.refund || X.typeOf(t) === 'Income'; charges.push({date: t.date, v: credit ? -t.amount : t.amount, t, sd: stmtFor(t.date, S)}); }
   });
-  const openB = +card.openBilled || 0, openU = +card.openUnbilled || 0;
-  const openDate = /^\d{4}-\d{2}-\d{2}$/.test(card.openDate || '') ? card.openDate : null;
   let sd0 = null, sd1 = null;
   if (openDate && (openB || openU)) { const s0 = stmtFor(openDate, S); sd0 = s0 === openDate ? s0 : stepStmt(s0, S, -1); sd1 = stepStmt(sd0, S, 1); }
   const cands = [stmtFor(today, S)].concat(charges.map(c => c.sd));
@@ -2862,7 +2952,7 @@ function cardLedger(card, X) {
   });
   const closed = stmts.filter(s => s.closed), open = stmts.filter(s => !s.closed);
   const nextSt = open[0] || null, later = open.slice(1);
-  return {card, S, D, stmts, closed, nextSt, later, charges, pays, sd0, openB, openU, openDate,
+  return {card, S, D, stmts, closed, nextSt, later, charges, pays, before, sd0, openB, openU, openDate,
     laterAmt: r2(later.reduce((a, s) => a + s.left, 0)),
     dueNow: r2(closed.reduce((a, s) => a + s.left, 0)),
     unpaid: closed.filter(s => s.left > 0.005),
@@ -3032,16 +3122,28 @@ function renderPay() {
   let h = '';
   const card = cards.find(k => k.id === payCard);
   if (!payMode) h = 'Payment not recorded for this entry. Tap Cash, Bank or Card to set it.';
-  else if (payMode === 'cash') { const ch = cashInHand(X); h = ch.any ? 'Cash in hand: ' + rs(ch.v) : ''; }
+  else if (payMode === 'cash' && !pay) h = acctHint(X, X.res('cash'), 'Cash in hand');
   else if (payMode === 'bank' && !banks.length) h = "No bank accounts yet. Add them in the vault's Savings accounts.";
+  else if (payMode === 'bank' && !pay && payAcct) h = acctHint(X, X.res(payAcct));
   else if ((payMode === 'card' || pay) && !cards.length) h = "No cards yet. Add them in the vault's Credit cards.";
-  else if (pay) h = card ? 'Reduces what you owe on ' + card.name + '. A transfer, so not counted as spending.' : 'Choose the card you are paying.';
+  else if (pay) h = card ? 'Reduces what you owe on ' + card.name + '. A transfer, so not counted as spending.' + (payAcct ? ' ' + acctHint(X, X.res(payAcct)) : '') : 'Choose the card you are paying.';
   else if (payMode === 'card' && card && card.stmtDay && /^\d{4}-\d{2}-\d{2}$/.test(date)) {
     const S = dayOf(card.stmtDay, 1), sd = stmtFor(date, S);
     h = 'Goes on the bill of ' + fmtDate(sd) + ' · pay by ' + fmtDate(dueOf(card, sd)) + '.';
   }
   $('#ePayHint').textContent = h; $('#ePayHint').hidden = !h;
+  $('#eRefundLbl').textContent = ty === 'Transfer' && !pay ? 'Money coming in (e.g. a loan repaid to you), not going out' : 'This is a refund (reduces spending in its category)';
   pc.scrollLeft = keep; chipsShow(pc); chipsShow($('#ePayCardChips'));
+}
+// One line on what the chosen account holds now, or why an entry will not move it.
+function acctHint(X, id, label) {
+  const a = X.am[id];
+  if (!a) return id === 'cash' ? 'Cash in hand is not tracked: add an account of kind Cash in Setup → Accounts.' : '';
+  const name = label || a.name;
+  if (a.pay) return a.name + ' is not linked to a Wealth account, so no balance will move. Link it in Setup → Accounts.';
+  if (!isLiveAcct(a)) return '';
+  const L = X.latest[id];
+  return L ? name + ' now: ' + rs(L.v) : name + ': no balance recorded yet. Record one in Wealth so entries move it.';
 }
 function updCardHint() { renderPay(); }
 function setPay(mode) { payMode = mode; if (mode === 'cash') { payCard = ''; } renderPay(); }
@@ -3233,6 +3335,49 @@ document.querySelectorAll('.calcb').forEach(b => {
   });
 });
 
+/* ---------- what a save did to balances ----------
+   After every save or delete, say what moved (old → new), and why anything that should have moved did not.
+   Uses the same moneyMoves() and cardLedger() as every screen, so the message and the screens always agree. */
+function moneyState(X) {
+  const o = {}; for (const [id, L] of Object.entries(X.latest)) o['a:' + id] = L.v;
+  cardList().forEach(k => { o['k:' + k.id] = cardLedger(k, X).owed; });
+  return o;
+}
+function impactLines(oldT, newT, X0, X1) {
+  const S0 = moneyState(X0), S1 = moneyState(X1), out = [], warn = [], accts = new Map(), cards = new Map();
+  [[oldT, X0], [newT, X1]].forEach(([t, X]) => {
+    if (!t) return;
+    moneyMoves(Object.assign({}, t, {_acct: undefined}), X).forEach(m => { if (!accts.has(m.id)) accts.set(m.id, []); accts.get(m.id).push({t, X, v: m.v}); });
+    if (t.card) { if (!cards.has(t.card)) cards.set(t.card, []); cards.get(t.card).push({t, X}); }
+  });
+  accts.forEach((uses, id) => {
+    const a = X1.am[id], L = X1.latest[id], d = (S1['a:' + id] || 0) - (S0['a:' + id] || 0);
+    if (!a) { warn.push(id === 'cash' ? 'Cash in hand is not tracked: add an account of kind Cash in Setup → Accounts.' : 'That account no longer exists, so no balance moved.'); return; }
+    if (a.pay) { warn.push(a.name + ' is not linked to a Wealth account, so no balance moved. Link it in Setup → Accounts.'); return; }
+    if (!isLiveAcct(a)) return;
+    if (!L) { warn.push(a.name + ' has no balance yet. Record one in Wealth and every entry from then on moves it.'); return; }
+    if (Math.abs(d) > 0.004) { out.push(a.name + ': ' + rs(S0['a:' + id] || 0) + ' → ' + rs(S1['a:' + id])); return; }
+    const stuck = uses.find(u => u.X === X1 && u.v && !afterRecord(u.t, L));
+    if (stuck) warn.push(a.name + ' stays ' + rs(L.v) + ': this is inside the balance you recorded on ' + fmtDM(L.date) + (L.at ? ' at ' + fmtTime(L.at) : '') + '. Use Update balance if that figure is wrong.');
+  });
+  cards.forEach((uses, id) => {
+    const k = cardList().find(c => c.id === id);
+    if (!k) { warn.push((cardName(id) || 'That card') + ' was removed, so nothing owed changed.'); return; }
+    const d = (S1['k:' + id] || 0) - (S0['k:' + id] || 0);
+    if (Math.abs(d) > 0.004) { out.push(k.name + ' owes ' + rs(S0['k:' + id] || 0) + ' → ' + rs(S1['k:' + id])); return; }
+    const u = uses.find(x => x.X === X1); if (!u) return;
+    const L = cardLedger(k, X1);
+    if (L.before.some(t => t.id === u.t.id)) warn.push(k.name + ': dated before ' + fmtDM(L.openDate) + ', so it is inside what you owed when you started tracking (Setup → Credit cards).');
+    else { const st = L.stmts.find(s => s.own && s.items.some(i => i.t.id === u.t.id)); if (st) warn.push(k.name + ': you typed the bill of ' + fmtDM(st.sd) + ' yourself (' + rs(st.billed) + '), so it stays. Clear that figure in Card bills to use the entries.'); }
+  });
+  return {out, warn};
+}
+function impactToast(head, oldT, newT, X0) {
+  let r; try { r = impactLines(oldT, newT, X0, ctx()); } catch (e) { r = {out: [], warn: []}; }
+  const lines = [head].concat(r.out, r.warn);
+  toast(lines.join('\n'), r.warn.length ? 'warn' : '', lines.length > 1 ? (r.warn.length ? 7000 : 4500) : 2600);
+}
+
 /* ---------- entry sheet ---------- */
 let editing = null, delArmed = false;
 function openEntry(t) {
@@ -3248,10 +3393,10 @@ function openEntry(t) {
   // How it was paid. New entries start on Cash; an edited entry shows what it was.
   payAcct = ''; payCard = '';
   if (!t) payMode = 'cash';
-  else if (isCardPay(t.cat, X.cm)) { payMode = 'bank'; payAcct = t.acct || ''; payCard = t.card || ''; }
+  else if (isCardPay(t.cat, X.cm)) { payMode = 'bank'; payAcct = X.res(t.acct) || ''; payCard = t.card || ''; }
   else if (t.card) { payMode = 'card'; payCard = t.card; }
   else if (t.acct === 'cash') payMode = 'cash';
-  else if (t.acct) { payMode = 'bank'; payAcct = t.acct; }
+  else if (t.acct) { payMode = 'bank'; payAcct = X.res(t.acct); }
   else payMode = ''; // older entry with no payment recorded: left as it is unless you pick one
   $('#eCat').value = startCat; $('#eCatText').value = '';
   ['#eCatChips', '#ePayChips', '#ePayCardChips'].forEach(sel => { $(sel).scrollLeft = 0; delete $(sel).dataset.mode; });
@@ -3277,12 +3422,12 @@ async function saveEntry(again) {
   else { acct = editing ? editing.acct || '' : ''; card = editing ? editing.card || '' : ''; }
   const t = {id: editing ? editing.id : newId(), date, amount: amt, cat, acct, card, note: $('#eNote').value.trim(),
     member: $('#eMember').value.trim(), tag: $('#eTag').value.trim(), at: editing ? editing.at : Date.now(), refund: $('#eRefund').checked};
-  const wasEditing = editing;
+  const wasEditing = editing, oldT = wasEditing ? (X.txns.find(x => x.id === wasEditing.id) || wasEditing) : null;
   try { await API.putTxn(t, wasEditing ? wasEditing._doc : null); } catch (e) { return fail(writeErr(e)); }
   const pref = readPref();
   writePref({cat, bank: (payMode === 'bank' || pay) && payAcct ? payAcct : pref.bank || '', card: card || pref.card || ''});
   const k = cycleKeyOf(date);
-  toast(k === state.cur ? 'Saved' : 'Saved in ' + cycleLabel(k));
+  impactToast(k === state.cur ? 'Saved' : 'Saved in ' + cycleLabel(k), oldT, t, X);
   if (again) { $('#eAmt').value = ''; $('#eAmtCalc').textContent = ''; $('#eNote').value = ''; $('#eRefund').checked = false; err.hidden = true; renderPay(); focusBox($('#eAmt')); }
   else closeEntry();
 }
@@ -3308,6 +3453,10 @@ async function saveBalances() {
   document.querySelectorAll('#balGrid .tin').forEach(inp => { const v = parseSigned(inp.value); if (v === null) return; if (isNaN(v)) bad = inp.getAttribute('aria-label'); else values[inp.dataset.id] = v; });
   if (bad) { err.textContent = bad + ' is not a number.'; err.hidden = false; return; }
   const merged = Object.assign({}, ((state.balances || {})[date] || {}).values || {}, values);
+  // Today's figures carry the moment they were typed, so entries made later today still move them.
+  // A figure for an earlier day stands for the end of that day.
+  const now = Date.now();
+  Object.keys(values).forEach(id => { if (date === todayStr()) merged[TIME_KEY + id] = now; else delete merged[TIME_KEY + id]; });
   try { await API.putBalance(date, merged); } catch (e) { err.textContent = writeErr(e); err.hidden = false; return; }
   $('#balScrim').hidden = true; toast(Object.keys(values).length === 1 ? 'Balance updated' : 'Balances saved');
 }
@@ -3431,7 +3580,7 @@ $('#eAgain').addEventListener('click', () => saveEntry(true));
 $('#eDel').addEventListener('click', async () => {
   const b = $('#eDel'); if (!editing) return;
   if (!delArmed) { delArmed = true; b.classList.add('armed'); b.textContent = 'Tap again to delete'; return; }
-  try { await API.delTxn(editing.id, editing._doc); toast('Entry deleted'); closeEntry(); } catch (e) { $('#eErr').textContent = writeErr(e); $('#eErr').hidden = false; }
+  try { const X0 = ctx(), oldT = X0.txns.find(x => x.id === editing.id) || editing; await API.delTxn(editing.id, editing._doc); impactToast('Entry deleted', oldT, null, X0); closeEntry(); } catch (e) { $('#eErr').textContent = writeErr(e); $('#eErr').hidden = false; }
 });
 $('#balForm').addEventListener('submit', ev => { ev.preventDefault(); saveBalances(); });
 ['entryScrim', 'balScrim', 'impScrim', 'copyScrim', 'vaultScrim', 'whyScrim', 'textScrim', 'noteScrim', 'noteMenu'].forEach(id => $('#' + id).addEventListener('click', ev => { if (ev.target.id === id) { if (id === 'noteScrim') { closeNote(); return; } $('#' + id).hidden = true; if (id === 'whyScrim') W$.stack = []; if (id === 'entryScrim') editing = null; } }));
@@ -3459,6 +3608,7 @@ $('#main').addEventListener('input', ev => {
 });
 $('#main').addEventListener('change', ev => {
   if (ev.target.id === 'sDay' && state.draft) { state.draft.cycleStartDay = +ev.target.value; state.dirty = true; renderSetup(ctx()); }
+  else if (ev.target.dataset && ev.target.dataset.pl && state.draft) { linkVaultBank(state.draft, ev.target.dataset.pl, ev.target.value); state.dirty = true; renderSetup(ctx()); }
   else if (ev.target.type === 'checkbox' && ev.target.closest('.edrow')) { /* handled by input */ }
 });
 $('#eCatText').addEventListener('input', ev => setCat(matchCategory(ev.target.value), true));
@@ -3632,15 +3782,27 @@ function syncPayMethods() {
   Object.values(state.cycles || {}).forEach(doc => Object.values((doc && doc.txns) || {}).forEach(t => { if (t && t.acct) used.add(t.acct); }));
   const ids = new Set(banks.map(b => b.r.id));
   cfg.accounts.forEach(a => { if (a.vault && !ids.has(a.vault)) delete a.vault; });
-  cfg.accounts = cfg.accounts.filter(a => !(a.pay && !a.vault && !used.has(a.id)));
+  // A Wealth account for a Vault bank: the same name, else the one bank account whose name holds every word of it
+  // ("HDFC ARHAAN" → "HDFC Savings Arhaan"). Only a single clear match is taken; Setup → Accounts can change it.
+  const words = x => cnorm(x).split(' ').filter(Boolean);
+  const guess = label => { const free = cfg.accounts.filter(x => !x.vault && !x.pay), lw = words(label);
+    const same = free.find(x => nkey(x.name) === nkey(label)); if (same) return same;
+    const c = free.filter(x => x.cls === 'Bank' && lw.length && lw.every(w => words(x.name).includes(w))); return c.length === 1 ? c[0] : null; };
   banks.forEach(({r, label}) => {
-    let a = cfg.accounts.find(x => x.vault === r.id) || cfg.accounts.find(x => !x.vault && !x.pay && nkey(x.name) === nkey(label));
-    if (a) { a.vault = r.id; if (a.pay) a.name = label; }
-    else cfg.accounts.push({id: r.id, name: label, owner: '', cls: 'Bank', liquid: true, counted: false, matures: '', pay: true, vault: r.id});
+    // A Wealth account linked to this Vault bank wins; else its stand-in (linked by guess unless you unlinked it).
+    const mine = cfg.accounts.find(x => x.vault === r.id && !x.pay), stand = cfg.accounts.find(x => x.vault === r.id && x.pay);
+    if (mine) { mine.vaultName = label; if (stand) stand.into = mine.id; return; }
+    const same = stand && stand.solo ? null : guess(label);
+    if (stand) { stand.name = label; if (same) { same.vault = r.id; same.vaultName = label; stand.into = same.id; } return; }
+    if (same) { same.vault = r.id; same.vaultName = label; }
+    else cfg.accounts.push({id: cfg.accounts.some(x => x.id === r.id) ? newId() : r.id, name: label, owner: '', cls: 'Bank', liquid: true, counted: false, matures: '', pay: true, vault: r.id});
   });
+  // A stand-in with no entries is dropped once it is not needed; one with entries stays, pointing at its Wealth account.
+  const res = acctResolver(cfg);
+  cfg.accounts = cfg.accounts.filter(a => !(a.pay && !used.has(a.id) && (!a.vault || res(a.id) !== a.id)));
   // Order: HDFC ARHAAN, AMMI, HDFC EFRAH first, then the rest as in the vault.
   const prio = name => { const k = ' ' + nkey(name) + ' '; return / hdfc /.test(k) && / arhaan /.test(k) ? 0 : / ammi /.test(k) ? 1 : / hdfc /.test(k) && / efrah /.test(k) ? 2 : 3; };
-  const linked = banks.map(({r}, i) => ({a: cfg.accounts.find(x => x.vault === r.id), i})).filter(x => x.a);
+  const linked = banks.map(({r}, i) => ({a: cfg.accounts.find(x => x.vault === r.id && !x.pay) || cfg.accounts.find(x => x.vault === r.id), i})).filter(x => x.a);
   cfg.payBanks = linked.sort((x, y) => prio(x.a.name) - prio(y.a.name) || x.i - y.i).map(x => x.a.id);
   if (JSON.stringify([cfg.cards, cfg.accounts, cfg.payBanks]) !== before) API.saveConfig(cfg);
 }
