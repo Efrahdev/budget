@@ -1866,6 +1866,28 @@ document.addEventListener('click', ev => {
 });
 applyText(readText(), false);
 
+
+/* ---------- install as an app ----------
+   In a Chrome tab, Chrome's address bar (when it sits at the bottom) rides above the keyboard and shows the
+   page address. Opened as an installed app, there is no address bar at all: just the app and the keyboard. */
+let installEvt = null;
+const isInstalled = () => matchMedia('(display-mode: standalone)').matches || matchMedia('(display-mode: fullscreen)').matches || navigator.standalone === true;
+window.addEventListener('beforeinstallprompt', ev => { ev.preventDefault(); installEvt = ev; if (state.view === 'setup' && !state.dirty) renderSetup(ctx()); });
+window.addEventListener('appinstalled', () => { installEvt = null; toast('Installed. Open Budget from your home screen.'); if (state.config && !state.dirty) renderSetup(ctx()); });
+function installHtml() {
+  if (isInstalled()) return '';
+  return `<section class="card"><div class="sec-h"><h2>Use it as an app</h2></div>
+    <div style="padding:12px 16px 16px;display:flex;flex-direction:column;gap:10px">
+      <p style="margin:0">Opened from its own home-screen icon, Budget Tracker runs full screen: no web address above the keyboard, more room to type.</p>
+      ${installEvt ? '<div><button class="btn primary" type="button" data-act="install">Install as app</button></div>'
+        : '<p class="hint" style="margin:0">In Chrome, tap <b>⋮</b> (top right) → <b>Add to home screen</b> → <b>Install</b>. Then open <b>Budget</b> from your home screen.</p>'}
+    </div></section>`;
+}
+document.addEventListener('click', async ev => {
+  if (!ev.target.closest('[data-act="install"]') || !installEvt) return;
+  installEvt.prompt(); try { await installEvt.userChoice; } catch (e) {} installEvt = null; if (!state.dirty) renderSetup(ctx());
+});
+
 /* ---------- day / night ----------
    Follows the phone until you flip it; your choice is remembered on this phone. */
 const LS_THEME = 'budgetTracker.theme';
@@ -3724,6 +3746,7 @@ function accountHtml() {
   return `<section class="card"><div class="sec-h"><h2>Account and sync</h2><span class="hint">${esc(syncLabel())}</span></div>
       <div class="ed" style="padding-top:12px"><p class="muted" style="margin:0;font-size:calc(14.5px*var(--fs,1));overflow-wrap:anywhere">${who}. Your data is in the <b>Budget Tracker data</b> Google Sheet.</p></div>
       <div class="row-actions"><button class="btn" type="button" data-act="sync-now">Sync now</button><button class="btn danger" type="button" data-act="disconnect">Sign out of this phone</button></div></section>
+    ${installHtml()}
     ${users ? `<section class="card list"><div class="sec-h"><h2>Family access</h2><span class="hint">Only these Google accounts can sign in</span></div>${list}
       <form class="row-actions addcard" id="addUserForm" novalidate><input id="newUser" type="email" autocomplete="off" placeholder="name@gmail.com" aria-label="Google account email to add"><button class="btn primary" type="submit">Add person</button></form></section>` : ''}`;
 }
