@@ -506,7 +506,11 @@ body[data-view="vault"] .fab,body[data-view="vault"] #addTop,body[data-view="vau
 .bigtext .htile .hn,.bigtext .kpi .lbl,.bigtext .cckpi .lbl,.bigtext .tstat .lbl,.bigtext .th-main .lbl,.bigtext .ro .lbl,.bigtext .why-big .lbl{text-transform:none;letter-spacing:0;font-weight:700}
 /* ===== notes ===== */
 body[data-view="notes"] .fab{display:none}
-.nnew1{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;min-height:54px;border:0;border-radius:14px;background:var(--accent);color:var(--accent-ink);font-weight:800;font-size:calc(18px*var(--fs,1));cursor:pointer;box-shadow:var(--shade)}
+.nfab{position:fixed;right:max(16px,env(safe-area-inset-right,0px));bottom:calc(18px + env(safe-area-inset-bottom,0px));z-index:15;display:inline-flex;align-items:center;gap:6px;padding:0 20px;height:52px;border:0;border-radius:26px;background:var(--accent);color:var(--accent-ink);font-weight:800;font-size:calc(16.5px*var(--fs,1));box-shadow:0 10px 24px -8px rgba(0,0,0,.45);cursor:pointer}
+.nfab b{font-size:calc(22px*var(--fs,1));line-height:1}
+.nfab:active{transform:scale(.96)}
+#v-notes{padding-bottom:84px}
+.nnew1-old{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;min-height:54px;border:0;border-radius:14px;background:var(--accent);color:var(--accent-ink);font-weight:800;font-size:calc(18px*var(--fs,1));cursor:pointer;box-shadow:var(--shade)}
 .nnew1 b{font-size:calc(24px*var(--fs,1));line-height:1}
 .nnew1:active{transform:scale(.99);filter:brightness(1.05)}
 .nbar .tin{min-height:44px;border-radius:10px;padding:9px 12px}
@@ -575,6 +579,16 @@ body[data-view="notes"] .fab{display:none}
 .jsonview .jk{color:var(--accent)}.jsonview .js{color:var(--good-ink)}.jsonview .jn{color:var(--pur-ink)}.jsonview .jl{color:var(--warn-ink);font-weight:600}
 .jsonok,.jsonbad{display:flex;align-items:baseline;margin-bottom:8px;font-weight:600}.jsonbad{color:var(--bad-ink)}
 .txtview{white-space:pre-wrap;line-height:1.55;overflow-wrap:anywhere}
+.ntools{display:flex;align-items:center;gap:6px;padding:0 0 8px}
+.ntool{min-width:46px;height:42px;padding:0 10px;border:1px solid var(--rule-2);border-radius:10px;background:var(--sheet);color:var(--ink);font-size:18px;font-weight:700;cursor:pointer}
+.ntool b{font-size:20px;font-weight:900}.ntool small{font-size:13px;margin-left:1px}.ntool.big{font-size:22px}
+.ntool[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.ntool:active{background:var(--accent-soft)}
+.nsep{width:1px;height:26px;background:var(--rule-2);margin:0 4px}
+.nsize{font-size:calc(13.5px*var(--fs,1));color:var(--ink-3);margin-left:4px}
+.nbody .ntext.rich{white-space:pre-wrap;overflow-y:auto;-webkit-user-select:text;user-select:text}
+.nbody .ntext,.txtview,.mdview{font-size:calc(17px*var(--fs,1)*var(--nfs,1))}
+.ntext.rich b,.ntext.rich strong{font-weight:800}
 /* ===== text size and font ===== */
 .textb span{font-weight:800;font-size:19px;line-height:1;letter-spacing:-.02em}.textb small{font-size:14px;font-weight:700}
 .tx-prev{display:flex;flex-direction:column;gap:2px;padding:14px;border-radius:12px;background:var(--accent-soft)}
@@ -1549,7 +1563,7 @@ function renderNotes() {
   const banner = !signedIn() || Sync.notesOk === undefined ? '' : !Sync.notesOk || Sync.notesV < 2
     ? `<div class="banner warn"><b>Notes are saved on this phone${Sync.notesOk ? ' (labels and pins too)' : ''} for now.</b> To keep them in Google Drive, update the script once: paste the new Code.gs in Apps Script, choose <b>setupNotes</b> and press <b>Run</b>, allow Drive access, then Deploy → Manage deployments → pencil → <b>New version</b>.</div>`
     : N.err ? `<div class="banner warn">Google Drive didn't take the last change: ${esc(N.err)}. Your notes are safe on this phone and will be sent again.</div>` : '';
-  el.innerHTML = `${banner}<button type="button" class="nnew1" data-act="n-new"><b>+</b> New note</button>
+  el.innerHTML = `${banner}<button type="button" class="nfab" data-act="n-new" aria-label="New note"><b>+</b> Note</button>
     <div class="nbar"><input id="nQ" type="search" placeholder="Search notes" aria-label="Search notes" value="${esc(N.q)}"></div>
     <div class="chips" id="nCats" role="group" aria-label="Show">${[['', 'All', all.length]].concat(Object.entries(NOTE_LABELS).map(([k, v]) => [k, v, counts[k] || 0])).map(([k, l, c]) => `<button type="button" class="chipb" data-act="n-cat" data-v="${k}" aria-pressed="${N.cat === k}">${l} <span class="cnt">${c}</span></button>`).join('')}</div>
     <div id="nList"></div>`;
@@ -1569,7 +1583,7 @@ function renderNoteList() {
   box.innerHTML = list.length ? `${pins.length ? `<div class="ngrp">Pinned</div><div class="nlist" id="nPinned">${pins.map(n => noteCard(n, true)).join('')}</div>` : ''}
       ${rest.length ? `${pins.length ? '<div class="ngrp">Notes</div>' : ''}<div class="nlist">${rest.map(n => noteCard(n, false)).join('')}</div>` : ''}
       <p class="hint nhint">Press and hold a note to pin, move, label or delete it.</p>`
-    : `<div class="card empty">${q || N.cat ? 'No notes match.' : 'No notes yet. Tap “New note” and start typing.'}</div>`;
+    : `<div class="card empty">${q || N.cat ? 'No notes match.' : 'No notes yet. Tap “+ Note” at the bottom and start typing.'}</div>`;
 }
 /* --- press and hold: the note's menu --- */
 let lp = null, lpFired = 0;
@@ -1646,11 +1660,12 @@ function drawNote() {
     <div class="nbody" id="nBody">${o.loading ? '<div class="empty">Opening from Google Drive…</div>' : o.failed ? '<div class="empty">Couldn\'t open this note from Google Drive. Check the connection and try again.</div>' : noteBodyHtml()}</div>
     <div class="nact"><button type="button" class="nkindb" data-act="n-kinds" aria-expanded="${N.kinds}">${k.label} ▾</button>
       ${N.kinds ? `<span class="nkinds">${Object.entries(NOTE_KINDS).filter(([kk]) => kk !== o.type).map(([kk, v]) => `<button type="button" class="chipb" data-act="n-kind" data-v="${kk}">${v.label}</button>`).join('')}</span>` : `${o.type === 'json' ? '<button type="button" class="btn sm" data-act="n-tidy">Tidy JSON</button>' : ''}<button type="button" class="btn sm" data-act="n-copy">Copy</button><button type="button" class="btn sm" data-act="n-dl">Download</button>${drive ? `<a class="btn sm" href="${drive}" target="_blank" rel="noopener">Drive</a>` : ''}<button type="button" class="btn sm danger" data-act="n-del">Delete</button>`}</div>`;
-  $('#noteScrim').hidden = false; noteState();
+  $('#noteScrim').hidden = false; noteState(); richBox(); noteSizeShow();
   const ta = $('#nText'); if (ta && o.fresh && !o.content) { o.fresh = false; setTimeout(() => { if (!$('#noteBox').contains(document.activeElement) || document.activeElement === document.body) focusBox(ta); }, 60); }
 }
 function noteBodyHtml() {
   const o = N.open;
+  if (N.mode === 'edit' && o.type === 'txt') return `<div class="ntools" role="toolbar" aria-label="Text"><button type="button" class="ntool" data-tool="bold" aria-label="Bold" aria-pressed="false"><b>B</b></button><span class="nsep"></span><button type="button" class="ntool" data-tool="smaller" aria-label="Smaller text">A<small>−</small></button><button type="button" class="ntool big" data-tool="bigger" aria-label="Bigger text">A<small>+</small></button><span class="nsize" id="nSize"></span></div><div id="nText" class="ntext tbox tin multi rich" role="textbox" aria-multiline="true" aria-label="Note" data-placeholder="Start typing…" inputmode="text" autocorrect="off" spellcheck="false">${textToRich(o.content)}</div>`;
   if (N.mode === 'edit') return `<textarea id="nText" class="ntext${o.type === 'html' || o.type === 'json' ? ' mono' : ''}" placeholder="${o.type === 'md' ? '# Heading\n\nWrite in **Markdown**…' : o.type === 'html' ? '<h1>Hello</h1>' : o.type === 'json' ? '{\n  "key": "value"\n}' : 'Start typing…'}" aria-label="Note">${esc(o.content)}</textarea>`;
   if (o.type === 'md') return `<div class="mdview">${mdToHtml(o.content) || '<p class="muted">Nothing written yet.</p>'}</div>`;
   if (o.type === 'html') return `<iframe class="htmlview" sandbox title="HTML preview" srcdoc="${esc(o.content || '<p style="font-family:sans-serif;color:#888">Nothing written yet.</p>')}"></iframe>`;
@@ -1659,6 +1674,44 @@ function noteBodyHtml() {
     catch (e) { return `<div class="jsonbad">${sdot('bad')}Not valid JSON: ${esc(e.message)}</div><pre class="jsonview plain">${esc(o.content)}</pre>`; } }
   return `<div class="txtview">${esc(o.content)}</div>`;
 }
+// Plain-text notes: a box where selected words can be made bold. Bold is stored as **word** (readable anywhere).
+function textToRich(s) { return esc(s).replace(/\*\*([^*\n]+?)\*\*/g, '<b>$1</b>').split('\n').map(l => l || '<br>').map((l, i) => i ? '<div>' + l + '</div>' : l).join(''); }
+function richToText(el) {
+  let out = '';
+  const walk = (n, bold) => n.childNodes.forEach(c => {
+    if (c.nodeType === 3) { out += c.nodeValue.replace(/\u00a0/g, ' '); return; }
+    if (c.nodeType !== 1) return;
+    const tag = c.tagName, b = tag === 'B' || tag === 'STRONG' || /^(bold|[6-9]00)$/.test(c.style.fontWeight || '');
+    if (tag === 'BR') { out += '\n'; return; }
+    const block = tag === 'DIV' || tag === 'P';
+    if (block && out && !out.endsWith('\n')) out += '\n';
+    if (b && !bold) { const start = out.length; walk(c, true); const inner = out.slice(start); out = out.slice(0, start) + (inner.trim() ? '**' + inner + '**' : inner); }
+    else walk(c, bold);
+    if (block && c.lastChild && c.lastChild.tagName === 'BR') return;
+  });
+  walk(el, false);
+  return out.replace(/\*\*(\s*)\*\*/g, '$1').replace(/\n$/, '');
+}
+function richBox() {
+  const el = document.querySelector('#nText.rich'); if (!el) return;
+  el.setAttribute('contenteditable', 'true');
+  Object.defineProperty(el, 'value', {configurable: true, get: () => richToText(el), set: v => { el.innerHTML = textToRich(v); }});
+  el.addEventListener('paste', ev => { ev.preventDefault(); document.execCommand('insertText', false, (ev.clipboardData && ev.clipboardData.getData('text/plain')) || ''); });
+  el.addEventListener('input', () => { if (!el.textContent && !el.querySelector('div')) el.innerHTML = ''; });
+}
+const NOTE_SIZES = [0.85, 1, 1.15, 1.3, 1.5, 1.75];
+const noteSize = () => { const v = +readPref().noteSize; return NOTE_SIZES.includes(v) ? v : 1; };
+function noteSizeShow() { document.documentElement.style.setProperty('--nfs', String(noteSize())); const e = $('#nSize'); if (e) e.textContent = Math.round(noteSize() * 100) + '%'; }
+function boldState() { const b = document.querySelector('.ntool[data-tool="bold"]'); if (b) { let on = false; try { on = document.queryCommandState('bold'); } catch (e) {} b.setAttribute('aria-pressed', String(on)); } }
+document.addEventListener('selectionchange', () => { if (N.open && document.activeElement && document.activeElement.id === 'nText') boldState(); });
+document.addEventListener('pointerdown', ev => { if (ev.target.closest('.ntool')) ev.preventDefault(); }); // keep the selection and the keyboard
+document.addEventListener('mousedown', ev => { if (ev.target.closest('.ntool')) ev.preventDefault(); });
+document.addEventListener('click', ev => {
+  const t = ev.target.closest('.ntool'); if (!t) return;
+  const box = $('#nText');
+  if (t.dataset.tool === 'bold') { if (document.activeElement !== box) box.focus(); document.execCommand('bold'); boldState(); noteChanged(); }
+  else { const i = NOTE_SIZES.indexOf(noteSize()), j = Math.max(0, Math.min(NOTE_SIZES.length - 1, i + (t.dataset.tool === 'bigger' ? 1 : -1))); writePref({noteSize: NOTE_SIZES[j]}); noteSizeShow(); }
+});
 function noteState() {
   const o = N.open, el = $('#nState'); if (!o || !el) return;
   const l = N.local[o.id];
