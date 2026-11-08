@@ -680,7 +680,7 @@ body[data-view="notes"] .fab{display:none}
 .vcc-name{font-weight:600;text-transform:uppercase;letter-spacing:.06em;font-size:calc(14px*var(--fs,1));overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .vcc-meta{display:flex;flex-direction:column;align-items:flex-end;font-family:ui-monospace,"Roboto Mono",monospace;font-size:calc(14px*var(--fs,1));white-space:nowrap}
 .vcc-meta small{font-family:var(--f-body);font-size:9px;letter-spacing:.1em;opacity:.8}.vcc-meta em{font-style:normal;font-family:var(--f-body);font-size:calc(12px*var(--fs,1));opacity:.9;margin-top:2px}
-.vba{position:relative;display:flex;gap:14px;align-items:flex-start;padding:16px;border-radius:16px;background:var(--sheet);border:1px solid var(--rule);box-shadow:var(--shade);cursor:pointer;overflow:hidden}
+.vba{position:relative;display:flex;flex-direction:column;gap:0;padding:16px;border-radius:16px;background:var(--sheet);border:1px solid var(--rule);box-shadow:var(--shade);cursor:pointer;overflow:hidden}
 .vba::before{content:"";position:absolute;left:0;top:0;bottom:0;width:6px;background:linear-gradient(180deg,var(--ca),var(--cb))}
 .vba-badge{flex:0 0 auto;width:46px;height:46px;border-radius:14px;display:grid;place-items:center;color:#fff;font-weight:800;font-size:calc(16px*var(--fs,1));background:linear-gradient(135deg,var(--ca),var(--cb))}
 .vba-main{flex:1 1 auto;min-width:0;display:flex;flex-direction:column;gap:2px}
@@ -707,6 +707,24 @@ body[data-view="notes"] .fab{display:none}
 .vs-act{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
 .vmore{left:auto;right:0;bottom:calc(100% + 8px)}
 #vTabs .chipb .cnt{opacity:.75;margin-left:2px}
+/* details on the card itself */
+.vcc.on{aspect-ratio:auto;justify-content:flex-start;gap:12px;cursor:default}
+.vonc{display:grid;grid-template-columns:1fr 1fr;gap:8px;position:relative;z-index:1}
+.vf2{position:relative;display:flex;flex-direction:column;gap:1px;padding:8px 40px 8px 10px;border-radius:10px;background:rgba(0,0,0,.18);box-shadow:inset 0 0 0 1px rgba(255,255,255,.12);min-width:0}
+.vf2.wide{grid-column:1/-1}
+.vl2{font-size:calc(11.5px*var(--fs,1));letter-spacing:.06em;text-transform:uppercase;opacity:.8;font-weight:700}
+.vv2{font-size:calc(17px*var(--fs,1));font-weight:700;overflow-wrap:break-word;-webkit-user-select:text;user-select:text;cursor:text;letter-spacing:.02em}
+.vv2.mono{font-family:ui-monospace,"Roboto Mono",SFMono-Regular,Menlo,monospace;letter-spacing:.06em}
+.vcp2{position:absolute;right:6px;top:50%;transform:translateY(-50%);width:30px;height:30px;border-radius:8px;border:0;background:rgba(255,255,255,.18);color:inherit;display:grid;place-items:center;cursor:pointer}
+.vcp2 svg{width:15px;height:15px}.vcp2.done{background:#fff;color:#1e9e62}
+.vonc-act{grid-column:1/-1;display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:2px;font-size:calc(12.5px*var(--fs,1));opacity:.85}
+.vedit{border:1px solid rgba(255,255,255,.4);background:rgba(255,255,255,.12);color:inherit;border-radius:8px;padding:5px 12px;font-weight:700;font-size:calc(13.5px*var(--fs,1));cursor:pointer}
+.vba.on{cursor:default}
+.vba-row{display:flex;gap:14px;align-items:flex-start}
+.vba .vonc{margin-top:12px}
+.vba .vf2{background:var(--sheet-2);box-shadow:inset 0 0 0 1px var(--rule)}
+.vba .vcp2{background:var(--sheet);border:1px solid var(--rule-2);color:var(--ink-2)}.vba .vcp2.done{background:var(--good);color:#fff}
+.vba .vedit{border-color:var(--rule-2);background:var(--sheet);color:var(--ink)}.vba .vonc-act{color:var(--ink-3)}
 /* ===== text size and font ===== */
 .textb span{font-weight:800;font-size:19px;line-height:1;letter-spacing:-.02em}.textb small{font-size:14px;font-weight:700}
 .tx-prev{display:flex;flex-direction:column;gap:2px;padding:14px;border-radius:12px;background:var(--accent-soft)}
@@ -3571,24 +3589,35 @@ function vDetails(r, t) { // every filled field, with a copy button
       return `<div class="vf"><span class="vl">${esc(c)}</span><span class="vv${mono.test(c) ? ' mono' : ''}">${esc(shown)}</span><button class="vcp" type="button" data-act="v-copy" data-id="${r.id}" data-i="${i}" aria-label="Copy ${esc(c)}">${COPY_ICON}</button></div>`; }).join('')}
     <div class="vdact"><button class="btn sm" type="button" data-act="v-edit" data-id="${r.id}">✎ Edit</button></div></div>`;
 }
+// Details shown on the card itself: every filled field, label + value (selectable) + copy. Values are exactly as saved;
+// card/account numbers are only spaced in fours for reading, and copy as digits only (what payment pages expect).
+const vIsNum = c => /^(cc number|card no|acc)$/i.test(String(c).trim());
+function vOnCard(r, t, skip) {
+  const cols = vCols(t.k), mono = /number|^acc$|card no|cvv|ifsc|cust id|^exp|^pw$|password|^stmt/i;
+  return `<div class="vonc">${cols.map((c, i) => { const v = String(r.c[i] || ''); if (!v || (skip || []).includes(i)) return '';
+      const shown = vIsNum(c) && vDigits(v).length >= 8 && /^[\d\s-]+$/.test(v) ? vGroup(v) : v, wide = vIsNum(c) || v.length > 10 || /note/i.test(c);
+      return `<div class="vf2${wide ? ' wide' : ''}"><span class="vl2">${esc(c)}</span><span class="vv2${mono.test(c) ? ' mono' : ''}">${esc(shown)}</span><button class="vcp2" type="button" data-act="v-copy" data-id="${r.id}" data-i="${i}" aria-label="Copy ${esc(c)}">${COPY_ICON}</button></div>`; }).join('')}
+    <div class="vonc-act"><button class="vedit" type="button" data-act="v-edit" data-id="${r.id}">✎ Edit</button><span>Tap the card to close</span></div></div>`;
+}
 function vCardFace(r) { // a credit card that looks like the card
   const [a, b] = vTheme(r.c[0] + ' ' + r.c[1]), net = vNet(r.c[2]), on = !!V.open[r.id], stmt = parseStmtDay(r.c[5]);
-  return `<div class="vitem${on ? ' open' : ''}"><div class="vcc" style="--ca:${a};--cb:${b}" data-act="v-row" data-id="${r.id}" role="button" tabindex="0" aria-expanded="${on}" aria-label="${esc(r.c[0] || 'Card')}, ending ${esc(vLast4(r.c[2]))}. Tap for details.">
+  return `<div class="vitem${on ? ' open' : ''}"><div class="vcc${on ? ' on' : ''}" style="--ca:${a};--cb:${b}" data-act="v-row" data-id="${r.id}" role="button" tabindex="0" aria-expanded="${on}" aria-label="${esc(r.c[0] || 'Card')}, ending ${esc(vLast4(r.c[2]))}. Tap for details.">
       <div class="vcc-top"><span class="vcc-bank">${esc(r.c[0] || 'Card')}</span>${net ? `<span class="vcc-net n-${net.toLowerCase()}">${net}</span>` : ''}</div>
-      <div class="vcc-chip" aria-hidden="true"></div>
+      ${on ? vOnCard(r, VAULT_TABLES[0], [0]) : `<div class="vcc-chip" aria-hidden="true"></div>
       <div class="vcc-num">•••• •••• •••• <b>${esc(vLast4(r.c[2]) || '····')}</b></div>
-      <div class="vcc-bot"><span class="vcc-name">${esc(r.c[1] || '')}</span><span class="vcc-meta">${r.c[3] ? `<small>VALID THRU</small>${esc(r.c[3])}` : ''}${stmt ? `<em>Bill ${ordinal(stmt)}</em>` : ''}</span></div>
-    </div>${on ? vDetails(r, VAULT_TABLES[0]) : ''}</div>`;
+      <div class="vcc-bot"><span class="vcc-name">${esc(r.c[1] || '')}</span><span class="vcc-meta">${r.c[3] ? `<small>VALID THRU</small>${esc(r.c[3])}` : ''}${stmt ? `<em>Bill ${ordinal(stmt)}</em>` : ''}</span></div>`}
+    </div></div>`;
 }
-function vBankFace(r) { // a bank account as one card: no columns, no sideways scrolling
+function vBankFace(r) { // a bank account as one card: no columns, no sideways scrolling; tap to see every detail on the card
   const [a, b] = vTheme(r.c[0]), on = !!V.open[r.id];
-  return `<div class="vitem${on ? ' open' : ''}"><div class="vba" style="--ca:${a};--cb:${b}" data-act="v-row" data-id="${r.id}" role="button" tabindex="0" aria-expanded="${on}" aria-label="${esc(r.c[0] || 'Account')}, ${esc(r.c[1] || '')}. Tap for details.">
-      <span class="vba-badge">${esc(vInitials(r.c[0]))}</span>
-      <div class="vba-main"><div class="vba-bank">${esc(r.c[0] || 'Account')}</div><div class="vba-name">${esc(r.c[1] || '')}</div>
+  return `<div class="vitem${on ? ' open' : ''}"><div class="vba${on ? ' on' : ''}" style="--ca:${a};--cb:${b}" data-act="v-row" data-id="${r.id}" role="button" tabindex="0" aria-expanded="${on}" aria-label="${esc(r.c[0] || 'Account')}, ${esc(r.c[1] || '')}. Tap for details.">
+      <div class="vba-row"><span class="vba-badge">${esc(vInitials(r.c[0]))}</span>
+      <div class="vba-main"><div class="vba-bank">${esc(r.c[0] || 'Account')}</div>${on ? `<div class="vba-name">${esc(r.c[1] || '')}</div>` : `<div class="vba-name">${esc(r.c[1] || '')}</div>
         <div class="vba-acc">${r.c[2] ? 'A/c ' + esc(vGroup(r.c[2])) : '<span class="muted">No account number</span>'}</div>
-        <div class="vba-tags">${r.c[5] ? `<span>IFSC ${esc(r.c[5])}</span>` : ''}${r.c[3] ? `<span>Cust ID ${esc(r.c[3])}</span>` : ''}${r.c[6] ? `<span>Debit •••• ${esc(vLast4(r.c[6]))}</span>` : ''}</div></div>
-      <span class="vchev" aria-hidden="true">${on ? '▴' : '▾'}</span>
-    </div>${on ? vDetails(r, VAULT_TABLES[1]) : ''}</div>`;
+        <div class="vba-tags">${r.c[5] ? `<span>IFSC ${esc(r.c[5])}</span>` : ''}${r.c[3] ? `<span>Cust ID ${esc(r.c[3])}</span>` : ''}${r.c[6] ? `<span>Debit •••• ${esc(vLast4(r.c[6]))}</span>` : ''}</div>`}</div>
+      ${on ? '' : '<span class="vchev" aria-hidden="true">▾</span>'}</div>
+      ${on ? vOnCard(r, VAULT_TABLES[1], [0]) : ''}
+    </div></div>`;
 }
 function vPersonalRow(r) {
   const on = !!V.open[r.id], [a] = vTheme(r.c[0]);
@@ -3863,6 +3892,7 @@ document.addEventListener('click', ev => {
   if (a === 'v-lock') lockVault('Vault locked');
   else if (a === 'v-tab') { writePref({vaultTab: b.dataset.t}); renderVaultLists(); window.scrollTo({top: 0}); }
   else if (a === 'v-row') {
+    if (ev.target.closest('.vf2, .vedit')) return;
     if (window.getSelection && String(window.getSelection())) return; // let people select text without toggling
     const r = V.rows.find(x => x.id === b.dataset.id); if (!r) return;
     V.open[r.id] = !V.open[r.id];
@@ -3872,7 +3902,7 @@ document.addEventListener('click', ev => {
   else if (a === 'v-copy') {
     const r = V.rows.find(x => x.id === b.dataset.id); if (!r) return;
     const label = vCols(r.t)[+b.dataset.i] || 'value';
-    vCopy(String(r.c[+b.dataset.i] || ''), label);
+    const raw = String(r.c[+b.dataset.i] || ''); vCopy(vIsNum(label) && vDigits(raw).length >= 8 && /^[\d\s-]+$/.test(raw) ? vDigits(raw) : raw, label);
     b.classList.add('done'); setTimeout(() => b.classList.remove('done'), 1200);
   }
   else if (a === 'v-add') vEditRow(b.dataset.t, null);
