@@ -505,7 +505,8 @@ body[data-view="vault"] .fab,body[data-view="vault"] #addTop,body[data-view="vau
 .htile .hn{overflow-wrap:normal;word-break:normal;hyphens:auto}
 .bigtext .htile .hn,.bigtext .kpi .lbl,.bigtext .cckpi .lbl,.bigtext .tstat .lbl,.bigtext .th-main .lbl,.bigtext .ro .lbl,.bigtext .why-big .lbl{text-transform:none;letter-spacing:0;font-weight:700}
 /* ===== notes ===== */
-body[data-view="notes"] .fab{display:none}
+body[data-view="notes"] .fab,body[data-view="disc"] .fab{display:none}
+#v-disc{padding-bottom:24px}
 .nfab{position:fixed;right:max(16px,env(safe-area-inset-right,0px));bottom:calc(18px + env(safe-area-inset-bottom,0px));z-index:15;display:inline-flex;align-items:center;gap:6px;padding:0 20px;height:52px;border:0;border-radius:26px;background:var(--accent);color:var(--accent-ink);font-weight:800;font-size:calc(16.5px*var(--fs,1));box-shadow:0 10px 24px -8px rgba(0,0,0,.45);cursor:pointer}
 .nfab b{font-size:calc(22px*var(--fs,1));line-height:1}
 .nfab:active{transform:scale(.96)}
@@ -730,6 +731,26 @@ body[data-view="notes"] .fab{display:none}
 .vacc-emb svg{width:24px;height:24px;fill:none;stroke:#fff;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
 .vacc-kind{font-style:normal;font-size:calc(12px*var(--fs,1));letter-spacing:.14em;font-weight:800;opacity:.85;padding-top:3px}
 .vacc-lbl{font-family:var(--f-body);font-size:calc(11px*var(--fs,1));letter-spacing:.12em;opacity:.8;margin-right:4px;vertical-align:middle}
+/* ===== Discretionary tab ===== */
+.dtop{padding:0;overflow:hidden}
+.dt-main{display:flex;flex-direction:column;gap:2px;padding:18px;background:linear-gradient(180deg,var(--pur-soft),transparent)}
+.dt-main .lbl,.dt-row .lbl{font-size:calc(13.5px*var(--fs,1));color:var(--ink-3);font-weight:700;letter-spacing:.04em;text-transform:uppercase}
+.dt-main .v{font-size:calc(40px*var(--fs,1));font-weight:800;letter-spacing:-.02em;white-space:nowrap;overflow:hidden}
+.dt-main .sub{color:var(--ink-2);font-size:calc(14.5px*var(--fs,1))}
+.dt-row{display:grid;grid-template-columns:1fr 1fr;border-top:1px solid var(--rule)}.dt-row>div{display:flex;flex-direction:column;padding:12px 18px}.dt-row>div+div{border-left:1px solid var(--rule)}
+.dt-row .v2{font-size:calc(20px*var(--fs,1));font-weight:700}
+.dbar{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.dlist{overflow:hidden}
+.dhead,.drow,.dgh{display:grid;grid-template-columns:48px minmax(0,1fr) minmax(70px,auto) minmax(70px,auto);gap:10px;align-items:center;padding:0 14px}
+.dhead{padding-top:10px;padding-bottom:8px;font-size:calc(12.5px*var(--fs,1));font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--ink-3);border-bottom:1px solid var(--rule)}
+.dhead span:nth-child(n+3),.dgh span:nth-child(n+2){text-align:right}
+.dgh{padding-top:9px;padding-bottom:7px;background:var(--sheet-2);font-weight:800;font-size:calc(14px*var(--fs,1));border-bottom:1px solid var(--rule)}
+.dgh span:first-child{grid-column:1/3}
+.drow{width:100%;border:0;border-bottom:1px solid var(--rule);background:none;color:inherit;font:inherit;text-align:left;padding-top:10px;padding-bottom:10px;cursor:pointer}
+.drow:active{background:var(--accent-soft)}
+.dd{display:flex;flex-direction:column;line-height:1.1;color:var(--ink-3);font-size:calc(12.5px*var(--fs,1));font-weight:600}.dd b{font-size:calc(19px*var(--fs,1));color:var(--ink)}
+.ddesc{display:flex;flex-direction:column;min-width:0}.ddesc .t1{font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.ddesc .t2{font-size:calc(13px*var(--fs,1));color:var(--ink-3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.dpaid,.drec{text-align:right;font-weight:700;white-space:nowrap}.drec{color:var(--good-ink)}
 /* ===== text size and font ===== */
 .textb span{font-weight:800;font-size:19px;line-height:1;letter-spacing:-.02em}.textb small{font-size:14px;font-weight:700}
 .tx-prev{display:flex;flex-direction:column;gap:2px;padding:14px;border-radius:12px;background:var(--accent-soft)}
@@ -867,6 +888,7 @@ body[data-view="notes"] .fab{display:none}
       <a href="#trend" data-v="trend">Trend</a>
       <a href="#vault" data-v="vault" id="vaultTab" hidden>Vault</a>
       <a href="#setup" data-v="setup">Setup</a>
+      <a href="#disc" data-v="disc">Discretionary</a>
     </nav>
   </div>
 </header>
@@ -898,6 +920,7 @@ body[data-view="notes"] .fab{display:none}
   <section class="view" id="v-trend" hidden></section>
   <section class="view" id="v-setup" hidden></section>
   <section class="view" id="v-vault" hidden></section>
+  <section class="view" id="v-disc" hidden></section>
 </main>
 
 <button class="fab" data-act="add" type="button" aria-label="Add entry">+</button>
@@ -1023,7 +1046,7 @@ body[data-view="notes"] .fab{display:none}
 <script>
 (() => {
 'use strict';
-const VIEWS = ['overview','entries','cards','wealth','notes','trend','setup','vault'];
+const VIEWS = ['overview','entries','cards','wealth','notes','trend','setup','vault','disc'];
 const TYPES = ['Expense','Income','Transfer'];
 const GROUPS = ['Fixed','Variable','Discretionary','Sinking'];
 const CLASSES = ['Bank','FD','Bond','Retirement','Equity','ETF','Gold','Cash','Property','Loan','Owed','Other'];
@@ -2481,6 +2504,39 @@ document.addEventListener('click', ev => {
   state.cur = b.dataset.k; state.curPinned = state.cur !== cycleKeyOf(todayStr()); render();
 });
 
+/* ---------- Discretionary tab ----------
+   Every entry in an unplanned category (Discretionary): no budget, but tracked here as well as in the month. */
+const discIds = () => state.config.categories.filter(c => c.unplanned && c.type === 'Expense').map(c => c.id);
+function renderDisc(X) {
+  const el = $('#v-disc'); if (!el) return;
+  const ids = discIds(), range = readPref().discRange === 'month' ? 'month' : 'all';
+  let list = X.txns.filter(t => ids.includes(t.cat));
+  if (range === 'month') list = list.filter(t => cycleKeyOf(t.date) === state.cur);
+  list.sort((a, b) => a.date === b.date ? (b.at || 0) - (a.at || 0) : (a.date < b.date ? 1 : -1));
+  const paid = list.filter(t => !t.refund).reduce((s, t) => s + t.amount, 0), recd = list.filter(t => t.refund).reduce((s, t) => s + t.amount, 0);
+  const groups = {}; list.forEach(t => { const k = cycleKeyOf(t.date); (groups[k] = groups[k] || []).push(t); });
+  const how = t => t.card ? cardName(t.card) : t.acct === 'cash' ? 'Cash' : (X.am[t.acct] || {}).name || '';
+  const row = t => { const d = parseYmd(t.date);
+    return `<button type="button" class="drow" data-act="edit" data-id="${esc(t.id)}" data-doc="${esc(t._doc)}">
+      <span class="dd"><b>${d.getDate()}</b>${MON[d.getMonth()]}</span>
+      <span class="ddesc"><span class="t1">${esc(t.note || (X.cm[t.cat] || {}).name || 'Discretionary')}</span>${how(t) ? `<span class="t2">${esc(how(t))}</span>` : ''}</span>
+      <span class="dpaid num">${t.refund ? '' : rs(t.amount)}</span><span class="drec num">${t.refund ? rs(t.amount) : ''}</span></button>`; };
+  const body = Object.keys(groups).sort().reverse().map(k => { const g = groups[k], gp = g.filter(t => !t.refund).reduce((s, t) => s + t.amount, 0), gr = g.filter(t => t.refund).reduce((s, t) => s + t.amount, 0);
+    return `<div class="dgrp"><div class="dgh"><span>${cycleLabel(k)}</span><span class="num">${rs(gp)}</span><span class="num">${gr ? rs(gr) : ''}</span></div>${g.map(row).join('')}</div>`; }).join('');
+  el.innerHTML = `<section class="card dtop">
+      <div class="dt-main"><span class="lbl">Discretionary ${range === 'month' ? 'in ' + cycleLabel(state.cur) : 'so far'}</span><span class="v fit">${rs(paid - recd)}</span><span class="sub">spent outside the budget · ${list.length} entr${list.length === 1 ? 'y' : 'ies'}</span></div>
+      <div class="dt-row"><div><span class="lbl">Paid</span><span class="v2 num">${rs(paid)}</span></div><div><span class="lbl">Received</span><span class="v2 num">${rs(recd)}</span></div></div></section>
+    <div class="dbar"><div class="seg" role="group" aria-label="Show"><button type="button" class="segb" data-act="d-range" data-v="all" aria-pressed="${range === 'all'}">All time</button><button type="button" class="segb" data-act="d-range" data-v="month" aria-pressed="${range === 'month'}">${cycleLabel(state.cur)}</button></div>
+      <button type="button" class="btn primary sm" data-act="d-add">+ Add</button></div>
+    <section class="card dlist"><div class="dhead"><span>Date</span><span>Description</span><span>Paid</span><span>Received</span></div>
+      ${body || `<div class="empty">No discretionary spending ${range === 'month' ? 'in ' + cycleLabel(state.cur) : 'yet'}. Pick <b>Discretionary</b> when you add an entry, or tap + Add.</div>`}</section>`;
+}
+document.addEventListener('click', ev => {
+  const b = ev.target.closest('[data-act="d-range"], [data-act="d-add"]'); if (!b) return;
+  if (b.dataset.act === 'd-range') { writePref({discRange: b.dataset.v}); renderDisc(ctx()); fitNums($('#v-disc')); return; }
+  openEntry(); const id = discIds()[0]; if (id) setCat(id);
+});
+
 /* ---------- setup ---------- */
 function usedCats(X) { const u = {}; X.txns.forEach(t => { u[t.cat] = (u[t.cat] || 0) + 1; }); return u; }
 function renderSetup(X) {
@@ -2489,7 +2545,7 @@ function renderSetup(X) {
   let sel = null; try { sel = ae && typeof ae.selectionStart === 'number' ? ae.selectionStart : null; } catch (e) {}
   const d = state.draft, used = usedCats(X);
   const opt = (arr, v) => arr.map(o => `<option${o === v ? ' selected' : ''}>${o}</option>`).join('');
-  const catRows = d.categories.map((c, i) => `<div class="edrow cat-row" data-i="${i}">
+  const catRows = d.categories.map((c, i) => c.unplanned ? '' : `<div class="edrow cat-row" data-i="${i}">
       <input class="c-name" id="c-name-${esc(c.id)}" type="text" value="${esc(c.name)}" data-k="name" aria-label="Category name">
       <input class="c-short" id="c-short-${esc(c.id)}" type="text" value="${esc(c.short || '')}" data-k="short" aria-label="Button label" placeholder="${esc(c.name)}" maxlength="16">
       <select class="c-type" id="c-type-${esc(c.id)}" data-k="type" aria-label="Type">${opt(TYPES, c.type)}</select>
@@ -2938,6 +2994,7 @@ function render() {
   if (!holdIfTyping('#v-cards')) renderCards(X);
   if (!holdIfTyping('#v-wealth')) renderWealth(X);
   if (!holdIfTyping('#v-notes')) renderNotes();
+  renderDisc(X);
   renderTrend(X);
   if (!state.dirty && !holdIfTyping('#v-setup')) { state.draft = clone(state.config); renderSetup(X); }
   fillDatalists(X);
