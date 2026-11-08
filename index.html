@@ -504,6 +504,52 @@ body[data-view="vault"] .fab,body[data-view="vault"] #addTop,body[data-view="vau
 @media (max-width:640px){.cckpi{padding:12px 10px 10px}.cckpi .v{font-size:calc(19px*var(--fs,1))}.ccd{width:48px;height:48px}}
 .htile .hn{overflow-wrap:normal;word-break:normal;hyphens:auto}
 .bigtext .htile .hn,.bigtext .kpi .lbl,.bigtext .cckpi .lbl,.bigtext .tstat .lbl,.bigtext .th-main .lbl,.bigtext .ro .lbl,.bigtext .why-big .lbl{text-transform:none;letter-spacing:0;font-weight:700}
+/* ===== notes ===== */
+body[data-view="notes"] .fab{display:none}
+.nnew{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+.nnewb{display:flex;align-items:center;justify-content:center;gap:6px;min-height:46px;padding:8px 6px;border:1px solid var(--rule-2);border-radius:12px;background:var(--sheet);color:var(--ink);font-weight:700;font-size:calc(15px*var(--fs,1));cursor:pointer;text-align:center;line-height:1.2}
+.nnewb b{color:var(--accent);font-size:calc(19px*var(--fs,1))}
+.nnewb:active{background:var(--accent-soft)}
+@media (max-width:520px){.nnew{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.nbar .tin{min-height:44px;border-radius:10px;padding:9px 12px}
+.chipb .cnt{color:var(--ink-3);font-weight:600;margin-left:2px}
+.nlist{display:flex;flex-direction:column;gap:10px}
+.ncard{display:flex;gap:12px;align-items:flex-start;width:100%;padding:14px;border:1px solid var(--rule);border-radius:var(--r);background:var(--sheet);box-shadow:var(--shade);color:inherit;font:inherit;text-align:left;cursor:pointer}
+.ncard:active{background:var(--accent-soft)}
+.ntype{flex:0 0 auto;min-width:50px;padding:6px 6px;border-radius:8px;text-align:center;font-weight:800;font-size:calc(12.5px*var(--fs,1));letter-spacing:.06em;background:var(--sheet-2);border:1px solid var(--rule-2);color:var(--ink-2)}
+.ntype.t-md{border-color:var(--accent);color:var(--accent)}.ntype.t-html{border-style:dashed}.ntype.t-json{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+.nmain{flex:1 1 auto;min-width:0;display:flex;flex-direction:column;gap:3px}
+.nmain .t1{font-weight:700;font-size:calc(17px*var(--fs,1));overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.nmain .t2{color:var(--ink-2);font-size:calc(14.5px*var(--fs,1));display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.nmain .t3{color:var(--ink-3);font-size:calc(13.5px*var(--fs,1))}
+.nsync{color:var(--warn-ink);font-weight:600}
+.sheet.note{max-width:820px;height:calc(100% - 10px - env(safe-area-inset-top,0px));gap:10px}
+@media (min-width:700px){.sheet.note{height:calc(100% - 48px)}}
+.nhead{display:flex;align-items:center;gap:10px}
+.nstate{flex:1 1 auto;min-width:0;font-size:calc(13.5px*var(--fs,1));color:var(--ink-3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.nmode{flex:0 0 auto}.nmode .segb{min-height:36px;padding:4px 12px}
+.ntitle.tin{font-size:calc(22px*var(--fs,1));font-weight:800;border:0;border-bottom:1px solid var(--rule);border-radius:0;padding:6px 2px;background:transparent}
+.ntitle.tin:focus{outline:none;border-bottom-color:var(--accent)}
+.nbody{flex:1 1 auto;min-height:0;display:flex;flex-direction:column;overflow:auto}
+.nbody .ntext.tin{flex:1 1 auto;min-height:240px;max-height:none;height:100%;white-space:pre-wrap;line-height:1.55;padding:12px;border-radius:10px}
+.ntext.mono,.jsonview,.mdview pre,.mdview code{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,"Roboto Mono",monospace;font-size:calc(14.5px*var(--fs,1))}
+.nact{display:flex;gap:8px;flex-wrap:wrap}
+.nact .danger{margin-left:auto}
+.mdview{line-height:1.6;overflow-wrap:anywhere}
+.mdview h1,.mdview h2,.mdview h3{line-height:1.25;margin:.8em 0 .35em}.mdview h1{font-size:calc(26px*var(--fs,1))}.mdview h2{font-size:calc(22px*var(--fs,1))}.mdview h3{font-size:calc(19px*var(--fs,1))}
+.mdview p,.mdview ul,.mdview ol,.mdview blockquote,.mdview pre{margin:.5em 0}
+.mdview code{background:var(--sheet-2);border:1px solid var(--rule);border-radius:5px;padding:1px 5px}
+.mdview pre{background:var(--sheet-2);border:1px solid var(--rule);border-radius:10px;padding:12px;overflow:auto}.mdview pre code{border:0;padding:0;background:none}
+.mdview blockquote{border-left:3px solid var(--accent);padding:2px 0 2px 12px;color:var(--ink-2)}
+.mdview hr{border:0;border-top:1px solid var(--rule-2);margin:1em 0}
+.mdview li.task{list-style:none;margin-left:-1.2em;display:flex;gap:8px;align-items:baseline}
+.mdview .box{display:inline-grid;place-items:center;width:18px;height:18px;border:1.5px solid var(--ink-3);border-radius:4px;font-size:12px;flex:0 0 auto}.mdview .box.on{background:var(--good);border-color:var(--good);color:#fff}
+.mdview table{font-size:calc(15px*var(--fs,1))}
+.htmlview{flex:1 1 auto;width:100%;min-height:320px;border:1px solid var(--rule);border-radius:10px;background:#fff}
+.jsonview{margin:0;padding:12px;background:var(--sheet-2);border:1px solid var(--rule);border-radius:10px;overflow:auto;white-space:pre;line-height:1.5}
+.jsonview .jk{color:var(--accent)}.jsonview .js{color:var(--good-ink)}.jsonview .jn{color:var(--pur-ink)}.jsonview .jl{color:var(--warn-ink);font-weight:600}
+.jsonok,.jsonbad{display:flex;align-items:baseline;margin-bottom:8px;font-weight:600}.jsonbad{color:var(--bad-ink)}
+.txtview{white-space:pre-wrap;line-height:1.55;overflow-wrap:anywhere}
 /* ===== text size and font ===== */
 .textb span{font-weight:800;font-size:19px;line-height:1;letter-spacing:-.02em}.textb small{font-size:14px;font-weight:700}
 .tx-prev{display:flex;flex-direction:column;gap:2px;padding:14px;border-radius:12px;background:var(--accent-soft)}
@@ -637,6 +683,7 @@ body[data-view="vault"] .fab,body[data-view="vault"] #addTop,body[data-view="vau
       <a href="#overview" data-v="overview">Overview</a>
       <a href="#entries" data-v="entries">Entries</a>
       <a href="#wealth" data-v="wealth">Wealth</a>
+      <a href="#notes" data-v="notes">Notes</a>
       <a href="#trend" data-v="trend">Trend</a>
       <a href="#vault" data-v="vault" id="vaultTab" hidden>Vault</a>
       <a href="#setup" data-v="setup">Setup</a>
@@ -666,6 +713,7 @@ body[data-view="vault"] .fab,body[data-view="vault"] #addTop,body[data-view="vau
 
   <section class="view" id="v-cards" hidden></section>
   <section class="view" id="v-wealth" hidden></section>
+  <section class="view" id="v-notes" hidden></section>
   <section class="view" id="v-trend" hidden></section>
   <section class="view" id="v-setup" hidden></section>
   <section class="view" id="v-vault" hidden></section>
@@ -761,6 +809,11 @@ body[data-view="vault"] .fab,body[data-view="vault"] #addTop,body[data-view="vau
   <form class="sheet" id="vaultForm" novalidate autocomplete="off"></form>
 </div>
 
+<!-- Note editor -->
+<div class="scrim" id="noteScrim" hidden>
+  <div class="sheet note" id="noteBox" role="dialog" aria-label="Note"></div>
+</div>
+
 <!-- Text size and font -->
 <div class="scrim" id="textScrim" hidden>
   <div class="sheet" id="textBox" role="dialog" aria-label="Text size and font"></div>
@@ -784,7 +837,7 @@ body[data-view="vault"] .fab,body[data-view="vault"] #addTop,body[data-view="vau
 <script>
 (() => {
 'use strict';
-const VIEWS = ['overview','entries','cards','wealth','trend','setup','vault'];
+const VIEWS = ['overview','entries','cards','wealth','notes','trend','setup','vault'];
 const TYPES = ['Expense','Income','Transfer'];
 const GROUPS = ['Fixed','Variable','Discretionary','Sinking'];
 const CLASSES = ['Bank','FD','Bond','Retirement','Equity','ETF','Gold','Cash','Property','Loan','Owed','Other'];
@@ -1044,6 +1097,7 @@ async function flush() {
 }
 function takeReply(j) {
   fromServer(j.data);
+  notesReply(j);
   if (j.me) Sync.me = j.me;
   if (Sync.me && Sync.me.role === 'Owner' && !V.loaded && !V.loading && !V.err) setTimeout(() => { if (!V.loaded && !V.loading) loadVault(); }, 0);
   Sync.users = j.users || null;
@@ -1376,6 +1430,195 @@ document.addEventListener('change', ev => {
   if (ev.target && ev.target.id === 'fdRate') { const v = parseFloat(String(ev.target.value).replace(',', '.')); if (v > 0 && v <= 30) writePref({fdRate: v}); renderWealth(ctx()); }
 });
 
+
+/* ---------- notes ----------
+   Markdown, HTML, plain text or JSON. Each note is a real file in Google Drive (folder "Budget Tracker notes");
+   the sheet keeps only the list. A note saves on this phone first (works offline), then goes to Drive in the
+   background and is sent again until Drive has it. Each person sees only their own notes. */
+const LS_NOTES = 'budgetTracker.notes.v1';
+const NOTE_KINDS = {md: {label: 'Markdown', short: 'MD', mime: 'text/markdown', ext: 'md'}, txt: {label: 'Plain text', short: 'TXT', mime: 'text/plain', ext: 'txt'},
+  html: {label: 'HTML', short: 'HTML', mime: 'text/html', ext: 'html'}, json: {label: 'JSON', short: 'JSON', mime: 'application/json', ext: 'json'}};
+const N = {local: {}, del: {}, bodies: {}, err: '', q: '', type: '', open: null, mode: 'edit', timer: 0};
+try { const s = JSON.parse(localStorage.getItem(LS_NOTES) || '{}') || {}; N.local = s.local || {}; N.del = s.del || {}; N.bodies = s.bodies || {}; } catch (e) {}
+function saveNotes() { try { localStorage.setItem(LS_NOTES, JSON.stringify({local: N.local, del: N.del, bodies: N.bodies})); } catch (e) {} }
+// The list: the sheet's list, with this phone's unsent changes on top.
+function noteList() {
+  const m = {}; (state.notes || []).forEach(n => { if (!N.del[n.id]) m[n.id] = Object.assign({}, n); });
+  Object.values(m).forEach(n => { n.preview = notePreview(n.preview); });
+  Object.values(N.local).forEach(l => { if (N.del[l.id]) return; m[l.id] = Object.assign({}, m[l.id] || {}, {id: l.id, title: l.title, type: l.type, updatedAt: l.updatedAt, preview: notePreview(l.content), size: l.content.length, dirty: true}); });
+  return Object.values(m).sort((a, b) => (b.updatedAt || 0) - (a.updatedAt || 0));
+}
+// Preview: the words only, without Markdown marks or HTML tags.
+const notePreview = c => String(c || '').replace(/<[^>]*>/g, ' ').replace(/```[^\n]*/g, ' ').replace(/^\s*\|?\s*:?-{3,}[\s|:-]*$/gm, ' ')
+  .replace(/^\s{0,3}(#{1,6}|>|[-*+]|\d+[.)])\s+/gm, '').replace(/\[( |x|X)\]\s+/g, '').replace(/\[([^\]]+)\]\([^)]*\)/g, '$1')
+  .replace(/(\*\*|__|~~|`)/g, '').replace(/(\s*\|\s*)+/g, ' · ').replace(/\s+/g, ' ').replace(/^( · )+|( · )+$/g, '').trim().slice(0, 140);
+// After every reply: clear what Drive has, send again what it doesn't.
+function notesReply(j) {
+  Sync.notesOk = Array.isArray(j.notes); // an older script has no notes yet: keep them on the phone until it does
+  if (Sync.notesOk) state.notes = j.notes;
+  if (j.noteBodies) for (const [id, c] of Object.entries(j.noteBodies)) { const n = (state.notes || []).find(x => x.id === id); if (n) N.bodies[id] = {u: n.updatedAt, c}; }
+  N.err = j.noteErrors && j.noteErrors.length ? j.noteErrors[0].error : '';
+  if (!Sync.notesOk) return;
+  let sent = false;
+  Object.values(N.local).forEach(l => {
+    const s = state.notes.find(x => x.id === l.id);
+    if (s && s.updatedAt >= Math.floor(l.updatedAt / 1000) * 1000) { N.bodies[l.id] = {u: s.updatedAt, c: l.content}; delete N.local[l.id]; return; }
+    if (!Sync.outbox.some(o => o.t === 'nput' && o.note.id === l.id)) { Sync.outbox.push({t: 'nput', note: Object.assign({}, l)}); sent = true; }
+  });
+  Object.keys(N.del).forEach(id => {
+    if (!state.notes.some(x => x.id === id)) { delete N.del[id]; delete N.bodies[id]; return; }
+    if (!Sync.outbox.some(o => o.t === 'ndel' && o.id === id)) { Sync.outbox.push({t: 'ndel', id}); sent = true; }
+  });
+  saveNotes();
+  if (sent && !N.err) setTimeout(flush, 400);
+}
+function noteSave(n) {
+  N.local[n.id] = {id: n.id, title: n.title, type: n.type, content: n.content, updatedAt: Date.now()};
+  saveNotes();
+  if (Sync.notesOk) { Sync.outbox.push({t: 'nput', note: Object.assign({}, N.local[n.id])}); saveCache(); clearTimeout(N.flushT); N.flushT = setTimeout(flush, 600); }
+}
+const fmtWhen = ms => { if (!ms) return ''; const d = new Date(ms), t = new Date(), hm = pad(d.getHours()) + ':' + pad(d.getMinutes());
+  if (d.toDateString() === t.toDateString()) return 'Today ' + hm; const y = new Date(t); y.setDate(y.getDate() - 1);
+  if (d.toDateString() === y.toDateString()) return 'Yesterday ' + hm; return d.getDate() + ' ' + MON[d.getMonth()] + (d.getFullYear() !== t.getFullYear() ? ' ' + d.getFullYear() : ''); };
+function renderNotes() {
+  const el = $('#v-notes'); if (!el) return;
+  const all = noteList(), counts = {}; all.forEach(n => { counts[n.type] = (counts[n.type] || 0) + 1; });
+  const banner = !signedIn() ? '' : Sync.notesOk === undefined ? '' : !Sync.notesOk
+    ? `<div class="banner warn"><b>Notes are saved on this phone for now.</b> To keep them in Google Drive, update the script once: paste the new Code.gs in Apps Script, choose <b>setupNotes</b> and press <b>Run</b>, allow Drive access, then Deploy → Manage deployments → pencil → <b>New version</b>.</div>`
+    : N.err ? `<div class="banner warn">Google Drive didn't take the last change: ${esc(N.err)}. Your notes are safe on this phone and will be sent again.</div>` : '';
+  el.innerHTML = `${banner}<div class="nnew" role="group" aria-label="New note">${Object.entries(NOTE_KINDS).map(([k, v]) => `<button type="button" class="nnewb" data-act="n-new" data-v="${k}"><b>+</b> ${v.label}</button>`).join('')}</div>
+    <div class="nbar"><input id="nQ" type="search" placeholder="Search notes" aria-label="Search notes" value="${esc(N.q)}"></div>
+    <div class="chips" id="nTypes" role="group" aria-label="Show">${[['', 'All', all.length]].concat(Object.entries(NOTE_KINDS).map(([k, v]) => [k, v.label, counts[k] || 0])).map(([k, l, c]) => `<button type="button" class="chipb" data-act="n-type" data-v="${k}" aria-pressed="${N.type === k}">${l} <span class="cnt">${c}</span></button>`).join('')}</div>
+    <div id="nList"></div>`;
+  renderNoteList();
+}
+function renderNoteList() {
+  const box = $('#nList'); if (!box) return;
+  const q = N.q.trim().toLowerCase(), list = noteList().filter(n => (!N.type || n.type === N.type) && (!q || (n.title + ' ' + n.preview + ' ' + ((N.local[n.id] || N.bodies[n.id] || {}).content || (N.bodies[n.id] || {}).c || '')).toLowerCase().includes(q)));
+  box.innerHTML = list.length ? `<div class="nlist">${list.map(n => `<button type="button" class="ncard" data-act="n-open" data-id="${esc(n.id)}">
+      <span class="ntype t-${n.type}">${NOTE_KINDS[n.type].short}</span>
+      <span class="nmain"><span class="t1">${esc(n.title || 'Untitled')}</span><span class="t2">${esc(n.preview || 'Empty note')}</span>
+        <span class="t3">${fmtWhen(n.updatedAt)}${n.dirty ? ` · <span class="nsync">${Sync.notesOk ? 'going to Drive' : 'on this phone'}</span>` : n.fileId ? ' · in Drive' : ''}</span></span></button>`).join('')}</div>`
+    : `<div class="card empty">${q || N.type ? 'No notes match.' : 'No notes yet. Start one above: Markdown, plain text, HTML or JSON.'}</div>`;
+}
+/* --- the editor --- */
+function noteBody(id) {
+  if (N.local[id]) return N.local[id].content;
+  const s = (state.notes || []).find(x => x.id === id), b = N.bodies[id];
+  return b && s && b.u === s.updatedAt ? b.c : null;
+}
+async function openNote(id, fresh) {
+  const s = noteList().find(x => x.id === id) || fresh; if (!s) return;
+  let c = fresh ? fresh.content : noteBody(id);
+  N.open = {id, title: s.title || '', type: s.type, content: c == null ? '' : c, fileId: s.fileId || '', loading: c == null};
+  N.mode = fresh || s.type === 'txt' ? 'edit' : 'view';
+  drawNote();
+  if (c == null) {
+    try { const j = await call([], {noteIds: [id]}); takeReply(j); c = noteBody(id); } catch (e) {}
+    if (!N.open || N.open.id !== id) return;
+    N.open.loading = false;
+    if (c == null) { N.open.failed = true; } else N.open.content = c;
+    drawNote();
+  }
+}
+function drawNote() {
+  const o = N.open, k = NOTE_KINDS[o.type], drive = o.fileId ? `https://drive.google.com/file/d/${encodeURIComponent(o.fileId)}/view` : '';
+  $('#noteBox').innerHTML = `<div class="nhead"><button type="button" class="btn ghost sm" data-act="n-close">‹ Notes</button><span class="nstate" id="nState"></span>
+      <div class="seg nmode" role="group" aria-label="Mode"><button type="button" class="segb" data-act="n-mode" data-v="edit" aria-pressed="${N.mode === 'edit'}">Edit</button><button type="button" class="segb" data-act="n-mode" data-v="view" aria-pressed="${N.mode === 'view'}">${o.type === 'json' ? 'Check' : 'Preview'}</button></div></div>
+    <input id="nTitle" type="text" class="ntitle" placeholder="Title" aria-label="Title" value="${esc(o.title)}">
+    <div class="chips ntypes" role="group" aria-label="Kind of note">${Object.entries(NOTE_KINDS).map(([kk, v]) => `<button type="button" class="chipb" data-act="n-kind" data-v="${kk}" aria-pressed="${kk === o.type}">${v.label}</button>`).join('')}</div>
+    <div class="nbody" id="nBody">${o.loading ? '<div class="empty">Opening from Google Drive…</div>' : o.failed ? '<div class="empty">Couldn\'t open this note from Google Drive. Check the connection and try again.</div>' : noteBodyHtml()}</div>
+    <div class="nact">${o.type === 'json' ? '<button type="button" class="btn sm" data-act="n-tidy">Tidy JSON</button>' : ''}<button type="button" class="btn sm" data-act="n-copy">Copy</button><button type="button" class="btn sm" data-act="n-dl">Download .${k.ext}</button>${drive ? `<a class="btn sm" href="${drive}" target="_blank" rel="noopener">Open in Drive</a>` : ''}<button type="button" class="btn sm danger" data-act="n-del">Delete</button></div>`;
+  $('#noteScrim').hidden = false; noteState();
+  const ta = $('#nText'); if (ta && !o.loading && N.mode === 'edit' && !o.content) setTimeout(() => { if (!$('#noteBox').contains(document.activeElement)) focusBox(o.title ? ta : $('#nTitle')); }, 60);
+}
+function noteBodyHtml() {
+  const o = N.open;
+  if (N.mode === 'edit') return `<textarea id="nText" class="ntext${o.type === 'html' || o.type === 'json' ? ' mono' : ''}" placeholder="${o.type === 'md' ? '# Heading\n\nWrite in **Markdown**…' : o.type === 'html' ? '<h1>Hello</h1>' : o.type === 'json' ? '{\n  "key": "value"\n}' : 'Write anything…'}" aria-label="Note">${esc(o.content)}</textarea>`;
+  if (o.type === 'md') return `<div class="mdview">${mdToHtml(o.content) || '<p class="muted">Nothing written yet.</p>'}</div>`;
+  if (o.type === 'html') return `<iframe class="htmlview" sandbox title="HTML preview" srcdoc="${esc(o.content || '<p style="font-family:sans-serif;color:#888">Nothing written yet.</p>')}"></iframe>`;
+  if (o.type === 'json') { if (!o.content.trim()) return '<p class="muted">Nothing written yet.</p>';
+    try { return `<div class="jsonok">${sdot('good')}Valid JSON</div><pre class="jsonview">${jsonHtml(JSON.parse(o.content))}</pre>`; }
+    catch (e) { return `<div class="jsonbad">${sdot('bad')}Not valid JSON: ${esc(e.message)}</div><pre class="jsonview plain">${esc(o.content)}</pre>`; } }
+  return `<div class="txtview">${esc(o.content) || '<span class="muted">Nothing written yet.</span>'}</div>`;
+}
+function noteState() {
+  const o = N.open, el = $('#nState'); if (!o || !el) return;
+  const l = N.local[o.id];
+  el.textContent = o.loading ? 'Opening…' : l ? (Sync.notesOk ? (N.err ? 'Saved on phone · Drive will retry' : 'Saved on phone · going to Drive') : 'Saved on this phone') : o.fileId ? 'Saved in Drive' : '';
+}
+function noteChanged() {
+  const o = N.open; if (!o || o.loading || o.failed) return;
+  const t = $('#nTitle'), x = $('#nText');
+  if (t) o.title = t.value.trim(); if (x) o.content = x.value;
+  clearTimeout(N.timer); N.timer = setTimeout(() => commitNote(), 900);
+}
+function commitNote() {
+  clearTimeout(N.timer); const o = N.open; if (!o || o.loading || o.failed) return;
+  const was = N.local[o.id] || (state.notes || []).find(x => x.id === o.id), body = noteBody(o.id);
+  const isNew = !was, same = was && (was.title || '') === o.title && was.type === o.type && body === o.content;
+  if (same || (isNew && !o.title && !o.content)) return;
+  noteSave(o); noteState(); renderNoteList();
+}
+function closeNote() { commitNote(); N.open = null; $('#noteScrim').hidden = true; renderNotes(); }
+// Markdown, rendered safely: everything is escaped first, then only these marks become formatting.
+function mdInline(t) {
+  return esc(t).replace(/`([^`]+)`/g, '<code>$1</code>').replace(/\*\*([^*]+)\*\*/g, '<b>$1</b>').replace(/__([^_]+)__/g, '<b>$1</b>')
+    .replace(/(^|[^*\w])\*([^*\s][^*]*?)\*(?!\*)/g, '$1<i>$2</i>').replace(/(^|[^\w])_([^_\s][^_]*?)_(?!\w)/g, '$1<i>$2</i>').replace(/~~([^~]+)~~/g, '<s>$1</s>')
+    .replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g, '<a href="$2" target="_blank" rel="noopener">$1</a>')
+    .replace(/(^|[\s(])(https?:\/\/[^\s<)]+)/g, '$1<a href="$2" target="_blank" rel="noopener">$2</a>');
+}
+function mdToHtml(src) {
+  const L = String(src || '').replace(/\r/g, '').split('\n'); let h = '', i = 0;
+  const isTableSep = s => /^\s*\|?\s*:?-{3,}:?\s*(\|\s*:?-{3,}:?\s*)*\|?\s*$/.test(s);
+  const cells = s => s.trim().replace(/^\||\|$/g, '').split('|').map(c => c.trim());
+  while (i < L.length) {
+    const l = L[i];
+    if (/^```/.test(l)) { const code = []; i++; while (i < L.length && !/^```/.test(L[i])) code.push(L[i++]); i++; h += `<pre><code>${esc(code.join('\n'))}</code></pre>`; continue; }
+    let m;
+    if ((m = l.match(/^(#{1,6})\s+(.*)$/))) { h += `<h${m[1].length}>${mdInline(m[2])}</h${m[1].length}>`; i++; continue; }
+    if (/^\s*([-*_])\s*\1\s*\1[\s\-*_]*$/.test(l)) { h += '<hr>'; i++; continue; }
+    if (/^\s*>/.test(l)) { const q = []; while (i < L.length && /^\s*>/.test(L[i])) q.push(L[i++].replace(/^\s*>\s?/, '')); h += `<blockquote>${mdToHtml(q.join('\n'))}</blockquote>`; continue; }
+    if (l.includes('|') && i + 1 < L.length && isTableSep(L[i + 1])) { const head = cells(l); i += 2; const body = []; while (i < L.length && L[i].includes('|') && L[i].trim()) body.push(cells(L[i++]));
+      h += `<div class="tscroll"><table><thead><tr>${head.map(c => `<th>${mdInline(c)}</th>`).join('')}</tr></thead><tbody>${body.map(r => `<tr>${r.map(c => `<td>${mdInline(c)}</td>`).join('')}</tr>`).join('')}</tbody></table></div>`; continue; }
+    if (/^\s*([-*+]|\d+[.)])\s+/.test(l)) { const ol = /^\s*\d/.test(l), items = [];
+      while (i < L.length && /^\s*([-*+]|\d+[.)])\s+/.test(L[i])) { let t = L[i++].replace(/^\s*([-*+]|\d+[.)])\s+/, ''); const tk = t.match(/^\[( |x|X)\]\s+(.*)$/);
+        items.push(tk ? `<li class="task"><span class="box${tk[1] === ' ' ? '' : ' on'}">${tk[1] === ' ' ? '' : '✓'}</span>${mdInline(tk[2])}</li>` : `<li>${mdInline(t)}</li>`); }
+      h += ol ? `<ol>${items.join('')}</ol>` : `<ul>${items.join('')}</ul>`; continue; }
+    if (!l.trim()) { i++; continue; }
+    const p = []; while (i < L.length && L[i].trim() && !/^(#{1,6}\s|```|\s*>|\s*([-*+]|\d+[.)])\s+)/.test(L[i])) p.push(L[i++]);
+    h += `<p>${p.map(mdInline).join('<br>')}</p>`;
+  }
+  return h;
+}
+function jsonHtml(v) {
+  const s = JSON.stringify(v, null, 2), re = /("(?:\\.|[^"\\])*")(\s*:)?|\b(true|false|null)\b|(-?\d+(?:\.\d+)?(?:[eE][+-]?\d+)?)/g; let out = '', last = 0, m;
+  while ((m = re.exec(s))) { out += esc(s.slice(last, m.index)); last = re.lastIndex;
+    out += m[1] ? `<span class="${m[2] ? 'jk' : 'js'}">${esc(m[1])}</span>${m[2] || ''}` : m[3] ? `<span class="jl">${m[3]}</span>` : `<span class="jn">${m[4]}</span>`; }
+  return out + esc(s.slice(last));
+}
+document.addEventListener('input', ev => {
+  if (ev.target && ev.target.id === 'nQ') { N.q = ev.target.value; renderNoteList(); }
+  else if (ev.target && (ev.target.id === 'nTitle' || ev.target.id === 'nText')) noteChanged();
+});
+document.addEventListener('click', async ev => {
+  const b = ev.target.closest('[data-act^="n-"]'); if (!b) return;
+  const a = b.dataset.act, o = N.open;
+  if (a === 'n-new') { const id = 'n' + newId(); openNote(id, {id, title: '', type: b.dataset.v, content: ''}); }
+  else if (a === 'n-open') openNote(b.dataset.id);
+  else if (a === 'n-type') { N.type = b.dataset.v; document.querySelectorAll('#nTypes .chipb').forEach(x => x.setAttribute('aria-pressed', String(x.dataset.v === N.type))); renderNoteList(); }
+  else if (!o) return;
+  else if (a === 'n-close') closeNote();
+  else if (a === 'n-mode') { commitNote(); N.mode = b.dataset.v; drawNote(); }
+  else if (a === 'n-kind') { o.type = b.dataset.v; commitNote(); drawNote(); }
+  else if (a === 'n-tidy') { try { o.content = JSON.stringify(JSON.parse(o.content), null, 2); commitNote(); drawNote(); toast('JSON tidied'); } catch (e) { toast('Not valid JSON: ' + e.message, 'bad'); } }
+  else if (a === 'n-copy') { try { await navigator.clipboard.writeText(o.content); toast('Copied'); } catch (e) { showCopy(o.title || 'Note', o.content); } }
+  else if (a === 'n-dl') { commitNote(); offerFile((o.title || 'Untitled').replace(/[\\/:*?"<>|]+/g, ' ').trim() + '.' + NOTE_KINDS[o.type].ext, o.content, NOTE_KINDS[o.type].mime); }
+  else if (a === 'n-del') { if (!arm(b, 'ndel' + o.id, 'Tap again to delete')) return;
+    clearTimeout(N.timer); delete N.local[o.id]; const onServer = (state.notes || []).some(x => x.id === o.id);
+    if (onServer) { N.del[o.id] = 1; if (Sync.notesOk) { Sync.outbox.push({t: 'ndel', id: o.id}); saveCache(); setTimeout(flush, 300); } }
+    saveNotes(); N.open = null; $('#noteScrim').hidden = true; renderNotes(); toast('Note deleted' + (onServer ? ' (it goes to the Drive bin)' : '')); }
+});
 
 /* ---------- text: font and size, for the whole app ----------
    Every font size in the app is "size × --fs", so one number scales everything. Saved on this phone and
@@ -2203,6 +2446,7 @@ function render() {
   if (!holdIfTyping('#v-entries')) renderEntries(X);
   if (!holdIfTyping('#v-cards')) renderCards(X);
   if (!holdIfTyping('#v-wealth')) renderWealth(X);
+  if (!holdIfTyping('#v-notes')) renderNotes();
   renderTrend(X);
   if (!state.dirty && !holdIfTyping('#v-setup')) { state.draft = clone(state.config); renderSetup(X); }
   fillDatalists(X);
@@ -2551,8 +2795,8 @@ $('#eDel').addEventListener('click', async () => {
   try { await API.delTxn(editing.id, editing._doc); toast('Entry deleted'); closeEntry(); } catch (e) { $('#eErr').textContent = writeErr(e); $('#eErr').hidden = false; }
 });
 $('#balForm').addEventListener('submit', ev => { ev.preventDefault(); saveBalances(); });
-['entryScrim', 'balScrim', 'impScrim', 'copyScrim', 'vaultScrim', 'whyScrim', 'textScrim'].forEach(id => $('#' + id).addEventListener('click', ev => { if (ev.target.id === id) { $('#' + id).hidden = true; if (id === 'whyScrim') W$.stack = []; if (id === 'entryScrim') editing = null; } }));
-document.addEventListener('keydown', ev => { if (ev.key === 'Escape') ['entryScrim', 'balScrim', 'impScrim', 'copyScrim', 'vaultScrim', 'whyScrim', 'textScrim'].forEach(id => { $('#' + id).hidden = true; }); });
+['entryScrim', 'balScrim', 'impScrim', 'copyScrim', 'vaultScrim', 'whyScrim', 'textScrim', 'noteScrim'].forEach(id => $('#' + id).addEventListener('click', ev => { if (ev.target.id === id) { if (id === 'noteScrim') { closeNote(); return; } $('#' + id).hidden = true; if (id === 'whyScrim') W$.stack = []; if (id === 'entryScrim') editing = null; } }));
+document.addEventListener('keydown', ev => { if (ev.key === 'Escape' && N.open) { closeNote(); return; } if (ev.key === 'Escape') ['entryScrim', 'balScrim', 'impScrim', 'copyScrim', 'vaultScrim', 'whyScrim', 'textScrim'].forEach(id => { $('#' + id).hidden = true; }); });
 $('#cycPick').addEventListener('change', ev => { state.cur = ev.target.value; state.curPinned = state.cur !== cycleKeyOf(todayStr()); render(); });
 ['fCat', 'fType'].forEach(id => $('#' + id).addEventListener('change', () => renderEntries(ctx())));
 $('#fQ').addEventListener('input', () => renderEntries(ctx()));

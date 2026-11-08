@@ -23,7 +23,9 @@ var TABS = {
   Config: ['Key', 'Value', 'Note'],
   Users: ['Email', 'Name', 'Role', 'Added by', 'Added at'],
   // Encrypted on the phone before it arrives. This script never sees readable vault data.
-  Vault: ['ID', 'Encrypted data', 'Saved at']
+  Vault: ['ID', 'Encrypted data', 'Saved at'],
+  // Notes live as real files in Drive (folder "Budget Tracker notes"); this tab is only the list.
+  Notes: ['ID', 'Title', 'Type', 'Owner', 'Drive file ID', 'Updated at', 'Size', 'Preview']
 };
 var E = {id: 0, date: 1, cycle: 2, type: 3, catName: 4, amount: 5, acctName: 6, cardName: 7, note: 8, member: 9, tag: 10,
          refund: 11, cat: 12, acct: 13, card: 14, at: 15, saved: 16};
@@ -50,12 +52,13 @@ function doPost(e) {
     if (req.emailLink) return out(sendLoginLink(ss, req.emailLink));
     var who = authorise(ss, req);
     if (!who.ok) return out(who);
-    var ops = Array.isArray(req.ops) ? req.ops : [], vaultOps = [];
+    var ops = Array.isArray(req.ops) ? req.ops : [], vaultOps = [], noteErrors = [];
     for (var i = 0; i < ops.length; i++) {
       var op = ops[i] || {};
       if (op.t === 'signout') { if (req.session) PropertiesService.getScriptProperties().deleteProperty('sess:' + req.session); return out({ok: true, signedOut: true}); }
       if (op.t === 'adduser' || op.t === 'deluser') { userOp(ss, op, who.user); continue; }
       if (op.t === 'vput' || op.t === 'vdel') { vaultOps.push(op); continue; }
+      if (op.t === 'nput' || op.t === 'ndel') { try { noteOp(ss, op, who.user); } catch (x) { noteErrors.push({id: (op.note || op).id, error: String(x && x.message || x)}); } continue; }
       applyOp(ss, op);
     }
     vaultApply(ss, vaultOps, who.user);
@@ -64,6 +67,9 @@ function doPost(e) {
     if (who.session) reply.session = who.session;
     if (who.user.role === 'Owner') reply.users = listUsers(ss);
     if (req.vault && who.user.role === 'Owner') reply.vault = readVault(ss);
+    reply.notes = readNotes(ss, who.user);
+    if (noteErrors.length) reply.noteErrors = noteErrors;
+    if (Array.isArray(req.noteIds) && req.noteIds.length) { try { reply.noteBodies = noteBodies(ss, req.noteIds, who.user); } catch (x) { reply.noteErrors = (reply.noteErrors || []).concat([{id: '', error: String(x && x.message || x)}]); } }
     return out(reply);
   } catch (err) {
     return out({ok: false, error: String(err && err.message || err)});
@@ -201,6 +207,69 @@ function vaultApply(ss, ops, me) {
 function readVault(ss) {
   return rows(ss.getSheetByName('Vault')).filter(function (r) { return r[0] && r[1]; })
     .map(function (r) { return {id: String(r[0]), data: String(r[1])}; });
+}
+
+
+/* ---------- notes: one real file per note in Drive ----------
+   Each person sees and changes only their own notes. Files sit in the owner's Drive, folder "Budget Tracker notes".
+   Run setupNotes() once from the editor after pasting this file: Google then asks to allow Drive access. */
+var NOTE_TYPES = {md: ['md', 'text/markdown'], html: ['html', 'text/html'], txt: ['txt', 'text/plain'], json: ['json', 'application/json']};
+var NOTES_FOLDER = 'Budget Tracker notes';
+function setupNotes() {
+  var ss = SpreadsheetApp.getActiveSpreadsheet(); ensureTabs(ss);
+  Logger.log('Notes folder ready: ' + notesFolder().getUrl());
+}
+function notesFolder() {
+  var p = PropertiesService.getScriptProperties(), id = p.getProperty('notesFolder');
+  if (id) { try { var f0 = DriveApp.getFolderById(id); if (!f0.isTrashed()) return f0; } catch (e) {} }
+  var it = DriveApp.getFoldersByName(NOTES_FOLDER), f = it.hasNext() ? it.next() : DriveApp.createFolder(NOTES_FOLDER);
+  p.setProperty('notesFolder', f.getId());
+  return f;
+}
+function noteOwner(user) { return String((user && user.email) || 'owner').toLowerCase(); }
+function noteFileName(title, type) {
+  var t = String(title || '').replace(/[\\/:*?"<>|\u0000-\u001f]+/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 120) || 'Untitled';
+  return t + '.' + NOTE_TYPES[type][0];
+}
+function noteOp(ss, op, user) {
+  var sh = ss.getSheetByName('Notes'), r = rows(sh), me = noteOwner(user);
+  var id = String((op.t === 'nput' ? (op.note || {}).id : op.id) || '');
+  if (!/^[A-Za-z0-9_\-]{1,64}$/.test(id)) return;
+  var at = -1;
+  for (var i = 0; i < r.length; i++) if (String(r[i][0]) === id) { at = i; break; }
+  if (at >= 0 && String(r[at][3]).toLowerCase() !== me) return; // someone else's note
+  var oldFile = at >= 0 ? String(r[at][4] || '') : '';
+  if (op.t === 'ndel') {
+    if (oldFile) { try { DriveApp.getFileById(oldFile).setTrashed(true); } catch (e) {} }
+    if (at >= 0) sh.deleteRow(at + 2);
+    return;
+  }
+  var n = op.note, type = NOTE_TYPES[n.type] ? n.type : 'txt', content = String(n.content == null ? '' : n.content), title = String(n.title || '').slice(0, 200);
+  var name = noteFileName(title, type), file = null;
+  if (at >= 0 && String(r[at][2]) === type && oldFile) { try { file = DriveApp.getFileById(oldFile); if (file.isTrashed()) file = null; } catch (e) { file = null; } }
+  if (file) { file.setContent(content); if (file.getName() !== name) file.setName(name); }
+  else {
+    file = notesFolder().createFile(name, content, NOTE_TYPES[type][1]);
+    if (oldFile) { try { DriveApp.getFileById(oldFile).setTrashed(true); } catch (e) {} } // the type changed: new file, old one to the bin
+  }
+  var preview = content.replace(/<[^>]*>/g, ' ').replace(/```[^\n]*/g, ' ').replace(/^\s{0,3}(#{1,6}|>|[-*+]|\d+[.)])\s+/gm, '').replace(/\[( |x|X)\]\s+/g, '')
+    .replace(/(\*\*|__|~~|`)/g, '').replace(/\s+/g, ' ').trim().slice(0, 140);
+  var row = [id, title, type, me, file.getId(), stamp(+n.updatedAt || Date.now()), content.length, preview];
+  if (at >= 0) sh.getRange(at + 2, 1, 1, row.length).setNumberFormat('@').setValues([row]);
+  else sh.getRange(sh.getLastRow() + 1, 1, 1, row.length).setNumberFormat('@').setValues([row]);
+}
+function readNotes(ss, user) {
+  var me = noteOwner(user);
+  return rows(ss.getSheetByName('Notes')).filter(function (r) { return r[0] && String(r[3]).toLowerCase() === me; }).map(function (r) {
+    return {id: String(r[0]), title: txt(r[1]), type: NOTE_TYPES[r[2]] ? String(r[2]) : 'txt', fileId: txt(r[4]), updatedAt: Date.parse(txt(r[5])) || 0, size: +r[6] || 0, preview: txt(r[7])};
+  });
+}
+function noteBodies(ss, ids, user) {
+  var mine = {}, out = {};
+  readNotes(ss, user).forEach(function (n) { mine[n.id] = n; });
+  ids.slice(0, 20).forEach(function (id) { var n = mine[String(id)]; if (!n || !n.fileId) return;
+    try { out[n.id] = DriveApp.getFileById(n.fileId).getBlob().getDataAsString('UTF-8'); } catch (e) {} });
+  return out;
 }
 
 /* ---------- sheet helpers ---------- */
