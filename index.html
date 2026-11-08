@@ -3408,9 +3408,17 @@ function openEntry(t) {
 }
 function closeEntry() { $('#entryScrim').hidden = true; editing = null; }
 async function saveEntry(again) {
-  const amt = parseAmount($('#eAmt').value), date = $('#eDate').value, cat = $('#eCat').value, err = $('#eErr'), X = ctx();
+  let amt = parseAmount($('#eAmt').value); const date = $('#eDate').value, cat = $('#eCat').value, err = $('#eErr'), X = ctx();
   const fail = (m, el) => { err.textContent = m; err.hidden = false; if (el) focusBox(el); };
-  if (!(amt > 0)) return fail(isFinite(amt) ? 'The amount works out to zero or less.' : 'Type an amount, like 450, 220+260 or 3×150.', $('#eAmt'));
+  if (!isFinite(amt)) return fail('Type an amount, like 450, 220+260 or 3×150.', $('#eAmt'));
+  if (amt === 0) return fail('The amount works out to zero.', $('#eAmt'));
+  // A minus sign on spending (Expense) is an adjustment: it is saved as a refund of the same size, so it adds back.
+  let refund = $('#eRefund').checked;
+  if (amt < 0) {
+    if (cat && (X.cm[cat] || {}).type !== 'Expense') return fail('Only spending can take a minus sign. For money back, tick "This is a refund" instead.', $('#eAmt'));
+    if (isCardPay(cat, X.cm)) return fail('A card bill payment cannot be negative.', $('#eAmt'));
+    amt = -amt; refund = !refund;
+  }
   if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) return fail('Choose a date.');
   if (!cat) return fail('Tap a category.');
   const pay = isCardPay(cat, X.cm);
@@ -3421,7 +3429,7 @@ async function saveEntry(again) {
   else if (payMode === 'card') { if (!payCard) return fail("Choose the card (add cards in the vault's Credit cards)."); card = payCard; }
   else { acct = editing ? editing.acct || '' : ''; card = editing ? editing.card || '' : ''; }
   const t = {id: editing ? editing.id : newId(), date, amount: amt, cat, acct, card, note: $('#eNote').value.trim(),
-    member: $('#eMember').value.trim(), tag: $('#eTag').value.trim(), at: editing ? editing.at : Date.now(), refund: $('#eRefund').checked};
+    member: $('#eMember').value.trim(), tag: $('#eTag').value.trim(), at: editing ? editing.at : Date.now(), refund};
   const wasEditing = editing, oldT = wasEditing ? (X.txns.find(x => x.id === wasEditing.id) || wasEditing) : null;
   try { await API.putTxn(t, wasEditing ? wasEditing._doc : null); } catch (e) { return fail(writeErr(e)); }
   const pref = readPref();
