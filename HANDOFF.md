@@ -12,7 +12,7 @@ A household budget PWA for **Arhaanbeta** (aarhaan22@gmail.com). One file app: `
 - **Sheet tabs:** Entries, Balances, CardFix, Config (JSON in "config part N" rows), Users (family allow-list; aarhaan22 is Owner), Vault (encrypted rows).
 - **Sign-in:** emailed one-time link (MailApp) → permanent session in Script Properties. A legacy `APP_KEY` set-up key also works (Owner role). The owner can share it with a new session; it is not stored in this repo.
 - **Cloud environment:** the session environment **"budget-tracker"** allows `script.google.com`, `script.googleusercontent.com`, `arhaanbeta.github.io`. Use it to test against the real script.
-- **Pushing:** commit to `main` and push; Pages goes live in ~30–60 s. Bump `CACHE` in `sw.js` (`budget-tracker-vNN`, currently v36) on every release.
+- **Pushing:** commit to `main` and push; Pages goes live in ~30–60 s. Bump `CACHE` in `sw.js` (`budget-tracker-vNN`, currently v37) on every release.
 
 ## App structure (index.html)
 - **Sync:** optimistic outbox (`queue` → `flush`), full data returned by the script each time; 30 s polling; offline-safe. Ops: config, txn, deltxn, bal, delbal, fix, replace, adduser, deluser, vput, vdel, signout.
@@ -33,6 +33,8 @@ A household budget PWA for **Arhaanbeta** (aarhaan22@gmail.com). One file app: `
 - **Status logic** lives in `catStatus()` (one category) and `cycleOutlook()` (whole month: projected spend at the current daily rate; Fixed/Sinking-group bills count as paid in one go, never "running fast"). Overview tiles show a thin "even pace" marker.
 - **Day/night**: `#themeBtn` flips `html[data-theme]`, remembered in localStorage (`budgetTracker.theme`); an inline script in `<head>` applies it before paint. Everything uses CSS variables, so charts switch without redrawing.
 - **Type**: Inter for all reading and numbers (Archivo only for the name), body 17px; nothing below 13px. Big figures carry class `fit` and `fitNums()` shrinks them just enough to fit.
+- **Text size and font** (`Aa` button, `textSheet()`): six fonts (Inter default, Atkinson Hyperlegible, Noto Sans, Roboto, Lexend, phone's font) and five sizes (0.9–1.35). Every font size in CSS and inline styles is `calc(Npx*var(--fs,1))`, so one variable scales the app; never write a bare px font size. Saved in localStorage `budgetTracker.text`, applied in `<head>` before paint; `bigtext` class (size ≥ 1.1) drops capitals on labels so long words fit. Chart label widths multiply by `fsNow()`.
+- **Overview card summary** (`cardStripHtml`): three figures (To pay now with urgency tone, Next bills, Total owed), an owed split bar, "Pay now" rows with calendar date tiles (red overdue, amber due within 5 days), "Coming up" rows, and a count of cards with nothing due. Every row opens that card's breakdown.
 - **Numbers**: always full Indian style in whole rupees (`rs()`, `INR`), e.g. ₹68,00,000. Never lakh/crore shorthand, never decimals (months of cover is rounded). `rsShort` is now just `rs`. Input boxes show amounts with Indian commas; parsers accept them.
 - **Trend** (`renderTrend`): range 6/12/All (pref `trendN`); hero (saved, average spend, months within budget, best month); Income and spending columns (spent coloured by status, budget tick); selected month readout; the month day by day (spent vs budget, dashed "at this pace" projection, last month in grey); savings building up; net worth; categories × months heatmap. Tapping a month sets the app's month (`state.cur`); every figure opens a breakdown (`m:KEY`, `ov-cat:ID@KEY`, `t-saved`, `t-avg`, `t-within`).
 
