@@ -751,6 +751,13 @@ body[data-view="notes"] .fab,body[data-view="disc"] .fab{display:none}
 .dd{display:flex;flex-direction:column;line-height:1.1;color:var(--ink-3);font-size:calc(12.5px*var(--fs,1));font-weight:600}.dd b{font-size:calc(19px*var(--fs,1));color:var(--ink)}
 .ddesc{display:flex;flex-direction:column;min-width:0}.ddesc .t1{font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.ddesc .t2{font-size:calc(13px*var(--fs,1));color:var(--ink-3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .dpaid,.drec{text-align:right;font-weight:700;white-space:nowrap}.drec{color:var(--good-ink)}
+/* Wealth tree */
+.wtree>summary{list-style:none;cursor:pointer}.wtree>summary::-webkit-details-marker{display:none}
+.wtree{border-top:1px solid var(--rule)}.list>.wtree:first-of-type{border-top:0}.wtree>summary.li{border-top:0}
+.wt-r{display:flex;align-items:center;gap:8px}.wt-chev{color:var(--ink-3);transition:transform .2s}.wtree[open] .wt-chev{transform:rotate(180deg)}
+.wtree[open]>summary{background:var(--sheet-2)}
+.li.twig{padding-left:30px;background:var(--sheet-2);border-top:1px dashed var(--rule)!important}
+.li.twig .t1{font-weight:600}
 /* ===== text size and font ===== */
 .textb span{font-weight:800;font-size:19px;line-height:1;letter-spacing:-.02em}.textb small{font-size:14px;font-weight:700}
 .tx-prev{display:flex;flex-direction:column;gap:2px;padding:14px;border-radius:12px;background:var(--accent-soft)}
@@ -1372,6 +1379,18 @@ function ctx() {
     let nw = 0; for (const [id, v] of Object.entries(run)) if (am[id] && am[id].counted !== false) nw += v;
     nwSeries.push({date: s.date, nw});
   });
+  // Bank and cash balances move with entries: the last recorded balance, plus income and refunds, minus spends,
+  // card-bill payments and other money out, dated after that record. Recording a balance re-ties it.
+  const cashMain = c.accounts.find(a => a.cls === 'Cash' && !a.pay && a.id === 'cash') || c.accounts.find(a => a.cls === 'Cash' && !a.pay);
+  c.accounts.filter(a => !a.pay && (a.cls === 'Bank' || a.cls === 'Cash')).forEach(a => {
+    const L = latest[a.id]; if (!L) return;
+    const moves = [];
+    txns.forEach(t => { if (t.date <= L.date) return; const ty = typeOf(t), atm = isAtm(t.cat, cm);
+      if (t.acct === a.id) moves.push({t, v: ty === 'Income' ? t.amount : ty === 'Expense' ? (t.refund ? t.amount : -t.amount) : (a.cls === 'Cash' && atm ? 0 : -t.amount)});
+      else if (a === cashMain && ty === 'Transfer' && atm && t.acct && t.acct !== a.id) moves.push({t, v: t.amount}); }); // ATM cash comes into cash in hand
+    const kept = moves.filter(m => m.v), delta = kept.reduce((x, m) => x + m.v, 0);
+    latest[a.id] = {v: L.v + delta, date: L.date, rec: L.v, moves: kept, delta};
+  });
   return {cm, am, txns, typeOf, byCycle, snaps, latest, nwSeries};
 }
 function cycleTotals(list, X) {
@@ -1477,7 +1496,7 @@ function renderOverview(X) {
   };
   const ch = cashInHand(X);
   const cashTile = ch.any ? `<div class="htile cashtile"${whyAttr(ch.accts.length === 1 ? 'w-acct:' + ch.accts[0].id : 'ov-cash')}><div class="hn">Cash in hand</div><div class="ha num fit">${rs(ch.v)}</div>
-      <div class="hs">recorded ${fmtDM(ch.date)} in Wealth</div></div>` : '';
+      <div class="hs">${ch.accts.length === 1 ? balNote(X.latest[ch.accts[0].id]) : 'recorded ' + fmtDM(ch.date) + ' in Wealth'}</div></div>` : '';
   const tiles = cashTile + cats.map(c => { const spent = T.byCat[c.id] || 0, budget = budgetOf(c, spent); return (budget > 0 || spent) ? tile(c, c.name, spent, budget, !!c.unplanned, 'ov-cat:' + c.id) : ''; }).join('')
     + (unknown ? tile(null, 'Unlisted', unknown, 0, false, 'ov-unl') : '');
 
@@ -1583,6 +1602,8 @@ function fdHtml(X) {
     ${rows.map(x => card(x.a.name, 'balance as of ' + fmtDM(x.date), x, 'fd:' + x.a.id)).join('')}
     <p class="hint" style="margin:0">Starts from each FD's latest recorded balance. "At maturity" uses the Matures date in Setup → Accounts.</p>`;
 }
+const KIND_LABEL = {Bank: 'Bank accounts', FD: 'Fixed deposits', Bond: 'Bonds', Retirement: 'Retirement', Equity: 'Shares', ETF: 'ETFs', Gold: 'Gold', Cash: 'Cash', Property: 'Property', Loan: 'Loans', Owed: 'Money owed', Other: 'Other'};
+const balNote = L => !L ? 'no balance yet' : L.moves && L.moves.length ? `${rs(L.rec)} on ${fmtDM(L.date)} ${L.delta < 0 ? '−' : '+'} ${rs(Math.abs(L.delta))}` : 'as of ' + fmtDM(L.date);
 // Everything Wealth shows, worked out once so the screen and the breakdowns always agree.
 function wealthCalc(X) {
   const accts = state.config.accounts.filter(a => !a.pay);
@@ -1600,7 +1621,7 @@ function wealthCalc(X) {
 function wealthGroups(X) {
   return [
     ['Assets', a => a.counted !== false && (X.latest[a.id] ? X.latest[a.id].v >= 0 : a.cls !== 'Loan' && a.cls !== 'Card' && a.cls !== 'Owed')],
-    ['Debts', a => a.counted !== false && (X.latest[a.id] ? X.latest[a.id].v < 0 : (a.cls === 'Loan' || a.cls === 'Card' || a.cls === 'Owed'))],
+    ['Liabilities', a => a.counted !== false && (X.latest[a.id] ? X.latest[a.id].v < 0 : (a.cls === 'Loan' || a.cls === 'Card' || a.cls === 'Owed'))],
     ['Not counted in net worth', a => a.counted === false]
   ];
 }
@@ -1610,7 +1631,7 @@ function renderWealth(X) {
   const kpis = `<div class="card kpis">
     <div class="kpi"${whyAttr('w-nw')}><span class="lbl">Net worth</span><span class="val fit">${rsShort(nw)}</span><span class="sub">Assets − debts − ${rsShort(bl.left)} still to spend this month</span></div>
     <div class="kpi"${whyAttr('w-liq')}><span class="lbl">Liquid money</span><span class="val fit">${rsShort(liquid)}</span><span class="sub">Usable within days</span></div>
-    <div class="kpi"${whyAttr('w-debt')}><span class="lbl">Debts</span><span class="val fit">${rsShort(-debts)}</span><span class="sub">Loans, card, money owed</span></div>
+    <div class="kpi"${whyAttr('w-debt')}><span class="lbl">Liabilities</span><span class="val fit">${rsShort(-debts)}</span><span class="sub">Loans, cards, money owed</span></div>
     <div class="kpi"${whyAttr('w-cover')}><span class="lbl">Months of cover</span><span class="val fit">${cover == null ? '—' : Math.round(cover)}</span><span class="sub">Liquid ÷ ${esc(sp.basis)}</span></div>
   </div>`;
   const tabs = `<div class="seg" role="group" aria-label="Wealth view"><button type="button" class="segb" data-act="w-view" data-v="nw" aria-pressed="${view === 'nw'}">Net worth</button><button type="button" class="segb" data-act="w-view" data-v="fd" aria-pressed="${view === 'fd'}">FD growth</button></div>`;
@@ -1620,15 +1641,26 @@ function renderWealth(X) {
     ? `<div class="chart">${chartLine(series.map(p => ({l: fmtDM(p.date), v: p.nw})), '', W - 16, 'Net worth over time')}</div>`
     : `<div class="empty">Record balances at the end of each cycle and your net worth line will appear here.</div>`;
   const groupsDef = wealthGroups(X);
+  // Assets and Liabilities as a tree: a kind with several accounts (e.g. Bank accounts) is one row that opens
+  // into its accounts; a kind with one account stays a single row. Credit cards open into each card.
+  const accRow = (a, inner) => { const L = X.latest[a.id], meta = [a.owner, inner ? '' : a.cls, a.liquid ? 'Liquid' : '', a.matures ? 'Matures ' + a.matures : ''].filter(Boolean).map(esc).join(' · ');
+    return `<div class="li tap${inner ? ' twig' : ''}"${whyAttr('w-acct:' + a.id)}><div class="l"><div class="t1">${esc(a.name)}</div><div class="t2">${meta}</div></div>
+      <div style="text-align:right"><div class="amt num">${L ? rs(L.v) : '—'}</div><div class="t2">${balNote(L)}</div></div></div>`; };
+  const branch = (key, title, sub, total, rows) => `<details class="wtree" data-tree="${esc(key)}"${state.openTree && state.openTree[key] ? ' open' : ''}><summary class="li"><div class="l"><div class="t1">${esc(title)}</div><div class="t2">${esc(sub)}</div></div>
+      <div class="wt-r"><span class="amt num">${rs(total)}</span><span class="wt-chev" aria-hidden="true">▾</span></div></summary>${rows}</details>`;
+  const cardTwigs = () => cardLs.map(L => `<div class="li tap twig"${whyAttr('card:' + L.card.id)}><div class="l"><div class="t1">${esc(L.card.name)}</div>
+      <div class="t2">${L.dueNow > 0.5 ? `Billed ${rs(L.dueNow)}${L.unpaid[0] ? ', pay by ' + fmtDM(L.unpaid[0].due) : ''}` : 'Nothing billed to pay'}${L.nextSt ? ` · Next bill ${fmtDM(L.nextSt.sd)}: ${rs(L.nextSt.left)}` : ''}${L.laterAmt > 0.5 ? ` · later ${rs(L.laterAmt)}` : ''}</div></div>
+      <div class="amt num">${rs(-L.owed)}</div></div>`).join('');
   const sections = groupsDef.map(([title, test], gi) => {
-    const xs = accts.filter(test), extra = title === 'Debts' && cardLs.length > 0; if (!xs.length && !extra) return '';
+    const xs = accts.filter(test), extra = title === 'Liabilities' && cardLs.length > 0; if (!xs.length && !extra) return '';
     const total = xs.reduce((s, a) => s + (X.latest[a.id] ? X.latest[a.id].v : 0), 0) - (extra ? cardOwed : 0);
-    const block = `<section class="card list"><div class="sec-h tap"${whyAttr('w-grp:' + gi)}><h2>${title}</h2><span class="hint num">${rs(total)}</span></div>${xs.map(a => { const L = X.latest[a.id];
-      const meta = [a.owner, a.cls, a.liquid ? 'Liquid' : '', a.matures ? 'Matures ' + a.matures : ''].filter(Boolean).map(esc).join(' · ');
-      return `<div class="li tap"${whyAttr('w-acct:' + a.id)}><div class="l"><div class="t1">${esc(a.name)}</div><div class="t2">${meta}</div></div>
-        <div style="text-align:right"><div class="amt num">${L ? rs(L.v) : '—'}</div><div class="t2">${L ? 'as of ' + fmtDay(parseYmd(L.date)) : 'no balance yet'}</div></div></div>`; }).join('')}${extra ? `<div class="li tap"${whyAttr('c-owed')}><div class="l"><div class="t1">Credit cards</div><div class="t2">Worked out from your card entries · ${cardLs.length} card${cardLs.length === 1 ? '' : 's'}</div></div><div style="text-align:right"><div class="amt num">${rs(-cardOwed)}</div><div class="t2"><a href="#cards">Card bills</a></div></div></div>` : ''}</section>`;
-    // after Debts: this month's budget still to be spent, also taken off net worth
-    return block + (title === 'Debts' || (title === 'Assets' && !accts.some(groupsDef[1][1]) && !cardLs.length) ? setAside() : '');
+    const byKind = {}; xs.forEach(a => { (byKind[a.cls || 'Other'] = byKind[a.cls || 'Other'] || []).push(a); });
+    const rows = Object.entries(byKind).map(([k, list]) => list.length === 1 ? accRow(list[0], false)
+      : branch(gi + ':' + k, KIND_LABEL[k] || k, list.length + ' accounts', list.reduce((s, a) => s + (X.latest[a.id] ? X.latest[a.id].v : 0), 0), list.map(a => accRow(a, true)).join(''))).join('')
+      + (extra ? branch(gi + ':cards', 'Credit cards', cardLs.length + ' card' + (cardLs.length === 1 ? '' : 's') + ' · tap for each card', -cardOwed, cardTwigs()) : '');
+    const block = `<section class="card list"><div class="sec-h tap"${whyAttr('w-grp:' + gi)}><h2>${title}</h2><span class="hint num">${rs(total)}</span></div>${rows}</section>`;
+    // after Liabilities: this month's budget still to be spent, also taken off net worth
+    return block + (title === 'Liabilities' || (title === 'Assets' && !accts.some(groupsDef[1][1]) && !cardLs.length) ? setAside() : '');
   }).join('');
   function setAside() {
     return `<section class="card list"><div class="sec-h tap"${whyAttr('w-left')}><h2>Still to spend this month</h2><span class="hint num">${rs(-bl.left)}</span></div>
@@ -2171,15 +2203,18 @@ function whyAcct(id, X) {
   const secs = [];
   if (hist.length) secs.push({title: 'Balances you recorded', plain: true, lines: hist.slice().reverse().map(h => ({label: ymdLabel(h.date), sub: h.ch == null ? 'first record' : (h.ch >= 0 ? 'up ' : 'down ') + rs(Math.abs(h.ch)) + ' since the one before', v: h.v}))});
   else secs.push({title: 'Balances you recorded', lines: [{label: 'No balance recorded yet', text: '—'}]});
-  // Entries paid from or into this account after the last record: shown, not added (the balance is what you recorded).
-  const since = L ? L.date : '', mv = X.txns.filter(t => t.acct === a.id && t.date > since).sort(byDateDesc).map(t => {
-    const ty = X.typeOf(t), v = ty === 'Income' ? t.amount : ty === 'Expense' && t.refund ? t.amount : -t.amount; return entLine(t, X, v); });
-  if (mv.length) secs.push({title: 'Entries since ' + (since ? fmtDM(since) : 'the start'), note: 'Not added to the balance above. Record today\'s balances to bring it up to date.', lines: mv, total: {label: 'Money in − money out', v: sum(mv, l => l.v)}});
+  // Bank and cash: today's balance = the last recorded balance + every entry since (added, not just shown).
+  const live = L && L.moves;
+  if (live) secs.unshift({title: "How today's balance is worked out", note: L.moves.length ? '' : 'No entries since the last record.',
+    lines: [{label: 'Recorded on ' + fmtDate(L.date), sub: 'what you entered in Record balances', v: L.rec}].concat(L.moves.slice().sort((x, y) => byDateDesc(x.t, y.t)).map(m => entLine(m.t, X, m.v))),
+    total: {label: 'Balance now', v: L.v}});
+  else if (L) { const mv = X.txns.filter(t => t.acct === a.id && t.date > L.date).sort(byDateDesc).map(t => { const ty = X.typeOf(t); return entLine(t, X, ty === 'Income' || (ty === 'Expense' && t.refund) ? t.amount : -t.amount); });
+    if (mv.length) secs.push({title: 'Entries since ' + fmtDM(L.date), note: 'This kind of account keeps the balance you record.', lines: mv, total: {label: 'Money in − money out', v: sum(mv, l => l.v)}}); }
   secs.push({title: 'How it counts', lines: how});
-  return {title: a.name, head: L ? 'Balance on ' + fmtDate(L.date) : 'Balance', value: L ? rs(L.v) : '—', sections: secs};
+  return {title: a.name, head: live ? 'Balance now' : L ? 'Balance on ' + fmtDate(L.date) : 'Balance', value: L ? rs(L.v) : '—', sections: secs, btn: {act: 'balances', label: L ? 'Set balance' : 'Record a balance'}};
 }
 const acctLine = (a, X, v) => { const L = X.latest[a.id];
-  return {label: a.name, sub: [a.owner, a.cls, L ? 'as of ' + fmtDM(L.date) : 'no balance yet'].filter(Boolean).join(' · '), v: v == null ? (L ? L.v : 0) : v, k: 'w-acct:' + a.id}; };
+  return {label: a.name, sub: [a.owner, a.cls, balNote(L)].filter(Boolean).join(' · '), v: v == null ? (L ? L.v : 0) : v, k: 'w-acct:' + a.id}; };
 const cardLines = (W0, neg) => W0.cardLs.map(L => ({label: L.card.name, sub: 'credit card · billed + not yet billed', v: neg ? -L.owed : L.owed, k: 'card:' + L.card.id}));
 function whyBuild(k) {
   if (!state.config) return null;
@@ -2258,8 +2293,11 @@ function whyBuild(k) {
     return {title: 'Liquid money', head: 'Today', value: rs(W0.liquid), sub: rsShort(W0.liquid), sections: secs};
   }
   if (kind === 'w-debt') {
-    const lines = counted.filter(a => W0.val(a) < 0).map(a => acctLine(a, X, -W0.val(a))).concat(W0.cardOwed > 0 ? cardLines(W0, false) : []);
-    return {title: 'Debts', head: 'Today', value: rs(-W0.debts), sub: rsShort(-W0.debts), sections: [{title: 'What you owe', lines: lines.length ? lines : [{label: 'No debts', text: ''}], total: {label: 'Debts', v: -W0.debts}}]};
+    const neg = counted.filter(a => W0.val(a) < 0), byK = {}; neg.forEach(a => { (byK[a.cls || 'Other'] = byK[a.cls || 'Other'] || []).push(a); });
+    const lines = Object.entries(byK).map(([k, l]) => l.length === 1 ? acctLine(l[0], X, -W0.val(l[0])) : {label: KIND_LABEL[k] || k, sub: l.length + ' accounts', v: -l.reduce((x, a) => x + W0.val(a), 0), items: l.map(a => acctLine(a, X, -W0.val(a)))});
+    if (W0.cardOwed > 0) lines.push({label: 'Credit cards', sub: W0.cardLs.length + ' cards · billed ' + rs(sum(W0.cardLs, L => L.dueNow)) + ' · next bills ' + rs(sum(W0.cardLs, L => L.nextSt ? L.nextSt.left : 0)), v: W0.cardOwed,
+      items: W0.cardLs.map(L => ({label: L.card.name, sub: `billed ${rs(L.dueNow)}` + (L.nextSt ? ` · next bill ${fmtDM(L.nextSt.sd)} ${rs(L.nextSt.left)}` : ''), v: L.owed, k: 'card:' + L.card.id}))});
+    return {title: 'Liabilities', head: 'Today', value: rs(-W0.debts), sections: [{title: 'What you owe', lines: lines.length ? lines : [{label: 'No liabilities', text: ''}], total: {label: 'Liabilities', v: -W0.debts}}]};
   }
   if (kind === 'w-cover') {
     const nowKey = cycleKeyOf(todayStr()), closed = Object.keys(X.byCycle).filter(k => k < nowKey).sort().slice(-6)
@@ -2332,7 +2370,7 @@ function whyHtml(d) {
     ${d.sections.map(s => `<section class="why-s"><h4>${esc(s.title)}</h4>${s.note ? `<p class="hint">${esc(s.note)}</p>` : ''}
       <div class="why-l">${s.lines.map(l => whyRow(l, s.plain)).join('')}
       ${s.total ? `<div class="wrow wtot"><span class="l"><span class="t1">= ${esc(s.total.label)}</span></span><span class="amt num">${s.total.text != null ? esc(s.total.text) : rs(s.total.v)}</span><span class="chev"></span></div>` : ''}</div></section>`).join('')}
-    <div class="sheet-actions"><button type="button" class="btn primary" data-act="why-close">Done</button></div>`;
+    <div class="sheet-actions">${d.btn ? `<button type="button" class="btn" data-act="${esc(d.btn.act)}">${esc(d.btn.label)}</button>` : ''}<button type="button" class="btn primary" data-act="why-close">Done</button></div>`;
 }
 function whyShow() {
   const k = W$.stack[W$.stack.length - 1], d = k && whyBuild(k), box = $('#whyBox');
@@ -2348,11 +2386,11 @@ function closeWhy() { $('#whyScrim').hidden = true; W$.stack = []; }
 document.addEventListener('click', ev => {
   const b = ev.target.closest('[data-act]'); if (!b) return;
   const act = b.dataset.act;
-  if (act === 'why') { if (ev.target.closest('a, input, .tin, button:not([data-act="why"]), details')) return; openWhy(b.dataset.k, false); }
+  if (act === 'why') { if (ev.target.closest('a, input, .tin, button:not([data-act="why"]), summary') || (ev.target.closest('details') && !b.closest('details'))) return; openWhy(b.dataset.k, false); }
   else if (act === 'why-go') openWhy(b.dataset.k, true);
   else if (act === 'why-back') { W$.stack.pop(); $('#whyBox').dataset.k = ''; whyShow(); }
   else if (act === 'why-close') closeWhy();
-  else if (act === 'edit' && b.closest('#whyScrim')) closeWhy();
+  else if ((act === 'edit' || act === 'balances') && b.closest('#whyScrim')) closeWhy();
 });
 document.addEventListener('keydown', ev => {
   if ((ev.key === 'Enter' || ev.key === ' ') && ev.target && ev.target.matches && ev.target.matches('[data-act="why"]')) { ev.preventDefault(); openWhy(ev.target.dataset.k, false); }
@@ -3390,7 +3428,7 @@ $('#main').addEventListener('change', async ev => {
   if ((typeof cur === 'number' ? cur : null) === v) return;
   try { await API.putFix(el.dataset.card, el.dataset.sd, v); toast(v === null ? 'Using the calculated amount' : 'Your figure saved'); } catch (e) { toast(writeErr(e), 'bad'); }
 });
-document.addEventListener('toggle', ev => { const d = ev.target; if (d && d.matches && d.matches('details.ct-hist')) state.openHist[d.dataset.card] = d.open; }, true);
+document.addEventListener('toggle', ev => { const d = ev.target; if (d && d.matches && d.matches('details.ct-hist')) state.openHist[d.dataset.card] = d.open; if (d && d.matches && d.matches('details.wtree')) { state.openTree = state.openTree || {}; state.openTree[d.dataset.tree] = d.open; } }, true);
 window.addEventListener('hashchange', () => {
   const lg = location.hash.match(/^#login=([a-f0-9]{20,80})$/);
   if (lg) { history.replaceState(null, '', location.pathname + '#overview'); if (!Sync.session) useLoginLink(lg[1]); setView('overview'); return; }
