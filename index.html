@@ -261,6 +261,17 @@ tr.sum td{font-weight:700;border-top:1px solid var(--rule-2)}
 .tbox:focus{outline:2px solid var(--accent);outline-offset:1px;border-color:var(--accent)}
 .tbox.amount-in{min-height:58px;line-height:40px}
 .tbox.mini{min-height:34px;padding:5px 9px;font-size:14px}
+.fdgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr))}
+.fdv{display:flex;flex-direction:column;gap:2px;padding:12px 16px;border-top:1px solid var(--rule);min-width:0}
+.fdv .lbl{font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-3);font-weight:700}
+.fdv .num{font-family:var(--f-display);font-stretch:88%;font-weight:700;font-size:20px}
+.fdv .fds{font-size:12px;color:var(--ink-3)}
+@media (max-width:640px){.fdgrid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.calcrow{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.calcb{width:44px;height:36px;border:1px solid var(--rule-2);background:var(--sheet);color:var(--ink);border-radius:8px;font-size:19px;font-weight:700;cursor:pointer;line-height:1}
+.calcb.eq{background:var(--accent-soft);border-color:transparent}
+#eAmtCalc{margin-left:4px;font-size:15px;font-weight:700;color:var(--ink-2)}
+#eAmtCalc.bad{color:var(--bad);font-weight:600;font-size:12px}
 .seg3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));width:100%}
 .seg3 .segb{padding:9px 6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .field input.mini{min-height:34px;padding:5px 9px;font-size:14px}
@@ -456,6 +467,10 @@ body[data-view="vault"] .fab,body[data-view="vault"] #addTop,body[data-view="vau
     <h3 id="entryTitle">Add entry</h3>
     <div class="field" data-focus="eAmt"><span id="eAmtLbl">Amount (₹)</span>
       <div id="eAmt" class="tbox amount-in" role="textbox" aria-labelledby="eAmtLbl" inputmode="text" enterkeyhint="next" autocorrect="off" spellcheck="false" data-placeholder="0"></div>
+      <div class="calcrow" role="group" aria-label="Calculator">
+        <button type="button" class="calcb" data-calc="+" aria-label="Plus">+</button><button type="button" class="calcb" data-calc="-" aria-label="Minus">−</button><button type="button" class="calcb" data-calc="×" aria-label="Times">×</button><button type="button" class="calcb" data-calc="÷" aria-label="Divide">÷</button><button type="button" class="calcb eq" data-calc="=" aria-label="Work it out">=</button>
+        <small id="eAmtCalc" aria-live="polite"></small>
+      </div>
     </div>
     <div class="field"><span id="eCatLbl">Category</span>
       <div class="chips" id="eCatChips" role="group" aria-labelledby="eCatLbl"></div>
@@ -603,17 +618,40 @@ function elapsed(key) {
   if (t > end) return {f: 1, day: days, days};
   const day = dayDiff(start, t) + 1; return {f: day / days, day, days};
 }
-// Accepts typed or dictated amounts: "450", "₹450", "Rs. 450", "450 rupees", "450/-", "220 plus 260".
-function parseAmount(s) {
-  s = String(s || '').toLowerCase()
-    .replace(/\bplus\b|\band\b/g, '+')
-    .replace(/\b(rupees?|rs\.?|inr|only)(?![a-z])/g, '')
-    .replace(/\/-/g, '')
-    .replace(/[,\s₹]/g, '')
-    .replace(/\.$/, '');
-  if (!/^\d+(\.\d+)?(\+\d+(\.\d+)?)*$/.test(s)) return NaN;
-  return Math.round(s.split('+').reduce((a, b) => a + parseFloat(b), 0) * 100) / 100;
+// Amounts can be worked out like a calculator: + − × ÷ (× and ÷ first), brackets allowed.
+// Typed or dictated: "450", "₹450", "Rs. 450", "450 rupees", "450/-", "220 plus 260", "3 x 150", "1200 divided by 4", "500 minus 120".
+// Never runs anything as code: a small parser reads numbers and the four operators only.
+function normAmount(s) {
+  return String(s || '').toLowerCase()
+    .replace(/\b(rupees?|rs\.?|inr|only)(?![a-z])/g, ' ')
+    .replace(/\/-/g, ' ')
+    .replace(/multiplied\s+by|\btimes\b|\binto\b|×|\*/g, '*')
+    .replace(/divided\s+by|\bover\b|÷/g, '/')
+    .replace(/\bby\b/g, '/')
+    .replace(/\bplus\b|\band\b|\badd\b/g, '+')
+    .replace(/\bminus\b|\bless\b|−|–/g, '-')
+    .replace(/(\d)\s*x\s*(?=[\d(.])/g, '$1*')
+    .replace(/[,₹\s]/g, '')
+    .replace(/[.=]+$/, '');
 }
+function parseAmount(raw) {
+  const s = normAmount(raw);
+  if (!s || /[^0-9.+\-*/()]/.test(s)) return NaN;
+  const toks = s.match(/\d+(?:\.\d+)?|\.\d+|[+\-*/()]/g);
+  if (!toks || toks.join('') !== s) return NaN;
+  let i = 0;
+  const num = () => {
+    const t = toks[i];
+    if (t === '(') { i++; const v = add(); if (toks[i] !== ')') throw 0; i++; return v; }
+    if (t === '-') { i++; return -num(); }
+    if (!t || !/^[\d.]/.test(t)) throw 0;
+    i++; return parseFloat(t);
+  };
+  const mul = () => { let v = num(); while (toks[i] === '*' || toks[i] === '/') { const op = toks[i++], r = num(); if (op === '/') { if (r === 0) throw 0; v /= r; } else v *= r; } return v; };
+  const add = () => { let v = mul(); while (toks[i] === '+' || toks[i] === '-') { const op = toks[i++], r = mul(); v = op === '+' ? v + r : v - r; } return v; };
+  try { const v = add(); return i === toks.length && isFinite(v) ? Math.round(v * 100) / 100 : NaN; } catch (e) { return NaN; }
+}
+const isPlainAmount = raw => /^\d+(\.\d+)?$/.test(normAmount(raw));
 function parseSigned(s) {
   s = String(s ?? '').replace(/[,\s₹]/g, '').replace('−', '-');
   if (s === '') return null;
@@ -912,6 +950,36 @@ function lineChart(series, W, H) {
   series.forEach((p, i) => { if (i % step === 0 || i === series.length - 1) s += `<text class="ax" x="${x(i)}" y="${H - 6}" text-anchor="middle">${fmtDay(parseYmd(p.date))}</text>`; });
   return s + '</svg>';
 }
+// What is still to be spent this month: the month's budget (unplanned categories count what was spent) minus spending so far.
+function budgetLeft(X) {
+  const key = cycleKeyOf(todayStr()), T = cycleTotals(X.byCycle[key], X);
+  const budget = state.config.categories.filter(c => c.type === 'Expense').reduce((a, c) => a + budgetOf(c, T.byCat[c.id]), 0);
+  return {key, budget, spent: T.exp, left: Math.max(0, budget - T.exp)};
+}
+// FDs: months until a "Matures" text such as "About Nov 2032", "Mar-2031" or "2030" (a bare year counts as its end).
+function monthsTo(text) {
+  const t = String(text || ''), y = t.match(/(19|20)\d{2}/); if (!y) return null;
+  const mi = MON.findIndex(m => new RegExp('\\b' + m, 'i').test(t)), now = parseYmd(todayStr());
+  const n = (+y[0] - now.getFullYear()) * 12 + ((mi >= 0 ? mi : 11) - now.getMonth());
+  return n > 0 ? {n, label: (mi >= 0 ? MON[mi] + ' ' : '') + y[0]} : null;
+}
+function fdHtml(X) {
+  const rate = Math.min(30, Math.max(0, +readPref().fdRate || 7)), r = rate / 100 / 12, grow = (p, m) => p * Math.pow(1 + r, m);
+  const fds = state.config.accounts.filter(a => !a.pay && a.cls === 'FD' && X.latest[a.id] && X.latest[a.id].v > 0);
+  if (!fds.length) return `<section class="card"><div class="empty">No FD balances yet. Accounts of kind <b>FD</b> (Setup → Accounts) appear here once you record their balances.</div></section>`;
+  const rows = fds.map(a => { const P = X.latest[a.id].v, mt = monthsTo(a.matures); return {a, P, date: X.latest[a.id].date, mt, int: P * r, y1: grow(P, 12), y3: grow(P, 36), y5: grow(P, 60), mat: mt ? grow(P, mt.n) : null}; });
+  const sum = k => rows.reduce((s, x) => s + (x[k] || 0), 0);
+  const box = (lbl, v, sub) => `<div class="fdv"><span class="lbl">${lbl}</span><span class="num">${v == null ? '—' : rs(v)}</span>${sub ? `<span class="fds">${esc(sub)}</span>` : ''}</div>`;
+  const card = (title, sub, x) => `<section class="card fdcard"><div class="sec-h"><h2>${esc(title)}</h2><span class="hint">${esc(sub)}</span></div><div class="fdgrid">
+      ${box('Today', x.P)}${box('Interest this month', x.int)}${box('In 1 year', x.y1)}${box('In 3 years', x.y3)}${box('In 5 years', x.y5)}${box('At maturity', x.mat, x.mt ? x.mt.label : 'no maturity date')}</div></section>`;
+  const total = {P: sum('P'), int: sum('int'), y1: sum('y1'), y3: sum('y3'), y5: sum('y5'), mat: rows.some(x => x.mat == null) ? null : sum('mat'), mt: null};
+  return `<div class="card" style="padding:12px 16px;display:flex;align-items:center;gap:8px;flex-wrap:wrap"><span class="hint">Compounded monthly at</span>
+      <input id="fdRate" type="text" inputmode="decimal" value="${rate}" aria-label="Interest rate per year" style="width:54px;border:1px solid var(--rule-2);background:var(--sheet);border-radius:6px;padding:4px 6px;text-align:right">
+      <span class="hint">% a year · value after m months = balance × (1 + rate ÷ 12)<sup>m</sup></span></div>
+    ${rows.length > 1 ? card('All FDs', rows.length + ' FDs', Object.assign(total, {mt: rows.every(x => x.mt) ? {label: 'each at its own date'} : null})) : ''}
+    ${rows.map(x => card(x.a.name, 'balance as of ' + fmtDM(x.date), x)).join('')}
+    <p class="hint" style="margin:0">Starts from each FD's latest recorded balance. "At maturity" uses the Matures date in Setup → Accounts.</p>`;
+}
 function renderWealth(X) {
   const accts = state.config.accounts.filter(a => !a.pay);
   let nw = 0, liquid = 0, debts = 0, hasAny = false;
@@ -919,14 +987,18 @@ function renderWealth(X) {
     if (a.counted !== false) { nw += L.v; if (L.v < 0) debts += L.v; if (a.liquid) liquid += L.v; } });
   const cardLs = cardList().map(c => cardLedger(c, X)), cardOwed = cardLs.reduce((a, L) => a + L.owed, 0);
   if (cardLs.length) { nw -= cardOwed; liquid -= cardOwed; if (cardOwed > 0) debts -= cardOwed; }
+  const bl = budgetLeft(X); nw -= bl.left; // money already promised to this month's budget is not wealth
   const series = X.nwSeries.map(p => ({date: p.date, nw: p.nw - cardLs.reduce((a, L) => a + cardOwedAsOf(L, p.date), 0)}));
   const sp = avgSpend(X), cover = sp.v > 0 ? liquid / sp.v : null;
+  const view = readPref().wealthView === 'fd' ? 'fd' : 'nw';
   const kpis = `<div class="card kpis">
-    <div class="kpi"><span class="lbl">Net worth</span><span class="val">${rsShort(nw)}</span><span class="sub">Counted accounts, debts subtracted</span></div>
+    <div class="kpi"><span class="lbl">Net worth</span><span class="val">${rsShort(nw)}</span><span class="sub">Assets − debts − ${rsShort(bl.left)} still to spend this month</span></div>
     <div class="kpi"><span class="lbl">Liquid money</span><span class="val">${rsShort(liquid)}</span><span class="sub">Usable within days</span></div>
     <div class="kpi"><span class="lbl">Debts</span><span class="val">${rsShort(-debts)}</span><span class="sub">Loans, card, money owed</span></div>
     <div class="kpi"><span class="lbl">Months of cover</span><span class="val">${cover == null ? '—' : cover.toFixed(1)}</span><span class="sub">Liquid ÷ ${esc(sp.basis)}</span></div>
   </div>`;
+  const tabs = `<div class="seg" role="group" aria-label="Wealth view"><button type="button" class="segb" data-act="w-view" data-v="nw" aria-pressed="${view === 'nw'}">Net worth</button><button type="button" class="segb" data-act="w-view" data-v="fd" aria-pressed="${view === 'fd'}">FD growth</button></div>`;
+  if (view === 'fd') { $('#v-wealth').innerHTML = `${kpis}${tabs}${fdHtml(X)}`; return; }
   const W = Math.max(320, Math.round(($('#v-wealth').clientWidth || 700) - 18));
   const chart = series.length >= 2
     ? `<div class="chart">${lineChart(series, W, 220)}</div>`
@@ -939,21 +1011,35 @@ function renderWealth(X) {
   const sections = groupsDef.map(([title, test]) => {
     const xs = accts.filter(test), extra = title === 'Debts' && cardLs.length > 0; if (!xs.length && !extra) return '';
     const total = xs.reduce((s, a) => s + (X.latest[a.id] ? X.latest[a.id].v : 0), 0) - (extra ? cardOwed : 0);
-    return `<section class="card list"><div class="sec-h"><h2>${title}</h2><span class="hint num">${rs(total)}</span></div>${xs.map(a => { const L = X.latest[a.id];
+    const block = `<section class="card list"><div class="sec-h"><h2>${title}</h2><span class="hint num">${rs(total)}</span></div>${xs.map(a => { const L = X.latest[a.id];
       const meta = [a.owner, a.cls, a.liquid ? 'Liquid' : '', a.matures ? 'Matures ' + a.matures : ''].filter(Boolean).map(esc).join(' · ');
       return `<div class="li"><div class="l"><div class="t1">${esc(a.name)}</div><div class="t2">${meta}</div></div>
-        <div style="text-align:right"><div class="amt num">${L ? rs(L.v) : '—'}</div><div class="t2">${L ? 'as of ' + fmtDay(parseYmd(L.date)) : 'no balance yet'}</div></div></div>`; }).join('')}${extra ? `<div class="li"><div class="l"><div class="t1">Credit cards</div><div class="t2">Worked out from your card entries · ${cardLs.length} card${cardLs.length === 1 ? '' : 's'}</div></div><div style="text-align:right"><div class="amt num">${rs(-cardOwed)}</div><div class="t2"><a href="#cards">Open Cards</a></div></div></div>` : ''}</section>`;
+        <div style="text-align:right"><div class="amt num">${L ? rs(L.v) : '—'}</div><div class="t2">${L ? 'as of ' + fmtDay(parseYmd(L.date)) : 'no balance yet'}</div></div></div>`; }).join('')}${extra ? `<div class="li"><div class="l"><div class="t1">Credit cards</div><div class="t2">Worked out from your card entries · ${cardLs.length} card${cardLs.length === 1 ? '' : 's'}</div></div><div style="text-align:right"><div class="amt num">${rs(-cardOwed)}</div><div class="t2"><a href="#cards">Card bills</a></div></div></div>` : ''}</section>`;
+    // after Debts: this month's budget still to be spent, also taken off net worth
+    return block + (title === 'Debts' || (title === 'Assets' && !accts.some(groupsDef[1][1]) && !cardLs.length) ? setAside() : '');
   }).join('');
+  function setAside() {
+    return `<section class="card list"><div class="sec-h"><h2>Still to spend this month</h2><span class="hint num">${rs(-bl.left)}</span></div>
+      <div class="li"><div class="l"><div class="t1">${esc(cycleLabel(bl.key))} budget left</div><div class="t2">Budget ${rs(bl.budget)} − spent ${rs(bl.spent)} · taken off net worth</div></div><div class="amt num">${rs(-bl.left)}</div></div></section>`;
+  }
   const snapsHtml = X.snaps.slice().reverse().map(s => { const p = series.find(z => z.date === s.date);
     return `<div class="li"><div class="l"><div class="t1">${fmtDay(parseYmd(s.date))} ${parseYmd(s.date).getFullYear()}</div><div class="t2">${Object.keys(s.values || {}).length} accounts</div></div>
       <div style="display:flex;gap:10px;align-items:center"><span class="amt num">${p ? rs(p.nw) : ''}</span><button class="icon-btn" type="button" data-act="del-snap" data-date="${esc(s.date)}" aria-label="Delete snapshot">×</button></div></div>`; }).join('');
-  $('#v-wealth').innerHTML = `${kpis}
+  // Order: summary, assets and debts first; the chart and recording balances at the bottom.
+  $('#v-wealth').innerHTML = `${kpis}${tabs}
+    ${sections}
+    <section class="card"><div class="sec-h"><h2>Net worth over time</h2><span class="hint">From recorded balances</span></div>${chart}</section>
     <div class="row-actions" style="padding:0"><button class="btn primary" type="button" data-act="balances">Record today's balances</button>
       <span class="hint" style="align-self:center">${hasAny ? '' : 'No balances recorded yet.'} Your home's value isn't counted unless you add it as an account.</span></div>
-    <section class="card"><div class="sec-h"><h2>Net worth over time</h2></div>${chart}</section>
-    ${sections}
     <section class="card list"><div class="sec-h"><h2>Balance snapshots</h2><span class="hint">One per cycle end is enough</span></div>${snapsHtml || '<div class="empty">None yet.</div>'}</section>`;
 }
+document.addEventListener('click', ev => {
+  const b = ev.target.closest('[data-act="w-view"]'); if (!b) return;
+  writePref({wealthView: b.dataset.v}); renderWealth(ctx());
+});
+document.addEventListener('change', ev => {
+  if (ev.target && ev.target.id === 'fdRate') { const v = parseFloat(String(ev.target.value).replace(',', '.')); if (v > 0 && v <= 30) writePref({fdRate: v}); renderWealth(ctx()); }
+});
 
 /* ---------- trend ---------- */
 function niceMax(v) { if (v <= 0) return 1; const p = Math.pow(10, Math.floor(Math.log10(v))); const n = v / p; return (n <= 1 ? 1 : n <= 2 ? 2 : n <= 2.5 ? 2.5 : n <= 5 ? 5 : 10) * p; }
@@ -1479,6 +1565,27 @@ function focusBox(el) { // focus with the cursor at the end
 // Tapping a box's label puts the cursor in the box, like a normal form.
 document.querySelectorAll('#entryForm [data-focus]').forEach(f => f.addEventListener('click', ev => { if (!ev.target.closest('.tbox, button, a, details')) focusBox($('#' + f.dataset.focus)); }));
 
+// Calculator: live result under the amount, plus + − × ÷ = buttons (they keep the keyboard open).
+function showCalc() {
+  const raw = $('#eAmt').value, out = $('#eAmtCalc');
+  if (!raw.trim() || isPlainAmount(raw)) { out.textContent = ''; out.className = ''; return; }
+  const v = parseAmount(raw);
+  if (isFinite(v)) { out.textContent = '= ' + rs(v); out.className = ''; }
+  else { out.textContent = /[+\-*/(]$/.test(normAmount(raw)) ? '' : "Can't work this out"; out.className = 'bad'; }
+}
+$('#eAmt').addEventListener('input', showCalc);
+document.querySelectorAll('.calcb').forEach(b => {
+  b.addEventListener('pointerdown', ev => ev.preventDefault()); // keep the cursor (and keyboard) in the amount box
+  b.addEventListener('mousedown', ev => ev.preventDefault());
+  b.addEventListener('click', () => {
+    const box = $('#eAmt'), k = b.dataset.calc;
+    if (k === '=') { const v = parseAmount(box.value); if (isFinite(v)) { box.value = String(v); focusBox(box); } showCalc(); return; }
+    if (document.activeElement !== box) focusBox(box);
+    if (!document.execCommand('insertText', false, k)) { box.value = box.value + k; focusBox(box); }
+    showCalc();
+  });
+});
+
 /* ---------- entry sheet ---------- */
 let editing = null, delArmed = false;
 function openEntry(t) {
@@ -1486,7 +1593,7 @@ function openEntry(t) {
   fillCatOptions($('#eCat'), X, false); fillCatChips();
   const pref = readPref();
   $('#entryTitle').textContent = t ? 'Edit entry' : 'Add entry';
-  $('#eAmt').value = t ? String(t.amount) : '';
+  $('#eAmt').value = t ? String(t.amount) : ''; $('#eAmtCalc').textContent = '';
   const startCat = t ? t.cat : (pref.cat && X.cm[pref.cat] ? pref.cat : (state.config.categories[0] || {}).id || '');
   $('#eNote').value = t ? t.note || '' : ''; $('#eMember').value = t ? t.member || '' : ''; $('#eTag').value = t ? t.tag || '' : '';
   $('#eRefund').checked = !!(t && t.refund);
@@ -1511,7 +1618,7 @@ function closeEntry() { $('#entryScrim').hidden = true; editing = null; }
 async function saveEntry(again) {
   const amt = parseAmount($('#eAmt').value), date = $('#eDate').value, cat = $('#eCat').value, err = $('#eErr'), X = ctx();
   const fail = (m, el) => { err.textContent = m; err.hidden = false; if (el) focusBox(el); };
-  if (!(amt > 0)) return fail('Type an amount above zero, like 450 or 220+260.', $('#eAmt'));
+  if (!(amt > 0)) return fail(isFinite(amt) ? 'The amount works out to zero or less.' : 'Type an amount, like 450, 220+260 or 3×150.', $('#eAmt'));
   if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) return fail('Choose a date.');
   if (!cat) return fail('Tap a category.');
   const pay = isCardPay(cat, X.cm);
@@ -1529,7 +1636,7 @@ async function saveEntry(again) {
   writePref({cat, bank: (payMode === 'bank' || pay) && payAcct ? payAcct : pref.bank || '', card: card || pref.card || ''});
   const k = cycleKeyOf(date);
   toast(k === state.cur ? 'Saved' : 'Saved in ' + cycleLabel(k));
-  if (again) { $('#eAmt').value = ''; $('#eNote').value = ''; $('#eRefund').checked = false; err.hidden = true; renderPay(); focusBox($('#eAmt')); }
+  if (again) { $('#eAmt').value = ''; $('#eAmtCalc').textContent = ''; $('#eNote').value = ''; $('#eRefund').checked = false; err.hidden = true; renderPay(); focusBox($('#eAmt')); }
   else closeEntry();
 }
 

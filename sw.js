@@ -1,6 +1,6 @@
 // Budget Tracker service worker: keeps the app itself available offline.
 // Money data never passes through here; it goes straight to Google Sheets.
-const CACHE = 'budget-tracker-v30';
+const CACHE = 'budget-tracker-v32';
 const SHELL = ['./', './index.html', './manifest.webmanifest', './icons/icon-192.png', './icons/icon-512.png', './icons/maskable-512.png', './icons/apple-touch-icon.png'];
 
 self.addEventListener('install', e => {
