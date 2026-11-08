@@ -232,11 +232,13 @@ function noteFileName(title, type) {
   return t + '.' + NOTE_TYPES[type][0];
 }
 var NOTE_LABELS = {arhaan: 1, efrah: 1, other: 1};
+// Built-in labels, or a name the person added (letters, numbers, spaces; up to 24 characters).
+function okLabel(v) { v = String(v == null ? '' : v); return NOTE_LABELS[v] || /^[^\u0000-\u001f<>"]{1,24}$/.test(v) && v.trim() === v ? v : ''; }
 function notesHead(sh) { // older Notes tabs get the label/pin columns added
   if (sh.getLastColumn() < TABS.Notes.length || String(sh.getRange(1, 9).getValue()) !== 'Label') sh.getRange(1, 1, 1, TABS.Notes.length).setValues([TABS.Notes]).setFontWeight('bold');
 }
 function noteMeta(n, old) {
-  return [NOTE_LABELS[n.cat] ? n.cat : (old && NOTE_LABELS[old[8]] ? String(old[8]) : 'other'), n.pinned ? 'Yes' : '', isFinite(+n.order) ? +n.order : 0];
+  return [okLabel(n.cat) || (old && okLabel(old[8])) || 'other', n.pinned ? 'Yes' : '', isFinite(+n.order) ? +n.order : 0];
 }
 function noteOp(ss, op, user) {
   var sh = ss.getSheetByName('Notes'); notesHead(sh);
@@ -274,7 +276,7 @@ function readNotes(ss, user) {
   var me = noteOwner(user);
   return rows(ss.getSheetByName('Notes')).filter(function (r) { return r[0] && String(r[3]).toLowerCase() === me; }).map(function (r) {
     return {id: String(r[0]), title: txt(r[1]), type: NOTE_TYPES[r[2]] ? String(r[2]) : 'txt', fileId: txt(r[4]), updatedAt: Date.parse(txt(r[5])) || 0, size: +r[6] || 0, preview: txt(r[7]),
-      cat: NOTE_LABELS[r[8]] ? String(r[8]) : 'other', pinned: /^(yes|true|1)$/i.test(txt(r[9])), order: +r[10] || 0};
+      cat: okLabel(txt(r[8])) || 'other', pinned: /^(yes|true|1)$/i.test(txt(r[9])), order: +r[10] || 0};
   });
 }
 function noteBodies(ss, ids, user) {
