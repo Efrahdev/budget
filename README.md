@@ -26,15 +26,12 @@ Type your Gmail address and tap **Email me a sign-in link**. Open the email on t
 
 ## Vault (owners only)
 
-Card, bank and personal details live in three tables in the app's **Vault** tab: credit cards (10 columns), bank accounts (10 columns) and personal information (3 columns). Column names can be renamed.
+Card, bank and personal details live in three tables in the app's **Vault** tab: credit cards, savings accounts and personal information. You can paste many rows at once, filter (Credit cards, Savings accounts, Personal, Aadhaar, Voter), copy any cell, and delete all rows of a table.
 
-- **Zero-knowledge:** each row is encrypted on the phone with **AES-256-GCM**. The key comes from your master passphrase through **PBKDF2-SHA256, 600,000 rounds**. The sheet's `Vault` tab and the Apps Script only ever see scrambled text, and the script rejects anything that isn't encrypted.
-- The key is non-extractable and kept only in memory. Nothing readable is saved on the phone.
-- Values stay masked until you tap **Show**. **Copy** clears the clipboard after 30 seconds.
-- The vault locks after 5 minutes without a tap, when the page closes, and on sign-out.
-- Only Owners can read or write the Vault, and the script enforces this too.
-- Master passphrase: at least 6 characters.
-- **There is no passphrase recovery.** Keep the passphrase on paper somewhere safe.
+- **Open mode (the owner's choice):** there is no passphrase and no lock. Rows are still stored scrambled (AES-256-GCM) in the sheet's `Vault` tab, but the key is built into the app, so this is **not** strong protection. Anyone who can read the sheet and this code could read the vault.
+- Only Owners can read or write the Vault, and the script enforces this.
+- A copy is kept on the owner's phone so the vault opens instantly; it is removed on sign-out.
+- Card and bank **names** (never numbers) feed the Cash / Bank / Card buttons on the entry form.
 
 ## One-time setup
 
