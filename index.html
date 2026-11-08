@@ -2215,7 +2215,7 @@ function whyAcct(id, X) {
   else if (L) { const mv = X.txns.filter(t => t.acct === a.id && t.date > L.date).sort(byDateDesc).map(t => { const ty = X.typeOf(t); return entLine(t, X, ty === 'Income' || (ty === 'Expense' && t.refund) ? t.amount : -t.amount); });
     if (mv.length) secs.push({title: 'Entries since ' + fmtDM(L.date), note: 'This kind of account keeps the balance you record.', lines: mv, total: {label: 'Money in − money out', v: sum(mv, l => l.v)}}); }
   secs.push({title: 'How it counts', lines: how});
-  return {title: a.name, head: live ? 'Balance now' : L ? 'Balance on ' + fmtDate(L.date) : 'Balance', value: L ? rs(L.v) : '—', sections: secs, btn: {act: 'balances', label: L ? 'Set balance' : 'Record a balance'}};
+  return {title: a.name, head: live ? 'Balance now' : L ? 'Balance on ' + fmtDate(L.date) : 'Balance', value: L ? rs(L.v) : '—', sections: secs, btn: {act: 'set-one', id: a.id, label: L ? 'Update balance' : 'Record a balance'}};
 }
 const acctLine = (a, X, v) => { const L = X.latest[a.id];
   return {label: a.name, sub: [a.owner, a.cls, balNote(L)].filter(Boolean).join(' · '), v: v == null ? (L ? L.v : 0) : v, k: 'w-acct:' + a.id}; };
@@ -2378,7 +2378,7 @@ function whyHtml(d) {
     ${d.sections.map(s => `<section class="why-s"><h4>${esc(s.title)}</h4>${s.note ? `<p class="hint">${esc(s.note)}</p>` : ''}
       <div class="why-l">${s.lines.map(l => whyRow(l, s.plain)).join('')}
       ${s.total ? `<div class="wrow wtot"><span class="l"><span class="t1">= ${esc(s.total.label)}</span></span><span class="amt num">${s.total.text != null ? esc(s.total.text) : rs(s.total.v)}</span><span class="chev"></span></div>` : ''}</div></section>`).join('')}
-    <div class="sheet-actions">${d.btn ? `<button type="button" class="btn" data-act="${esc(d.btn.act)}">${esc(d.btn.label)}</button>` : ''}<button type="button" class="btn primary" data-act="why-close">Done</button></div>`;
+    <div class="sheet-actions">${d.btn ? `<button type="button" class="btn" data-act="${esc(d.btn.act)}"${d.btn.id ? ` data-id="${esc(d.btn.id)}"` : ''}>${esc(d.btn.label)}</button>` : ''}<button type="button" class="btn primary" data-act="why-close">Done</button></div>`;
 }
 function whyShow() {
   const k = W$.stack[W$.stack.length - 1], d = k && whyBuild(k), box = $('#whyBox');
@@ -2399,6 +2399,7 @@ document.addEventListener('click', ev => {
   else if (act === 'why-back') { W$.stack.pop(); $('#whyBox').dataset.k = ''; whyShow(); }
   else if (act === 'why-close') closeWhy();
   else if ((act === 'edit' || act === 'balances') && b.closest('#whyScrim')) closeWhy();
+  else if (act === 'set-one') { closeWhy(); openBalances(b.dataset.id); }
 });
 document.addEventListener('keydown', ev => {
   if ((ev.key === 'Enter' || ev.key === ' ') && ev.target && ev.target.matches && ev.target.matches('[data-act="why"]')) { ev.preventDefault(); openWhy(ev.target.dataset.k, false); }
@@ -3244,14 +3245,18 @@ async function saveEntry(again) {
 }
 
 /* ---------- balances sheet ---------- */
-function openBalances() {
-  const X = ctx();
+// Record balances: all accounts, or just one (e.g. EPF or NPS each month) via openBalances(id).
+function openBalances(only) {
+  const X = ctx(), one = typeof only === 'string' ? state.config.accounts.find(a => a.id === only) : null;
   $('#bDate').value = todayStr(); $('#bErr').hidden = true;
-  $('#balGrid').innerHTML = state.config.accounts.filter(a => !a.pay).map(a => { const L = X.latest[a.id];
+  $('#balForm h3').textContent = one ? 'Update ' + one.name : 'Record balances';
+  $('#balForm h3 + p').textContent = one ? 'Type what ' + one.name + ' holds now. Only this account changes.' : 'Type what each account holds today. Enter debts as negative numbers, like −50,000.';
+  $('#balGrid').innerHTML = state.config.accounts.filter(a => !a.pay && (!one || a.id === one.id)).map(a => { const L = X.latest[a.id];
     return `<div class="balrow"><div><div class="bn">${esc(a.name)}</div><div class="bm">${esc([a.owner, a.cls].filter(Boolean).join(' · '))}${L ? ' · last ' + rs(L.v) : ''}</div></div>
       <input id="bal-${esc(a.id)}" data-id="${esc(a.id)}" type="text" inputmode="numeric" value="${L ? INR.format(Math.round(L.v)) : ''}" aria-label="Balance for ${esc(a.name)}"></div>`; }).join('')
     || '<p class="muted">Add accounts in Setup first.</p>';
   $('#balScrim').hidden = false;
+  if (one) setTimeout(() => { const b = $('#bal-' + one.id); if (b) b.select(); }, 60);
 }
 async function saveBalances() {
   const date = $('#bDate').value, err = $('#bErr');
@@ -3259,8 +3264,9 @@ async function saveBalances() {
   const values = {}; let bad = '';
   document.querySelectorAll('#balGrid .tin').forEach(inp => { const v = parseSigned(inp.value); if (v === null) return; if (isNaN(v)) bad = inp.getAttribute('aria-label'); else values[inp.dataset.id] = v; });
   if (bad) { err.textContent = bad + ' is not a number.'; err.hidden = false; return; }
-  try { await API.putBalance(date, values); } catch (e) { err.textContent = writeErr(e); err.hidden = false; return; }
-  $('#balScrim').hidden = true; toast('Balances saved');
+  const merged = Object.assign({}, ((state.balances || {})[date] || {}).values || {}, values);
+  try { await API.putBalance(date, merged); } catch (e) { err.textContent = writeErr(e); err.hidden = false; return; }
+  $('#balScrim').hidden = true; toast(Object.keys(values).length === 1 ? 'Balance updated' : 'Balances saved');
 }
 
 /* ---------- backup ---------- */
