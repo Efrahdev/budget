@@ -1606,17 +1606,21 @@ const KIND_LABEL = {Bank: 'Bank accounts', FD: 'Fixed deposits', Bond: 'Bonds', 
 const balNote = L => !L ? 'no balance yet' : L.moves && L.moves.length ? `${rs(L.rec)} on ${fmtDM(L.date)} ${L.delta < 0 ? '−' : '+'} ${rs(Math.abs(L.delta))}` : 'as of ' + fmtDM(L.date);
 // Everything Wealth shows, worked out once so the screen and the breakdowns always agree.
 function wealthCalc(X) {
+  // Owner's rule: liabilities are paid from liquid money, so they come off LIQUID money, and
+  //   Liquid money = liquid assets − all liabilities (loans, money owed, credit cards) − this month's budget still to spend
+  //   Net worth    = liquid money + non-liquid assets
   const accts = state.config.accounts.filter(a => !a.pay);
   const val = a => X.latest[a.id] ? X.latest[a.id].v : 0;
-  let nw = 0, liquid = 0, debts = 0, hasAny = false;
-  accts.forEach(a => { const L = X.latest[a.id]; if (!L) return; hasAny = true;
-    if (a.counted !== false) { nw += L.v; if (L.v < 0) debts += L.v; if (a.liquid) liquid += L.v; } });
+  let liqAssets = 0, nonLiq = 0, debts = 0, hasAny = false;
+  accts.forEach(a => { const L = X.latest[a.id]; if (!L) return; hasAny = true; if (a.counted === false) return;
+    if (L.v < 0) debts += L.v; else if (a.liquid) liqAssets += L.v; else nonLiq += L.v; });
   const cardLs = cardList().map(c => cardLedger(c, X)), cardOwed = cardLs.reduce((a, L) => a + L.owed, 0);
-  if (cardLs.length) { nw -= cardOwed; liquid -= cardOwed; if (cardOwed > 0) debts -= cardOwed; }
-  const bl = budgetLeft(X); nw -= bl.left; // money already promised to this month's budget is not wealth
+  if (cardLs.length) debts -= cardOwed; // money paid ahead on a card (owed < 0) reduces liabilities
+  const bl = budgetLeft(X);
+  const liquid = liqAssets + debts - bl.left, nw = liquid + nonLiq;
   const series = X.nwSeries.map(p => ({date: p.date, nw: p.nw - cardLs.reduce((a, L) => a + cardOwedAsOf(L, p.date), 0)}));
-  const sp = avgSpend(X), cover = sp.v > 0 ? liquid / sp.v : null;
-  return {accts, val, nw, liquid, debts, hasAny, cardLs, cardOwed, bl, series, sp, cover};
+  const sp = avgSpend(X), cover = sp.v > 0 ? Math.max(0, liquid) / sp.v : null;
+  return {accts, val, nw, liquid, liqAssets, nonLiq, debts, hasAny, cardLs, cardOwed, bl, series, sp, cover};
 }
 function wealthGroups(X) {
   return [
@@ -1629,8 +1633,8 @@ function renderWealth(X) {
   const W0 = wealthCalc(X), {accts, nw, liquid, debts, hasAny, cardLs, cardOwed, bl, series, sp, cover} = W0;
   const view = readPref().wealthView === 'fd' ? 'fd' : 'nw';
   const kpis = `<div class="card kpis">
-    <div class="kpi"${whyAttr('w-nw')}><span class="lbl">Net worth</span><span class="val fit">${rsShort(nw)}</span><span class="sub">Assets − debts − ${rsShort(bl.left)} still to spend this month</span></div>
-    <div class="kpi"${whyAttr('w-liq')}><span class="lbl">Liquid money</span><span class="val fit">${rsShort(liquid)}</span><span class="sub">Usable within days</span></div>
+    <div class="kpi"${whyAttr('w-nw')}><span class="lbl">Net worth</span><span class="val fit">${rsShort(nw)}</span><span class="sub">Liquid money + non-liquid assets</span></div>
+    <div class="kpi"${whyAttr('w-liq')}><span class="lbl">Liquid money</span><span class="val fit">${rsShort(liquid)}</span><span class="sub">After liabilities and this month's budget</span></div>
     <div class="kpi"${whyAttr('w-debt')}><span class="lbl">Liabilities</span><span class="val fit">${rsShort(-debts)}</span><span class="sub">Loans, cards, money owed</span></div>
     <div class="kpi"${whyAttr('w-cover')}><span class="lbl">Months of cover</span><span class="val fit">${cover == null ? '—' : Math.round(cover)}</span><span class="sub">Liquid ÷ ${esc(sp.basis)}</span></div>
   </div>`;
@@ -2275,22 +2279,20 @@ function whyBuild(k) {
   if (kind === 'card') return whyCard(arg, X);
   const W0 = wealthCalc(X), G = wealthGroups(X), counted = W0.accts.filter(a => a.counted !== false && X.latest[a.id]);
   const left = {label: cycleLabel(W0.bl.key) + ' budget still to spend', sub: 'what each budgeted category has left', v: -W0.bl.left, k: 'w-left'};
-  if (kind === 'w-nw') {
-    const pos = counted.filter(a => W0.val(a) >= 0), neg = counted.filter(a => W0.val(a) < 0), gross = sum(pos, a => W0.val(a));
-    const off = neg.map(a => acctLine(a, X)).concat(cardLines(W0, true), [left]);
+  if (kind === 'w-nw' || kind === 'w-liq') {
+    const liqA = counted.filter(a => a.liquid && W0.val(a) >= 0), nonA = counted.filter(a => !a.liquid && W0.val(a) >= 0), neg = counted.filter(a => W0.val(a) < 0);
+    const byK = {}; neg.forEach(a => { (byK[a.cls || 'Other'] = byK[a.cls || 'Other'] || []).push(a); });
+    const liab = Object.entries(byK).map(([k, l]) => l.length === 1 ? acctLine(l[0], X) : {label: KIND_LABEL[k] || k, sub: l.length + ' accounts', v: l.reduce((x, a) => x + W0.val(a), 0), items: l.map(a => acctLine(a, X))});
+    if (W0.cardLs.length) liab.push({label: 'Credit cards', sub: W0.cardLs.length + ' cards · billed ' + rs(sum(W0.cardLs, L => L.dueNow)) + ' · next bills ' + rs(sum(W0.cardLs, L => L.nextSt ? L.nextSt.left : 0)), v: -W0.cardOwed, items: cardLines(W0, true)});
+    const liqSec = {title: 'Liquid money', note: 'Liabilities are paid from liquid money, so they come off here.', lines: [
+        {label: 'Liquid assets', sub: liqA.length + ' accounts usable within days', v: W0.liqAssets, items: liqA.map(a => acctLine(a, X))},
+        {label: 'Liabilities', sub: 'loans, money owed, credit cards', v: W0.debts, items: liab}, left], total: {label: 'Liquid money', v: W0.liquid}};
+    const nwSec = {title: 'Net worth', lines: [{label: 'Liquid money', sub: 'after liabilities and this month\'s budget', v: W0.liquid, k: 'w-liq'},
+        {label: 'Non-liquid assets', sub: nonA.length + ' accounts (FDs, bonds, retirement…)', v: W0.nonLiq, items: nonA.map(a => acctLine(a, X))}], total: {label: 'Net worth', v: W0.nw}};
     const out = W0.accts.filter(a => a.counted === false || !X.latest[a.id]).map(a => ({label: a.name, sub: a.counted === false ? 'marked not counted in Setup' : 'no balance recorded yet', text: X.latest[a.id] ? rs(X.latest[a.id].v) : '—', k: 'w-acct:' + a.id}));
-    const secs = [{title: 'What you have (gross)', lines: pos.length ? pos.map(a => acctLine(a, X)) : [{label: 'No balances recorded yet', text: ''}], total: {label: 'Gross assets', v: gross}},
-      {title: 'Taken off', lines: off, total: {label: 'Taken off', v: sum(off, l => l.v)}},
-      {title: 'Net worth', lines: [{label: 'Gross assets', v: gross}, {label: 'Taken off', v: sum(off, l => l.v)}], total: {label: 'Net worth', v: W0.nw}}];
-    if (out.length) secs.push({title: 'Not added', lines: out});
-    return {title: 'Net worth', head: 'Today', value: rs(W0.nw), sub: rsShort(W0.nw), sections: secs};
-  }
-  if (kind === 'w-liq') {
-    const liq = counted.filter(a => a.liquid), lines = liq.map(a => acctLine(a, X)).concat(cardLines(W0, true));
-    const out = counted.filter(a => !a.liquid).map(a => ({label: a.name, sub: 'not liquid (Setup)', text: rs(W0.val(a)), k: 'w-acct:' + a.id}));
-    const secs = [{title: 'Usable within days', lines: lines.length ? lines : [{label: 'No liquid accounts', text: ''}], total: {label: 'Liquid money', v: W0.liquid}}];
-    if (out.length) secs.push({title: 'Not added', lines: out});
-    return {title: 'Liquid money', head: 'Today', value: rs(W0.liquid), sub: rsShort(W0.liquid), sections: secs};
+    const secs = kind === 'w-nw' ? [nwSec, liqSec] : [liqSec];
+    if (out.length && kind === 'w-nw') secs.push({title: 'Not added', lines: out});
+    return kind === 'w-nw' ? {title: 'Net worth', head: 'Today', value: rs(W0.nw), sections: secs} : {title: 'Liquid money', head: 'Today', value: rs(W0.liquid), sections: secs};
   }
   if (kind === 'w-debt') {
     const neg = counted.filter(a => W0.val(a) < 0), byK = {}; neg.forEach(a => { (byK[a.cls || 'Other'] = byK[a.cls || 'Other'] || []).push(a); });
@@ -2305,8 +2307,8 @@ function whyBuild(k) {
     const spend = closed.length ? closed.map(x => ({label: cycleLabel(x.k), v: x.v})) : [{label: 'Monthly budget', sub: 'until a full cycle closes', v: W0.sp.v}];
     return {title: 'Months of cover', head: 'How long liquid money lasts', value: W0.cover == null ? '—' : String(Math.round(W0.cover)), sections: [
       {title: 'Monthly spending', plain: true, lines: spend, total: closed.length > 1 ? {label: 'Average', text: rs(sum(closed, x => x.v)) + ' ÷ ' + closed.length + ' = ' + rs(W0.sp.v)} : {label: 'Monthly spending', v: W0.sp.v}},
-      {title: 'Liquid ÷ monthly spending', lines: [{label: 'Liquid money', text: rs(W0.liquid), k: 'w-liq'}, {label: 'Monthly spending', text: rs(W0.sp.v)}],
-        total: {label: 'Months of cover', text: W0.cover == null ? '—' : rs(W0.liquid) + ' ÷ ' + rs(W0.sp.v) + ' = ' + Math.round(W0.cover) + ' months'}}]};
+      {title: 'Liquid ÷ monthly spending', lines: [{label: 'Liquid money', text: rs(W0.liquid) + (W0.liquid < 0 ? ' (below zero, so 0 months)' : ''), k: 'w-liq'}, {label: 'Monthly spending', text: rs(W0.sp.v)}],
+        total: {label: 'Months of cover', text: W0.cover == null ? '—' : rs(Math.max(0, W0.liquid)) + ' ÷ ' + rs(W0.sp.v) + ' = ' + Math.round(W0.cover) + ' months'}}]};
   }
   if (kind === 'w-grp') {
     const gi = +arg, def = G[gi]; if (!def) return null;
