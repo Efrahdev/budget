@@ -2,7 +2,7 @@
 <html lang="en-GB">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,interactive-widget=resizes-content">
 <title>Budget Tracker</title>
 <meta name="description" content="Household budget, credit cards and net worth, synced to Google Sheets.">
 <link rel="manifest" href="manifest.webmanifest">
@@ -589,6 +589,16 @@ body[data-view="notes"] .fab{display:none}
 .nbody .ntext.rich{white-space:pre-wrap;overflow-y:auto;-webkit-user-select:text;user-select:text}
 .nbody .ntext,.txtview,.mdview{font-size:calc(17px*var(--fs,1)*var(--nfs,1))}
 .ntext.rich b,.ntext.rich strong{font-weight:800}
+.nact{align-items:center;flex-wrap:nowrap}
+.npopw{position:relative}
+.npop{position:absolute;bottom:calc(100% + 8px);left:0;z-index:30;min-width:230px;display:flex;flex-direction:column;padding:6px;border:1px solid var(--rule-2);border-radius:14px;background:var(--sheet);box-shadow:0 18px 40px -12px rgba(0,0,0,.45)}
+.nmorew .npop{left:auto;right:0;min-width:190px}
+.npi{display:flex;flex-direction:column;align-items:flex-start;gap:1px;padding:10px 12px;border:0;border-radius:10px;background:none;color:var(--ink);font:inherit;text-align:left;cursor:pointer;text-decoration:none}
+.npi b{font-size:calc(16px*var(--fs,1))}.npi small{font-size:calc(13px*var(--fs,1));color:var(--ink-3)}
+.npi[aria-checked="true"]{background:var(--accent-soft)}.npi[aria-checked="true"] b::after{content:" ✓";color:var(--accent)}
+.npi:active{background:var(--accent-soft)}.npi.danger b{color:var(--bad-ink)}
+.nmoreb{width:44px;height:40px;border:1px solid var(--rule-2);border-radius:10px;background:var(--sheet);color:var(--ink);font-size:22px;line-height:1;cursor:pointer}
+.nsave{margin-left:auto;min-height:44px;padding:0 22px;font-size:calc(16.5px*var(--fs,1));border-radius:12px}
 /* ===== text size and font ===== */
 .textb span{font-weight:800;font-size:19px;line-height:1;letter-spacing:-.02em}.textb small{font-size:14px;font-weight:700}
 .tx-prev{display:flex;flex-direction:column;gap:2px;padding:14px;border-radius:12px;background:var(--accent-soft)}
@@ -1658,8 +1668,12 @@ function drawNote() {
     <input id="nTitle" type="text" class="ntitle" placeholder="Title (optional)" aria-label="Title" value="${esc(o.title)}">
     <div class="nlabels" role="group" aria-label="Label">${Object.entries(NOTE_LABELS).map(([kk, v]) => `<button type="button" class="nlab l-${kk}" data-act="n-label" data-v="${kk}" aria-pressed="${kk === o.cat}"><i>${v[0]}</i>${v}</button>`).join('')}</div>
     <div class="nbody" id="nBody">${o.loading ? '<div class="empty">Opening from Google Drive…</div>' : o.failed ? '<div class="empty">Couldn\'t open this note from Google Drive. Check the connection and try again.</div>' : noteBodyHtml()}</div>
-    <div class="nact"><button type="button" class="nkindb" data-act="n-kinds" aria-expanded="${N.kinds}">${k.label} ▾</button>
-      ${N.kinds ? `<span class="nkinds">${Object.entries(NOTE_KINDS).filter(([kk]) => kk !== o.type).map(([kk, v]) => `<button type="button" class="chipb" data-act="n-kind" data-v="${kk}">${v.label}</button>`).join('')}</span>` : `${o.type === 'json' ? '<button type="button" class="btn sm" data-act="n-tidy">Tidy JSON</button>' : ''}<button type="button" class="btn sm" data-act="n-copy">Copy</button><button type="button" class="btn sm" data-act="n-dl">Download</button>${drive ? `<a class="btn sm" href="${drive}" target="_blank" rel="noopener">Drive</a>` : ''}<button type="button" class="btn sm danger" data-act="n-del">Delete</button>`}</div>`;
+    <div class="nact"><div class="npopw"><button type="button" class="nkindb" data-act="n-kinds" aria-haspopup="true" aria-expanded="false">${k.label} ▾</button>
+        <div class="npop nkpop" hidden role="menu">${Object.entries(NOTE_KINDS).map(([kk, v]) => `<button type="button" class="npi" role="menuitemradio" data-act="n-kind" data-v="${kk}" aria-checked="${kk === o.type}"><b>${v.label}</b><small>${{txt: 'Simple text, with bold', md: 'Headings, lists, tables', html: 'A web page', json: 'Data, checked and tidied'}[kk]}</small></button>`).join('')}</div></div>
+      ${o.type === 'json' ? '<button type="button" class="btn sm" data-act="n-tidy">Tidy</button>' : ''}
+      <div class="npopw nmorew"><button type="button" class="nmoreb" data-act="n-more" aria-haspopup="true" aria-label="More">⋯</button>
+        <div class="npop nmpop" hidden role="menu"><button type="button" class="npi" data-act="n-copy"><b>Copy</b></button><button type="button" class="npi" data-act="n-dl"><b>Download .${k.ext}</b></button>${drive ? `<a class="npi" href="${drive}" target="_blank" rel="noopener"><b>Open in Drive</b></a>` : ''}<button type="button" class="npi danger" data-act="n-del"><b>Delete</b></button></div></div>
+      <button type="button" class="btn primary nsave" data-act="n-save">✓ Save</button></div>`;
   $('#noteScrim').hidden = false; noteState(); richBox(); noteSizeShow();
   const ta = $('#nText'); if (ta && o.fresh && !o.content) { o.fresh = false; setTimeout(() => { if (!$('#noteBox').contains(document.activeElement) || document.activeElement === document.body) focusBox(ta); }, 60); }
 }
@@ -1712,6 +1726,7 @@ document.addEventListener('click', ev => {
   if (t.dataset.tool === 'bold') { if (document.activeElement !== box) box.focus(); document.execCommand('bold'); boldState(); noteChanged(); }
   else { const i = NOTE_SIZES.indexOf(noteSize()), j = Math.max(0, Math.min(NOTE_SIZES.length - 1, i + (t.dataset.tool === 'bigger' ? 1 : -1))); writePref({noteSize: NOTE_SIZES[j]}); noteSizeShow(); }
 });
+document.addEventListener('click', ev => { const it = ev.target.closest('.npi'); if (it && !it.classList.contains('danger') && it.dataset.act !== 'n-kind') setTimeout(() => document.querySelectorAll('#noteBox .npop').forEach(x => { x.hidden = true; }), 0); if (!ev.target.closest('.npopw')) document.querySelectorAll('#noteBox .npop').forEach(x => { x.hidden = true; }); }, true);
 function noteState() {
   const o = N.open, el = $('#nState'); if (!o || !el) return;
   const l = N.local[o.id];
@@ -1788,8 +1803,13 @@ document.addEventListener('click', async ev => {
   else if (!o) return;
   else if (a === 'n-close') closeNote();
   else if (a === 'n-mode') { commitNote(); N.mode = b.dataset.v; drawNote(); }
-  else if (a === 'n-kinds') { N.kinds = !N.kinds; drawNote(); }
-  else if (a === 'n-kind') { o.type = b.dataset.v; N.kinds = false; if (o.type === 'txt') N.mode = 'edit'; commitNote(); drawNote(); }
+  else if (a === 'n-kinds' || a === 'n-more') { const pop = b.parentElement.querySelector('.npop'), show = pop.hidden; document.querySelectorAll('#noteBox .npop').forEach(x => { x.hidden = true; }); pop.hidden = !show; b.setAttribute('aria-expanded', String(show)); }
+  else if (a === 'n-save') { closeNote(); toast('Saved'); }
+  else if (a === 'n-kind') { // show the note formatted for its new kind straight away
+    if (o.type === 'txt' && b.dataset.v !== 'txt' && $('#nText')) o.content = $('#nText').value;
+    o.type = b.dataset.v;
+    if (o.type === 'json') { try { o.content = JSON.stringify(JSON.parse(o.content), null, 2); } catch (e) {} }
+    N.mode = o.type === 'txt' || !o.content.trim() ? 'edit' : 'view'; commitNote(); drawNote(); toast(NOTE_KINDS[o.type].label); }
   else if (a === 'n-label') { o.cat = b.dataset.v; writePref({noteCat: o.cat}); document.querySelectorAll('.nlab').forEach(x => x.setAttribute('aria-pressed', String(x.dataset.v === o.cat))); commitNote(); }
   else if (a === 'n-pin') { if (!o.pinned) { const pins = sortNotes(noteList()).filter(n => n.pinned && n.id !== o.id); o.order = pins.length ? Math.min(...pins.map(n => n.order || 0)) - 1 : 0; } o.pinned = !o.pinned; b.setAttribute('aria-pressed', String(o.pinned)); commitNote(); toast(o.pinned ? 'Pinned to the top' : 'Unpinned'); }
   else if (a === 'n-tidy') { try { o.content = JSON.stringify(JSON.parse(o.content), null, 2); commitNote(); drawNote(); toast('JSON tidied'); } catch (e) { toast('Not valid JSON: ' + e.message, 'bad'); } }
