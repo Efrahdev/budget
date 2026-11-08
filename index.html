@@ -651,6 +651,62 @@ body[data-view="notes"] .fab{display:none}
 .cat-row{grid-template-columns:minmax(0,2fr) minmax(0,1.1fr) minmax(0,1fr) minmax(0,1fr) auto}
 @media (max-width:640px){.cat-row{grid-template-columns:repeat(3,minmax(0,1fr));grid-template-areas:"name name del" "short type budget"}.cat-row .c-short{grid-area:short}
   .card-row{grid-template-columns:repeat(2,minmax(0,1fr)) auto;grid-template-areas:"name name del" "sd dd ."}}
+/* ===== vault ===== */
+.vlists{display:flex;flex-direction:column;gap:22px}
+.vhero{display:grid;grid-template-columns:auto 1fr;gap:12px 14px;align-items:center;padding:18px;border-radius:18px;color:#fff;background:radial-gradient(120% 140% at 0% 0%,#2d6fd6 0%,#3b3fb5 45%,#6a2fb0 100%);box-shadow:0 18px 36px -18px rgba(40,40,140,.6)}
+.vh-ic{width:46px;height:46px;border-radius:14px;background:rgba(255,255,255,.16);display:grid;place-items:center}.vh-ic svg{width:26px;height:26px;fill:none;stroke:#fff;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.vh-t{display:flex;flex-direction:column}.vh-t b{font-size:calc(20px*var(--fs,1));font-weight:800}.vh-t span{font-size:calc(14px*var(--fs,1));opacity:.85}
+.vh-n{grid-column:1/-1;display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.vh-n button{display:flex;flex-direction:column;align-items:flex-start;gap:0;padding:10px 12px;border:0;border-radius:12px;background:rgba(255,255,255,.14);color:#fff;font:inherit;font-size:calc(13.5px*var(--fs,1));cursor:pointer;text-align:left}
+.vh-n b{font-size:calc(24px*var(--fs,1));font-weight:800;line-height:1.1}
+.vh-n button:active{background:rgba(255,255,255,.24)}
+.vsec2{display:flex;flex-direction:column;gap:12px}
+.vs-h{display:flex;align-items:baseline;justify-content:space-between;padding:0 2px}.vs-h h2{margin:0;font-size:calc(18px*var(--fs,1));font-weight:800}
+.vgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,300px),1fr));gap:14px}
+.vitem{display:flex;flex-direction:column;min-width:0}
+.vcc{position:relative;aspect-ratio:1.586;border-radius:18px;padding:18px 20px;color:#fff;cursor:pointer;overflow:hidden;display:flex;flex-direction:column;justify-content:space-between;
+  background:radial-gradient(130% 120% at 100% 0%,rgba(255,255,255,.22) 0%,transparent 45%),radial-gradient(90% 80% at 0% 100%,rgba(0,0,0,.25) 0%,transparent 60%),linear-gradient(135deg,var(--ca),var(--cb));
+  box-shadow:0 14px 28px -14px rgba(0,0,0,.55),inset 0 1px 0 rgba(255,255,255,.18);transition:transform .2s ease;-webkit-tap-highlight-color:transparent}
+.vcc::after{content:"";position:absolute;inset:0;background:repeating-linear-gradient(115deg,rgba(255,255,255,.035) 0 2px,transparent 2px 7px);pointer-events:none}
+.vcc:active{transform:scale(.985)}
+.vcc-top{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
+.vcc-bank{font-weight:800;font-size:calc(18px*var(--fs,1));letter-spacing:.02em;text-shadow:0 1px 2px rgba(0,0,0,.25);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.vcc-net{font-weight:900;font-style:italic;font-size:calc(17px*var(--fs,1));letter-spacing:.02em;opacity:.95}.vcc-net.n-mastercard{font-style:normal;font-size:calc(13px*var(--fs,1))}.vcc-net.n-rupay{font-style:normal}
+.vcc-chip{width:44px;height:33px;border-radius:7px;background:linear-gradient(135deg,#f3dc8b,#c9a043 55%,#e8cf7a);box-shadow:inset 0 0 0 1px rgba(0,0,0,.18);position:relative}
+.vcc-chip::before{content:"";position:absolute;inset:8px 6px;border:1px solid rgba(0,0,0,.25);border-radius:3px}
+.vcc-num{font-family:ui-monospace,"Roboto Mono",SFMono-Regular,Menlo,monospace;font-size:calc(19px*var(--fs,1));letter-spacing:.12em;text-shadow:0 1px 2px rgba(0,0,0,.3);white-space:nowrap}
+.vcc-num b{font-weight:800;font-size:1.15em}
+.vcc-bot{display:flex;justify-content:space-between;align-items:flex-end;gap:10px}
+.vcc-name{font-weight:600;text-transform:uppercase;letter-spacing:.06em;font-size:calc(14px*var(--fs,1));overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.vcc-meta{display:flex;flex-direction:column;align-items:flex-end;font-family:ui-monospace,"Roboto Mono",monospace;font-size:calc(14px*var(--fs,1));white-space:nowrap}
+.vcc-meta small{font-family:var(--f-body);font-size:9px;letter-spacing:.1em;opacity:.8}.vcc-meta em{font-style:normal;font-family:var(--f-body);font-size:calc(12px*var(--fs,1));opacity:.9;margin-top:2px}
+.vba{position:relative;display:flex;gap:14px;align-items:flex-start;padding:16px;border-radius:16px;background:var(--sheet);border:1px solid var(--rule);box-shadow:var(--shade);cursor:pointer;overflow:hidden}
+.vba::before{content:"";position:absolute;left:0;top:0;bottom:0;width:6px;background:linear-gradient(180deg,var(--ca),var(--cb))}
+.vba-badge{flex:0 0 auto;width:46px;height:46px;border-radius:14px;display:grid;place-items:center;color:#fff;font-weight:800;font-size:calc(16px*var(--fs,1));background:linear-gradient(135deg,var(--ca),var(--cb))}
+.vba-main{flex:1 1 auto;min-width:0;display:flex;flex-direction:column;gap:2px}
+.vba-bank{font-weight:800;font-size:calc(17px*var(--fs,1))}.vba-name{color:var(--ink-2);font-size:calc(14.5px*var(--fs,1))}
+.vba-acc{font-family:ui-monospace,"Roboto Mono",monospace;font-size:calc(17px*var(--fs,1));font-weight:600;letter-spacing:.04em;margin-top:4px;overflow-wrap:anywhere}
+.vba-tags{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}.vba-tags span{font-size:calc(12.5px*var(--fs,1));font-weight:600;padding:3px 8px;border-radius:999px;background:var(--sheet-2);border:1px solid var(--rule);color:var(--ink-2)}
+.vchev{flex:0 0 auto;color:var(--ink-3);font-size:14px;align-self:center}
+.vplist{display:flex;flex-direction:column;border:1px solid var(--rule);border-radius:16px;background:var(--sheet);box-shadow:var(--shade);overflow:hidden}
+.vp+.vp{border-top:1px solid var(--rule)}
+.vpr{display:flex;align-items:center;gap:12px;padding:11px 12px 11px 14px;cursor:pointer}
+.vp-av{flex:0 0 auto;width:38px;height:38px;border-radius:50%;display:grid;place-items:center;color:#fff;font-weight:800;font-size:calc(14px*var(--fs,1));background:var(--ca)}
+.vp-main{flex:1 1 auto;min-width:0;display:flex;flex-direction:column}.vp-t{font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.vp-id{color:var(--ink-2);font-size:calc(14.5px*var(--fs,1));overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.mono{font-family:ui-monospace,"Roboto Mono",SFMono-Regular,Menlo,monospace}
+.vdet{margin-top:-8px;padding:16px 14px 10px;border:1px solid var(--rule);border-top:0;border-radius:0 0 16px 16px;background:var(--sheet);display:flex;flex-direction:column}
+.vitem.open .vcc{border-radius:18px 18px 18px 18px}
+.vp .vdet{margin:0;border:0;border-top:1px dashed var(--rule);border-radius:0;background:var(--sheet-2)}
+.vba+.vdet{margin-top:-10px;padding-top:18px}
+.vf{display:grid;grid-template-columns:minmax(80px,32%) minmax(0,1fr) auto;gap:10px;align-items:center;padding:8px 0;border-top:1px solid var(--rule)}.vf:first-child{border-top:0}
+.vl{font-size:calc(13px*var(--fs,1));color:var(--ink-3);font-weight:600}
+.vv{font-size:calc(16px*var(--fs,1));font-weight:600;overflow-wrap:anywhere;-webkit-user-select:text;user-select:text}
+.vcp{flex:0 0 auto;width:38px;height:38px;border-radius:10px;border:1px solid var(--rule-2);background:var(--sheet);color:var(--ink-2);display:grid;place-items:center;cursor:pointer}
+.vcp svg{width:17px;height:17px}.vcp.done{background:var(--good);border-color:var(--good);color:#fff}
+.vdact{display:flex;justify-content:flex-end;padding-top:8px}
+.vs-act{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.vmore{left:auto;right:0;bottom:calc(100% + 8px)}
+#vTabs .chipb .cnt{opacity:.75;margin-left:2px}
 /* ===== text size and font ===== */
 .textb span{font-weight:800;font-size:19px;line-height:1;letter-spacing:-.02em}.textb small{font-size:14px;font-weight:700}
 .tx-prev{display:flex;flex-direction:column;gap:2px;padding:14px;border-radius:12px;background:var(--accent-soft)}
@@ -3488,48 +3544,87 @@ function renderVault() {
   el.innerHTML = `<div class="vbar"><input id="vQ" type="search" placeholder="Search the vault" aria-label="Search the vault" value="${esc(V.q)}" autocomplete="off">
       ${open ? '' : '<button class="btn" type="button" data-act="v-lock">🔒 Lock</button>'}</div>
     <div class="chips" id="vTabs" role="group" aria-label="Show"></div>
-    <p class="hint" style="margin:0">Tap the copy icon next to any value to copy it. Swipe a table sideways to see every column. <span id="vSync"></span></p>
-    <div id="vLists" style="display:flex;flex-direction:column;gap:16px"></div>
+    <p class="hint" style="margin:0">Tap a card to see every detail and copy it. <span id="vSync"></span></p>
+    <div id="vLists" class="vlists"></div>
     ${open ? '' : `<div class="row-actions" style="padding:0"><button class="btn sm" type="button" data-act="v-pass">Change passphrase</button></div>`}`;
   renderVaultLists(); vStatus();
 }
 const COPY_ICON = '<svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg>';
-// One table per section. Tap a row to show the whole row; every cell has its own copy button.
+/* ---------- vault: cards you can scan at a glance ----------
+   Credit cards look like the real card (bank colours, chip, network). Bank accounts are one card each, with no
+   sideways scrolling. Tap any card to open every detail, each with its own copy button. */
+const VBANKS = [[/amazon/i, ['#1b2430', '#3a4a5e']], [/hdfc/i, ['#0b3a7a', '#1d5fb8']], [/icici/i, ['#7a1d1d', '#b4481c']], [/\bsbi\b|state bank/i, ['#0f5a98', '#2a8fd0']],
+  [/axis/i, ['#6e1838', '#a52a5c']], [/hsbc/i, ['#1f1f1f', '#b0122a']], [/stan|standard chartered/i, ['#0b5a3a', '#1c74b8']], [/kotak/i, ['#b0102a', '#0e2a66']],
+  [/amex|american express/i, ['#18609e', '#4b98cf']], [/\byes\b/i, ['#0c3b78', '#2a72d0']], [/idfc/i, ['#6d1a28', '#a52838']], [/bob|baroda/i, ['#a63c0d', '#c9601a']],
+  [/dcb/i, ['#1b3a6b', '#2d65a8']], [/indusind/i, ['#5a1a1a', '#8c2f1f']], [/rbl/i, ['#14325c', '#2a5d9e']], [/federal/i, ['#0d3b66', '#d4a017']], [/au\b/i, ['#5a2a82', '#e46c2b']]];
+const VFALL = [['#2d3a8c', '#5160c9'], ['#0f5e5a', '#1f9a8f'], ['#5b2a86', '#8c4fc4'], ['#7a3b10', '#b8641c'], ['#1d4e89', '#3d84c6'], ['#3f3f46', '#6b7280']];
+function vTheme(name) { const n = String(name || ''); for (const [re, c] of VBANKS) if (re.test(n)) return c; let h = 0; for (const ch of n) h = (h * 31 + ch.charCodeAt(0)) >>> 0; return VFALL[h % VFALL.length]; }
+const vDigits = v => String(v || '').replace(/\D/g, '');
+function vNet(num) { const d = vDigits(num); if (/^3[47]/.test(d)) return 'AMEX'; if (/^4/.test(d)) return 'VISA'; if (/^(5[1-5]|2[2-7])/.test(d)) return 'Mastercard'; if (/^(60|65|81|82|508|353|356)/.test(d)) return 'RuPay'; if (/^3(0|6|8)/.test(d)) return 'Diners'; return ''; }
+const vLast4 = v => { const d = vDigits(v); return d.length >= 4 ? d.slice(-4) : String(v || '').slice(-4); };
+const vGroup = v => { const d = vDigits(v); if (d.length < 8) return String(v || ''); return /^3[47]/.test(d) && d.length === 15 ? d.replace(/^(\d{4})(\d{6})(\d{5})$/, '$1 $2 $3') : d.replace(/(\d{4})(?=\d)/g, '$1 '); };
+const vInitials = s => String(s || '?').trim().split(/\s+/).slice(0, 2).map(w => w[0] || '').join('').toUpperCase() || '?';
+function vDetails(r, t) { // every filled field, with a copy button
+  const cols = vCols(t.k), mono = /number|^acc$|card no|cvv|ifsc|cust id|^exp|^pw$|password|^stmt/i;
+  return `<div class="vdet">${cols.map((c, i) => { const v = String(r.c[i] || ''); if (!v) return '';
+      const shown = isOpenMode() || V.open[r.id] ? (/(cc number|card no|^acc$)/i.test(c) ? vGroup(v) : v) : '••••';
+      return `<div class="vf"><span class="vl">${esc(c)}</span><span class="vv${mono.test(c) ? ' mono' : ''}">${esc(shown)}</span><button class="vcp" type="button" data-act="v-copy" data-id="${r.id}" data-i="${i}" aria-label="Copy ${esc(c)}">${COPY_ICON}</button></div>`; }).join('')}
+    <div class="vdact"><button class="btn sm" type="button" data-act="v-edit" data-id="${r.id}">✎ Edit</button></div></div>`;
+}
+function vCardFace(r) { // a credit card that looks like the card
+  const [a, b] = vTheme(r.c[0] + ' ' + r.c[1]), net = vNet(r.c[2]), on = !!V.open[r.id], stmt = parseStmtDay(r.c[5]);
+  return `<div class="vitem${on ? ' open' : ''}"><div class="vcc" style="--ca:${a};--cb:${b}" data-act="v-row" data-id="${r.id}" role="button" tabindex="0" aria-expanded="${on}" aria-label="${esc(r.c[0] || 'Card')}, ending ${esc(vLast4(r.c[2]))}. Tap for details.">
+      <div class="vcc-top"><span class="vcc-bank">${esc(r.c[0] || 'Card')}</span>${net ? `<span class="vcc-net n-${net.toLowerCase()}">${net}</span>` : ''}</div>
+      <div class="vcc-chip" aria-hidden="true"></div>
+      <div class="vcc-num">•••• •••• •••• <b>${esc(vLast4(r.c[2]) || '····')}</b></div>
+      <div class="vcc-bot"><span class="vcc-name">${esc(r.c[1] || '')}</span><span class="vcc-meta">${r.c[3] ? `<small>VALID THRU</small>${esc(r.c[3])}` : ''}${stmt ? `<em>Bill ${ordinal(stmt)}</em>` : ''}</span></div>
+    </div>${on ? vDetails(r, VAULT_TABLES[0]) : ''}</div>`;
+}
+function vBankFace(r) { // a bank account as one card: no columns, no sideways scrolling
+  const [a, b] = vTheme(r.c[0]), on = !!V.open[r.id];
+  return `<div class="vitem${on ? ' open' : ''}"><div class="vba" style="--ca:${a};--cb:${b}" data-act="v-row" data-id="${r.id}" role="button" tabindex="0" aria-expanded="${on}" aria-label="${esc(r.c[0] || 'Account')}, ${esc(r.c[1] || '')}. Tap for details.">
+      <span class="vba-badge">${esc(vInitials(r.c[0]))}</span>
+      <div class="vba-main"><div class="vba-bank">${esc(r.c[0] || 'Account')}</div><div class="vba-name">${esc(r.c[1] || '')}</div>
+        <div class="vba-acc">${r.c[2] ? 'A/c ' + esc(vGroup(r.c[2])) : '<span class="muted">No account number</span>'}</div>
+        <div class="vba-tags">${r.c[5] ? `<span>IFSC ${esc(r.c[5])}</span>` : ''}${r.c[3] ? `<span>Cust ID ${esc(r.c[3])}</span>` : ''}${r.c[6] ? `<span>Debit •••• ${esc(vLast4(r.c[6]))}</span>` : ''}</div></div>
+      <span class="vchev" aria-hidden="true">${on ? '▴' : '▾'}</span>
+    </div>${on ? vDetails(r, VAULT_TABLES[1]) : ''}</div>`;
+}
+function vPersonalRow(r) {
+  const on = !!V.open[r.id], [a] = vTheme(r.c[0]);
+  return `<div class="vitem vp${on ? ' open' : ''}"><div class="vpr" data-act="v-row" data-id="${r.id}" role="button" tabindex="0" aria-expanded="${on}">
+      <span class="vp-av" style="--ca:${a}">${esc(vInitials(r.c[0]))}</span>
+      <span class="vp-main"><span class="vp-t">${esc(r.c[0] || 'Item')}</span>${r.c[1] ? `<span class="vp-id mono">${esc(r.c[1])}</span>` : ''}</span>
+      ${r.c[1] ? `<button class="vcp" type="button" data-act="v-copy" data-id="${r.id}" data-i="1" aria-label="Copy ID">${COPY_ICON}</button>` : ''}
+      <span class="vchev" aria-hidden="true">${on ? '▴' : '▾'}</span></div>${on ? vDetails(r, VAULT_TABLES[2]) : ''}</div>`;
+}
 function renderVaultLists() {
   const box = $('#vLists'); if (!box) return;
-  const q = V.q.trim().toLowerCase();
-  const broken = V.rows.filter(r => r.t === 'broken').length;
-  // Filter buttons: All, or one table on its own. The choice is remembered on this phone (it is not secret).
-  const SUBS = {aadhaar: {label: 'Aadhaar', test: r => /a{1,2}dh?a{1,2}r/i.test(String(r.c[0] || ''))},
-                voter: {label: 'Voter', test: r => /voter|epic/i.test(String(r.c[0] || ''))}};
-  const tab = ['cards', 'banks', 'personal', 'aadhaar', 'voter'].includes(readPref().vaultTab) ? readPref().vaultTab : 'all';
-  const sub = SUBS[tab];
+  const q = V.q.trim().toLowerCase(), broken = V.rows.filter(r => r.t === 'broken').length;
+  const SUBS = {aadhaar: {label: 'Aadhaar', test: r => /a{1,2}dh?a{1,2}r/i.test(String(r.c[0] || ''))}, voter: {label: 'Voter', test: r => /voter|epic/i.test(String(r.c[0] || ''))}};
+  const tab = ['cards', 'banks', 'personal', 'aadhaar', 'voter'].includes(readPref().vaultTab) ? readPref().vaultTab : 'all', sub = SUBS[tab];
   const count = k => SUBS[k] ? V.rows.filter(r => r.t === 'personal' && SUBS[k].test(r)).length : V.rows.filter(r => r.t === k).length;
-  const tabBtn = (k, label, n) => `<button type="button" class="chipb" data-act="v-tab" data-t="${k}" aria-pressed="${tab === k}">${esc(label)} · ${n}</button>`;
+  const tabBtn = (k, label, n) => `<button type="button" class="chipb" data-act="v-tab" data-t="${k}" aria-pressed="${tab === k}">${esc(label)} <span class="cnt">${n}</span></button>`;
   const tabs = $('#vTabs');
-  if (tabs) tabs.innerHTML = tabBtn('all', 'All', V.rows.filter(r => r.t !== 'broken').length) + VAULT_TABLES.map(t => tabBtn(t.k, t.k === 'personal' ? 'Personal' : t.title, count(t.k))).join('')
+  if (tabs) tabs.innerHTML = tabBtn('all', 'All', V.rows.filter(r => r.t !== 'broken').length) + VAULT_TABLES.map(t => tabBtn(t.k, t.k === 'personal' ? 'Personal' : t.k === 'banks' ? 'Bank accounts' : t.title, count(t.k))).join('')
     + Object.entries(SUBS).map(([k, x]) => tabBtn(k, x.label, count(k))).join('');
-  box.innerHTML = VAULT_TABLES.filter(t => tab === 'all' || t.k === tab || (sub && t.k === 'personal')).map(t => {
-    const cols = vCols(t.k), all = !!V.showAll[t.k];
+  const hero = tab === 'all' && !q ? `<div class="vhero"><div class="vh-ic" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 2.5 4 5.5v6c0 5 3.4 8.6 8 10 4.6-1.4 8-5 8-10v-6l-8-3Z"/><path d="m8.5 12 2.4 2.4 4.6-4.8"/></svg></div>
+      <div class="vh-t"><b>Your vault</b><span>Locked on this phone before it goes to Google</span></div>
+      <div class="vh-n"><button type="button" data-act="v-tab" data-t="cards"><b>${count('cards')}</b>cards</button><button type="button" data-act="v-tab" data-t="banks"><b>${count('banks')}</b>accounts</button><button type="button" data-act="v-tab" data-t="personal"><b>${count('personal')}</b>personal</button></div></div>` : '';
+  box.innerHTML = hero + VAULT_TABLES.filter(t => tab === 'all' || t.k === tab || (sub && t.k === 'personal')).map(t => {
     let list = V.rows.filter(r => r.t === t.k && (!sub || sub.test(r))).sort((a, b) => String(a.c[0] || '').localeCompare(String(b.c[0] || '')) || String(a.c[1] || '').localeCompare(String(b.c[1] || '')));
     const total = list.length;
     if (q) list = list.filter(r => r.c.some(v => String(v || '').toLowerCase().includes(q)));
-    const last = cols.length - 1;
-    const body = list.map(r => {
-      const on = all || isOpenMode() || !!V.open[r.id];
-      return `<tr class="${on ? 'on' : ''}" data-act="v-row" data-id="${r.id}" aria-label="${esc(r.c[0] || '')}: tap to ${on ? 'hide' : 'show'}">${cols.map((c, i) => {
-        const v = String(r.c[i] || '');
-        if (!v) return `<td class="${i === last ? 'wrap' : ''}"><span class="nil">—</span></td>`;
-        const vis = on || t.show.includes(i);
-        return `<td class="${i === last ? 'wrap' : ''}"><span class="cell"><span class="cv${vis ? '' : ' masked'}">${vis ? esc(v) : '••••'}</span><button class="cp" type="button" data-act="v-copy" data-id="${r.id}" data-i="${i}" aria-label="Copy ${esc(c)}" title="Copy ${esc(c)}">${COPY_ICON}</button></span></td>`;
-      }).join('')}<td class="act"><button class="cp" type="button" data-act="v-edit" data-id="${r.id}" aria-label="Edit ${esc(r.c[0] || '')}" title="Edit">✎</button></td></tr>`;
-    }).join('');
-    return `<section class="card vsec"><div class="sec-h"><h2>${esc(sub ? sub.label : t.title)}</h2><span class="hint">${total} saved${total && !isOpenMode() ? ` · <button class="linkbtn" type="button" data-act="v-showall" data-t="${t.k}">${all ? 'Hide all' : 'Show all'}</button>` : ''}</span></div>
-      ${body ? `<div class="vwrap"><table class="vt"><thead><tr>${cols.map(c => `<th>${esc(c)}</th>`).join('')}<th class="act"><span class="sr">Edit</span></th></tr></thead><tbody>${body}</tbody></table></div>`
-        : `<div class="empty">${q ? 'No match.' : 'Nothing yet. Add your first ' + t.one + ', or paste many at once.'}</div>`}
-      <div class="row-actions"><button class="btn sm primary" type="button" data-act="v-add" data-t="${t.k}">+ Add ${t.one}</button><button class="btn sm" type="button" data-act="v-import" data-t="${t.k}">Paste many rows</button><button class="btn sm" type="button" data-act="v-cols" data-t="${t.k}">Rename columns</button>${t.delAll && total ? `<button class="btn sm danger" type="button" data-act="v-delall" data-t="${t.k}">Delete all</button>` : ''}</div></section>`;
-  }).join('') + (broken ? `<div class="banner warn">${broken} row${broken === 1 ? '' : 's'} could not be opened with this passphrase. They may have been changed outside the app.</div>` : '');
+    const items = list.map(r => t.k === 'cards' ? vCardFace(r) : t.k === 'banks' ? vBankFace(r) : vPersonalRow(r)).join('');
+    const icon = {cards: '💳', banks: '🏦', personal: '🪪'}[t.k];
+    return `<section class="vsec2"><div class="vs-h"><h2><span aria-hidden="true">${icon}</span> ${esc(sub ? sub.label : t.k === 'banks' ? 'Bank accounts' : t.title)}</h2><span class="hint">${q ? list.length + ' of ' + total : total}</span></div>
+      ${items ? `<div class="${t.k === 'cards' ? 'vgrid' : t.k === 'banks' ? 'vgrid vgrid-b' : 'vplist'}">${items}</div>` : `<div class="card empty">${q ? 'No match.' : 'Nothing yet. Add your first ' + t.one + ', or paste many at once.'}</div>`}
+      <div class="vs-act"><button class="btn sm primary" type="button" data-act="v-add" data-t="${t.k}">+ Add ${t.one}</button><button class="btn sm" type="button" data-act="v-import" data-t="${t.k}">Paste many</button>
+        <div class="npopw"><button class="btn sm" type="button" data-act="v-more" aria-label="More">⋯</button><div class="npop vmore" hidden><button class="npi" type="button" data-act="v-cols" data-t="${t.k}"><b>Rename columns</b></button>${t.delAll && total ? `<button class="npi danger" type="button" data-act="v-delall" data-t="${t.k}"><b>Delete all ${esc(t.many)}</b></button>` : ''}</div></div></div></section>`;
+  }).join('') + (broken ? `<div class="banner warn">${broken} row${broken === 1 ? '' : 's'} could not be opened. They may have been changed outside the app.</div>` : '');
 }
+document.addEventListener('click', ev => { const b = ev.target.closest('[data-act="v-more"]'); if (!b) return; const pop = b.parentElement.querySelector('.npop'), show = pop.hidden; document.querySelectorAll('.npop').forEach(x => { x.hidden = true; }); pop.hidden = !show; });
+document.addEventListener('keydown', ev => { if ((ev.key === 'Enter' || ev.key === ' ') && ev.target.matches && ev.target.matches('[data-act="v-row"]')) { ev.preventDefault(); ev.target.click(); } });
 function vForm(html) { const f = $('#vaultForm'); f.innerHTML = html; $('#vaultScrim').hidden = false; setTimeout(() => { const i = f.querySelector('.tin, input:not([type=hidden]):not([type=checkbox])'); if (i && !f.contains(document.activeElement)) i.focus(); }, 30); }
 function vEditRow(tk, id) {
   const t = VAULT_TABLES.find(x => x.k === tk), cols = vCols(tk), r = id ? V.rows.find(x => x.id === id) : null;
@@ -3770,8 +3865,7 @@ document.addEventListener('click', ev => {
   else if (a === 'v-row') {
     if (window.getSelection && String(window.getSelection())) return; // let people select text without toggling
     const r = V.rows.find(x => x.id === b.dataset.id); if (!r) return;
-    if (V.showAll[r.t]) { V.showAll[r.t] = false; V.rows.filter(x => x.t === r.t).forEach(x => { V.open[x.id] = x.id !== r.id; }); }
-    else V.open[r.id] = !V.open[r.id];
+    V.open[r.id] = !V.open[r.id];
     renderVaultLists();
   }
   else if (a === 'v-showall') { const k = b.dataset.t; V.showAll[k] = !V.showAll[k]; if (!V.showAll[k]) V.rows.forEach(x => { if (x.t === k) V.open[x.id] = false; }); renderVaultLists(); }
