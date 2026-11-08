@@ -725,6 +725,11 @@ body[data-view="notes"] .fab{display:none}
 .vba .vf2{background:var(--sheet-2);box-shadow:inset 0 0 0 1px var(--rule)}
 .vba .vcp2{background:var(--sheet);border:1px solid var(--rule-2);color:var(--ink-2)}.vba .vcp2.done{background:var(--good);color:#fff}
 .vba .vedit{border-color:var(--rule-2);background:var(--sheet);color:var(--ink)}.vba .vonc-act{color:var(--ink-3)}
+/* bank accounts drawn like the credit cards */
+.vacc-emb{width:44px;height:33px;border-radius:8px;display:grid;place-items:center;background:rgba(255,255,255,.16);box-shadow:inset 0 0 0 1px rgba(255,255,255,.25)}
+.vacc-emb svg{width:24px;height:24px;fill:none;stroke:#fff;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+.vacc-kind{font-style:normal;font-size:calc(12px*var(--fs,1));letter-spacing:.14em;font-weight:800;opacity:.85;padding-top:3px}
+.vacc-lbl{font-family:var(--f-body);font-size:calc(11px*var(--fs,1));letter-spacing:.12em;opacity:.8;margin-right:4px;vertical-align:middle}
 /* ===== text size and font ===== */
 .textb span{font-weight:800;font-size:19px;line-height:1;letter-spacing:-.02em}.textb small{font-size:14px;font-weight:700}
 .tx-prev{display:flex;flex-direction:column;gap:2px;padding:14px;border-radius:12px;background:var(--accent-soft)}
@@ -3608,15 +3613,13 @@ function vCardFace(r) { // a credit card that looks like the card
       <div class="vcc-bot"><span class="vcc-name">${esc(r.c[1] || '')}</span><span class="vcc-meta">${r.c[3] ? `<small>VALID THRU</small>${esc(r.c[3])}` : ''}${stmt ? `<em>Bill ${ordinal(stmt)}</em>` : ''}</span></div>`}
     </div></div>`;
 }
-function vBankFace(r) { // a bank account as one card: no columns, no sideways scrolling; tap to see every detail on the card
-  const [a, b] = vTheme(r.c[0]), on = !!V.open[r.id];
-  return `<div class="vitem${on ? ' open' : ''}"><div class="vba${on ? ' on' : ''}" style="--ca:${a};--cb:${b}" data-act="v-row" data-id="${r.id}" role="button" tabindex="0" aria-expanded="${on}" aria-label="${esc(r.c[0] || 'Account')}, ${esc(r.c[1] || '')}. Tap for details.">
-      <div class="vba-row"><span class="vba-badge">${esc(vInitials(r.c[0]))}</span>
-      <div class="vba-main"><div class="vba-bank">${esc(r.c[0] || 'Account')}</div>${on ? `<div class="vba-name">${esc(r.c[1] || '')}</div>` : `<div class="vba-name">${esc(r.c[1] || '')}</div>
-        <div class="vba-acc">${r.c[2] ? 'A/c ' + esc(vGroup(r.c[2])) : '<span class="muted">No account number</span>'}</div>
-        <div class="vba-tags">${r.c[5] ? `<span>IFSC ${esc(r.c[5])}</span>` : ''}${r.c[3] ? `<span>Cust ID ${esc(r.c[3])}</span>` : ''}${r.c[6] ? `<span>Debit •••• ${esc(vLast4(r.c[6]))}</span>` : ''}</div>`}</div>
-      ${on ? '' : '<span class="vchev" aria-hidden="true">▾</span>'}</div>
-      ${on ? vOnCard(r, VAULT_TABLES[1], [0]) : ''}
+function vBankFace(r) { // a bank account drawn exactly like the credit cards: bank colours, emblem, last 4 digits, holder, IFSC
+  const [a, b] = vTheme(r.c[0]), on = !!V.open[r.id], net = vNet(r.c[6]);
+  return `<div class="vitem${on ? ' open' : ''}"><div class="vcc vacc${on ? ' on' : ''}" style="--ca:${a};--cb:${b}" data-act="v-row" data-id="${r.id}" role="button" tabindex="0" aria-expanded="${on}" aria-label="${esc(r.c[0] || 'Account')}, account ending ${esc(vLast4(r.c[2]))}. Tap for details.">
+      <div class="vcc-top"><span class="vcc-bank">${esc(r.c[0] || 'Account')}</span><span class="vcc-net${net ? ' n-' + net.toLowerCase() : ' vacc-kind'}">${net || 'SAVINGS'}</span></div>
+      ${on ? vOnCard(r, VAULT_TABLES[1], [0]) : `<div class="vacc-emb" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M3 9.5 12 4l9 5.5"/><path d="M5 10v8M9.5 10v8M14.5 10v8M19 10v8"/><path d="M3.5 20.5h17"/></svg></div>
+      <div class="vcc-num"><small class="vacc-lbl">A/C</small> •••• •••• <b>${esc(vLast4(r.c[2]) || '····')}</b></div>
+      <div class="vcc-bot"><span class="vcc-name">${esc(r.c[1] || '')}</span><span class="vcc-meta">${r.c[5] ? `<small>IFSC</small>${esc(r.c[5])}` : ''}${r.c[3] ? `<em>Cust ID ${esc(r.c[3])}</em>` : ''}</span></div>`}
     </div></div>`;
 }
 function vPersonalRow(r) {
