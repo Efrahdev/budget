@@ -1636,7 +1636,7 @@ function renderWealth(X) {
     <div class="kpi"${whyAttr('w-nw')}><span class="lbl">Net worth</span><span class="val fit">${rsShort(nw)}</span><span class="sub">Liquid money + non-liquid assets</span></div>
     <div class="kpi"${whyAttr('w-liq')}><span class="lbl">Liquid money</span><span class="val fit">${rsShort(liquid)}</span><span class="sub">After liabilities and this month's budget</span></div>
     <div class="kpi"${whyAttr('w-debt')}><span class="lbl">Liabilities</span><span class="val fit">${rsShort(-debts)}</span><span class="sub">Loans, cards, money owed</span></div>
-    <div class="kpi"${whyAttr('w-cover')}><span class="lbl">Months of cover</span><span class="val fit">${cover == null ? '—' : Math.round(cover)}</span><span class="sub">Liquid ÷ ${esc(sp.basis)}</span></div>
+    <div class="kpi"${whyAttr('w-gross')}><span class="lbl">Gross assets</span><span class="val fit">${rsShort(W0.liqAssets + W0.nonLiq)}</span><span class="sub">Liquid + non-liquid, before liabilities</span></div>
   </div>`;
   const tabs = `<div class="seg" role="group" aria-label="Wealth view"><button type="button" class="segb" data-act="w-view" data-v="nw" aria-pressed="${view === 'nw'}">Net worth</button><button type="button" class="segb" data-act="w-view" data-v="fd" aria-pressed="${view === 'fd'}">FD growth</button></div>`;
   if (view === 'fd') { $('#v-wealth').innerHTML = `${kpis}${tabs}${fdHtml(X)}`; return; }
@@ -2293,6 +2293,12 @@ function whyBuild(k) {
     const secs = kind === 'w-nw' ? [nwSec, liqSec] : [liqSec];
     if (out.length && kind === 'w-nw') secs.push({title: 'Not added', lines: out});
     return kind === 'w-nw' ? {title: 'Net worth', head: 'Today', value: rs(W0.nw), sections: secs} : {title: 'Liquid money', head: 'Today', value: rs(W0.liquid), sections: secs};
+  }
+  if (kind === 'w-gross') {
+    const liqA = counted.filter(a => a.liquid && W0.val(a) >= 0), nonA = counted.filter(a => !a.liquid && W0.val(a) >= 0);
+    return {title: 'Gross assets', head: 'Today, before liabilities', value: rs(W0.liqAssets + W0.nonLiq), sections: [{title: 'Liquid + non-liquid', lines: [
+      {label: 'Liquid assets', sub: liqA.length + ' accounts usable within days', v: W0.liqAssets, items: liqA.map(a => acctLine(a, X))},
+      {label: 'Non-liquid assets', sub: nonA.length + ' accounts (FDs, bonds, retirement…)', v: W0.nonLiq, items: nonA.map(a => acctLine(a, X))}], total: {label: 'Gross assets', v: W0.liqAssets + W0.nonLiq}}]};
   }
   if (kind === 'w-debt') {
     const neg = counted.filter(a => W0.val(a) < 0), byK = {}; neg.forEach(a => { (byK[a.cls || 'Other'] = byK[a.cls || 'Other'] || []).push(a); });
