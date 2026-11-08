@@ -402,6 +402,32 @@ body[data-view="vault"] .fab,body[data-view="vault"] #addTop,body[data-view="vau
 .lockcard{display:flex;flex-direction:column;gap:12px;padding:18px 16px;max-width:560px}
 .lockcard .field input{font-size:16px}
 .warnbox{background:var(--warn-soft);border-radius:8px;padding:10px 12px;font-size:13px;color:var(--ink)}
+/* how a figure is worked out */
+[data-act="why"]{cursor:pointer;-webkit-tap-highlight-color:transparent}
+.kpi[data-act="why"]:active,.htile[data-act="why"]:active,.li.tap:active,.sec-h.tap:active,.fdcard.tap:active{background:var(--accent-soft)}
+.list .li.tap{position:relative;padding-right:28px}
+.list .li.tap::after{content:"›";position:absolute;right:12px;top:50%;transform:translateY(-50%);color:var(--ink-3);font-size:18px}
+.ct-h[data-act="why"]:active{filter:brightness(1.08)}
+.sheet.why{gap:12px}
+.why-h{display:flex;align-items:center;gap:10px}
+.why-big{display:flex;flex-direction:column;gap:2px;padding:12px 14px;border-radius:12px;background:var(--accent-soft)}
+.why-big .lbl{font-size:12px;color:var(--ink-2);font-weight:600;letter-spacing:.04em;text-transform:uppercase}
+.why-big .v{font-family:var(--f-display);font-stretch:88%;font-weight:800;font-size:30px;line-height:1.1}
+.why-s h4{margin:4px 0 6px;font-size:12px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--ink-3)}
+.why-s .hint{margin:0 0 6px}
+.why-l{border:1px solid var(--rule);border-radius:12px;overflow:hidden}
+.wrow{display:flex;align-items:center;gap:10px;width:100%;padding:10px 12px;border:0;border-top:1px solid var(--rule);background:none;color:inherit;font:inherit;text-align:left}
+.why-l>.wrow:first-child,.why-l>.wgrp:first-child>.wrow{border-top:0}
+.wgrp>.wrow{list-style:none;cursor:pointer}.wgrp>.wrow::-webkit-details-marker{display:none}
+.wgrp{border-top:1px solid var(--rule)}.why-l>.wgrp:first-child{border-top:0}.wgrp>.wrow{border-top:0}
+.wgrp[open]>.wrow .chev{transform:rotate(180deg)}
+.wsub{background:var(--paper)}.wsub .wrow{padding-left:24px}.wsub .wrow .t1{font-weight:500}
+.wrow .l{flex:1;min-width:0;display:flex;flex-direction:column;gap:1px}
+.wrow .t1{font-weight:600;overflow-wrap:anywhere}.wrow .t2{font-size:12px;color:var(--ink-3);overflow-wrap:anywhere}
+.wrow .amt.neg{color:var(--bad)}
+.wrow .chev{width:10px;flex:0 0 10px;color:var(--ink-3);text-align:center}
+.wrow.go{cursor:pointer}.wrow.go:active{background:var(--accent-soft)}
+.wtot{background:var(--paper);border-top:1px solid var(--rule-2)!important}.wtot .t1{font-weight:800}.wtot .amt{font-weight:800}
 </style>
 </head>
 <body>
@@ -546,6 +572,11 @@ body[data-view="vault"] .fab,body[data-view="vault"] #addTop,body[data-view="vau
 <!-- Vault row editor -->
 <div class="scrim" id="vaultScrim" hidden>
   <form class="sheet" id="vaultForm" novalidate autocomplete="off"></form>
+</div>
+
+<!-- How a figure is worked out -->
+<div class="scrim" id="whyScrim" hidden>
+  <div class="sheet why" id="whyBox" role="dialog" aria-label="How this is worked out"></div>
 </div>
 
 <!-- Copy sheet (fallback when downloads are unavailable) -->
@@ -870,26 +901,26 @@ function renderOverview(X) {
   const unknown = Object.keys(T.byCat).filter(id => !X.cm[id]).reduce((a, id) => a + T.byCat[id], 0);
 
   const kpis = `<div class="card kpis">
-    <div class="kpi"><span class="lbl">Income</span><span class="val">${rs(T.inc)}</span></div>
-    <div class="kpi"><span class="lbl">Spent</span><span class="val">${rs(T.exp)}</span><span class="sub">of ${rs(budgetTotal)} budget</span></div>
-    <div class="kpi"><span class="lbl">Saved</span><span class="val">${T.inc > 0 ? rs(saved) : '—'}</span></div>
-    <div class="kpi"><span class="lbl">Savings rate</span><span class="val">${pct(rate)}</span></div>
+    <div class="kpi"${whyAttr('ov-inc')}><span class="lbl">Income</span><span class="val">${rs(T.inc)}</span></div>
+    <div class="kpi"${whyAttr('ov-exp')}><span class="lbl">Spent</span><span class="val">${rs(T.exp)}</span><span class="sub">of ${rs(budgetTotal)} budget</span></div>
+    <div class="kpi"${whyAttr('ov-saved')}><span class="lbl">Saved</span><span class="val">${T.inc > 0 ? rs(saved) : '—'}</span></div>
+    <div class="kpi"${whyAttr('ov-rate')}><span class="lbl">Savings rate</span><span class="val">${pct(rate)}</span></div>
   </div>`;
 
   // One tile per category, named exactly as in Setup, in Setup order.
-  const tile = (name, spent, budget, unplanned) => {
+  const tile = (name, spent, budget, unplanned, k) => {
     const over = !unplanned && budget > 0 && spent > budget;
     const w = unplanned ? 100 : budget > 0 ? Math.min(spent / budget, 1) * 100 : (spent > 0 ? 100 : 0);
     const tone = unplanned ? 'u' : !budget ? 'u' : over ? 'bad' : spent >= budget * 0.9 ? 'warn' : 'good';
-    return `<div class="htile"><div class="hn">${esc(name)}</div><div class="ha num">${rs(spent)}</div>
+    return `<div class="htile"${whyAttr(k)}><div class="hn">${esc(name)}</div><div class="ha num">${rs(spent)}</div>
       <div class="hb" role="img" aria-label="${esc(name)}: ${rs(spent)}${budget > 0 && !unplanned ? ' of ' + rs(budget) : ''}"><i class="${tone}" style="width:${w}%"></i></div>
       <div class="hs${over ? ' over' : ''}">${unplanned ? 'as spent' : !budget ? 'no budget' : over ? '+' + rs(spent - budget) + ' over ' + rs(budget) : 'of ' + rs(budget)}</div></div>`;
   };
   const ch = cashInHand(X), cs = state.config.cashStart || {};
-  const cashTile = ch.any ? `<div class="htile cashtile"><div class="hn">Cash in hand</div><div class="ha num">${rs(ch.v)}</div>
+  const cashTile = ch.any ? `<div class="htile cashtile"${whyAttr('ov-cash')}><div class="hn">Cash in hand</div><div class="ha num">${rs(ch.v)}</div>
       <div class="hs">${/^\d{4}-\d{2}-\d{2}$/.test(cs.date || '') ? 'started ' + rs(+cs.amount || 0) + ' on ' + fmtDM(cs.date) : 'set your starting cash in Setup'}</div></div>` : '';
-  const tiles = cashTile + cats.map(c => { const spent = T.byCat[c.id] || 0, budget = budgetOf(c, spent); return (budget > 0 || spent) ? tile(c.name, spent, budget, !!c.unplanned) : ''; }).join('')
-    + (unknown ? tile('Unlisted', unknown, 0, false) : '');
+  const tiles = cashTile + cats.map(c => { const spent = T.byCat[c.id] || 0, budget = budgetOf(c, spent); return (budget > 0 || spent) ? tile(c.name, spent, budget, !!c.unplanned, 'ov-cat:' + c.id) : ''; }).join('')
+    + (unknown ? tile('Unlisted', unknown, 0, false, 'ov-unl') : '');
 
   $('#v-overview').innerHTML = `${kpis}${tiles ? `<div class="hgrid">${tiles}</div>` : '<div class="card empty">No entries in ' + cycleLabel(key) + ' yet.</div>'}
     ${cardStripHtml(X)}`;
@@ -970,18 +1001,20 @@ function fdHtml(X) {
   const rows = fds.map(a => { const P = X.latest[a.id].v, mt = monthsTo(a.matures); return {a, P, date: X.latest[a.id].date, mt, int: P * r, y1: grow(P, 12), y3: grow(P, 36), y5: grow(P, 60), mat: mt ? grow(P, mt.n) : null}; });
   const sum = k => rows.reduce((s, x) => s + (x[k] || 0), 0);
   const box = (lbl, v, sub) => `<div class="fdv"><span class="lbl">${lbl}</span><span class="num">${v == null ? '—' : rs(v)}</span>${sub ? `<span class="fds">${esc(sub)}</span>` : ''}</div>`;
-  const card = (title, sub, x) => `<section class="card fdcard"><div class="sec-h"><h2>${esc(title)}</h2><span class="hint">${esc(sub)}</span></div><div class="fdgrid">
+  const card = (title, sub, x, k) => `<section class="card fdcard tap"${whyAttr(k)}><div class="sec-h"><h2>${esc(title)}</h2><span class="hint">${esc(sub)}</span></div><div class="fdgrid">
       ${box('Today', x.P)}${box('Interest this month', x.int)}${box('In 1 year', x.y1)}${box('In 3 years', x.y3)}${box('In 5 years', x.y5)}${box('At maturity', x.mat, x.mt ? x.mt.label : 'no maturity date')}</div></section>`;
   const total = {P: sum('P'), int: sum('int'), y1: sum('y1'), y3: sum('y3'), y5: sum('y5'), mat: rows.some(x => x.mat == null) ? null : sum('mat'), mt: null};
   return `<div class="card" style="padding:12px 16px;display:flex;align-items:center;gap:8px;flex-wrap:wrap"><span class="hint">Compounded monthly at</span>
       <input id="fdRate" type="text" inputmode="decimal" value="${rate}" aria-label="Interest rate per year" style="width:54px;border:1px solid var(--rule-2);background:var(--sheet);border-radius:6px;padding:4px 6px;text-align:right">
       <span class="hint">% a year · value after m months = balance × (1 + rate ÷ 12)<sup>m</sup></span></div>
-    ${rows.length > 1 ? card('All FDs', rows.length + ' FDs', Object.assign(total, {mt: rows.every(x => x.mt) ? {label: 'each at its own date'} : null})) : ''}
-    ${rows.map(x => card(x.a.name, 'balance as of ' + fmtDM(x.date), x)).join('')}
+    ${rows.length > 1 ? card('All FDs', rows.length + ' FDs', Object.assign(total, {mt: rows.every(x => x.mt) ? {label: 'each at its own date'} : null}), 'fd:all') : ''}
+    ${rows.map(x => card(x.a.name, 'balance as of ' + fmtDM(x.date), x, 'fd:' + x.a.id)).join('')}
     <p class="hint" style="margin:0">Starts from each FD's latest recorded balance. "At maturity" uses the Matures date in Setup → Accounts.</p>`;
 }
-function renderWealth(X) {
+// Everything Wealth shows, worked out once so the screen and the breakdowns always agree.
+function wealthCalc(X) {
   const accts = state.config.accounts.filter(a => !a.pay);
+  const val = a => X.latest[a.id] ? X.latest[a.id].v : 0;
   let nw = 0, liquid = 0, debts = 0, hasAny = false;
   accts.forEach(a => { const L = X.latest[a.id]; if (!L) return; hasAny = true;
     if (a.counted !== false) { nw += L.v; if (L.v < 0) debts += L.v; if (a.liquid) liquid += L.v; } });
@@ -990,12 +1023,23 @@ function renderWealth(X) {
   const bl = budgetLeft(X); nw -= bl.left; // money already promised to this month's budget is not wealth
   const series = X.nwSeries.map(p => ({date: p.date, nw: p.nw - cardLs.reduce((a, L) => a + cardOwedAsOf(L, p.date), 0)}));
   const sp = avgSpend(X), cover = sp.v > 0 ? liquid / sp.v : null;
+  return {accts, val, nw, liquid, debts, hasAny, cardLs, cardOwed, bl, series, sp, cover};
+}
+function wealthGroups(X) {
+  return [
+    ['Assets', a => a.counted !== false && (X.latest[a.id] ? X.latest[a.id].v >= 0 : a.cls !== 'Loan' && a.cls !== 'Card' && a.cls !== 'Owed')],
+    ['Debts', a => a.counted !== false && (X.latest[a.id] ? X.latest[a.id].v < 0 : (a.cls === 'Loan' || a.cls === 'Card' || a.cls === 'Owed'))],
+    ['Not counted in net worth', a => a.counted === false]
+  ];
+}
+function renderWealth(X) {
+  const W0 = wealthCalc(X), {accts, nw, liquid, debts, hasAny, cardLs, cardOwed, bl, series, sp, cover} = W0;
   const view = readPref().wealthView === 'fd' ? 'fd' : 'nw';
   const kpis = `<div class="card kpis">
-    <div class="kpi"><span class="lbl">Net worth</span><span class="val">${rsShort(nw)}</span><span class="sub">Assets − debts − ${rsShort(bl.left)} still to spend this month</span></div>
-    <div class="kpi"><span class="lbl">Liquid money</span><span class="val">${rsShort(liquid)}</span><span class="sub">Usable within days</span></div>
-    <div class="kpi"><span class="lbl">Debts</span><span class="val">${rsShort(-debts)}</span><span class="sub">Loans, card, money owed</span></div>
-    <div class="kpi"><span class="lbl">Months of cover</span><span class="val">${cover == null ? '—' : cover.toFixed(1)}</span><span class="sub">Liquid ÷ ${esc(sp.basis)}</span></div>
+    <div class="kpi"${whyAttr('w-nw')}><span class="lbl">Net worth</span><span class="val">${rsShort(nw)}</span><span class="sub">Assets − debts − ${rsShort(bl.left)} still to spend this month</span></div>
+    <div class="kpi"${whyAttr('w-liq')}><span class="lbl">Liquid money</span><span class="val">${rsShort(liquid)}</span><span class="sub">Usable within days</span></div>
+    <div class="kpi"${whyAttr('w-debt')}><span class="lbl">Debts</span><span class="val">${rsShort(-debts)}</span><span class="sub">Loans, card, money owed</span></div>
+    <div class="kpi"${whyAttr('w-cover')}><span class="lbl">Months of cover</span><span class="val">${cover == null ? '—' : cover.toFixed(1)}</span><span class="sub">Liquid ÷ ${esc(sp.basis)}</span></div>
   </div>`;
   const tabs = `<div class="seg" role="group" aria-label="Wealth view"><button type="button" class="segb" data-act="w-view" data-v="nw" aria-pressed="${view === 'nw'}">Net worth</button><button type="button" class="segb" data-act="w-view" data-v="fd" aria-pressed="${view === 'fd'}">FD growth</button></div>`;
   if (view === 'fd') { $('#v-wealth').innerHTML = `${kpis}${tabs}${fdHtml(X)}`; return; }
@@ -1003,27 +1047,23 @@ function renderWealth(X) {
   const chart = series.length >= 2
     ? `<div class="chart">${lineChart(series, W, 220)}</div>`
     : `<div class="empty">Record balances at the end of each cycle and your net worth line will appear here.</div>`;
-  const groupsDef = [
-    ['Assets', a => a.counted !== false && (X.latest[a.id] ? X.latest[a.id].v >= 0 : a.cls !== 'Loan' && a.cls !== 'Card' && a.cls !== 'Owed')],
-    ['Debts', a => a.counted !== false && (X.latest[a.id] ? X.latest[a.id].v < 0 : (a.cls === 'Loan' || a.cls === 'Card' || a.cls === 'Owed'))],
-    ['Not counted in net worth', a => a.counted === false]
-  ];
-  const sections = groupsDef.map(([title, test]) => {
+  const groupsDef = wealthGroups(X);
+  const sections = groupsDef.map(([title, test], gi) => {
     const xs = accts.filter(test), extra = title === 'Debts' && cardLs.length > 0; if (!xs.length && !extra) return '';
     const total = xs.reduce((s, a) => s + (X.latest[a.id] ? X.latest[a.id].v : 0), 0) - (extra ? cardOwed : 0);
-    const block = `<section class="card list"><div class="sec-h"><h2>${title}</h2><span class="hint num">${rs(total)}</span></div>${xs.map(a => { const L = X.latest[a.id];
+    const block = `<section class="card list"><div class="sec-h tap"${whyAttr('w-grp:' + gi)}><h2>${title}</h2><span class="hint num">${rs(total)}</span></div>${xs.map(a => { const L = X.latest[a.id];
       const meta = [a.owner, a.cls, a.liquid ? 'Liquid' : '', a.matures ? 'Matures ' + a.matures : ''].filter(Boolean).map(esc).join(' · ');
-      return `<div class="li"><div class="l"><div class="t1">${esc(a.name)}</div><div class="t2">${meta}</div></div>
-        <div style="text-align:right"><div class="amt num">${L ? rs(L.v) : '—'}</div><div class="t2">${L ? 'as of ' + fmtDay(parseYmd(L.date)) : 'no balance yet'}</div></div></div>`; }).join('')}${extra ? `<div class="li"><div class="l"><div class="t1">Credit cards</div><div class="t2">Worked out from your card entries · ${cardLs.length} card${cardLs.length === 1 ? '' : 's'}</div></div><div style="text-align:right"><div class="amt num">${rs(-cardOwed)}</div><div class="t2"><a href="#cards">Card bills</a></div></div></div>` : ''}</section>`;
+      return `<div class="li tap"${whyAttr('w-acct:' + a.id)}><div class="l"><div class="t1">${esc(a.name)}</div><div class="t2">${meta}</div></div>
+        <div style="text-align:right"><div class="amt num">${L ? rs(L.v) : '—'}</div><div class="t2">${L ? 'as of ' + fmtDay(parseYmd(L.date)) : 'no balance yet'}</div></div></div>`; }).join('')}${extra ? `<div class="li tap"${whyAttr('c-owed')}><div class="l"><div class="t1">Credit cards</div><div class="t2">Worked out from your card entries · ${cardLs.length} card${cardLs.length === 1 ? '' : 's'}</div></div><div style="text-align:right"><div class="amt num">${rs(-cardOwed)}</div><div class="t2"><a href="#cards">Card bills</a></div></div></div>` : ''}</section>`;
     // after Debts: this month's budget still to be spent, also taken off net worth
     return block + (title === 'Debts' || (title === 'Assets' && !accts.some(groupsDef[1][1]) && !cardLs.length) ? setAside() : '');
   }).join('');
   function setAside() {
-    return `<section class="card list"><div class="sec-h"><h2>Still to spend this month</h2><span class="hint num">${rs(-bl.left)}</span></div>
-      <div class="li"><div class="l"><div class="t1">${esc(cycleLabel(bl.key))} budget left</div><div class="t2">Budget ${rs(bl.budget)} − spent ${rs(bl.spent)} · taken off net worth</div></div><div class="amt num">${rs(-bl.left)}</div></div></section>`;
+    return `<section class="card list"><div class="sec-h tap"${whyAttr('w-left')}><h2>Still to spend this month</h2><span class="hint num">${rs(-bl.left)}</span></div>
+      <div class="li tap"${whyAttr('w-left')}><div class="l"><div class="t1">${esc(cycleLabel(bl.key))} budget left</div><div class="t2">Budget ${rs(bl.budget)} − spent ${rs(bl.spent)} · taken off net worth</div></div><div class="amt num">${rs(-bl.left)}</div></div></section>`;
   }
   const snapsHtml = X.snaps.slice().reverse().map(s => { const p = series.find(z => z.date === s.date);
-    return `<div class="li"><div class="l"><div class="t1">${fmtDay(parseYmd(s.date))} ${parseYmd(s.date).getFullYear()}</div><div class="t2">${Object.keys(s.values || {}).length} accounts</div></div>
+    return `<div class="li tap"${whyAttr('w-snap:' + s.date)}><div class="l"><div class="t1">${fmtDay(parseYmd(s.date))} ${parseYmd(s.date).getFullYear()}</div><div class="t2">${Object.keys(s.values || {}).length} accounts</div></div>
       <div style="display:flex;gap:10px;align-items:center"><span class="amt num">${p ? rs(p.nw) : ''}</span><button class="icon-btn" type="button" data-act="del-snap" data-date="${esc(s.date)}" aria-label="Delete snapshot">×</button></div></div>`; }).join('');
   // Order: summary, assets and debts first; the chart and recording balances at the bottom.
   $('#v-wealth').innerHTML = `${kpis}${tabs}
@@ -1039,6 +1079,234 @@ document.addEventListener('click', ev => {
 });
 document.addEventListener('change', ev => {
   if (ev.target && ev.target.id === 'fdRate') { const v = parseFloat(String(ev.target.value).replace(',', '.')); if (v > 0 && v <= 30) writePref({fdRate: v}); renderWealth(ctx()); }
+});
+
+/* ---------- how a figure is worked out ----------
+   Tap any figure on Overview, Wealth or Card bills: a sheet lists every amount added (+) and taken off (−).
+   Each breakdown is built fresh from the same numbers the screen uses, so the two always agree. */
+const whyAttr = k => k ? ` data-act="why" data-k="${esc(k)}" role="button" tabindex="0"` : '';
+const sgn = v => (v < -0.004 ? '− ' : '+ ') + rs(Math.abs(v));
+const W$ = {stack: []};
+const sum = (xs, f) => xs.reduce((a, x) => a + f(x), 0);
+const ymdLabel = d => fmtDate(d);
+// An entry as a line: tap it to edit the entry.
+function entLine(t, X, v) {
+  const c = X.cm[t.cat], how = t.card ? cardName(t.card) : t.acct === 'cash' ? 'Cash' : (X.am[t.acct] || {}).name || '';
+  return {label: t.note || (c ? c.name : 'Unlisted'), sub: [fmtDM(t.date), t.note && c ? c.name : '', how, t.refund ? 'refund' : ''].filter(Boolean).join(' · '), v, t};
+}
+const byDateDesc = (a, b) => a.date === b.date ? (b.at || 0) - (a.at || 0) : (a.date < b.date ? 1 : -1);
+function spendLines(list, X) { return list.slice().sort(byDateDesc).map(t => entLine(t, X, t.refund ? -t.amount : t.amount)); }
+
+// Card: opening + spends (by bill) + your-figure corrections − payments = total owed.
+function whyCard(id, X) {
+  const card = cardList().find(c => c.id === id); if (!card) return null;
+  const L = cardLedger(card, X), lines = [];
+  if (L.sd0 && (L.openB || L.openU)) lines.push({label: 'Owed when you started tracking', sub: `On ${fmtDate(L.openDate)}: ${rs(L.openB)} billed + ${rs(L.openU)} not yet billed`, v: L.openB + L.openU});
+  L.stmts.slice().reverse().forEach(s => {
+    if (!s.items.length) return; const st = stStatus(s);
+    lines.push({label: (s.closed ? 'Bill of ' : 'Next bill, ') + fmtDM(s.sd), sub: `${s.items.length} spend${s.items.length === 1 ? '' : 's'} · ${st.t}`, v: sum(s.items, i => i.v),
+      items: s.items.slice().sort((a, b) => byDateDesc(a.t, b.t)).map(i => entLine(i.t, X, i.v))});
+  });
+  L.stmts.filter(s => s.own && Math.abs(s.billed - s.calc) > 0.004).forEach(s => lines.push({label: 'Your figure on bill of ' + fmtDM(s.sd), sub: `Bank's bill ${rs(s.billed)} instead of ${rs(s.calc)} worked out`, v: s.billed - s.calc}));
+  if (L.pays.length) lines.push({label: 'Payments made', sub: L.pays.length + ' payment' + (L.pays.length === 1 ? '' : 's'), v: -sum(L.pays, p => p.v),
+    items: L.pays.slice().sort((a, b) => byDateDesc(a.t, b.t)).map(p => entLine(p.t, X, -p.v))});
+  const split = [{label: 'Billed, to pay', sub: L.unpaid.length ? L.unpaid.map(s => 'bill of ' + fmtDM(s.sd)).join(', ') : 'nothing waiting', v: L.dueNow}];
+  if (L.nextSt) split.push({label: 'On the next bill', sub: 'bills on ' + fmtDate(L.nextSt.sd), v: L.nextSt.left});
+  if (L.laterAmt > 0.004) split.push({label: 'On later bills', v: L.laterAmt});
+  if (L.credit > 0.004) split.push({label: 'Paid ahead', sub: 'reduces your next bill', v: -L.credit});
+  return {title: card.name, head: 'Total owed', value: rs(L.owed), sections: [
+    {title: 'Added and taken off', lines: lines.length ? lines : [{label: 'No spends or payments yet', text: ''}], total: {label: 'Total owed', v: L.owed}},
+    {title: 'Where the total owed sits', lines: split, total: {label: 'Total owed', v: L.owed}}]};
+}
+// A Wealth account: its balance is the figure you recorded. Shows the history and the entries since.
+function whyAcct(id, X) {
+  const a = state.config.accounts.find(x => x.id === id); if (!a) return null;
+  const L = X.latest[a.id], hist = [];
+  let prev = null;
+  X.snaps.forEach(s => { const v = (s.values || {})[a.id]; if (typeof v !== 'number') return; hist.push({date: s.date, v, ch: prev == null ? null : v - prev}); prev = v; });
+  const counted = a.counted !== false;
+  const how = [{label: 'Counted in net worth', text: counted ? 'Yes' : 'No'}, {label: 'Liquid money', text: a.liquid && counted ? 'Yes' : 'No'}];
+  if (a.owner || a.cls) how.push({label: 'Owner · kind', text: [a.owner, a.cls].filter(Boolean).join(' · ')});
+  if (a.matures) how.push({label: 'Matures', text: a.matures});
+  const secs = [];
+  if (hist.length) secs.push({title: 'Balances you recorded', plain: true, lines: hist.slice().reverse().map(h => ({label: ymdLabel(h.date), sub: h.ch == null ? 'first record' : (h.ch >= 0 ? 'up ' : 'down ') + rs(Math.abs(h.ch)) + ' since the one before', v: h.v}))});
+  else secs.push({title: 'Balances you recorded', lines: [{label: 'No balance recorded yet', text: '—'}]});
+  // Entries paid from or into this account after the last record: shown, not added (the balance is what you recorded).
+  const since = L ? L.date : '', mv = X.txns.filter(t => t.acct === a.id && t.date > since).sort(byDateDesc).map(t => {
+    const ty = X.typeOf(t), v = ty === 'Income' ? t.amount : ty === 'Expense' && t.refund ? t.amount : -t.amount; return entLine(t, X, v); });
+  if (mv.length) secs.push({title: 'Entries since ' + (since ? fmtDM(since) : 'the start'), note: 'Not added to the balance above. Record today\'s balances to bring it up to date.', lines: mv, total: {label: 'Money in − money out', v: sum(mv, l => l.v)}});
+  secs.push({title: 'How it counts', lines: how});
+  return {title: a.name, head: L ? 'Balance on ' + fmtDate(L.date) : 'Balance', value: L ? rs(L.v) : '—', sections: secs};
+}
+const acctLine = (a, X, v) => { const L = X.latest[a.id];
+  return {label: a.name, sub: [a.owner, a.cls, L ? 'as of ' + fmtDM(L.date) : 'no balance yet'].filter(Boolean).join(' · '), v: v == null ? (L ? L.v : 0) : v, k: 'w-acct:' + a.id}; };
+const cardLines = (W0, neg) => W0.cardLs.map(L => ({label: L.card.name, sub: 'credit card · billed + not yet billed', v: neg ? -L.owed : L.owed, k: 'card:' + L.card.id}));
+function whyBuild(k) {
+  if (!state.config) return null;
+  const X = ctx(), i = k.indexOf(':'), kind = i < 0 ? k : k.slice(0, i), arg = i < 0 ? '' : k.slice(i + 1);
+  const key = state.cur, list = X.byCycle[key] || [], T = cycleTotals(list, X), cl = cycleLabel(key);
+  const cats = state.config.categories.filter(c => c.type === 'Expense');
+  const budgetTotal = cats.reduce((a, c) => a + budgetOf(c, T.byCat[c.id]), 0);
+  if (kind === 'ov-inc') {
+    const xs = list.filter(t => X.typeOf(t) === 'Income').sort(byDateDesc).map(t => entLine(t, X, t.amount));
+    return {title: 'Income', head: cl, value: rs(T.inc), sections: [{title: 'Money received', lines: xs.length ? xs : [{label: 'No income entries in ' + cl, text: ''}], total: {label: 'Income', v: T.inc}}]};
+  }
+  if (kind === 'ov-exp') {
+    const xs = cats.filter(c => T.byCat[c.id]).map(c => ({label: c.name, sub: list.filter(t => t.cat === c.id).length + ' entries', v: T.byCat[c.id], k: 'ov-cat:' + c.id}));
+    const unk = Object.keys(T.byCat).filter(id => !X.cm[id]).reduce((a, id) => a + T.byCat[id], 0);
+    if (unk) xs.push({label: 'Unlisted', sub: 'category no longer in Setup', v: unk, k: 'ov-unl'});
+    return {title: 'Spent', head: cl, value: rs(T.exp), sections: [
+      {title: 'By category', lines: xs.length ? xs : [{label: 'No spending in ' + cl, text: ''}], total: {label: 'Spent', v: T.exp}},
+      {title: 'Against the budget', lines: [{label: 'Budget', sub: 'all categories' + (cats.some(c => c.unplanned) ? ' · unplanned ones count what was spent' : ''), v: budgetTotal}, {label: 'Spent', v: -T.exp}],
+        total: {label: budgetTotal - T.exp >= 0 ? 'Left' : 'Over budget', v: budgetTotal - T.exp}}]};
+  }
+  if (kind === 'ov-saved') return {title: 'Saved', head: cl, value: T.inc > 0 ? rs(T.inc - T.exp) : '—', sections: [{title: 'Income − spent', lines: [
+    {label: 'Income', v: T.inc, k: 'ov-inc'}, {label: 'Spent', v: -T.exp, k: 'ov-exp'}], total: {label: 'Saved', v: T.inc - T.exp}},
+    {title: 'Not counted as spending', lines: [{label: 'Moved between accounts', sub: 'card bill payments, ATM cash, savings, loans', text: rs(T.trf)}]}]};
+  if (kind === 'ov-rate') return {title: 'Savings rate', head: cl, value: pct(T.inc > 0 ? (T.inc - T.exp) / T.inc : null), sections: [{title: 'Saved ÷ income', lines: [
+    {label: 'Saved', text: rs(T.inc - T.exp), k: 'ov-saved'}, {label: 'Income', text: rs(T.inc), k: 'ov-inc'}], total: {label: 'Savings rate', text: T.inc > 0 ? rs(T.inc - T.exp) + ' ÷ ' + rs(T.inc) + ' = ' + pct((T.inc - T.exp) / T.inc) : 'No income yet'}}]};
+  if (kind === 'ov-cat' || kind === 'ov-unl') {
+    const c = X.cm[arg], xs = list.filter(t => X.typeOf(t) === 'Expense' && (kind === 'ov-unl' ? !X.cm[t.cat] : t.cat === arg));
+    if (kind === 'ov-cat' && !c) return null;
+    const spent = sum(xs, t => t.refund ? -t.amount : t.amount), secs = [{title: 'Entries', lines: xs.length ? spendLines(xs, X) : [{label: 'No entries in ' + cl, text: ''}], total: {label: 'Spent', v: spent}}];
+    if (c && !c.unplanned && +c.budget > 0) secs.push({title: 'Against the budget', lines: [{label: 'Budget', v: +c.budget}, {label: 'Spent', v: -spent}], total: {label: spent > +c.budget ? 'Over budget' : 'Left', v: +c.budget - spent}});
+    if (c && c.unplanned) secs.push({title: 'Budget', lines: [{label: 'Unplanned: its budget is what was spent', text: rs(spent)}]});
+    return {title: c ? c.name : 'Unlisted', head: cl, value: rs(spent), sections: secs};
+  }
+  if (kind === 'ov-cash') {
+    const cs = state.config.cashStart || {}, from = /^\d{4}-\d{2}-\d{2}$/.test(cs.date || '') ? cs.date : '', g = {inc: [], exp: [], atm: [], out: []};
+    X.txns.forEach(t => { if (from && t.date < from) return; const ty = X.typeOf(t), atm = isAtm(t.cat, X.cm);
+      if (t.acct === 'cash') { if (ty === 'Income') g.inc.push(entLine(t, X, t.amount)); else if (ty === 'Expense') g.exp.push(entLine(t, X, t.refund ? t.amount : -t.amount)); else if (!atm) g.out.push(entLine(t, X, -t.amount)); }
+      else if (ty === 'Transfer' && atm) g.atm.push(entLine(t, X, t.amount)); });
+    const grp = (label, xs) => xs.length ? [{label, sub: xs.length + ' entr' + (xs.length === 1 ? 'y' : 'ies'), v: sum(xs, l => l.v), items: xs.sort((a, b) => byDateDesc(a.t, b.t))}] : [];
+    const lines = (from ? [{label: 'Starting cash', sub: 'on ' + fmtDate(from) + ' (Setup)', v: +cs.amount || 0}] : []).concat(grp('ATM withdrawals', g.atm), grp('Cash received', g.inc), grp('Paid in cash', g.exp), grp('Cash moved out', g.out));
+    const v = cashInHand(X).v;
+    return {title: 'Cash in hand', head: 'Today', value: rs(v), sections: [{title: 'Added and taken off', lines, total: {label: 'Cash in hand', v}}]};
+  }
+  if (kind === 'card') return whyCard(arg, X);
+  const W0 = wealthCalc(X), G = wealthGroups(X), counted = W0.accts.filter(a => a.counted !== false && X.latest[a.id]);
+  const left = {label: cycleLabel(W0.bl.key) + ' budget still to spend', sub: `budget ${rs(W0.bl.budget)} − spent ${rs(W0.bl.spent)}`, v: -W0.bl.left, k: 'w-left'};
+  if (kind === 'w-nw') {
+    const pos = counted.filter(a => W0.val(a) >= 0), neg = counted.filter(a => W0.val(a) < 0), gross = sum(pos, a => W0.val(a));
+    const off = neg.map(a => acctLine(a, X)).concat(cardLines(W0, true), [left]);
+    const out = W0.accts.filter(a => a.counted === false || !X.latest[a.id]).map(a => ({label: a.name, sub: a.counted === false ? 'marked not counted in Setup' : 'no balance recorded yet', text: X.latest[a.id] ? rs(X.latest[a.id].v) : '—', k: 'w-acct:' + a.id}));
+    const secs = [{title: 'What you have (gross)', lines: pos.length ? pos.map(a => acctLine(a, X)) : [{label: 'No balances recorded yet', text: ''}], total: {label: 'Gross assets', v: gross}},
+      {title: 'Taken off', lines: off, total: {label: 'Taken off', v: sum(off, l => l.v)}},
+      {title: 'Net worth', lines: [{label: 'Gross assets', v: gross}, {label: 'Taken off', v: sum(off, l => l.v)}], total: {label: 'Net worth', v: W0.nw}}];
+    if (out.length) secs.push({title: 'Not added', lines: out});
+    return {title: 'Net worth', head: 'Today', value: rs(W0.nw), sub: rsShort(W0.nw), sections: secs};
+  }
+  if (kind === 'w-liq') {
+    const liq = counted.filter(a => a.liquid), lines = liq.map(a => acctLine(a, X)).concat(cardLines(W0, true));
+    const out = counted.filter(a => !a.liquid).map(a => ({label: a.name, sub: 'not liquid (Setup)', text: rs(W0.val(a)), k: 'w-acct:' + a.id}));
+    const secs = [{title: 'Usable within days', lines: lines.length ? lines : [{label: 'No liquid accounts', text: ''}], total: {label: 'Liquid money', v: W0.liquid}}];
+    if (out.length) secs.push({title: 'Not added', lines: out});
+    return {title: 'Liquid money', head: 'Today', value: rs(W0.liquid), sub: rsShort(W0.liquid), sections: secs};
+  }
+  if (kind === 'w-debt') {
+    const lines = counted.filter(a => W0.val(a) < 0).map(a => acctLine(a, X, -W0.val(a))).concat(W0.cardOwed > 0 ? cardLines(W0, false) : []);
+    return {title: 'Debts', head: 'Today', value: rs(-W0.debts), sub: rsShort(-W0.debts), sections: [{title: 'What you owe', lines: lines.length ? lines : [{label: 'No debts', text: ''}], total: {label: 'Debts', v: -W0.debts}}]};
+  }
+  if (kind === 'w-cover') {
+    const nowKey = cycleKeyOf(todayStr()), closed = Object.keys(X.byCycle).filter(k => k < nowKey).sort().slice(-6)
+      .map(k => ({k, v: cycleTotals(X.byCycle[k], X).exp})).filter(x => x.v > 0);
+    const spend = closed.length ? closed.map(x => ({label: cycleLabel(x.k), v: x.v})) : [{label: 'Monthly budget', sub: 'until a full cycle closes', v: W0.sp.v}];
+    return {title: 'Months of cover', head: 'How long liquid money lasts', value: W0.cover == null ? '—' : W0.cover.toFixed(1), sections: [
+      {title: 'Monthly spending', plain: true, lines: spend, total: closed.length > 1 ? {label: 'Average', text: rs(sum(closed, x => x.v)) + ' ÷ ' + closed.length + ' = ' + rs(W0.sp.v)} : {label: 'Monthly spending', v: W0.sp.v}},
+      {title: 'Liquid ÷ monthly spending', lines: [{label: 'Liquid money', text: rs(W0.liquid), k: 'w-liq'}, {label: 'Monthly spending', text: rs(W0.sp.v)}],
+        total: {label: 'Months of cover', text: W0.cover == null ? '—' : rs(W0.liquid) + ' ÷ ' + rs(W0.sp.v) + ' = ' + W0.cover.toFixed(1)}}]};
+  }
+  if (kind === 'w-grp') {
+    const gi = +arg, def = G[gi]; if (!def) return null;
+    const xs = W0.accts.filter(def[1]), extra = gi === 1 && W0.cardLs.length > 0;
+    const lines = xs.map(a => acctLine(a, X)).concat(extra ? cardLines(W0, true) : []);
+    const total = sum(xs, a => W0.val(a)) - (extra ? W0.cardOwed : 0);
+    return {title: def[0], head: 'Today', value: rs(total), sections: [{title: gi === 2 ? 'Shown, but left out of net worth' : 'Added up', lines, total: {label: def[0], v: total}}]};
+  }
+  if (kind === 'w-left') {
+    const bk = W0.bl.key, T2 = cycleTotals(X.byCycle[bk], X);
+    const bud = cats.map(c => ({c, b: budgetOf(c, T2.byCat[c.id])})).filter(x => x.b > 0).map(x => ({label: x.c.name, sub: x.c.unplanned ? 'unplanned: as spent' : '', v: x.b}));
+    const sp = cats.filter(c => T2.byCat[c.id]).map(c => ({label: c.name, v: -T2.byCat[c.id], k: 'ov-cat:' + c.id}));
+    const unk = Object.keys(T2.byCat).filter(id => !X.cm[id]).reduce((a, id) => a + T2.byCat[id], 0); if (unk) sp.push({label: 'Unlisted', v: -unk});
+    const lines = [{label: 'Budget for ' + cycleLabel(bk), v: W0.bl.budget, items: bud}, {label: 'Spent so far', v: -W0.bl.spent, items: sp}];
+    if (W0.bl.budget - W0.bl.spent < 0) lines.push({label: 'Spent more than the budget', sub: 'nothing left, so nothing is taken off', v: W0.bl.spent - W0.bl.budget});
+    return {title: 'Still to spend', head: cycleLabel(bk) + ' · taken off net worth', value: rs(W0.bl.left), sections: [{title: 'Budget − spent', note: cycleLabel(bk) !== cl ? 'This is always the current month, ' + cycleLabel(bk) + '.' : '', lines, total: {label: 'Still to spend', v: W0.bl.left}}]};
+  }
+  if (kind === 'w-acct') return whyAcct(arg, X);
+  if (kind === 'w-snap') {
+    const run = {}; X.snaps.forEach(s => { if (s.date <= arg) for (const [id, v] of Object.entries(s.values || {})) if (typeof v === 'number') run[id] = v; });
+    const lines = Object.keys(run).filter(id => X.am[id] && X.am[id].counted !== false).map(id => ({label: X.am[id].name, sub: X.am[id].cls || '', v: run[id], k: 'w-acct:' + id}));
+    W0.cardLs.forEach(L => { const o = cardOwedAsOf(L, arg); if (Math.abs(o) > 0.004) lines.push({label: L.card.name, sub: 'credit card owed on that day', v: -o, k: 'card:' + L.card.id}); });
+    const p = W0.series.find(z => z.date === arg); if (!p) return null;
+    return {title: 'Net worth on ' + fmtDate(arg), head: 'From the balances you recorded', value: rs(p.nw), sections: [{title: 'Added and taken off', note: 'Accounts not in this snapshot use their last earlier balance.', lines, total: {label: 'Net worth', v: p.nw}}]};
+  }
+  if (kind === 'fd') {
+    const rate = Math.min(30, Math.max(0, +readPref().fdRate || 7)), r = rate / 100 / 12;
+    const fds = state.config.accounts.filter(a => !a.pay && a.cls === 'FD' && X.latest[a.id] && X.latest[a.id].v > 0 && (arg === 'all' || a.id === arg));
+    if (!fds.length) return null;
+    const P = sum(fds, a => X.latest[a.id].v), f = m => sum(fds, a => X.latest[a.id].v * Math.pow(1 + r, m));
+    const secs = [];
+    if (fds.length > 1) secs.push({title: 'FDs added up', lines: fds.map(a => acctLine(a, X)), total: {label: 'Today', v: P}});
+    secs.push({title: 'Monthly compounding at ' + rate + '% a year', note: 'Each month adds ' + (rate / 12).toFixed(3).replace(/0+$/, '') + '% (the yearly rate ÷ 12) to the month before.', lines: [
+      {label: 'Interest this month', sub: rs(P) + ' × ' + rate + '% ÷ 12', text: rs(P * r)},
+      {label: 'In 1 year', sub: 'balance × (1 + ' + rate + '% ÷ 12)^12', text: rs(f(12))},
+      {label: 'In 3 years', sub: 'balance × (1 + ' + rate + '% ÷ 12)^36', text: rs(f(36))},
+      {label: 'In 5 years', sub: 'balance × (1 + ' + rate + '% ÷ 12)^60', text: rs(f(60))}].concat(fds.map(a => { const mt = monthsTo(a.matures); return mt
+        ? {label: (fds.length > 1 ? a.name + ' at maturity' : 'At maturity'), sub: mt.label + ' · ' + mt.n + ' months · balance × (1 + ' + rate + '% ÷ 12)^' + mt.n, text: rs(X.latest[a.id].v * Math.pow(1 + r, mt.n))}
+        : {label: (fds.length > 1 ? a.name + ' at maturity' : 'At maturity'), sub: 'no Matures date in Setup', text: '—'}; }))});
+    return {title: fds.length > 1 ? 'All FDs' : fds[0].name, head: 'Today', value: rs(P), sections: secs};
+  }
+  if (kind === 'c-owed' || kind === 'c-due' || kind === 'c-next') {
+    if (!W0.cardLs.length) return null;
+    if (kind === 'c-owed') return {title: 'Total owed on cards', head: 'Billed plus not yet billed', value: rs(W0.cardOwed), sections: [{title: 'Each card', lines: cardLines(W0, false), total: {label: 'Total owed', v: W0.cardOwed}}]};
+    if (kind === 'c-due') { const xs = W0.cardLs.flatMap(L => L.unpaid.map(s => ({label: L.card.name, sub: 'bill of ' + fmtDM(s.sd) + ' · pay by ' + fmtDate(s.due) + (s.paid > 0.004 ? ' · ' + rs(s.paid) + ' already paid' : ''), v: s.left, k: 'card:' + L.card.id})));
+      const v = sum(W0.cardLs, L => L.dueNow);
+      return {title: 'Billed, to pay', head: 'Bills already made', value: rs(v), sections: [{title: 'Unpaid bills', lines: xs.length ? xs : [{label: 'No bill is waiting', text: ''}], total: {label: 'Billed, to pay', v}}]}; }
+    const xs = W0.cardLs.filter(L => L.nextSt).map(L => ({label: L.card.name, sub: 'bills on ' + fmtDate(L.nextSt.sd) + ' · ' + L.nextSt.items.length + ' spends', v: L.nextSt.left, k: 'card:' + L.card.id}));
+    const v = sum(W0.cardLs, L => L.nextSt ? L.nextSt.left : 0);
+    return {title: 'On next bills', head: 'Spent since the last bills', value: rs(v), sections: [{title: 'Each card', lines: xs, total: {label: 'On next bills', v}}]};
+  }
+  return null;
+}
+function whyRow(l, plain) {
+  const neg = l.text == null && l.v < -0.004;
+  const amt = l.text != null ? esc(l.text) : plain ? rs(l.v) : sgn(l.v);
+  const inner = `<span class="l"><span class="t1">${esc(l.label)}</span>${l.sub ? `<span class="t2">${esc(l.sub)}</span>` : ''}</span><span class="amt num${neg && !plain ? ' neg' : ''}">${amt}</span>`;
+  if (l.items && l.items.length) return `<details class="wgrp"><summary class="wrow">${inner}<span class="chev">▾</span></summary><div class="wsub">${l.items.map(x => whyRow(x, plain)).join('')}</div></details>`;
+  if (l.k) return `<button type="button" class="wrow go" data-act="why-go" data-k="${esc(l.k)}">${inner}<span class="chev">›</span></button>`;
+  if (l.t) return `<button type="button" class="wrow go" data-act="edit" data-id="${esc(l.t.id)}" data-doc="${esc(l.t._doc)}">${inner}<span class="chev">›</span></button>`;
+  return `<div class="wrow">${inner}<span class="chev"></span></div>`;
+}
+function whyHtml(d) {
+  return `<div class="why-h">${W$.stack.length > 1 ? '<button type="button" class="btn ghost sm" data-act="why-back">‹ Back</button>' : ''}<h3>${esc(d.title)}</h3></div>
+    <div class="why-big"><span class="lbl">${esc(d.head || '')}</span><span class="v num">${esc(d.value)}</span>${d.sub ? `<span class="hint">${esc(d.sub)}</span>` : ''}</div>
+    ${d.sections.map(s => `<section class="why-s"><h4>${esc(s.title)}</h4>${s.note ? `<p class="hint">${esc(s.note)}</p>` : ''}
+      <div class="why-l">${s.lines.map(l => whyRow(l, s.plain)).join('')}
+      ${s.total ? `<div class="wrow wtot"><span class="l"><span class="t1">= ${esc(s.total.label)}</span></span><span class="amt num">${s.total.text != null ? esc(s.total.text) : rs(s.total.v)}</span><span class="chev"></span></div>` : ''}</div></section>`).join('')}
+    <div class="sheet-actions"><button type="button" class="btn primary" data-act="why-close">Done</button></div>`;
+}
+function whyShow() {
+  const k = W$.stack[W$.stack.length - 1], d = k && whyBuild(k), box = $('#whyBox');
+  if (!d) { W$.stack.pop(); if (W$.stack.length) return whyShow(); $('#whyScrim').hidden = true; return; }
+  const h = whyHtml(d); if (box.dataset.k === k && box.innerHTML === h) return;
+  const same = box.dataset.k === k, open = same ? [...box.querySelectorAll('details')].map(x => x.open) : [], top = same ? box.scrollTop : 0;
+  box.innerHTML = h; box.dataset.k = k;
+  if (same) { box.querySelectorAll('details').forEach((x, i) => { if (open[i]) x.open = true; }); box.scrollTop = top; } else box.scrollTop = 0;
+  $('#whyScrim').hidden = false;
+}
+function openWhy(k, push) { if (!push) W$.stack = []; W$.stack.push(k); $('#whyBox').dataset.k = ''; whyShow(); }
+function closeWhy() { $('#whyScrim').hidden = true; W$.stack = []; }
+document.addEventListener('click', ev => {
+  const b = ev.target.closest('[data-act]'); if (!b) return;
+  const act = b.dataset.act;
+  if (act === 'why') { if (ev.target.closest('a, input, button:not([data-act="why"]), details')) return; openWhy(b.dataset.k, false); }
+  else if (act === 'why-go') openWhy(b.dataset.k, true);
+  else if (act === 'why-back') { W$.stack.pop(); $('#whyBox').dataset.k = ''; whyShow(); }
+  else if (act === 'why-close') closeWhy();
+  else if (act === 'edit' && b.closest('#whyScrim')) closeWhy();
+});
+document.addEventListener('keydown', ev => {
+  if ((ev.key === 'Enter' || ev.key === ' ') && ev.target && ev.target.matches && ev.target.matches('[data-act="why"]')) { ev.preventDefault(); openWhy(ev.target.dataset.k, false); }
 });
 
 /* ---------- trend ---------- */
@@ -1265,7 +1533,7 @@ function cardStripHtml(X) {
   const up = Ls.flatMap(L => L.unpaid.map(s => ({L, s}))).sort((a, b) => a.s.due < b.s.due ? -1 : a.s.due > b.s.due ? 1 : 0);
   const coming = Ls.reduce((a, L) => a + (L.nextSt ? L.nextSt.left : 0) + L.laterAmt, 0);
   const rows = up.map(({L, s}) => { const st = stStatus(s);
-    return `<div class="li"><div class="l"><div class="t1">${esc(L.card.name)}</div><div class="t2">Bill of ${fmtDM(s.sd)} · pay by ${fmtDate(s.due)}</div></div>
+    return `<div class="li tap"${whyAttr('card:' + L.card.id)}><div class="l"><div class="t1">${esc(L.card.name)}</div><div class="t2">Bill of ${fmtDM(s.sd)} · pay by ${fmtDate(s.due)}</div></div>
       <div style="text-align:right;display:flex;flex-direction:column;align-items:flex-end;gap:3px"><div class="amt num">${rs(s.left)}</div><span class="chip ${st.c}">${st.t}</span></div></div>`; }).join('');
   return `<section class="card list"><div class="sec-h"><h2>Card bills to pay</h2><a class="hint" href="#cards">Card bills</a></div>
     ${rows || '<div class="empty">No card bill is waiting to be paid.</div>'}
@@ -1294,7 +1562,7 @@ function tileHtml(L) {
       <td class="n">${rs(s.paid)}</td><td class="n">${rs(s.left)}</td><td><span class="chip ${st.c}">${st.t}</span></td><td class="from">${from}</td></tr>`;
   }).join('');
   return `<article class="ctile">
-    <header class="ct-h"><div><div class="ct-name">${esc(c.name)}</div><div class="ct-sub">Bill on the ${ordinal(L.S)} · ${L.D ? 'pay by the ' + ordinal(L.D) : 'pay within about 20 days'}</div></div>
+    <header class="ct-h"${whyAttr('card:' + c.id)}><div><div class="ct-name">${esc(c.name)}</div><div class="ct-sub">Bill on the ${ordinal(L.S)} · ${L.D ? 'pay by the ' + ordinal(L.D) : 'pay within about 20 days'}</div></div>
       <div class="ct-owed"><span class="lbl">Total owed</span><span class="v num">${rs(L.owed)}</span></div></header>
     ${lim ? `<div class="ct-limit"><div class="bar" role="img" aria-label="${pct(used / lim)} of limit used"><span class="fill ${used / lim > 0.8 ? 'bad' : used / lim > 0.5 ? 'warn' : 'good'}" style="width:${Math.min(1, used / lim) * 100}%"></span></div><span class="s">${rs(used)} of ${rs(lim)} limit used (${pct(used / lim)}) · ${rs(Math.max(0, lim - used))} available</span></div>` : ''}
     <div class="ct-grid"><div class="ct-box">${billBox}</div><div class="ct-box">${nextBox}</div></div>
@@ -1323,9 +1591,9 @@ function renderCards(X) {
     ? `Pay <b>${rs(nx.s.left)}</b> on <b>${esc(nx.L.card.name)}</b> by <b>${fmtDate(nx.s.due)}</b> (${nxSt.t.toLowerCase()}). In all you owe <b>${rs(owed)}</b> on your cards: <b>${rs(dueNow)}</b> is already billed and <b>${rs(nextAmt + laterAmt)}</b> will be on the coming bills.`
     : `No card bill is waiting to be paid. <b>${rs(nextAmt + laterAmt)}</b> will be on your coming bills.`;
   const kpis = `<div class="card kpis">
-    <div class="kpi"><span class="lbl">Billed, to pay</span><span class="val">${rs(dueNow)}</span><span class="sub">${up.length} bill${up.length === 1 ? '' : 's'} waiting</span></div>
-    <div class="kpi"><span class="lbl">On next bills</span><span class="val">${rs(nextAmt)}</span><span class="sub">${laterAmt > 0.005 ? rs(laterAmt) + ' more on later bills' : 'Spent since the last bills'}</span></div>
-    <div class="kpi"><span class="lbl">Total owed on cards</span><span class="val">${rs(owed)}</span><span class="sub">Billed plus not yet billed</span></div>
+    <div class="kpi"${whyAttr('c-due')}><span class="lbl">Billed, to pay</span><span class="val">${rs(dueNow)}</span><span class="sub">${up.length} bill${up.length === 1 ? '' : 's'} waiting</span></div>
+    <div class="kpi"${whyAttr('c-next')}><span class="lbl">On next bills</span><span class="val">${rs(nextAmt)}</span><span class="sub">${laterAmt > 0.005 ? rs(laterAmt) + ' more on later bills' : 'Spent since the last bills'}</span></div>
+    <div class="kpi"${whyAttr('c-owed')}><span class="lbl">Total owed on cards</span><span class="val">${rs(owed)}</span><span class="sub">Billed plus not yet billed</span></div>
     <div class="kpi"><span class="lbl">Next payment</span><span class="val">${nx ? fmtDM(nx.s.due) : '—'}</span><span class="sub">${nx ? esc(nx.L.card.name) + ' · ' + nxSt.t : 'Nothing due'}</span></div>
   </div>`;
   const rowsB = []; let tot = 0;
@@ -1424,7 +1692,7 @@ function render() {
   renderChrome(X); renderBanner();
   const gate = $('#gate');
   if (!state.config) {
-    VIEWS.forEach(n => { $('#v-' + n).hidden = true; });
+    VIEWS.forEach(n => { $('#v-' + n).hidden = true; }); closeWhy();
     const known = state.got.config;
     gate.hidden = false;
     if (!signedIn()) { renderSignIn(gate); return; }
@@ -1445,6 +1713,7 @@ function render() {
   if (!state.dirty) { state.draft = clone(state.config); renderSetup(X); }
   fillDatalists(X);
   setView(state.view);
+  if (!$('#whyScrim').hidden) whyShow(); // keep an open breakdown up to date after a sync
 }
 function fillDatalists(X) {
   const members = new Set(), tags = new Set();
@@ -1786,8 +2055,8 @@ $('#eDel').addEventListener('click', async () => {
   try { await API.delTxn(editing.id, editing._doc); toast('Entry deleted'); closeEntry(); } catch (e) { $('#eErr').textContent = writeErr(e); $('#eErr').hidden = false; }
 });
 $('#balForm').addEventListener('submit', ev => { ev.preventDefault(); saveBalances(); });
-['entryScrim', 'balScrim', 'impScrim', 'copyScrim', 'vaultScrim'].forEach(id => $('#' + id).addEventListener('click', ev => { if (ev.target.id === id) { $('#' + id).hidden = true; if (id === 'entryScrim') editing = null; } }));
-document.addEventListener('keydown', ev => { if (ev.key === 'Escape') ['entryScrim', 'balScrim', 'impScrim', 'copyScrim', 'vaultScrim'].forEach(id => { $('#' + id).hidden = true; }); });
+['entryScrim', 'balScrim', 'impScrim', 'copyScrim', 'vaultScrim', 'whyScrim'].forEach(id => $('#' + id).addEventListener('click', ev => { if (ev.target.id === id) { $('#' + id).hidden = true; if (id === 'whyScrim') W$.stack = []; if (id === 'entryScrim') editing = null; } }));
+document.addEventListener('keydown', ev => { if (ev.key === 'Escape') ['entryScrim', 'balScrim', 'impScrim', 'copyScrim', 'vaultScrim', 'whyScrim'].forEach(id => { $('#' + id).hidden = true; }); });
 $('#cycPick').addEventListener('change', ev => { state.cur = ev.target.value; state.curPinned = state.cur !== cycleKeyOf(todayStr()); render(); });
 ['fCat', 'fType'].forEach(id => $('#' + id).addEventListener('change', () => renderEntries(ctx())));
 $('#fQ').addEventListener('input', () => renderEntries(ctx()));
