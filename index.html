@@ -636,6 +636,21 @@ body[data-view="notes"] .fab{display:none}
 .nm-wrap{flex-wrap:wrap}.nm-wrap .nm-b{flex:1 1 30%}
 .nlabform{display:flex;flex-direction:column;gap:12px}.nlabform .tin{min-height:46px;font-size:calc(17px*var(--fs,1))}
 .nlabform .nm-row{justify-content:flex-end}
+/* Setup: cards and adjustments */
+.card-row{grid-template-columns:minmax(0,2fr) 130px 170px auto;align-items:end}
+.card-row .k-more summary{cursor:pointer;padding:4px 0}
+.adjform{display:flex;flex-direction:column;gap:10px;padding:12px 16px 14px}
+.adjkind{align-self:stretch;display:grid;grid-template-columns:1fr 1fr}.adjkind .segb,.adjsign .segb{white-space:nowrap;padding:8px 12px}.adjexp{margin:0}
+.adjgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:10px;align-items:end}
+.adjgrid .f{display:block;min-width:0}.adjgrid .fl2{display:block;font-size:calc(13px*var(--fs,1));color:var(--ink-3);font-weight:600;margin-bottom:3px}
+.adjgrid select,.adjgrid input[type=date]{width:100%;border:1px solid var(--rule-2);background:var(--sheet);border-radius:7px;padding:7px 9px;min-height:40px}
+.adjgrid .tin{min-height:40px}.adjgrid .adjnote{grid-column:1/-1}
+.adjsign{grid-column:1/-1;justify-self:start;align-self:end}
+.adjrow .amt.neg{color:var(--bad-ink)}
+.filters #fPay{flex:1 1 150px}
+.cat-row{grid-template-columns:minmax(0,2fr) minmax(0,1.1fr) minmax(0,1fr) minmax(0,1fr) auto}
+@media (max-width:640px){.cat-row{grid-template-columns:repeat(3,minmax(0,1fr));grid-template-areas:"name name del" "short type budget"}.cat-row .c-short{grid-area:short}
+  .card-row{grid-template-columns:repeat(2,minmax(0,1fr)) auto;grid-template-areas:"name name del" "sd dd ."}}
 /* ===== text size and font ===== */
 .textb span{font-weight:800;font-size:19px;line-height:1;letter-spacing:-.02em}.textb small{font-size:14px;font-weight:700}
 .tx-prev{display:flex;flex-direction:column;gap:2px;padding:14px;border-radius:12px;background:var(--accent-soft)}
@@ -792,6 +807,7 @@ body[data-view="notes"] .fab{display:none}
       <select id="fType" aria-label="Filter by type">
         <option value="">All types</option><option>Expense</option><option>Income</option><option>Transfer</option>
       </select>
+      <select id="fPay" aria-label="Filter by payment"></select>
       <input id="fQ" type="search" placeholder="Search notes, tags, people" aria-label="Search entries">
     </div>
     <div id="entriesBody"></div>
@@ -1302,7 +1318,8 @@ function renderBanner() {
 
 /* ---------- overview ---------- */
 // Unplanned categories (e.g. Discretionary) have no budget up front: each cycle, their budget is what was spent.
-const budgetOf = (c, spent) => c.unplanned ? Math.max(0, spent || 0) : (+c.budget || 0);
+// Unplanned categories (Discretionary) have no budget: their spending counts in Spent but adds nothing to the budget.
+const budgetOf = (c, spent) => c.unplanned ? 0 : (+c.budget || 0);
 // Budget status, the same everywhere (tiles, totals, Trend):
 //   good = on track · warn = running ahead of the month (on course to go over) · bad = over budget · pur = spent outside the plan.
 // Fixed and once-in-a-while bills (rent, fees, premiums) are paid in one go, so they never count as "running fast".
@@ -1350,15 +1367,15 @@ function renderOverview(X) {
     const st = c ? catStatus(c, spent, key) : (spent ? 'pur' : ''), over = st === 'bad';
     const w = unplanned ? 100 : budget > 0 ? Math.min(spent / budget, 1) * 100 : (spent > 0 ? 100 : 0);
     const pace = c && budget > 0 && !unplanned && !isLumpy(c) && f > 0 && f < 1 ? `<b class="pace" style="left:${(f * 100).toFixed(1)}%" title="Where you would be at an even pace"></b>` : '';
-    const note = unplanned ? 'unplanned · as spent' : !budget ? 'no budget' : over ? rs(spent - budget) + ' over ' + rs(budget)
+    const note = unplanned ? 'no budget · extra spending' : !budget ? 'no budget' : over ? rs(spent - budget) + ' over ' + rs(budget)
       : st === 'warn' ? 'running fast · of ' + rs(budget) : 'of ' + rs(budget) + ' · ' + rs(budget - spent) + ' left';
     return `<div class="htile"${whyAttr(k)}><div class="hn">${esc(name)}</div><div class="ha num fit">${rs(spent)}</div>
       <div class="hb" role="img" aria-label="${esc(name)}: ${rs(spent)}${budget > 0 && !unplanned ? ' of ' + rs(budget) : ''}, ${st ? STATUS_WORD[st] : 'nothing spent'}"><i class="${st || 'none'}" style="width:${w}%"></i>${pace}</div>
       <div class="hs ${st}">${sdot(st)}<span>${note}</span></div></div>`;
   };
-  const ch = cashInHand(X), cs = state.config.cashStart || {};
-  const cashTile = ch.any ? `<div class="htile cashtile"${whyAttr('ov-cash')}><div class="hn">Cash in hand</div><div class="ha num">${rs(ch.v)}</div>
-      <div class="hs">${/^\d{4}-\d{2}-\d{2}$/.test(cs.date || '') ? 'started ' + rs(+cs.amount || 0) + ' on ' + fmtDM(cs.date) : 'set your starting cash in Setup'}</div></div>` : '';
+  const ch = cashInHand(X);
+  const cashTile = ch.any ? `<div class="htile cashtile"${whyAttr(ch.accts.length === 1 ? 'w-acct:' + ch.accts[0].id : 'ov-cash')}><div class="hn">Cash in hand</div><div class="ha num fit">${rs(ch.v)}</div>
+      <div class="hs">recorded ${fmtDM(ch.date)} in Wealth</div></div>` : '';
   const tiles = cashTile + cats.map(c => { const spent = T.byCat[c.id] || 0, budget = budgetOf(c, spent); return (budget > 0 || spent) ? tile(c, c.name, spent, budget, !!c.unplanned, 'ov-cat:' + c.id) : ''; }).join('')
     + (unknown ? tile(null, 'Unlisted', unknown, 0, false, 'ov-unl') : '');
 
@@ -1377,7 +1394,18 @@ function fillCatOptions(sel, X, withAll, value) {
 function renderEntries(X) {
   const fc = $('#fCat'), keep = fc.value; fillCatOptions(fc, X, true, keep);
   const ft = $('#fType').value, q = $('#fQ').value.trim().toLowerCase();
+  // Payment filter: cash, any bank account, any card (cards and accounts are the same objects as everywhere else).
+  const fp = $('#fPay'), keepP = fp.value, usedA = new Set(), usedK = new Set(); X.txns.forEach(t => { if (t.acct && t.acct !== 'cash') usedA.add(t.acct); if (t.card) usedK.add(t.card); });
+  const banks = payBanks().concat([...usedA].filter(id => X.am[id] && !payBanks().some(a => a.id === id)).map(id => X.am[id]));
+  const cardsF = cardList().concat([...usedK].filter(id => !cardList().some(k => k.id === id)).map(id => ({id, name: cardName(id)})));
+  fp.innerHTML = '<option value="">All payments</option><option value="cash">Cash</option>' + (banks.length ? '<optgroup label="Bank accounts">' + banks.map(a => `<option value="a:${esc(a.id)}">${esc(a.name)} · bank</option>`).join('') + '</optgroup>' : '')
+    + (cardsF.length ? '<optgroup label="Credit cards">' + cardsF.map(k => `<option value="k:${esc(k.id)}">${esc(k.name)} · card</option>`).join('') + '</optgroup>' : '') + '<option value="none">Not recorded</option>';
+  fp.value = [...fp.options].some(o => o.value === keepP) ? keepP : '';
   let list = (X.byCycle[state.cur] || []).slice();
+  if (fp.value === 'cash') list = list.filter(t => t.acct === 'cash');
+  else if (fp.value === 'none') list = list.filter(t => !t.acct && !t.card);
+  else if (fp.value.startsWith('a:')) list = list.filter(t => t.acct === fp.value.slice(2));
+  else if (fp.value.startsWith('k:')) list = list.filter(t => t.card === fp.value.slice(2));
   if (fc.value) list = list.filter(t => t.cat === fc.value);
   if (ft) list = list.filter(t => X.typeOf(t) === ft);
   if (q) list = list.filter(t => [t.note, t.tag, t.member, (X.cm[t.cat] || {}).name, (X.am[t.acct] || {}).name].join(' ').toLowerCase().includes(q));
@@ -1392,8 +1420,8 @@ function renderEntries(X) {
         <span class="l"><span class="t1">${esc(c ? c.name : 'Unlisted')}${ty === 'Transfer' ? ' <span class="tag">Transfer</span>' : ''}${t.refund ? ' <span class="tag">Refund</span>' : ''}${t.tag ? ` <span class="tag">${esc(t.tag)}</span>` : ''}</span>
         <span class="t2">${meta || '&nbsp;'}</span></span>
         <span class="amt num ${ty === 'Income' || t.refund ? 'inc' : ty === 'Transfer' ? 'trf' : ''}">${ty === 'Income' ? '+' : t.refund ? '−' : ''}${rs(t.amount)}</span></button>`; }).join('')}</div></div>`; }).join('');
-  $('#entriesBody').innerHTML = `<div class="card ledger">${html || `<div class="empty">No entries match. ${(fc.value || ft || q) ? 'Clear the filters to see everything in ' + cycleLabel(state.cur) + '.' : 'Tap Add entry to log one.'}</div>`}
-    ${list.length ? `<div class="foot"><span>${list.length} entries</span><span>Spent <b class="num">${rs(T.exp)}</b></span><span>Income <b class="num">${rs(T.inc)}</b></span><span>Moved between accounts <b class="num">${rs(T.trf)}</b></span></div>` : ''}</div>`;
+  $('#entriesBody').innerHTML = `<div class="card ledger">${html || `<div class="empty">No entries match. ${(fc.value || ft || q || fp.value) ? 'Clear the filters to see everything in ' + cycleLabel(state.cur) + '.' : 'Tap Add entry to log one.'}</div>`}
+    ${list.length ? `<div class="foot"><span>${list.length} entr${list.length === 1 ? 'y' : 'ies'}</span><span>Spent <b class="num">${rs(T.exp)}</b></span><span>Income <b class="num">${rs(T.inc)}</b></span><span>Moved between accounts <b class="num">${rs(T.trf)}</b></span></div>` : ''}</div>`;
 }
 
 /* ---------- wealth ---------- */
@@ -1423,9 +1451,11 @@ function lineChart(series, W, H) {
 }
 // What is still to be spent this month: the month's budget (unplanned categories count what was spent) minus spending so far.
 function budgetLeft(X) {
+  // Still to spend: what each budgeted category has left this month. Overspending in one category, or
+  // Discretionary spending, doesn't shrink what's still set aside for the others.
   const key = cycleKeyOf(todayStr()), T = cycleTotals(X.byCycle[key], X);
-  const budget = state.config.categories.filter(c => c.type === 'Expense').reduce((a, c) => a + budgetOf(c, T.byCat[c.id]), 0);
-  return {key, budget, spent: T.exp, left: Math.max(0, budget - T.exp)};
+  const rows = state.config.categories.filter(c => c.type === 'Expense' && !c.unplanned && +c.budget > 0).map(c => { const b = +c.budget, sp = T.byCat[c.id] || 0; return {c, b, sp, left: Math.max(0, b - sp)}; });
+  return {key, rows, budget: rows.reduce((a, r) => a + r.b, 0), spent: T.exp, left: rows.reduce((a, r) => a + r.left, 0)};
 }
 // FDs: months until a "Matures" text such as "About Nov 2032", "Mar-2031" or "2030" (a bare year counts as its end).
 function monthsTo(text) {
@@ -1500,7 +1530,7 @@ function renderWealth(X) {
   }).join('');
   function setAside() {
     return `<section class="card list"><div class="sec-h tap"${whyAttr('w-left')}><h2>Still to spend this month</h2><span class="hint num">${rs(-bl.left)}</span></div>
-      <div class="li tap"${whyAttr('w-left')}><div class="l"><div class="t1">${esc(cycleLabel(bl.key))} budget left</div><div class="t2">Budget ${rs(bl.budget)} − spent ${rs(bl.spent)} · taken off net worth</div></div><div class="amt num">${rs(-bl.left)}</div></div></section>`;
+      <div class="li tap"${whyAttr('w-left')}><div class="l"><div class="t1">${esc(cycleLabel(bl.key))} budget left</div><div class="t2">Left in each budgeted category · taken off net worth</div></div><div class="amt num">${rs(-bl.left)}</div></div></section>`;
   }
   const snapsHtml = X.snaps.slice().reverse().map(s => { const p = series.find(z => z.date === s.date);
     return `<div class="li tap"${whyAttr('w-snap:' + s.date)}><div class="l"><div class="t1">${fmtDay(parseYmd(s.date))} ${parseYmd(s.date).getFullYear()}</div><div class="t2">${Object.keys(s.values || {}).length} accounts</div></div>
@@ -2066,7 +2096,7 @@ function whyBuild(k) {
     if (unk) xs.push({label: 'Unlisted', sub: 'category no longer in Setup', v: unk, k: 'ov-unl' + sfx});
     return {title: 'Spent', head: cl, value: rs(T.exp), sections: [
       {title: 'By category', lines: xs.length ? xs : [{label: 'No spending in ' + cl, text: ''}], total: {label: 'Spent', v: T.exp}},
-      {title: 'Against the budget', lines: [{label: 'Budget', sub: 'all categories' + (cats.some(c => c.unplanned) ? ' · unplanned ones count what was spent' : ''), v: budgetTotal}, {label: 'Spent', v: -T.exp}],
+      {title: 'Against the budget', lines: [{label: 'Budget', sub: 'all categories' + (cats.some(c => c.unplanned) ? ' · Discretionary has no budget' : ''), v: budgetTotal}, {label: 'Spent', v: -T.exp}],
         total: {label: budgetTotal - T.exp >= 0 ? 'Left' : 'Over budget', v: budgetTotal - T.exp}}]};
   }
   if (kind === 'ov-saved') return {title: 'Saved', head: cl, value: T.inc > 0 ? rs(T.inc - T.exp) : '—', sections: [{title: 'Income − spent', lines: [
@@ -2079,18 +2109,12 @@ function whyBuild(k) {
     if (kind === 'ov-cat' && !c) return null;
     const spent = sum(xs, t => t.refund ? -t.amount : t.amount), secs = [{title: 'Entries', lines: xs.length ? spendLines(xs, X) : [{label: 'No entries in ' + cl, text: ''}], total: {label: 'Spent', v: spent}}];
     if (c && !c.unplanned && +c.budget > 0) secs.push({title: 'Against the budget', lines: [{label: 'Budget', v: +c.budget}, {label: 'Spent', v: -spent}], total: {label: spent > +c.budget ? 'Over budget' : 'Left', v: +c.budget - spent}});
-    if (c && c.unplanned) secs.push({title: 'Budget', lines: [{label: 'Unplanned: its budget is what was spent', text: rs(spent)}]});
+    if (c && c.unplanned) secs.push({title: 'Budget', lines: [{label: 'No budget: spending outside the plan', sub: 'counts in Spent, adds nothing to the budget', text: rs(0)}]});
     return {title: c ? c.name : 'Unlisted', head: cl, value: rs(spent), sections: secs};
   }
-  if (kind === 'ov-cash') {
-    const cs = state.config.cashStart || {}, from = /^\d{4}-\d{2}-\d{2}$/.test(cs.date || '') ? cs.date : '', g = {inc: [], exp: [], atm: [], out: []};
-    X.txns.forEach(t => { if (from && t.date < from) return; const ty = X.typeOf(t), atm = isAtm(t.cat, X.cm);
-      if (t.acct === 'cash') { if (ty === 'Income') g.inc.push(entLine(t, X, t.amount)); else if (ty === 'Expense') g.exp.push(entLine(t, X, t.refund ? t.amount : -t.amount)); else if (!atm) g.out.push(entLine(t, X, -t.amount)); }
-      else if (ty === 'Transfer' && atm) g.atm.push(entLine(t, X, t.amount)); });
-    const grp = (label, xs) => xs.length ? [{label, sub: xs.length + ' entr' + (xs.length === 1 ? 'y' : 'ies'), v: sum(xs, l => l.v), items: xs.sort((a, b) => byDateDesc(a.t, b.t))}] : [];
-    const lines = (from ? [{label: 'Starting cash', sub: 'on ' + fmtDate(from) + ' (Setup)', v: +cs.amount || 0}] : []).concat(grp('ATM withdrawals', g.atm), grp('Cash received', g.inc), grp('Paid in cash', g.exp), grp('Cash moved out', g.out));
-    const v = cashInHand(X).v;
-    return {title: 'Cash in hand', head: 'Today', value: rs(v), sections: [{title: 'Added and taken off', lines, total: {label: 'Cash in hand', v}}]};
+  if (kind === 'ov-cash') { // more than one Cash account: added up
+    const ch = cashInHand(X);
+    return {title: 'Cash in hand', head: 'Recorded in Wealth', value: rs(ch.v), sections: [{title: 'Cash accounts', lines: ch.accts.map(a => acctLine(a, X)), total: {label: 'Cash in hand', v: ch.v}}]};
   }
   if (kind === 'm') { // one month: income − spent = saved, then where the money went
     const mk = arg, T2 = cycleTotals(X.byCycle[mk], X), O = cycleOutlook(T2, mk), ml = cycleLabel(mk);
@@ -2113,7 +2137,7 @@ function whyBuild(k) {
   }
   if (kind === 'card') return whyCard(arg, X);
   const W0 = wealthCalc(X), G = wealthGroups(X), counted = W0.accts.filter(a => a.counted !== false && X.latest[a.id]);
-  const left = {label: cycleLabel(W0.bl.key) + ' budget still to spend', sub: `budget ${rs(W0.bl.budget)} − spent ${rs(W0.bl.spent)}`, v: -W0.bl.left, k: 'w-left'};
+  const left = {label: cycleLabel(W0.bl.key) + ' budget still to spend', sub: 'what each budgeted category has left', v: -W0.bl.left, k: 'w-left'};
   if (kind === 'w-nw') {
     const pos = counted.filter(a => W0.val(a) >= 0), neg = counted.filter(a => W0.val(a) < 0), gross = sum(pos, a => W0.val(a));
     const off = neg.map(a => acctLine(a, X)).concat(cardLines(W0, true), [left]);
@@ -2152,13 +2176,8 @@ function whyBuild(k) {
     return {title: def[0], head: 'Today', value: rs(total), sections: [{title: gi === 2 ? 'Shown, but left out of net worth' : 'Added up', lines, total: {label: def[0], v: total}}]};
   }
   if (kind === 'w-left') {
-    const bk = W0.bl.key, T2 = cycleTotals(X.byCycle[bk], X);
-    const bud = cats.map(c => ({c, b: budgetOf(c, T2.byCat[c.id])})).filter(x => x.b > 0).map(x => ({label: x.c.name, sub: x.c.unplanned ? 'unplanned: as spent' : '', v: x.b}));
-    const sp = cats.filter(c => T2.byCat[c.id]).map(c => ({label: c.name, v: -T2.byCat[c.id], k: 'ov-cat:' + c.id}));
-    const unk = Object.keys(T2.byCat).filter(id => !X.cm[id]).reduce((a, id) => a + T2.byCat[id], 0); if (unk) sp.push({label: 'Unlisted', v: -unk});
-    const lines = [{label: 'Budget for ' + cycleLabel(bk), v: W0.bl.budget, items: bud}, {label: 'Spent so far', v: -W0.bl.spent, items: sp}];
-    if (W0.bl.budget - W0.bl.spent < 0) lines.push({label: 'Spent more than the budget', sub: 'nothing left, so nothing is taken off', v: W0.bl.spent - W0.bl.budget});
-    return {title: 'Still to spend', head: cycleLabel(bk) + ' · taken off net worth', value: rs(W0.bl.left), sections: [{title: 'Budget − spent', note: cycleLabel(bk) !== cl ? 'This is always the current month, ' + cycleLabel(bk) + '.' : '', lines, total: {label: 'Still to spend', v: W0.bl.left}}]};
+    const bk = W0.bl.key, lines = W0.bl.rows.map(r => ({label: r.c.name, sub: `budget ${rs(r.b)} − spent ${rs(r.sp)}` + (r.sp > r.b ? ' · over, so nothing left' : ''), v: r.left, k: 'ov-cat:' + r.c.id + '@' + bk}));
+    return {title: 'Still to spend', head: cycleLabel(bk) + ' · taken off net worth', value: rs(W0.bl.left), sections: [{title: 'Left in each budgeted category', note: (cycleLabel(bk) !== cl ? 'This is always the current month, ' + cycleLabel(bk) + '. ' : '') + 'Discretionary has no budget, so nothing is set aside for it.', lines: lines.length ? lines : [{label: 'No budgets set', text: ''}], total: {label: 'Still to spend', v: W0.bl.left}}]};
   }
   if (kind === 'w-acct') return whyAcct(arg, X);
   if (kind === 'w-snap') {
@@ -2393,6 +2412,7 @@ function renderSetup(X) {
   const opt = (arr, v) => arr.map(o => `<option${o === v ? ' selected' : ''}>${o}</option>`).join('');
   const catRows = d.categories.map((c, i) => `<div class="edrow cat-row" data-i="${i}">
       <input class="c-name" id="c-name-${esc(c.id)}" type="text" value="${esc(c.name)}" data-k="name" aria-label="Category name">
+      <input class="c-short" id="c-short-${esc(c.id)}" type="text" value="${esc(c.short || '')}" data-k="short" aria-label="Button label" placeholder="${esc(c.name)}" maxlength="16">
       <select class="c-type" id="c-type-${esc(c.id)}" data-k="type" aria-label="Type">${opt(TYPES, c.type)}</select>
       <input class="c-budget num" id="c-budget-${esc(c.id)}" type="number" min="0" step="100" inputmode="numeric" value="${c.type === 'Expense' && !c.unplanned ? INR.format(+c.budget || 0) : ''}" data-k="budget" aria-label="Monthly budget" ${c.type !== 'Expense' ? 'disabled placeholder="—"' : c.unplanned ? 'disabled placeholder="= spend" title="Unplanned: the budget each month is what you spend"' : ''}>
       <button class="icon-btn c-del" type="button" data-act="del-cat" data-i="${i}" ${used[c.id] ? `disabled title="Used by ${used[c.id]} entries"` : 'title="Remove"'} aria-label="Remove category">×</button>
@@ -2412,17 +2432,15 @@ function renderSetup(X) {
       <label for="sDay">Each cycle starts on day</label>
       <select id="sDay" style="border:1px solid var(--rule-2);background:var(--sheet);border-radius:7px;padding:6px 8px">${days.map(n => `<option${n === +d.cycleStartDay ? ' selected' : ''}>${n}</option>`).join('')}</select>
       <span class="hint">Set it to your salary day. A cycle is named after the month it ends in.</span></div></section>
-    <section class="card"><div class="sec-h"><h2>Cash in hand</h2><span class="hint">Your starting cash. Cash entries from that day are added or taken off.</span></div>
-      <div class="ed" style="display:flex;gap:12px;flex-wrap:wrap;padding-top:12px">
-        <label class="field" style="flex:1 1 140px"><span>Starting cash ₹</span><input id="sCashAmt" type="text" inputmode="decimal" autocomplete="off" value="${d.cashStart && d.cashStart.amount != null && d.cashStart.amount !== '' && isFinite(+d.cashStart.amount) ? INR.format(Math.round(+d.cashStart.amount)) : esc((d.cashStart || {}).amount || '')}" placeholder="0"></label>
-        <label class="field" style="flex:1 1 140px"><span>As of</span><input id="sCashDate" type="date" value="${esc((d.cashStart && d.cashStart.date) || '')}"></label>
-      </div></section>
-    <section class="card"><div class="sec-h"><h2>Categories and monthly budgets</h2><span class="hint">These names show as the tiles on Overview, in this order.</span></div>
-      <div class="ed" id="catEd"><div class="edrow cat-row edhead"><span>Name</span><span>Type</span><span>Budget ₹</span><span></span></div>${catRows}</div>
+    <section class="card"><div class="sec-h"><h2>Categories and monthly budgets</h2><span class="hint">Names show everywhere (tiles, entries, filters), in this order. The button label is the short name on the Add entry buttons; blank uses the full name.</span></div>
+      <div class="ed" id="catEd"><div class="edrow cat-row edhead"><span>Name</span><span>Button label</span><span>Type</span><span>Budget ₹</span><span></span></div>${catRows}</div>
       <div class="row-actions"><button class="btn sm" type="button" data-act="add-cat">+ Add category</button></div></section>
     <section class="card"><div class="sec-h"><h2>Accounts</h2><span class="hint">For net worth. Bank accounts and cards you pay with come from the Vault.</span></div>
       <div class="ed" id="accEd"><div class="edrow acc-row edhead"><span>Name</span><span>Owner</span><span>Kind</span><span></span><span></span><span>Matures</span><span></span></div>${accRows}</div>
       <div class="row-actions"><button class="btn sm" type="button" data-act="add-acct">+ Add account</button></div></section>
+    <section class="card"><div class="sec-h"><h2>Credit cards</h2><span class="hint">One list for the Vault, Add entry and Card bills. New Vault cards appear here; your edits here stay.</span></div>
+      <div class="ed" id="cardEd">${(d.cards || []).map((k, i) => cardRowHtml(k, i)).join('') || '<div class="empty">No cards yet. Add them in the Vault\'s Credit cards table.</div>'}</div></section>
+    ${adjustHtml(X)}
     ${accountHtml()}
     <section class="card"><div class="sec-h"><h2>Backup</h2><span class="hint">Your data lives in Google Sheets. A backup file is a spare copy.</span></div>
       <div class="row-actions">
@@ -2435,6 +2453,106 @@ function renderSetup(X) {
   renderSaveBar();
   if (focusId) { const el = document.getElementById(focusId); if (el) { if (el.classList.contains('tin')) focusBox(el); else { el.focus(); try { if (sel != null && el.setSelectionRange) el.setSelectionRange(sel, sel); } catch (e) {} } } }
 }
+/* ---------- Setup: credit cards (one list for the Vault, Add entry and Card bills) ---------- */
+function cardRowHtml(k, i) {
+  const id = esc(k.id), days = (v, blank) => (blank ? `<option value=""${+v ? '' : ' selected'}>${blank}</option>` : '') + Array.from({length: 31}, (_, n) => `<option value="${n + 1}"${+v === n + 1 ? ' selected' : ''}>${ordinal(n + 1)}</option>`).join('');
+  const amt = v => (v === '' || v == null || !isFinite(+String(v).replace(/[,₹\s]/g, ''))) ? esc(v || '') : (+String(v).replace(/[,₹\s]/g, '') ? INR.format(Math.round(+String(v).replace(/[,₹\s]/g, ''))) : '');
+  return `<div class="edrow card-row" data-i="${i}">
+      <label class="f k-name"><span class="fl2">Name</span><input id="k-name-${id}" type="text" value="${esc(k.name)}" data-k="name" aria-label="Card name"></label>
+      <label class="f k-sd"><span class="fl2">Bill on</span><select id="k-sd-${id}" data-k="stmtDay" aria-label="Statement day">${days(k.stmtDay)}</select></label>
+      <label class="f k-dd"><span class="fl2">Pay by</span><select id="k-dd-${id}" data-k="dueDay" aria-label="Pay-by day">${days(k.dueDay, 'About 20 days later')}</select></label>
+      <button class="icon-btn k-del" type="button" data-act="del-cardrow" data-i="${i}" aria-label="Remove card" title="Remove card">×</button>
+      <details class="k-more"><summary class="hint">Limit, and what you owed when you started</summary><div class="kgrid">
+        <label class="f"><span class="fl2">Limit ₹</span><input id="k-lim-${id}" type="text" inputmode="numeric" value="${amt(k.limit)}" data-k="limit" placeholder="—"></label>
+        <label class="f"><span class="fl2">Billed, unpaid ₹</span><input id="k-ob-${id}" type="text" inputmode="numeric" value="${amt(k.openBilled)}" data-k="openBilled" placeholder="0"></label>
+        <label class="f"><span class="fl2">Not yet billed ₹</span><input id="k-ou-${id}" type="text" inputmode="numeric" value="${amt(k.openUnbilled)}" data-k="openUnbilled" placeholder="0"></label>
+        <label class="f"><span class="fl2">As of</span><input id="k-od-${id}" type="date" value="${esc(k.openDate || '')}" data-k="openDate"></label>
+      </div></details></div>`;
+}
+/* ---------- Setup: manual adjustments ----------
+   Two kinds, saved as ordinary entries tagged "Adjustment" (so they show in Entries, breakdowns and the sheet):
+   1. Counts in the month: + or − in a category you pick (optionally on a card). Changes that month's spending.
+   2. Card bill only: + or − on one card's bill (e.g. a no-cost EMI instalment already counted months ago).
+      Changes what you owe on the card, never the month's spending. Uses the Transfer category "Card bill adjustment". */
+const ADJ_TAG = 'Adjustment';
+state.adj = state.adj || {kind: 'month', sign: 1, amt: '', date: '', cat: '', card1: '', card2: '', bill: '', note: ''};
+const billLabel = sd => { const d = parseYmd(sd); return d.getDate() + ' ' + MON[d.getMonth()] + ' ' + String(d.getFullYear()).slice(2) + (sd >= todayStr() ? ' · coming' : ''); };
+const isCardAdj = (catId, cm) => !!(cm[catId] && cm[catId].role === 'cardadj');
+function adjBills(cardId, X) {
+  const card = cardList().find(k => k.id === cardId); if (!card) return [];
+  const L = cardLedger(card, X), S = dayOf(card.stmtDay, 1), have = new Set(L.stmts.map(s => s.sd)), list = L.stmts.slice(-7).map(s => s.sd);
+  let n = (L.nextSt || L.stmts[L.stmts.length - 1] || {sd: stmtFor(todayStr(), S)}).sd; for (let i = 0; i < 2; i++) { n = stepStmt(n, S, 1); if (!have.has(n)) list.push(n); }
+  return [...new Set(list)].sort().reverse();
+}
+function adjustHtml(X) {
+  const A = state.adj, cats = state.config.categories.filter(c => c.type === 'Expense'), cards = cardList();
+  if (!A.date) A.date = todayStr();
+  if (!A.cat || !cats.some(c => c.id === A.cat)) A.cat = (cats.find(c => c.id === 'misc') || cats[0] || {}).id || '';
+  if (!cards.some(k => k.id === A.card2)) A.card2 = (cards[0] || {}).id || '';
+  const bills = adjBills(A.card2, X); if (!bills.includes(A.bill)) { const L = cards.find(k => k.id === A.card2) ? cardLedger(cards.find(k => k.id === A.card2), X) : null; A.bill = L && L.nextSt ? L.nextSt.sd : bills[0] || ''; }
+  const seg = (act, v, cur, label) => `<button type="button" class="segb" data-act="${act}" data-v="${v}" aria-pressed="${String(v) === String(cur)}">${label}</button>`;
+  const list = X.txns.filter(t => t.tag === ADJ_TAG).sort((a, b) => a.date < b.date ? 1 : a.date > b.date ? -1 : (b.at || 0) - (a.at || 0)).slice(0, 40);
+  const row = t => { const cardOnly = isCardAdj(t.cat, X.cm), c = X.cm[t.cat];
+    return `<div class="li adjrow"><div class="l"><div class="t1">${cardOnly ? 'Card bill only' : esc(c ? c.name : 'Unlisted')}${t.card ? ' · ' + esc(cardName(t.card)) : ''}</div>
+      <div class="t2">${cardOnly ? 'bill of ' + fmtDate(t.date) : 'counts in ' + cycleLabel(cycleKeyOf(t.date)) + ' · ' + fmtDM(t.date)}${t.note && t.note !== ADJ_TAG ? ' · ' + esc(t.note) : ''}</div></div>
+      <div style="display:flex;gap:10px;align-items:center"><span class="amt num${t.refund ? ' neg' : ''}">${t.refund ? '− ' : '+ '}${rs(t.amount)}</span><button class="icon-btn" type="button" data-act="adj-del" data-id="${esc(t.id)}" data-doc="${esc(t._doc)}" aria-label="Delete adjustment">×</button></div></div>`; };
+  return `<section class="card adjcard"><div class="sec-h"><h2>Adjustments</h2><span class="hint">One-off corrections. Saved as entries tagged “Adjustment”.</span></div>
+    <div class="adjform">
+      <div class="seg adjkind" role="group" aria-label="Kind">${seg('adj-kind', 'month', A.kind, 'Counts in the month')}${seg('adj-kind', 'card', A.kind, 'Card bill only')}</div>
+      <p class="hint adjexp">${A.kind === 'month' ? 'Adds to (or takes off) that month\'s spending, in the category you pick. Pick a card too if it is on a card bill.' : 'Changes one card\'s bill and what you owe on it. The month\'s spending and budget don\'t change (for example a no-cost EMI instalment for something already counted).'}</p>
+      <div class="adjgrid">
+        <div class="seg adjsign" role="group" aria-label="Add or take off">${seg('adj-sign', 1, A.sign, '+ Add')}${seg('adj-sign', -1, A.sign, '− Take off')}</div>
+        <label class="f"><span class="fl2">Amount ₹</span><input id="adjAmt" type="text" inputmode="decimal" value="${esc(A.amt)}" placeholder="0"></label>
+        ${A.kind === 'month' ? `
+        <label class="f"><span class="fl2">Date (counts in ${cycleLabel(cycleKeyOf(/^\d{4}-\d{2}-\d{2}$/.test(A.date) ? A.date : todayStr()))})</span><input id="adjDate" type="date" value="${esc(A.date)}"></label>
+        <label class="f"><span class="fl2">Category</span><select id="adjCat">${cats.map(c => `<option value="${esc(c.id)}"${c.id === A.cat ? ' selected' : ''}>${esc(c.name)}</option>`).join('')}</select></label>
+        <label class="f"><span class="fl2">On a card?</span><select id="adjCard1"><option value="">No card</option>${cards.map(k => `<option value="${esc(k.id)}"${k.id === A.card1 ? ' selected' : ''}>${esc(k.name)}</option>`).join('')}</select></label>`
+        : cards.length ? `
+        <label class="f"><span class="fl2">Card</span><select id="adjCard2">${cards.map(k => `<option value="${esc(k.id)}"${k.id === A.card2 ? ' selected' : ''}>${esc(k.name)}</option>`).join('')}</select></label>
+        <label class="f"><span class="fl2">Bill</span><select id="adjBill">${bills.map(sd => `<option value="${sd}"${sd === A.bill ? ' selected' : ''}>${billLabel(sd)}</option>`).join('')}</select></label>` : '<p class="hint">No cards yet.</p>'}
+        <label class="f adjnote"><span class="fl2">Note</span><input id="adjNote" type="text" value="${esc(A.note)}" placeholder="${A.kind === 'month' ? 'e.g. one-off from June' : 'e.g. EMI 3 of 6, phone'}"></label>
+      </div>
+      <div class="row-actions" style="padding:0"><button class="btn primary" type="button" data-act="adj-add">Add adjustment</button></div>
+    </div>
+    ${list.length ? `<div class="list adjlist">${list.map(row).join('')}</div>` : '<div class="empty">No adjustments yet.</div>'}</section>`;
+}
+document.addEventListener('input', ev => {
+  const id = ev.target && ev.target.id, A = state.adj, map = {adjAmt: 'amt', adjDate: 'date', adjCat: 'cat', adjCard1: 'card1', adjCard2: 'card2', adjBill: 'bill', adjNote: 'note'};
+  if (!map[id]) return; A[map[id]] = ev.target.value;
+  if (id === 'adjCard2') { const bills = adjBills(A.card2, ctx()), sel = $('#adjBill'); A.bill = ''; const L = cardLedger(cardList().find(k => k.id === A.card2), ctx()); A.bill = L.nextSt ? L.nextSt.sd : bills[0] || '';
+    if (sel) sel.innerHTML = bills.map(sd => `<option value="${sd}"${sd === A.bill ? ' selected' : ''}>${billLabel(sd)}</option>`).join(''); }
+  if (id === 'adjDate') { const l = ev.target.closest('label').querySelector('.fl2'); if (l && /^\d{4}-\d{2}-\d{2}$/.test(A.date)) l.textContent = 'Date (counts in ' + cycleLabel(cycleKeyOf(A.date)) + ')'; }
+});
+document.addEventListener('change', ev => { const id = ev.target && ev.target.id; if (/^adj(Cat|Card1|Card2|Bill|Date)$/.test(id || '')) ev.target.dispatchEvent(new Event('input', {bubbles: true})); });
+document.addEventListener('click', async ev => {
+  const b = ev.target.closest('[data-act^="adj-"]'); if (!b) return;
+  const A = state.adj, a = b.dataset.act;
+  if (a === 'adj-kind') { A.kind = b.dataset.v; renderSetup(ctx()); return; }
+  if (a === 'adj-sign') { A.sign = +b.dataset.v; document.querySelectorAll('.adjsign .segb').forEach(x => x.setAttribute('aria-pressed', String(x.dataset.v === b.dataset.v))); return; }
+  if (a === 'adj-del') { if (!arm(b, 'adj' + b.dataset.id, '✓')) return; try { await API.delTxn(b.dataset.id, b.dataset.doc); toast('Adjustment deleted'); } catch (e) { toast(writeErr(e), 'bad'); } return; }
+  if (a !== 'adj-add') return;
+  const amt = Math.abs(parseAmount(A.amt));
+  if (!(amt > 0)) { toast('Type the amount, like 2500', 'bad'); focusBox($('#adjAmt')); return; }
+  const base = {id: newId(), amount: amt, acct: '', member: '', tag: ADJ_TAG, at: Date.now(), refund: A.sign < 0, note: (A.note || '').trim() || ADJ_TAG};
+  if (A.kind === 'month') {
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(A.date)) { toast('Choose a date', 'bad'); return; }
+    if (!state.config.categories.some(c => c.id === A.cat)) { toast('Choose a category', 'bad'); return; }
+    await API.putTxn(Object.assign(base, {date: A.date, cat: A.cat, card: A.card1 || ''}));
+    toast((A.sign < 0 ? 'Taken off ' : 'Added to ') + cycleLabel(cycleKeyOf(A.date)));
+  } else {
+    if (!A.card2 || !A.bill) { toast('Choose the card and the bill', 'bad'); return; }
+    let cat = state.config.categories.find(c => c.role === 'cardadj');
+    if (!cat) {
+      if (state.dirty) { toast('Save or discard your Setup changes first', 'bad'); return; }
+      const cfg = clone(state.config); cat = {id: 'cardadj', name: 'Card bill adjustment', type: 'Transfer', role: 'cardadj', group: '', budget: 0};
+      cfg.categories.push(cat); await API.saveConfig(cfg);
+    }
+    await API.putTxn(Object.assign(base, {date: A.bill, cat: cat.id, card: A.card2}));
+    toast((A.sign < 0 ? 'Taken off ' : 'Added to ') + cardName(A.card2) + ' bill of ' + fmtDM(A.bill));
+  }
+  A.amt = ''; A.note = ''; A.sign = 1; renderSetup(ctx());
+});
+
 function renderSaveBar() {
   const slot = $('#saveSlot'); if (!slot) return;
   slot.innerHTML = state.dirty ? `<div class="savebar"><span>${state.setupErr ? esc(state.setupErr) : 'You have unsaved changes.'}</span><span style="display:flex;gap:8px"><button class="btn ghost" type="button" data-act="discard-setup">Discard</button><button class="btn primary" type="button" data-act="save-setup">Save changes</button></span></div>` : '';
@@ -2468,8 +2586,8 @@ const fmtDM = s => fmtDay(parseYmd(s));
 const ordinal = n => { const v = n % 100; return n + ((v >= 11 && v <= 13) ? 'th' : ({1: 'st', 2: 'nd', 3: 'rd'}[n % 10] || 'th')); };
 const r2 = v => Math.round(v * 100) / 100;
 function cardList() { return (state.config && Array.isArray(state.config.cards)) ? state.config.cards : []; }
-function cardName(id) { if (!id) return ''; const c = cardList().find(x => x.id === id); return c ? c.name : 'Removed card'; }
-function isCardPay(catId, cm) { const c = cm[catId]; return !!c && c.type === 'Transfer' && (c.role === 'cardpay' || c.id === 'cardpay' || /card/i.test(c.name)); }
+function cardName(id) { if (!id) return ''; const c = cardList().find(x => x.id === id) || ((state.config && state.config.cardsRemoved) || []).find(x => x.id === id); return c ? c.name : 'Removed card'; }
+function isCardPay(catId, cm) { const c = cm[catId]; return !!c && c.type === 'Transfer' && c.role !== 'cardadj' && (c.role === 'cardpay' || c.id === 'cardpay' || /card/i.test(c.name)); }
 function cardBillDate(t, X) {
   const c = cardList().find(x => x.id === t.card); if (!c || isCardPay(t.cat, X.cm)) return '';
   return stmtFor(t.date, dayOf(c.stmtDay, 1));
@@ -2657,16 +2775,12 @@ function payBanks() {
 }
 const isAtm = (cat, cm) => { const c = cm[cat]; return !!c && c.type === 'Transfer' && (c.id === 'atm' || /\batm\b|cash withdraw/i.test(c.name)); };
 // Cash in hand: starting cash (Setup) plus cash received, minus cash spent, plus ATM withdrawals, from the start date on.
+// Cash in hand: the Cash balance you record in Wealth (accounts of kind Cash). One figure, used on Overview,
+// in liquid money and in net worth. Cash entries since the last record are shown in its breakdown, not added.
+const cashAccts = () => state.config.accounts.filter(a => a.cls === 'Cash' && !a.pay);
 function cashInHand(X) {
-  const cs = state.config.cashStart || {}, from = /^\d{4}-\d{2}-\d{2}$/.test(cs.date || '') ? cs.date : '';
-  let v = +cs.amount || 0, any = !!from;
-  X.txns.forEach(t => {
-    if (from && t.date < from) return;
-    const ty = X.typeOf(t), atm = isAtm(t.cat, X.cm);
-    if (t.acct === 'cash') { any = true; if (ty === 'Income') v += t.amount; else if (ty === 'Expense') v += t.refund ? t.amount : -t.amount; else if (!atm) v -= t.amount; }
-    else if (ty === 'Transfer' && atm) { any = true; v += t.amount; }
-  });
-  return {v, any};
+  const xs = cashAccts().filter(a => X.latest[a.id]);
+  return {v: xs.reduce((s, a) => s + X.latest[a.id].v, 0), any: xs.length > 0, date: xs.reduce((d, a) => X.latest[a.id].date > d ? X.latest[a.id].date : d, ''), accts: xs};
 }
 function renderPay() {
   if (!state.config) return;
@@ -2841,7 +2955,7 @@ function setCat(id, fromText) {
 function fillCatChips() {
   const cats = state.config.categories, chip = c => `<button type="button" class="chipb" data-act="e-chip" data-id="${esc(c.id)}" aria-pressed="false" title="${esc(c.name)}">${esc(c.short || c.name)}</button>`;
   const pins = (state.config.chips || []).map(id => cats.find(c => c.id === id && c.type === 'Expense')).filter(Boolean);
-  const spend = pins.concat(cats.filter(c => c.type === 'Expense' && !pins.includes(c))), rest = cats.filter(c => c.type !== 'Expense');
+  const spend = pins.concat(cats.filter(c => c.type === 'Expense' && !pins.includes(c))), rest = cats.filter(c => c.type !== 'Expense' && c.role !== 'cardadj');
   $('#eCatChips').innerHTML = spend.map(chip).join('') + (rest.length ? '<span class="chipsep" aria-hidden="true"></span>' + rest.map(chip).join('') : '');
 }
 
@@ -3039,7 +3153,7 @@ document.addEventListener('click', async ev => {
     state.draft.cards = state.draft.cards || []; state.draft.cards.push(c); state.dirty = true; renderSetup(ctx());
     const el = document.getElementById('k-name-' + c.id); if (el) focusBox(el);
   }
-  else if (act === 'del-cardrow') { if (!arm(b, 'card' + b.dataset.i, '✓')) return; state.draft.cards.splice(+b.dataset.i, 1); state.dirty = true; renderSetup(ctx()); }
+  else if (act === 'del-cardrow') { if (!arm(b, 'card' + b.dataset.i, '✓')) return; const k = state.draft.cards.splice(+b.dataset.i, 1)[0]; if (k) { state.draft.cardsRemoved = (state.draft.cardsRemoved || []).filter(x => x.id !== k.id).concat([{id: k.id, name: k.name}]); } state.dirty = true; renderSetup(ctx()); }
   else if (act === 'add') openEntry();
   else if (act === 'close-entry') closeEntry();
   else if (act === 'edit') { const X = ctx(); const t = X.txns.find(x => x.id === b.dataset.id && x._doc === b.dataset.doc); if (t) openEntry(t); }
@@ -3055,23 +3169,19 @@ document.addEventListener('click', async ev => {
   else if (act === 'discard-setup') { state.dirty = false; state.setupErr = ''; state.draft = null; render(); }
   else if (act === 'save-setup') {
     const d = state.draft, names = new Set(); let problem = '';
-    d.categories.forEach(c => { c.name = String(c.name || '').trim(); if (!c.name) problem = 'Every category needs a name.'; else if (names.has(c.name.toLowerCase())) problem = 'Two categories are called "' + c.name + '".'; names.add(c.name.toLowerCase()); if (c.type !== 'Expense') { c.group = ''; c.budget = 0; delete c.unplanned; } else { c.budget = c.unplanned ? 0 : Math.max(0, Math.round(parseSigned(c.budget) || 0)); if (!GROUPS.includes(c.group)) c.group = 'Variable'; } });
+    d.categories.forEach(c => { c.name = String(c.name || '').trim(); c.short = String(c.short || '').trim().slice(0, 16); if (!c.short) delete c.short; if (!c.name) problem = 'Every category needs a name.'; else if (names.has(c.name.toLowerCase())) problem = 'Two categories are called "' + c.name + '".'; names.add(c.name.toLowerCase()); if (c.type !== 'Expense') { c.group = ''; c.budget = 0; delete c.unplanned; } else { c.budget = c.unplanned ? 0 : Math.max(0, Math.round(parseSigned(c.budget) || 0)); if (!GROUPS.includes(c.group)) c.group = 'Variable'; } });
     d.accounts.forEach(a => { a.name = String(a.name || '').trim(); if (!a.name) problem = 'Every account needs a name.'; });
     const cnames = new Set();
     (d.cards = d.cards || []).forEach(c => {
       c.name = String(c.name || '').trim();
       if (!c.name) problem = 'Every card needs a name.'; else if (cnames.has(c.name.toLowerCase())) problem = 'Two cards are called "' + c.name + '".';
       cnames.add(c.name.toLowerCase());
-      c.stmtDay = Math.min(31, Math.max(1, parseInt(c.stmtDay, 10) || 1)); c.dueDay = Math.min(31, Math.max(1, parseInt(c.dueDay, 10) || 1));
-      c.limit = (c.limit === '' || c.limit == null || !(+c.limit > 0)) ? null : Math.round(+c.limit);
-      c.openBilled = Math.max(0, +c.openBilled || 0); c.openUnbilled = Math.max(0, +c.openUnbilled || 0);
+      c.stmtDay = Math.min(31, Math.max(1, parseInt(c.stmtDay, 10) || 1)); c.dueDay = parseInt(c.dueDay, 10) > 0 ? Math.min(31, parseInt(c.dueDay, 10)) : null;
+      const lim = parseSigned(c.limit); c.limit = lim > 0 ? Math.round(lim) : null;
+      c.openBilled = Math.max(0, Math.round(parseSigned(c.openBilled) || 0)); c.openUnbilled = Math.max(0, Math.round(parseSigned(c.openUnbilled) || 0));
       if (!/^\d{4}-\d{2}-\d{2}$/.test(c.openDate || '')) c.openDate = todayStr();
     });
-    if (d.cashStart && (String(d.cashStart.amount || '').trim() !== '' || d.cashStart.date)) {
-      const v = parseSigned(d.cashStart.amount);
-      if (v === null || isNaN(v)) problem = 'Starting cash must be a number, like 12000.';
-      else d.cashStart = {amount: v, date: /^\d{4}-\d{2}-\d{2}$/.test(d.cashStart.date || '') ? d.cashStart.date : todayStr()};
-    } else delete d.cashStart;
+    delete d.cashStart; // cash in hand is the Cash balance recorded in Wealth
     if (problem) { state.setupErr = problem; renderSaveBar(); return; }
     try { await API.saveConfig(clone(d)); state.dirty = false; state.setupErr = ''; state.draft = null; toast('Setup saved'); render(); } catch (e) { state.setupErr = writeErr(e); renderSaveBar(); }
   }
@@ -3096,7 +3206,7 @@ $('#balForm').addEventListener('submit', ev => { ev.preventDefault(); saveBalanc
 ['entryScrim', 'balScrim', 'impScrim', 'copyScrim', 'vaultScrim', 'whyScrim', 'textScrim', 'noteScrim', 'noteMenu'].forEach(id => $('#' + id).addEventListener('click', ev => { if (ev.target.id === id) { if (id === 'noteScrim') { closeNote(); return; } $('#' + id).hidden = true; if (id === 'whyScrim') W$.stack = []; if (id === 'entryScrim') editing = null; } }));
 document.addEventListener('keydown', ev => { if (ev.key === 'Escape' && !$('#noteMenu').hidden) { closeNoteMenu(); return; } if (ev.key === 'Escape' && N.open) { closeNote(); return; } if (ev.key === 'Escape') ['entryScrim', 'balScrim', 'impScrim', 'copyScrim', 'vaultScrim', 'whyScrim', 'textScrim'].forEach(id => { $('#' + id).hidden = true; }); });
 $('#cycPick').addEventListener('change', ev => { state.cur = ev.target.value; state.curPinned = state.cur !== cycleKeyOf(todayStr()); render(); });
-['fCat', 'fType'].forEach(id => $('#' + id).addEventListener('change', () => renderEntries(ctx())));
+['fCat', 'fType', 'fPay'].forEach(id => $('#' + id).addEventListener('change', () => renderEntries(ctx())));
 $('#fQ').addEventListener('input', () => renderEntries(ctx()));
 $('#impFile').addEventListener('change', ev => { const f = ev.target.files && ev.target.files[0]; if (!f) return; const r = new FileReader(); r.onload = () => { $('#impText').value = String(r.result || ''); checkImport($('#impText').value); }; r.readAsText(f); });
 $('#impText').addEventListener('input', ev => checkImport(ev.target.value));
@@ -3117,10 +3227,7 @@ $('#main').addEventListener('input', ev => {
   markDirty();
 });
 $('#main').addEventListener('change', ev => {
-  if ((ev.target.id === 'sCashAmt' || ev.target.id === 'sCashDate') && state.draft) {
-    state.draft.cashStart = {amount: $('#sCashAmt').value.trim(), date: $('#sCashDate').value}; markDirty();
-  }
-  else if (ev.target.id === 'sDay' && state.draft) { state.draft.cycleStartDay = +ev.target.value; state.dirty = true; renderSetup(ctx()); }
+  if (ev.target.id === 'sDay' && state.draft) { state.draft.cycleStartDay = +ev.target.value; state.dirty = true; renderSetup(ctx()); }
   else if (ev.target.type === 'checkbox' && ev.target.closest('.edrow')) { /* handled by input */ }
 });
 $('#eCatText').addEventListener('input', ev => setCat(matchCategory(ev.target.value), true));
@@ -3147,7 +3254,6 @@ $('#main').addEventListener('change', async ev => {
   if ((typeof cur === 'number' ? cur : null) === v) return;
   try { await API.putFix(el.dataset.card, el.dataset.sd, v); toast(v === null ? 'Using the calculated amount' : 'Your figure saved'); } catch (e) { toast(writeErr(e), 'bad'); }
 });
-document.addEventListener('input', ev => { if ((ev.target.id === 'sCashAmt' || ev.target.id === 'sCashDate') && state.draft) { state.draft.cashStart = {amount: $('#sCashAmt').value.trim(), date: $('#sCashDate').value}; markDirty(); } });
 document.addEventListener('toggle', ev => { const d = ev.target; if (d && d.matches && d.matches('details.ct-hist')) state.openHist[d.dataset.card] = d.open; }, true);
 window.addEventListener('hashchange', () => {
   const lg = location.hash.match(/^#login=([a-f0-9]{20,80})$/);
@@ -3289,9 +3395,8 @@ function vaultPayLists() {
 function syncPayMethods() {
   if (!state.config || state.dirty || !isOpenMode() || !V.key || !(Sync.me && Sync.me.role === 'Owner')) return;
   const {cards, banks} = vaultPayLists(), cfg = clone(state.config), before = JSON.stringify([cfg.cards || [], cfg.accounts, cfg.payBanks || []]);
-  const oldCards = cfg.cards || [];
-  cfg.cards = cards.map(({r, label}) => { const prev = oldCards.find(k => k.id === r.id) || {};
-    return {id: r.id, name: label, stmtDay: parseStmtDay(r.c[5]) || +prev.stmtDay || 1, dueDay: +prev.dueDay || null, src: 'vault'}; });
+  const oldCards = cfg.cards || [], known = new Set(oldCards.map(k => k.id).concat((cfg.cardsRemoved || []).map(k => k.id)));
+  cfg.cards = oldCards.concat(cards.filter(({r}) => !known.has(r.id)).map(({r, label}) => ({id: r.id, name: label, stmtDay: parseStmtDay(r.c[5]) || 1, dueDay: null, src: 'vault'})));
   const used = new Set(state.txnsAcctIds || []);
   Object.values(state.cycles || {}).forEach(doc => Object.values((doc && doc.txns) || {}).forEach(t => { if (t && t.acct) used.add(t.acct); }));
   const ids = new Set(banks.map(b => b.r.id));
