@@ -758,6 +758,21 @@ body[data-view="notes"] .fab,body[data-view="disc"] .fab{display:none}
 .wtree[open]>summary{background:var(--sheet-2)}
 .li.twig{padding-left:30px;background:var(--sheet-2);border-top:1px dashed var(--rule)!important}
 .li.twig .t1{font-weight:600}
+/* discretionary tags + readable descriptions */
+.ddesc .t1{white-space:normal;overflow:visible;overflow-wrap:anywhere;line-height:1.3}
+.ddesc .t2{white-space:normal;display:flex;flex-wrap:wrap;gap:4px 8px;align-items:center}
+.dtag{font-style:normal;font-weight:700;font-size:calc(12px*var(--fs,1));padding:1px 8px;border-radius:999px;background:var(--pur-soft);color:var(--pur-ink)}
+.drow{align-items:start}.dpaid,.drec{padding-top:2px}
+.dtags .cnt{font-weight:600;opacity:.8;margin-left:2px}
+#eDiscTagBox{display:flex;flex-direction:column;gap:6px;margin-top:8px}#eDiscTagBox[hidden]{display:none}
+.chip-new{border-style:dashed}
+/* Discretionary rows: one amount column so the description gets the width */
+.dhead,.drow,.dgh{grid-template-columns:44px minmax(0,1fr) auto!important;gap:10px}
+.dhead span:nth-child(3),.dgh span:nth-child(2){text-align:right}
+.dgh span:first-child{grid-column:1/3}
+.damt{text-align:right;font-weight:700;white-space:nowrap;padding-top:2px;display:flex;flex-direction:column;align-items:flex-end}
+.damt.rec{color:var(--good-ink)}.damt small,.dgh small{font-size:calc(12px*var(--fs,1));font-weight:600;opacity:.85}
+.dgh .num{display:flex;flex-direction:column;align-items:flex-end}
 /* ===== text size and font ===== */
 .textb span{font-weight:800;font-size:19px;line-height:1;letter-spacing:-.02em}.textb small{font-size:14px;font-weight:700}
 .tx-prev{display:flex;flex-direction:column;gap:2px;padding:14px;border-radius:12px;background:var(--accent-soft)}
@@ -949,6 +964,7 @@ body[data-view="notes"] .fab,body[data-view="disc"] .fab{display:none}
       <div id="eCatText" class="tbox mini" role="textbox" aria-labelledby="eCatLbl" aria-describedby="eCatShow" inputmode="text" enterkeyhint="done" autocorrect="off" spellcheck="false" data-placeholder="…or say or type one"></div>
       <select id="eCat" hidden aria-hidden="true" tabindex="-1"></select>
       <small id="eCatShow"></small>
+      <div id="eDiscTagBox" hidden><span class="sublbl">Tag</span><div class="chips" id="eDiscTags" role="group" aria-label="Discretionary tag"></div></div>
     </div>
     <div class="field"><span id="ePayLbl">Paid with</span>
       <div class="seg seg3" id="ePaySeg" role="group" aria-labelledby="ePayLbl">
@@ -2554,11 +2570,37 @@ document.addEventListener('click', ev => {
 /* ---------- Discretionary tab ----------
    Every entry in an unplanned category (Discretionary): no budget, but tracked here as well as in the month. */
 const discIds = () => state.config.categories.filter(c => c.unplanned && c.type === 'Expense').map(c => c.id);
+
+/* Discretionary tags: your own labels (e.g. Kashmir trip, Gold) to see what each kind of extra spending cost.
+   Stored in the entry's Tag. When Discretionary is chosen, the entry form shows your tags as one-tap buttons. */
+function discTagList() {
+  const ids = discIds(), set = new Set((readPref().discTags || []).filter(Boolean));
+  Object.values(state.cycles || {}).forEach(d => Object.values((d && d.txns) || {}).forEach(t => { if (t && ids.includes(t.cat) && t.tag) set.add(t.tag); }));
+  return [...set].sort((a, b) => a.localeCompare(b));
+}
+function discTagChips() {
+  const box = $('#eDiscTagBox'); if (!box || !state.config) return;
+  const on = discIds().includes($('#eCat').value); box.hidden = !on; if (!on) return;
+  const cur = ($('#eTag').value || '').trim();
+  $('#eDiscTags').innerHTML = discTagList().map(t => `<button type="button" class="chipb" data-act="e-dtag" data-v="${esc(t)}" aria-pressed="${t === cur}">${esc(t)}</button>`).join('')
+    + `<button type="button" class="chipb chip-new" data-act="e-dtag-new">+ New tag</button>`;
+}
+document.addEventListener('click', ev => {
+  const b = ev.target.closest('[data-act="e-dtag"], [data-act="e-dtag-new"]'); if (!b) return;
+  if (b.dataset.act === 'e-dtag') { const tg = $('#eTag'); tg.value = tg.value.trim() === b.dataset.v ? '' : b.dataset.v; discTagChips(); return; }
+  $('#eMore').open = true; focusBox($('#eTag')); toast('Type the new tag in Tag below');
+});
+document.addEventListener('input', ev => { if (ev.target && ev.target.id === 'eTag') discTagChips(); });
 function renderDisc(X) {
   const el = $('#v-disc'); if (!el) return;
   const ids = discIds(), range = readPref().discRange === 'month' ? 'month' : 'all';
   let list = X.txns.filter(t => ids.includes(t.cat));
   if (range === 'month') list = list.filter(t => cycleKeyOf(t.date) === state.cur);
+  const net = xs => xs.reduce((s, t) => s + (t.refund ? -t.amount : t.amount), 0), tagOf = t => (t.tag || '').trim();
+  const tagTot = {}; list.forEach(t => { const k = tagOf(t) || '\u0000'; tagTot[k] = (tagTot[k] || 0) + (t.refund ? -t.amount : t.amount); });
+  const ftag = state.discTag != null && (state.discTag === '' ? tagTot['\u0000'] != null : tagTot[state.discTag] != null) ? state.discTag : null;
+  const tagBar = Object.keys(tagTot).length > 1 || Object.keys(tagTot)[0] !== '\u0000' ? `<div class="chips dtags" role="group" aria-label="Filter by tag"><button type="button" class="chipb" data-act="d-tag" data-v="__all" aria-pressed="${ftag == null}">All tags <span class="cnt">${rs(net(list))}</span></button>${Object.keys(tagTot).filter(k => k !== '\u0000').sort((a, b) => tagTot[b] - tagTot[a]).map(k => `<button type="button" class="chipb" data-act="d-tag" data-v="${esc(k)}" aria-pressed="${ftag === k}">${esc(k)} <span class="cnt">${rs(tagTot[k])}</span></button>`).join('')}${tagTot['\u0000'] != null ? `<button type="button" class="chipb" data-act="d-tag" data-v="" aria-pressed="${ftag === ''}">No tag <span class="cnt">${rs(tagTot['\u0000'])}</span></button>` : ''}</div>` : '';
+  if (ftag != null) list = list.filter(t => tagOf(t) === ftag);
   list.sort((a, b) => a.date === b.date ? (b.at || 0) - (a.at || 0) : (a.date < b.date ? 1 : -1));
   const paid = list.filter(t => !t.refund).reduce((s, t) => s + t.amount, 0), recd = list.filter(t => t.refund).reduce((s, t) => s + t.amount, 0);
   const groups = {}; list.forEach(t => { const k = cycleKeyOf(t.date); (groups[k] = groups[k] || []).push(t); });
@@ -2566,22 +2608,23 @@ function renderDisc(X) {
   const row = t => { const d = parseYmd(t.date);
     return `<button type="button" class="drow" data-act="edit" data-id="${esc(t.id)}" data-doc="${esc(t._doc)}">
       <span class="dd"><b>${d.getDate()}</b>${MON[d.getMonth()]}</span>
-      <span class="ddesc"><span class="t1">${esc(t.note || (X.cm[t.cat] || {}).name || 'Discretionary')}</span>${how(t) ? `<span class="t2">${esc(how(t))}</span>` : ''}</span>
-      <span class="dpaid num">${t.refund ? '' : rs(t.amount)}</span><span class="drec num">${t.refund ? rs(t.amount) : ''}</span></button>`; };
+      <span class="ddesc"><span class="t1">${esc(t.note || (X.cm[t.cat] || {}).name || 'Discretionary')}</span><span class="t2">${tagOf(t) ? `<i class="dtag">${esc(tagOf(t))}</i>` : ''}${esc(how(t))}</span></span>
+      <span class="damt num${t.refund ? ' rec' : ''}">${t.refund ? '+' + rs(t.amount) + '<small>received</small>' : rs(t.amount)}</span></button>`; };
   const body = Object.keys(groups).sort().reverse().map(k => { const g = groups[k], gp = g.filter(t => !t.refund).reduce((s, t) => s + t.amount, 0), gr = g.filter(t => t.refund).reduce((s, t) => s + t.amount, 0);
-    return `<div class="dgrp"><div class="dgh"><span>${cycleLabel(k)}</span><span class="num">${rs(gp)}</span><span class="num">${gr ? rs(gr) : ''}</span></div>${g.map(row).join('')}</div>`; }).join('');
+    return `<div class="dgrp"><div class="dgh"><span>${cycleLabel(k)}</span><span class="num">${rs(gp)}${gr ? `<small>${rs(gr)} received</small>` : ''}</span></div>${g.map(row).join('')}</div>`; }).join('');
   el.innerHTML = `<section class="card dtop">
-      <div class="dt-main"><span class="lbl">Discretionary ${range === 'month' ? 'in ' + cycleLabel(state.cur) : 'so far'}</span><span class="v fit">${rs(paid - recd)}</span><span class="sub">spent outside the budget · ${list.length} entr${list.length === 1 ? 'y' : 'ies'}</span></div>
+      <div class="dt-main"><span class="lbl">Discretionary ${range === 'month' ? 'in ' + cycleLabel(state.cur) : 'so far'}${ftag ? ' · ' + esc(ftag) : ftag === '' ? ' · no tag' : ''}</span><span class="v fit">${rs(paid - recd)}</span><span class="sub">spent outside the budget · ${list.length} entr${list.length === 1 ? 'y' : 'ies'}</span></div>
       <div class="dt-row"><div><span class="lbl">Paid</span><span class="v2 num">${rs(paid)}</span></div><div><span class="lbl">Received</span><span class="v2 num">${rs(recd)}</span></div></div></section>
     <div class="dbar"><div class="seg" role="group" aria-label="Show"><button type="button" class="segb" data-act="d-range" data-v="all" aria-pressed="${range === 'all'}">All time</button><button type="button" class="segb" data-act="d-range" data-v="month" aria-pressed="${range === 'month'}">${cycleLabel(state.cur)}</button></div>
-      <button type="button" class="btn primary sm" data-act="d-add">+ Add</button></div>
-    <section class="card dlist"><div class="dhead"><span>Date</span><span>Description</span><span>Paid</span><span>Received</span></div>
+      <button type="button" class="btn primary sm" data-act="d-add">+ Add</button></div>${tagBar}
+    <section class="card dlist"><div class="dhead"><span>Date</span><span>Description</span><span>Amount</span></div>
       ${body || `<div class="empty">No discretionary spending ${range === 'month' ? 'in ' + cycleLabel(state.cur) : 'yet'}. Pick <b>Discretionary</b> when you add an entry, or tap + Add.</div>`}</section>`;
 }
 document.addEventListener('click', ev => {
-  const b = ev.target.closest('[data-act="d-range"], [data-act="d-add"]'); if (!b) return;
+  const b = ev.target.closest('[data-act="d-range"], [data-act="d-add"], [data-act="d-tag"]'); if (!b) return;
+  if (b.dataset.act === 'd-tag') { state.discTag = b.dataset.v === '__all' ? null : b.dataset.v; renderDisc(ctx()); fitNums($('#v-disc')); return; }
   if (b.dataset.act === 'd-range') { writePref({discRange: b.dataset.v}); renderDisc(ctx()); fitNums($('#v-disc')); return; }
-  openEntry(); const id = discIds()[0]; if (id) setCat(id);
+  openEntry(); const id = discIds()[0]; if (id) setCat(id); if (state.discTag) { $('#eTag').value = state.discTag; discTagChips(); }
 });
 
 /* ---------- setup ---------- */
@@ -3131,7 +3174,7 @@ function setCat(id, fromText) {
   else { show.textContent = ''; show.className = ''; }
   document.querySelectorAll('#eCatChips .chipb').forEach(b => b.setAttribute('aria-pressed', String(!!c && b.dataset.id === c.id)));
   chipsShow($('#eCatChips'));
-  updCardHint();
+  updCardHint(); discTagChips();
 }
 // Quick-pick buttons: the pinned ones first (config.chips, in that order), then the other spending
 // categories in Setup order, then income and transfers. A category's short label (c.short) is used if set.
