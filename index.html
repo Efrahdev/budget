@@ -636,6 +636,7 @@ function toTextBox(inp) {
   const tag = inp.tagName, type = tag === 'TEXTAREA' ? 'textarea' : (inp.getAttribute('type') || 'text').toLowerCase();
   if (tag === 'INPUT' && KEEP_INPUT.test(type)) return;
   if (inp.hasAttribute('readonly')) return; // read-only boxes never open the keyboard
+  if (inp.hasAttribute('data-keep-ac')) return; // the sign-in email box: the owner wants Google's suggestions there
   const multi = tag === 'TEXTAREA', box = document.createElement('div');
   for (const a of [...inp.attributes]) if (!SKIP_ATTR.test(a.name)) box.setAttribute(a.name, a.value);
   box.classList.add('tbox', 'tin'); if (multi) box.classList.add('multi'); if (type === 'password') box.classList.add('secret');
