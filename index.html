@@ -598,7 +598,19 @@ body[data-view="notes"] .fab{display:none}
 .npi[aria-checked="true"]{background:var(--accent-soft)}.npi[aria-checked="true"] b::after{content:" ✓";color:var(--accent)}
 .npi:active{background:var(--accent-soft)}.npi.danger b{color:var(--bad-ink)}
 .nmoreb{width:44px;height:40px;border:1px solid var(--rule-2);border-radius:10px;background:var(--sheet);color:var(--ink);font-size:22px;line-height:1;cursor:pointer}
-.nsave{margin-left:auto;min-height:44px;padding:0 22px;font-size:calc(16.5px*var(--fs,1));border-radius:12px}
+.nfilter{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.nchips{display:flex;gap:6px;flex:0 0 auto}
+.nchip{height:38px;padding:0 12px;border:1px solid var(--rule-2);border-radius:19px;background:var(--sheet);color:var(--ink);font-weight:600;font-size:calc(14.5px*var(--fs,1));cursor:pointer;white-space:nowrap}
+.nchip[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.nfilter .tin{flex:1 1 90px;min-width:90px;width:auto;height:38px;min-height:38px;padding:7px 12px;border-radius:19px;line-height:22px}
+.nact .nbtns{display:flex;align-items:center;gap:6px;margin-left:auto;flex:0 0 auto}
+.nbtn{height:38px;padding:0 12px;border:1px solid var(--rule-2);border-radius:10px;background:var(--sheet);color:var(--ink);font-weight:700;font-size:calc(14.5px*var(--fs,1));cursor:pointer;white-space:nowrap}
+.nbtn:active{background:var(--accent-soft)}
+.nbtn.ndel{color:var(--bad-ink);border-color:color-mix(in srgb,var(--bad) 40%,var(--rule-2))}.nbtn.ndel.armed{background:var(--bad);color:#fff;border-color:var(--bad)}
+.nbtn.nsave{background:var(--accent);border-color:var(--accent);color:var(--accent-ink);padding:0 14px}
+.nact .npopw{display:flex;align-items:center}
+.nact .nkindb{box-sizing:border-box;height:38px;padding:0 12px;font-size:calc(14px*var(--fs,1));white-space:nowrap;line-height:1}
+.nact .nbtn{box-sizing:border-box;line-height:1}
 /* ===== text size and font ===== */
 .textb span{font-weight:800;font-size:19px;line-height:1;letter-spacing:-.02em}.textb small{font-size:14px;font-weight:700}
 .tx-prev{display:flex;flex-direction:column;gap:2px;padding:14px;border-radius:12px;background:var(--accent-soft)}
@@ -1569,13 +1581,9 @@ const fmtWhen = ms => { if (!ms) return ''; const d = new Date(ms), t = new Date
   if (d.toDateString() === y.toDateString()) return 'Yesterday ' + hm; return d.getDate() + ' ' + MON[d.getMonth()] + (d.getFullYear() !== t.getFullYear() ? ' ' + d.getFullYear() : ''); };
 function renderNotes() {
   const el = $('#v-notes'); if (!el) return;
-  const all = noteList(), counts = {}; all.forEach(n => { counts[n.cat] = (counts[n.cat] || 0) + 1; });
-  const banner = !signedIn() || Sync.notesOk === undefined ? '' : !Sync.notesOk || Sync.notesV < 2
-    ? `<div class="banner warn"><b>Notes are saved on this phone${Sync.notesOk ? ' (labels and pins too)' : ''} for now.</b> To keep them in Google Drive, update the script once: paste the new Code.gs in Apps Script, choose <b>setupNotes</b> and press <b>Run</b>, allow Drive access, then Deploy → Manage deployments → pencil → <b>New version</b>.</div>`
-    : N.err ? `<div class="banner warn">Google Drive didn't take the last change: ${esc(N.err)}. Your notes are safe on this phone and will be sent again.</div>` : '';
-  el.innerHTML = `${banner}<button type="button" class="nfab" data-act="n-new" aria-label="New note"><b>+</b> Note</button>
-    <div class="nbar"><input id="nQ" type="search" placeholder="Search notes" aria-label="Search notes" value="${esc(N.q)}"></div>
-    <div class="chips" id="nCats" role="group" aria-label="Show">${[['', 'All', all.length]].concat(Object.entries(NOTE_LABELS).map(([k, v]) => [k, v, counts[k] || 0])).map(([k, l, c]) => `<button type="button" class="chipb" data-act="n-cat" data-v="${k}" aria-pressed="${N.cat === k}">${l} <span class="cnt">${c}</span></button>`).join('')}</div>
+    el.innerHTML = `<button type="button" class="nfab" data-act="n-new" aria-label="New note"><b>+</b> Note</button>
+    <div class="nfilter"><div class="nchips" id="nCats" role="group" aria-label="Show">${[['', 'All']].concat(Object.entries(NOTE_LABELS)).map(([k, l]) => `<button type="button" class="nchip" data-act="n-cat" data-v="${k}" aria-pressed="${N.cat === k}">${l}</button>`).join('')}</div>
+      <input id="nQ" type="search" placeholder="Search" aria-label="Search notes" value="${esc(N.q)}"></div>
     <div id="nList"></div>`;
   renderNoteList();
 }
@@ -1670,10 +1678,7 @@ function drawNote() {
     <div class="nbody" id="nBody">${o.loading ? '<div class="empty">Opening from Google Drive…</div>' : o.failed ? '<div class="empty">Couldn\'t open this note from Google Drive. Check the connection and try again.</div>' : noteBodyHtml()}</div>
     <div class="nact"><div class="npopw"><button type="button" class="nkindb" data-act="n-kinds" aria-haspopup="true" aria-expanded="false">${k.label} ▾</button>
         <div class="npop nkpop" hidden role="menu">${Object.entries(NOTE_KINDS).map(([kk, v]) => `<button type="button" class="npi" role="menuitemradio" data-act="n-kind" data-v="${kk}" aria-checked="${kk === o.type}"><b>${v.label}</b><small>${{txt: 'Simple text, with bold', md: 'Headings, lists, tables', html: 'A web page', json: 'Data, checked and tidied'}[kk]}</small></button>`).join('')}</div></div>
-      ${o.type === 'json' ? '<button type="button" class="btn sm" data-act="n-tidy">Tidy</button>' : ''}
-      <div class="npopw nmorew"><button type="button" class="nmoreb" data-act="n-more" aria-haspopup="true" aria-label="More">⋯</button>
-        <div class="npop nmpop" hidden role="menu"><button type="button" class="npi" data-act="n-copy"><b>Copy</b></button><button type="button" class="npi" data-act="n-dl"><b>Download .${k.ext}</b></button>${drive ? `<a class="npi" href="${drive}" target="_blank" rel="noopener"><b>Open in Drive</b></a>` : ''}<button type="button" class="npi danger" data-act="n-del"><b>Delete</b></button></div></div>
-      <button type="button" class="btn primary nsave" data-act="n-save">✓ Save</button></div>`;
+      <div class="nbtns"><button type="button" class="nbtn" data-act="n-copy">Copy</button><button type="button" class="nbtn ndel" data-act="n-del">Delete</button><button type="button" class="nbtn nsave" data-act="n-save">✓ Save</button></div></div>`;
   $('#noteScrim').hidden = false; noteState(); richBox(); noteSizeShow();
   const ta = $('#nText'); if (ta && o.fresh && !o.content) { o.fresh = false; setTimeout(() => { if (!$('#noteBox').contains(document.activeElement) || document.activeElement === document.body) focusBox(ta); }, 60); }
 }
@@ -1793,7 +1798,7 @@ document.addEventListener('click', async ev => {
   const a = b.dataset.act, o = N.open;
   if (a === 'n-new') { const id = 'n' + newId(); openNote(id, {id, title: '', type: 'txt', cat: N.cat || defaultLabel(), content: ''}); }
   else if (a === 'n-open') openNote(b.dataset.id);
-  else if (a === 'n-cat') { N.cat = b.dataset.v; document.querySelectorAll('#nCats .chipb').forEach(x => x.setAttribute('aria-pressed', String(x.dataset.v === N.cat))); renderNoteList(); }
+  else if (a === 'n-cat') { N.cat = b.dataset.v; document.querySelectorAll('#nCats .nchip').forEach(x => x.setAttribute('aria-pressed', String(x.dataset.v === N.cat))); renderNoteList(); }
   else if (a === 'n-m-close') closeNoteMenu();
   else if (a === 'n-m-pin') { const n = noteList().find(x => x.id === b.dataset.id); pinNote(b.dataset.id, !(n && n.pinned)); closeNoteMenu(); renderNotes(); toast(n && n.pinned ? 'Unpinned' : 'Pinned to the top'); }
   else if (a === 'n-m-move') { const ids = sortNotes(noteList()).filter(x => x.pinned).map(x => x.id), i = ids.indexOf(b.dataset.id), j = i + (+b.dataset.d);
@@ -1803,7 +1808,7 @@ document.addEventListener('click', async ev => {
   else if (!o) return;
   else if (a === 'n-close') closeNote();
   else if (a === 'n-mode') { commitNote(); N.mode = b.dataset.v; drawNote(); }
-  else if (a === 'n-kinds' || a === 'n-more') { const pop = b.parentElement.querySelector('.npop'), show = pop.hidden; document.querySelectorAll('#noteBox .npop').forEach(x => { x.hidden = true; }); pop.hidden = !show; b.setAttribute('aria-expanded', String(show)); }
+  else if (a === 'n-kinds') { const pop = b.parentElement.querySelector('.npop'), show = pop.hidden; document.querySelectorAll('#noteBox .npop').forEach(x => { x.hidden = true; }); pop.hidden = !show; b.setAttribute('aria-expanded', String(show)); }
   else if (a === 'n-save') { closeNote(); toast('Saved'); }
   else if (a === 'n-kind') { // show the note formatted for its new kind straight away
     if (o.type === 'txt' && b.dataset.v !== 'txt' && $('#nText')) o.content = $('#nText').value;
@@ -1815,7 +1820,7 @@ document.addEventListener('click', async ev => {
   else if (a === 'n-tidy') { try { o.content = JSON.stringify(JSON.parse(o.content), null, 2); commitNote(); drawNote(); toast('JSON tidied'); } catch (e) { toast('Not valid JSON: ' + e.message, 'bad'); } }
   else if (a === 'n-copy') { try { await navigator.clipboard.writeText(o.content); toast('Copied'); } catch (e) { showCopy(o.title || 'Note', o.content); } }
   else if (a === 'n-dl') { commitNote(); offerFile((o.title || noteName({preview: notePreview(o.content)})).replace(/[\\/:*?"<>|]+/g, ' ').trim() + '.' + NOTE_KINDS[o.type].ext, o.content, NOTE_KINDS[o.type].mime); }
-  else if (a === 'n-del') { if (!arm(b, 'ndel' + o.id, 'Tap again to delete')) return; deleteNote(o.id); N.open = null; $('#noteScrim').hidden = true; renderNotes(); }
+  else if (a === 'n-del') { if (!arm(b, 'ndel' + o.id, 'Sure?')) return; deleteNote(o.id); N.open = null; $('#noteScrim').hidden = true; renderNotes(); }
 });
 /* ---------- text: font and size, for the whole app ----------
    Every font size in the app is "size × --fs", so one number scales everything. Saved on this phone and
