@@ -25,7 +25,7 @@ var TABS = {
   // Encrypted on the phone before it arrives. This script never sees readable vault data.
   Vault: ['ID', 'Encrypted data', 'Saved at'],
   // Notes live as real files in Drive (folder "Budget Tracker notes"); this tab is only the list.
-  Notes: ['ID', 'Title', 'Type', 'Owner', 'Drive file ID', 'Updated at', 'Size', 'Preview']
+  Notes: ['ID', 'Title', 'Type', 'Owner', 'Drive file ID', 'Updated at', 'Size', 'Preview', 'Label', 'Pinned', 'Pin order']
 };
 var E = {id: 0, date: 1, cycle: 2, type: 3, catName: 4, amount: 5, acctName: 6, cardName: 7, note: 8, member: 9, tag: 10,
          refund: 11, cat: 12, acct: 13, card: 14, at: 15, saved: 16};
@@ -58,7 +58,7 @@ function doPost(e) {
       if (op.t === 'signout') { if (req.session) PropertiesService.getScriptProperties().deleteProperty('sess:' + req.session); return out({ok: true, signedOut: true}); }
       if (op.t === 'adduser' || op.t === 'deluser') { userOp(ss, op, who.user); continue; }
       if (op.t === 'vput' || op.t === 'vdel') { vaultOps.push(op); continue; }
-      if (op.t === 'nput' || op.t === 'ndel') { try { noteOp(ss, op, who.user); } catch (x) { noteErrors.push({id: (op.note || op).id, error: String(x && x.message || x)}); } continue; }
+      if (op.t === 'nput' || op.t === 'ndel' || op.t === 'nmeta') { try { noteOp(ss, op, who.user); } catch (x) { noteErrors.push({id: (op.note || op).id, error: String(x && x.message || x)}); } continue; }
       applyOp(ss, op);
     }
     vaultApply(ss, vaultOps, who.user);
@@ -67,7 +67,7 @@ function doPost(e) {
     if (who.session) reply.session = who.session;
     if (who.user.role === 'Owner') reply.users = listUsers(ss);
     if (req.vault && who.user.role === 'Owner') reply.vault = readVault(ss);
-    reply.notes = readNotes(ss, who.user);
+    reply.notes = readNotes(ss, who.user); reply.notesV = 2;
     if (noteErrors.length) reply.noteErrors = noteErrors;
     if (Array.isArray(req.noteIds) && req.noteIds.length) { try { reply.noteBodies = noteBodies(ss, req.noteIds, who.user); } catch (x) { reply.noteErrors = (reply.noteErrors || []).concat([{id: '', error: String(x && x.message || x)}]); } }
     return out(reply);
@@ -231,9 +231,21 @@ function noteFileName(title, type) {
   var t = String(title || '').replace(/[\\/:*?"<>|\u0000-\u001f]+/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 120) || 'Untitled';
   return t + '.' + NOTE_TYPES[type][0];
 }
+var NOTE_LABELS = {arhaan: 1, efrah: 1, other: 1};
+function notesHead(sh) { // older Notes tabs get the label/pin columns added
+  if (sh.getLastColumn() < TABS.Notes.length || String(sh.getRange(1, 9).getValue()) !== 'Label') sh.getRange(1, 1, 1, TABS.Notes.length).setValues([TABS.Notes]).setFontWeight('bold');
+}
+function noteMeta(n, old) {
+  return [NOTE_LABELS[n.cat] ? n.cat : (old && NOTE_LABELS[old[8]] ? String(old[8]) : 'other'), n.pinned ? 'Yes' : '', isFinite(+n.order) ? +n.order : 0];
+}
 function noteOp(ss, op, user) {
-  var sh = ss.getSheetByName('Notes'), r = rows(sh), me = noteOwner(user);
+  var sh = ss.getSheetByName('Notes'); notesHead(sh);
+  var r = rows(sh), me = noteOwner(user);
   var id = String((op.t === 'nput' ? (op.note || {}).id : op.id) || '');
+  if (op.t === 'nmeta') { // label, pin and pin order only: the file in Drive is untouched
+    for (var k = 0; k < r.length; k++) if (String(r[k][0]) === id && String(r[k][3]).toLowerCase() === me) { sh.getRange(k + 2, 9, 1, 3).setNumberFormat('@').setValues([noteMeta(op, r[k])]); return; }
+    return;
+  }
   if (!/^[A-Za-z0-9_\-]{1,64}$/.test(id)) return;
   var at = -1;
   for (var i = 0; i < r.length; i++) if (String(r[i][0]) === id) { at = i; break; }
@@ -245,7 +257,7 @@ function noteOp(ss, op, user) {
     return;
   }
   var n = op.note, type = NOTE_TYPES[n.type] ? n.type : 'txt', content = String(n.content == null ? '' : n.content), title = String(n.title || '').slice(0, 200);
-  var name = noteFileName(title, type), file = null;
+  var name = noteFileName(title || content.split('\n')[0], type), file = null;
   if (at >= 0 && String(r[at][2]) === type && oldFile) { try { file = DriveApp.getFileById(oldFile); if (file.isTrashed()) file = null; } catch (e) { file = null; } }
   if (file) { file.setContent(content); if (file.getName() !== name) file.setName(name); }
   else {
@@ -253,15 +265,16 @@ function noteOp(ss, op, user) {
     if (oldFile) { try { DriveApp.getFileById(oldFile).setTrashed(true); } catch (e) {} } // the type changed: new file, old one to the bin
   }
   var preview = content.replace(/<[^>]*>/g, ' ').replace(/```[^\n]*/g, ' ').replace(/^\s{0,3}(#{1,6}|>|[-*+]|\d+[.)])\s+/gm, '').replace(/\[( |x|X)\]\s+/g, '')
-    .replace(/(\*\*|__|~~|`)/g, '').replace(/\s+/g, ' ').trim().slice(0, 140);
-  var row = [id, title, type, me, file.getId(), stamp(+n.updatedAt || Date.now()), content.length, preview];
+    .replace(/(\*\*|__|~~|`)/g, '').replace(/[ \t]*\n+[ \t]*/g, ' · ').replace(/\s+/g, ' ').trim().slice(0, 140);
+  var row = [id, title, type, me, file.getId(), stamp(+n.updatedAt || Date.now()), content.length, preview].concat(noteMeta(n, at >= 0 ? r[at] : null));
   if (at >= 0) sh.getRange(at + 2, 1, 1, row.length).setNumberFormat('@').setValues([row]);
   else sh.getRange(sh.getLastRow() + 1, 1, 1, row.length).setNumberFormat('@').setValues([row]);
 }
 function readNotes(ss, user) {
   var me = noteOwner(user);
   return rows(ss.getSheetByName('Notes')).filter(function (r) { return r[0] && String(r[3]).toLowerCase() === me; }).map(function (r) {
-    return {id: String(r[0]), title: txt(r[1]), type: NOTE_TYPES[r[2]] ? String(r[2]) : 'txt', fileId: txt(r[4]), updatedAt: Date.parse(txt(r[5])) || 0, size: +r[6] || 0, preview: txt(r[7])};
+    return {id: String(r[0]), title: txt(r[1]), type: NOTE_TYPES[r[2]] ? String(r[2]) : 'txt', fileId: txt(r[4]), updatedAt: Date.parse(txt(r[5])) || 0, size: +r[6] || 0, preview: txt(r[7]),
+      cat: NOTE_LABELS[r[8]] ? String(r[8]) : 'other', pinned: /^(yes|true|1)$/i.test(txt(r[9])), order: +r[10] || 0};
   });
 }
 function noteBodies(ss, ids, user) {

@@ -506,18 +506,43 @@ body[data-view="vault"] .fab,body[data-view="vault"] #addTop,body[data-view="vau
 .bigtext .htile .hn,.bigtext .kpi .lbl,.bigtext .cckpi .lbl,.bigtext .tstat .lbl,.bigtext .th-main .lbl,.bigtext .ro .lbl,.bigtext .why-big .lbl{text-transform:none;letter-spacing:0;font-weight:700}
 /* ===== notes ===== */
 body[data-view="notes"] .fab{display:none}
-.nnew{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
-.nnewb{display:flex;align-items:center;justify-content:center;gap:6px;min-height:46px;padding:8px 6px;border:1px solid var(--rule-2);border-radius:12px;background:var(--sheet);color:var(--ink);font-weight:700;font-size:calc(15px*var(--fs,1));cursor:pointer;text-align:center;line-height:1.2}
-.nnewb b{color:var(--accent);font-size:calc(19px*var(--fs,1))}
-.nnewb:active{background:var(--accent-soft)}
-@media (max-width:520px){.nnew{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.nnew1{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;min-height:54px;border:0;border-radius:14px;background:var(--accent);color:var(--accent-ink);font-weight:800;font-size:calc(18px*var(--fs,1));cursor:pointer;box-shadow:var(--shade)}
+.nnew1 b{font-size:calc(24px*var(--fs,1));line-height:1}
+.nnew1:active{transform:scale(.99);filter:brightness(1.05)}
 .nbar .tin{min-height:44px;border-radius:10px;padding:9px 12px}
 .chipb .cnt{color:var(--ink-3);font-weight:600;margin-left:2px}
+.chipb[aria-pressed="true"] .cnt{color:inherit;opacity:.85}
 .nlist{display:flex;flex-direction:column;gap:10px}
 .ncard{display:flex;gap:12px;align-items:flex-start;width:100%;padding:14px;border:1px solid var(--rule);border-radius:var(--r);background:var(--sheet);box-shadow:var(--shade);color:inherit;font:inherit;text-align:left;cursor:pointer}
 .ncard:active{background:var(--accent-soft)}
-.ntype{flex:0 0 auto;min-width:50px;padding:6px 6px;border-radius:8px;text-align:center;font-weight:800;font-size:calc(12.5px*var(--fs,1));letter-spacing:.06em;background:var(--sheet-2);border:1px solid var(--rule-2);color:var(--ink-2)}
-.ntype.t-md{border-color:var(--accent);color:var(--accent)}.ntype.t-html{border-style:dashed}.ntype.t-json{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+.ncard{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;transition:transform .18s ease,box-shadow .18s ease;position:relative;touch-action:pan-y}
+.ncard.held{transform:scale(.985);box-shadow:0 0 0 2px var(--accent)}
+.ncard.pinned{border-color:color-mix(in srgb,var(--accent) 35%,var(--rule))}
+.ncard.dragging{z-index:5;transition:none;box-shadow:0 14px 34px -12px rgba(0,0,0,.45),0 0 0 2px var(--accent)}
+.nav{flex:0 0 auto;width:40px;height:40px;border-radius:50%;display:grid;place-items:center;font-weight:800;font-size:calc(17px*var(--fs,1));background:var(--accent-soft);color:var(--accent)}
+.nav.l-efrah{background:var(--sheet-2);color:var(--ink);border:2px solid var(--accent)}.nav.l-other{background:var(--sheet-2);color:var(--ink-2);border:1px dashed var(--rule-2)}
+.pinmark{font-size:.85em;margin-right:6px}
+.ngrip{flex:0 0 auto;align-self:center;width:40px;height:44px;display:grid;place-items:center;margin:-8px -6px -8px 0;font-size:24px;color:var(--ink-3);cursor:grab;touch-action:none;border-radius:8px}
+.ngrip:active{background:var(--accent-soft);cursor:grabbing}
+.ngrp{margin:6px 2px -2px;font-size:calc(13px*var(--fs,1));font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-3)}
+.nhint{margin:2px 2px 0;text-align:center}
+.npin{flex:0 0 auto;width:42px;height:42px;border-radius:50%;border:1px solid var(--rule-2);background:var(--sheet);font-size:19px;cursor:pointer;filter:grayscale(1);opacity:.6}
+.npin[aria-pressed="true"]{filter:none;opacity:1;background:var(--accent-soft);border-color:var(--accent)}
+.nlabels{display:flex;gap:8px;flex-wrap:wrap}
+.nlab{display:inline-flex;align-items:center;gap:7px;padding:5px 12px 5px 5px;border:1px solid var(--rule-2);border-radius:999px;background:var(--sheet);color:var(--ink);font-weight:600;font-size:calc(15px*var(--fs,1));cursor:pointer}
+.nlab i{font-style:normal;width:26px;height:26px;border-radius:50%;display:grid;place-items:center;background:var(--sheet-2);font-weight:800;font-size:calc(13px*var(--fs,1))}
+.nlab[aria-pressed="true"]{border-color:var(--accent);background:var(--accent-soft);box-shadow:0 0 0 1px var(--accent)}.nlab[aria-pressed="true"] i{background:var(--accent);color:var(--accent-ink)}
+.nkindb{border:1px dashed var(--rule-2);background:none;color:var(--ink-2);border-radius:999px;padding:6px 12px;font-weight:600;font-size:calc(14px*var(--fs,1));cursor:pointer}
+.nkinds{display:flex;gap:6px;flex-wrap:wrap}
+.sheet.nmenu{gap:8px;padding-top:14px}
+.nm-h{display:flex;align-items:center;gap:10px;padding:2px 2px 8px;border-bottom:1px solid var(--rule)}.nm-h b{font-size:calc(17px*var(--fs,1));overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.nm-b{display:flex;align-items:center;gap:12px;width:100%;min-height:52px;padding:10px 14px;border:1px solid var(--rule);border-radius:12px;background:var(--sheet);color:var(--ink);font:inherit;font-weight:600;font-size:calc(16.5px*var(--fs,1));cursor:pointer;text-align:left}
+.nm-b span{width:24px;text-align:center;font-size:19px}.nm-b:disabled{opacity:.4}.nm-b:active{background:var(--accent-soft)}
+.nm-b.danger{color:var(--bad-ink);border-color:color-mix(in srgb,var(--bad) 40%,var(--rule))}.nm-b.danger.armed{background:var(--bad);color:#fff}
+.nm-row{display:flex;gap:8px}.nm-row .nm-b{flex:1 1 0;justify-content:center}
+.nm-c{justify-content:center}.nm-c[aria-pressed="true"]{border-color:var(--accent);background:var(--accent-soft);box-shadow:0 0 0 1px var(--accent)}
+.nm-lbl{font-size:calc(13px*var(--fs,1));font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--ink-3);margin:6px 2px 0}
+.nm-close{align-self:center;margin-top:4px}
 .nmain{flex:1 1 auto;min-width:0;display:flex;flex-direction:column;gap:3px}
 .nmain .t1{font-weight:700;font-size:calc(17px*var(--fs,1));overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .nmain .t2{color:var(--ink-2);font-size:calc(14.5px*var(--fs,1));display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
@@ -812,6 +837,11 @@ body[data-view="notes"] .fab{display:none}
 <!-- Note editor -->
 <div class="scrim" id="noteScrim" hidden>
   <div class="sheet note" id="noteBox" role="dialog" aria-label="Note"></div>
+</div>
+
+<!-- Note menu (press and hold) -->
+<div class="scrim" id="noteMenu" hidden>
+  <div class="sheet nmenu" id="noteMenuBox" role="dialog" aria-label="Note options"></div>
 </div>
 
 <!-- Text size and font -->
@@ -1432,75 +1462,161 @@ document.addEventListener('change', ev => {
 
 
 /* ---------- notes ----------
-   Markdown, HTML, plain text or JSON. Each note is a real file in Google Drive (folder "Budget Tracker notes");
-   the sheet keeps only the list. A note saves on this phone first (works offline), then goes to Drive in the
-   background and is sent again until Drive has it. Each person sees only their own notes. */
+   One tap makes a plain-text note (Markdown, HTML or JSON only if you switch). Each note has a label
+   (Arhaan, Efrah, Others), can be pinned, and pinned notes can be put in any order. Press and hold a note
+   for its menu; drag the grip of a pinned note to move it. Each note is a real file in Google Drive (folder
+   "Budget Tracker notes"); the sheet keeps only the list. Notes save on this phone first and are sent again
+   until the sheet shows them. Each person sees only their own notes. */
 const LS_NOTES = 'budgetTracker.notes.v1';
-const NOTE_KINDS = {md: {label: 'Markdown', short: 'MD', mime: 'text/markdown', ext: 'md'}, txt: {label: 'Plain text', short: 'TXT', mime: 'text/plain', ext: 'txt'},
+const NOTE_KINDS = {txt: {label: 'Plain text', short: 'TXT', mime: 'text/plain', ext: 'txt'}, md: {label: 'Markdown', short: 'MD', mime: 'text/markdown', ext: 'md'},
   html: {label: 'HTML', short: 'HTML', mime: 'text/html', ext: 'html'}, json: {label: 'JSON', short: 'JSON', mime: 'application/json', ext: 'json'}};
-const N = {local: {}, del: {}, bodies: {}, err: '', q: '', type: '', open: null, mode: 'edit', timer: 0};
-try { const s = JSON.parse(localStorage.getItem(LS_NOTES) || '{}') || {}; N.local = s.local || {}; N.del = s.del || {}; N.bodies = s.bodies || {}; } catch (e) {}
-function saveNotes() { try { localStorage.setItem(LS_NOTES, JSON.stringify({local: N.local, del: N.del, bodies: N.bodies})); } catch (e) {} }
-// The list: the sheet's list, with this phone's unsent changes on top.
-function noteList() {
-  const m = {}; (state.notes || []).forEach(n => { if (!N.del[n.id]) m[n.id] = Object.assign({}, n); });
-  Object.values(m).forEach(n => { n.preview = notePreview(n.preview); });
-  Object.values(N.local).forEach(l => { if (N.del[l.id]) return; m[l.id] = Object.assign({}, m[l.id] || {}, {id: l.id, title: l.title, type: l.type, updatedAt: l.updatedAt, preview: notePreview(l.content), size: l.content.length, dirty: true}); });
-  return Object.values(m).sort((a, b) => (b.updatedAt || 0) - (a.updatedAt || 0));
-}
+const NOTE_LABELS = {arhaan: 'Arhaan', efrah: 'Efrah', other: 'Others'};
+const N = {local: {}, meta: {}, del: {}, bodies: {}, err: '', q: '', cat: '', open: null, mode: 'edit', timer: 0, kinds: false};
+try { const s = JSON.parse(localStorage.getItem(LS_NOTES) || '{}') || {}; N.local = s.local || {}; N.meta = s.meta || {}; N.del = s.del || {}; N.bodies = s.bodies || {}; } catch (e) {}
+function saveNotes() { try { localStorage.setItem(LS_NOTES, JSON.stringify({local: N.local, meta: N.meta, del: N.del, bodies: N.bodies})); } catch (e) {} }
+const defaultLabel = () => { const p = readPref().noteCat; if (NOTE_LABELS[p]) return p; const e = ((Sync.me || {}).email || '').toLowerCase(); return /aarhaan|arhaan/.test(e) ? 'arhaan' : /efrah|ifra/.test(e) ? 'efrah' : 'other'; };
 // Preview: the words only, without Markdown marks or HTML tags.
 const notePreview = c => String(c || '').replace(/<[^>]*>/g, ' ').replace(/```[^\n]*/g, ' ').replace(/^\s*\|?\s*:?-{3,}[\s|:-]*$/gm, ' ')
   .replace(/^\s{0,3}(#{1,6}|>|[-*+]|\d+[.)])\s+/gm, '').replace(/\[( |x|X)\]\s+/g, '').replace(/\[([^\]]+)\]\([^)]*\)/g, '$1')
-  .replace(/(\*\*|__|~~|`)/g, '').replace(/(\s*\|\s*)+/g, ' · ').replace(/\s+/g, ' ').replace(/^( · )+|( · )+$/g, '').trim().slice(0, 140);
-// After every reply: clear what Drive has, send again what it doesn't.
+  .replace(/(\*\*|__|~~|`)/g, '').replace(/(\s*\|\s*)+/g, ' · ').replace(/[ \t]*\n+[ \t]*/g, ' · ').replace(/( · )+/g, ' · ').replace(/\s+/g, ' ').replace(/^( · )+|( · )+$/g, '').trim().slice(0, 140);
+// The list: the sheet's list, with this phone's unsent changes on top.
+function noteList() {
+  const m = {}; (state.notes || []).forEach(n => { if (!N.del[n.id]) m[n.id] = Object.assign({cat: 'other', pinned: false, order: 0}, n, {preview: notePreview(n.preview)}); });
+  Object.values(N.local).forEach(l => { if (N.del[l.id]) return; m[l.id] = Object.assign({}, m[l.id] || {}, {id: l.id, title: l.title, type: l.type, cat: l.cat, pinned: !!l.pinned, order: l.order || 0, updatedAt: l.updatedAt, preview: notePreview(l.content), size: l.content.length, dirty: true}); });
+  Object.entries(N.meta).forEach(([id, mt]) => { if (m[id]) Object.assign(m[id], mt, {metaDirty: true}); });
+  Object.values(m).forEach(n => { const body = N.local[n.id] ? N.local[n.id].content : N.bodies[n.id] && N.bodies[n.id].u === n.updatedAt ? N.bodies[n.id].c : null; if (body != null) n.preview = notePreview(body); });
+  return Object.values(m);
+}
+const sortNotes = l => l.slice().sort((a, b) => (b.pinned - a.pinned) || (a.pinned ? (a.order - b.order) || (b.updatedAt - a.updatedAt) : (b.updatedAt || 0) - (a.updatedAt || 0)));
+const noteName = n => n.title || (String(n.preview || '').split(' · ')[0] || '').slice(0, 60) || 'New note';
+const noteRest = n => n.title ? n.preview : String(n.preview || '').split(' · ').slice(1).join(' · ');
+// After every reply: clear what the sheet has, send again what it doesn't.
 function notesReply(j) {
   Sync.notesOk = Array.isArray(j.notes); // an older script has no notes yet: keep them on the phone until it does
+  Sync.notesV = Sync.notesOk ? (+j.notesV || 1) : 0;
   if (Sync.notesOk) state.notes = j.notes;
   if (j.noteBodies) for (const [id, c] of Object.entries(j.noteBodies)) { const n = (state.notes || []).find(x => x.id === id); if (n) N.bodies[id] = {u: n.updatedAt, c}; }
   N.err = j.noteErrors && j.noteErrors.length ? j.noteErrors[0].error : '';
   if (!Sync.notesOk) return;
-  let sent = false;
+  let sent = false; const queued = (t, id) => Sync.outbox.some(o => o.t === t && (o.id || (o.note || {}).id) === id);
   Object.values(N.local).forEach(l => {
     const s = state.notes.find(x => x.id === l.id);
-    if (s && s.updatedAt >= Math.floor(l.updatedAt / 1000) * 1000) { N.bodies[l.id] = {u: s.updatedAt, c: l.content}; delete N.local[l.id]; return; }
-    if (!Sync.outbox.some(o => o.t === 'nput' && o.note.id === l.id)) { Sync.outbox.push({t: 'nput', note: Object.assign({}, l)}); sent = true; }
+    if (s && s.updatedAt >= Math.floor(l.updatedAt / 1000) * 1000) { N.bodies[l.id] = {u: s.updatedAt, c: l.content};
+      if (Sync.notesV < 2 || s.cat !== l.cat || !!s.pinned !== !!l.pinned || (+s.order || 0) !== (+l.order || 0)) N.meta[l.id] = {cat: l.cat, pinned: !!l.pinned, order: +l.order || 0};
+      delete N.local[l.id]; return; }
+    if (!queued('nput', l.id)) { Sync.outbox.push({t: 'nput', note: Object.assign({}, l)}); sent = true; }
+  });
+  Object.entries(N.meta).forEach(([id, mt]) => {
+    const s = state.notes.find(x => x.id === id); if (!s) { if (!N.local[id]) delete N.meta[id]; return; }
+    if (Sync.notesV < 2) return; // the sheet can't hold labels yet: keep them on the phone
+    if (s.cat === mt.cat && !!s.pinned === !!mt.pinned && (+s.order || 0) === (+mt.order || 0)) { delete N.meta[id]; return; }
+    if (Sync.notesV >= 2 && !queued('nmeta', id)) { Sync.outbox.push(Object.assign({t: 'nmeta', id}, mt)); sent = true; }
   });
   Object.keys(N.del).forEach(id => {
-    if (!state.notes.some(x => x.id === id)) { delete N.del[id]; delete N.bodies[id]; return; }
-    if (!Sync.outbox.some(o => o.t === 'ndel' && o.id === id)) { Sync.outbox.push({t: 'ndel', id}); sent = true; }
+    if (!state.notes.some(x => x.id === id)) { delete N.del[id]; delete N.bodies[id]; delete N.meta[id]; return; }
+    if (!queued('ndel', id)) { Sync.outbox.push({t: 'ndel', id}); sent = true; }
   });
   saveNotes();
   if (sent && !N.err) setTimeout(flush, 400);
 }
 function noteSave(n) {
-  N.local[n.id] = {id: n.id, title: n.title, type: n.type, content: n.content, updatedAt: Date.now()};
+  const cur = noteList().find(x => x.id === n.id) || {};
+  N.local[n.id] = {id: n.id, title: n.title, type: n.type, content: n.content, cat: n.cat || cur.cat || defaultLabel(), pinned: n.pinned != null ? !!n.pinned : !!cur.pinned, order: n.order != null ? n.order : (cur.order || 0), updatedAt: Date.now()};
+  delete N.meta[n.id];
   saveNotes();
   if (Sync.notesOk) { Sync.outbox.push({t: 'nput', note: Object.assign({}, N.local[n.id])}); saveCache(); clearTimeout(N.flushT); N.flushT = setTimeout(flush, 600); }
 }
+// Label, pin and order changes: only the list changes, not the file.
+function noteSetMeta(id, patch) {
+  const cur = noteList().find(x => x.id === id); if (!cur) return;
+  const mt = {cat: cur.cat, pinned: !!cur.pinned, order: cur.order || 0, ...patch};
+  if (N.local[id]) Object.assign(N.local[id], mt); else N.meta[id] = mt;
+  saveNotes();
+  if (Sync.notesOk) { if (N.local[id]) Sync.outbox.push({t: 'nput', note: Object.assign({}, N.local[id])}); else if (Sync.notesV >= 2) Sync.outbox.push(Object.assign({t: 'nmeta', id}, mt)); saveCache(); clearTimeout(N.flushT); N.flushT = setTimeout(flush, 600); }
+}
+function pinNote(id, on) {
+  if (!on) return noteSetMeta(id, {pinned: false, order: 0});
+  const pins = sortNotes(noteList()).filter(n => n.pinned);
+  noteSetMeta(id, {pinned: true, order: pins.length ? Math.min(...pins.map(n => n.order || 0)) - 1 : 0}); // newest pin goes to the top
+}
+function movePinned(ids) { ids.forEach((id, i) => { const n = noteList().find(x => x.id === id); if (n && n.order !== i) noteSetMeta(id, {order: i}); }); }
 const fmtWhen = ms => { if (!ms) return ''; const d = new Date(ms), t = new Date(), hm = pad(d.getHours()) + ':' + pad(d.getMinutes());
   if (d.toDateString() === t.toDateString()) return 'Today ' + hm; const y = new Date(t); y.setDate(y.getDate() - 1);
   if (d.toDateString() === y.toDateString()) return 'Yesterday ' + hm; return d.getDate() + ' ' + MON[d.getMonth()] + (d.getFullYear() !== t.getFullYear() ? ' ' + d.getFullYear() : ''); };
 function renderNotes() {
   const el = $('#v-notes'); if (!el) return;
-  const all = noteList(), counts = {}; all.forEach(n => { counts[n.type] = (counts[n.type] || 0) + 1; });
-  const banner = !signedIn() ? '' : Sync.notesOk === undefined ? '' : !Sync.notesOk
-    ? `<div class="banner warn"><b>Notes are saved on this phone for now.</b> To keep them in Google Drive, update the script once: paste the new Code.gs in Apps Script, choose <b>setupNotes</b> and press <b>Run</b>, allow Drive access, then Deploy → Manage deployments → pencil → <b>New version</b>.</div>`
+  const all = noteList(), counts = {}; all.forEach(n => { counts[n.cat] = (counts[n.cat] || 0) + 1; });
+  const banner = !signedIn() || Sync.notesOk === undefined ? '' : !Sync.notesOk || Sync.notesV < 2
+    ? `<div class="banner warn"><b>Notes are saved on this phone${Sync.notesOk ? ' (labels and pins too)' : ''} for now.</b> To keep them in Google Drive, update the script once: paste the new Code.gs in Apps Script, choose <b>setupNotes</b> and press <b>Run</b>, allow Drive access, then Deploy → Manage deployments → pencil → <b>New version</b>.</div>`
     : N.err ? `<div class="banner warn">Google Drive didn't take the last change: ${esc(N.err)}. Your notes are safe on this phone and will be sent again.</div>` : '';
-  el.innerHTML = `${banner}<div class="nnew" role="group" aria-label="New note">${Object.entries(NOTE_KINDS).map(([k, v]) => `<button type="button" class="nnewb" data-act="n-new" data-v="${k}"><b>+</b> ${v.label}</button>`).join('')}</div>
+  el.innerHTML = `${banner}<button type="button" class="nnew1" data-act="n-new"><b>+</b> New note</button>
     <div class="nbar"><input id="nQ" type="search" placeholder="Search notes" aria-label="Search notes" value="${esc(N.q)}"></div>
-    <div class="chips" id="nTypes" role="group" aria-label="Show">${[['', 'All', all.length]].concat(Object.entries(NOTE_KINDS).map(([k, v]) => [k, v.label, counts[k] || 0])).map(([k, l, c]) => `<button type="button" class="chipb" data-act="n-type" data-v="${k}" aria-pressed="${N.type === k}">${l} <span class="cnt">${c}</span></button>`).join('')}</div>
+    <div class="chips" id="nCats" role="group" aria-label="Show">${[['', 'All', all.length]].concat(Object.entries(NOTE_LABELS).map(([k, v]) => [k, v, counts[k] || 0])).map(([k, l, c]) => `<button type="button" class="chipb" data-act="n-cat" data-v="${k}" aria-pressed="${N.cat === k}">${l} <span class="cnt">${c}</span></button>`).join('')}</div>
     <div id="nList"></div>`;
   renderNoteList();
 }
+function noteCard(n, pinned) {
+  return `<div class="ncard${pinned ? ' pinned' : ''}" data-act="n-open" data-id="${esc(n.id)}" role="button" tabindex="0" aria-label="${esc(noteName(n))}. Press and hold for options.">
+      <span class="nav l-${n.cat}" aria-hidden="true">${esc(NOTE_LABELS[n.cat][0])}</span>
+      <span class="nmain"><span class="t1">${pinned ? '<span class="pinmark" aria-label="Pinned">📌</span>' : ''}${esc(noteName(n))}</span>${noteRest(n) ? `<span class="t2">${esc(noteRest(n))}</span>` : ''}
+        <span class="t3">${esc(NOTE_LABELS[n.cat])} · ${fmtWhen(n.updatedAt)}${n.type !== 'txt' ? ' · ' + NOTE_KINDS[n.type].short : ''}${n.dirty || n.metaDirty ? ` · <span class="nsync">${Sync.notesOk ? 'saving' : 'on this phone'}</span>` : ''}</span></span>
+      ${pinned ? `<span class="ngrip" data-grip="${esc(n.id)}" role="button" aria-label="Drag to move" title="Drag to move">≡</span>` : ''}</div>`;
+}
 function renderNoteList() {
   const box = $('#nList'); if (!box) return;
-  const q = N.q.trim().toLowerCase(), list = noteList().filter(n => (!N.type || n.type === N.type) && (!q || (n.title + ' ' + n.preview + ' ' + ((N.local[n.id] || N.bodies[n.id] || {}).content || (N.bodies[n.id] || {}).c || '')).toLowerCase().includes(q)));
-  box.innerHTML = list.length ? `<div class="nlist">${list.map(n => `<button type="button" class="ncard" data-act="n-open" data-id="${esc(n.id)}">
-      <span class="ntype t-${n.type}">${NOTE_KINDS[n.type].short}</span>
-      <span class="nmain"><span class="t1">${esc(n.title || 'Untitled')}</span><span class="t2">${esc(n.preview || 'Empty note')}</span>
-        <span class="t3">${fmtWhen(n.updatedAt)}${n.dirty ? ` · <span class="nsync">${Sync.notesOk ? 'going to Drive' : 'on this phone'}</span>` : n.fileId ? ' · in Drive' : ''}</span></span></button>`).join('')}</div>`
-    : `<div class="card empty">${q || N.type ? 'No notes match.' : 'No notes yet. Start one above: Markdown, plain text, HTML or JSON.'}</div>`;
+  const q = N.q.trim().toLowerCase(), list = sortNotes(noteList()).filter(n => (!N.cat || n.cat === N.cat) && (!q || (n.title + ' ' + n.preview + ' ' + ((N.local[n.id] || {}).content || (N.bodies[n.id] || {}).c || '')).toLowerCase().includes(q)));
+  const pins = list.filter(n => n.pinned), rest = list.filter(n => !n.pinned);
+  box.innerHTML = list.length ? `${pins.length ? `<div class="ngrp">Pinned</div><div class="nlist" id="nPinned">${pins.map(n => noteCard(n, true)).join('')}</div>` : ''}
+      ${rest.length ? `${pins.length ? '<div class="ngrp">Notes</div>' : ''}<div class="nlist">${rest.map(n => noteCard(n, false)).join('')}</div>` : ''}
+      <p class="hint nhint">Press and hold a note to pin, move, label or delete it.</p>`
+    : `<div class="card empty">${q || N.cat ? 'No notes match.' : 'No notes yet. Tap “New note” and start typing.'}</div>`;
 }
+/* --- press and hold: the note's menu --- */
+let lp = null, lpFired = 0;
+document.addEventListener('pointerdown', ev => {
+  const c = ev.target.closest('.ncard'); if (!c || ev.target.closest('.ngrip') || ev.button > 0) return;
+  lp = {id: c.dataset.id, x: ev.clientX, y: ev.clientY, el: c, t: setTimeout(() => { lpFired = Date.now(); c.classList.add('held'); try { navigator.vibrate && navigator.vibrate(12); } catch (e) {} noteMenu(c.dataset.id); lp = null; }, 480)};
+});
+document.addEventListener('pointermove', ev => { if (lp && Math.hypot(ev.clientX - lp.x, ev.clientY - lp.y) > 10) { clearTimeout(lp.t); lp = null; } });
+['pointerup', 'pointercancel'].forEach(t => document.addEventListener(t, () => { if (lp) { clearTimeout(lp.t); lp = null; } }));
+document.addEventListener('contextmenu', ev => { if (ev.target.closest('.ncard')) ev.preventDefault(); });
+function noteMenu(id) {
+  const n = noteList().find(x => x.id === id); if (!n) return;
+  const pins = sortNotes(noteList()).filter(x => x.pinned), pi = pins.findIndex(x => x.id === id);
+  $('#noteMenuBox').innerHTML = `<div class="nm-h"><span class="nav l-${n.cat}">${NOTE_LABELS[n.cat][0]}</span><b>${esc(noteName(n))}</b></div>
+    <button type="button" class="nm-b" data-act="n-m-pin" data-id="${esc(id)}"><span>📌</span>${n.pinned ? 'Unpin' : 'Pin to the top'}</button>
+    ${n.pinned && pins.length > 1 ? `<div class="nm-row"><button type="button" class="nm-b" data-act="n-m-move" data-d="-1" data-id="${esc(id)}"${pi <= 0 ? ' disabled' : ''}><span>↑</span>Move up</button><button type="button" class="nm-b" data-act="n-m-move" data-d="1" data-id="${esc(id)}"${pi >= pins.length - 1 ? ' disabled' : ''}><span>↓</span>Move down</button></div>` : ''}
+    <div class="nm-lbl">Label</div><div class="nm-row">${Object.entries(NOTE_LABELS).map(([k, v]) => `<button type="button" class="nm-b nm-c" data-act="n-m-cat" data-v="${k}" data-id="${esc(id)}" aria-pressed="${n.cat === k}">${v}</button>`).join('')}</div>
+    <button type="button" class="nm-b danger" data-act="n-m-del" data-id="${esc(id)}"><span>🗑</span>Delete</button>
+    <button type="button" class="btn ghost nm-close" data-act="n-m-close">Cancel</button>`;
+  $('#noteMenu').hidden = false;
+  document.querySelectorAll('.ncard.held').forEach(x => x.classList.remove('held'));
+}
+function closeNoteMenu() { $('#noteMenu').hidden = true; }
+function deleteNote(id) {
+  clearTimeout(N.timer); delete N.local[id]; delete N.meta[id]; const onServer = (state.notes || []).some(x => x.id === id);
+  if (onServer) { N.del[id] = 1; if (Sync.notesOk) { Sync.outbox.push({t: 'ndel', id}); saveCache(); setTimeout(flush, 300); } }
+  saveNotes(); toast('Note deleted' + (onServer ? ' (it goes to the Drive bin)' : ''));
+}
+/* --- drag a pinned note by its grip --- */
+let dg = null;
+document.addEventListener('pointerdown', ev => {
+  const g = ev.target.closest('.ngrip'); if (!g) return;
+  ev.preventDefault(); const card = g.closest('.ncard'), list = card.parentElement, cards = [...list.children];
+  dg = {card, list, cards, y0: ev.clientY, idx: cards.indexOf(card), to: cards.indexOf(card), h: card.getBoundingClientRect().height + 10, mids: cards.map(c => { const r = c.getBoundingClientRect(); return r.top + r.height / 2; })};
+  card.classList.add('dragging'); try { g.setPointerCapture(ev.pointerId); } catch (e) {}
+});
+document.addEventListener('pointermove', ev => {
+  if (!dg) return; ev.preventDefault();
+  const dy = ev.clientY - dg.y0, mid = dg.mids[dg.idx] + dy; let to = dg.idx;
+  dg.mids.forEach((m, i) => { if (i < dg.idx && mid < m) to = Math.min(to, i); if (i > dg.idx && mid > m) to = Math.max(to, i); });
+  dg.to = to; dg.card.style.transform = `translateY(${dy}px)`;
+  dg.cards.forEach((c, i) => { if (c === dg.card) return; c.style.transform = i > dg.idx && i <= to ? `translateY(${-dg.h}px)` : i < dg.idx && i >= to ? `translateY(${dg.h}px)` : ''; });
+}, {passive: false});
+['pointerup', 'pointercancel'].forEach(t => document.addEventListener(t, () => {
+  if (!dg) return; const {cards, idx, to} = dg; dg.card.classList.remove('dragging'); cards.forEach(c => { c.style.transform = ''; }); dg = null;
+  if (to === idx) return; const ids = cards.map(c => c.dataset.id); ids.splice(to, 0, ids.splice(idx, 1)[0]); movePinned(ids); renderNoteList();
+}));
 /* --- the editor --- */
 function noteBody(id) {
   if (N.local[id]) return N.local[id].content;
@@ -1510,42 +1626,43 @@ function noteBody(id) {
 async function openNote(id, fresh) {
   const s = noteList().find(x => x.id === id) || fresh; if (!s) return;
   let c = fresh ? fresh.content : noteBody(id);
-  N.open = {id, title: s.title || '', type: s.type, content: c == null ? '' : c, fileId: s.fileId || '', loading: c == null};
-  N.mode = fresh || s.type === 'txt' ? 'edit' : 'view';
+  N.open = {id, title: s.title || '', type: s.type || 'txt', cat: s.cat || defaultLabel(), pinned: !!s.pinned, order: s.order || 0, content: c == null ? '' : c, fileId: s.fileId || '', loading: c == null, fresh: !!fresh};
+  N.mode = 'edit'; N.kinds = false;
   drawNote();
   if (c == null) {
     try { const j = await call([], {noteIds: [id]}); takeReply(j); c = noteBody(id); } catch (e) {}
     if (!N.open || N.open.id !== id) return;
-    N.open.loading = false;
-    if (c == null) { N.open.failed = true; } else N.open.content = c;
+    N.open.loading = false; if (c == null) N.open.failed = true; else N.open.content = c;
     drawNote();
   }
 }
 function drawNote() {
-  const o = N.open, k = NOTE_KINDS[o.type], drive = o.fileId ? `https://drive.google.com/file/d/${encodeURIComponent(o.fileId)}/view` : '';
+  const o = N.open, k = NOTE_KINDS[o.type], drive = o.fileId ? `https://drive.google.com/file/d/${encodeURIComponent(o.fileId)}/view` : '', fancy = o.type !== 'txt';
   $('#noteBox').innerHTML = `<div class="nhead"><button type="button" class="btn ghost sm" data-act="n-close">‹ Notes</button><span class="nstate" id="nState"></span>
-      <div class="seg nmode" role="group" aria-label="Mode"><button type="button" class="segb" data-act="n-mode" data-v="edit" aria-pressed="${N.mode === 'edit'}">Edit</button><button type="button" class="segb" data-act="n-mode" data-v="view" aria-pressed="${N.mode === 'view'}">${o.type === 'json' ? 'Check' : 'Preview'}</button></div></div>
-    <input id="nTitle" type="text" class="ntitle" placeholder="Title" aria-label="Title" value="${esc(o.title)}">
-    <div class="chips ntypes" role="group" aria-label="Kind of note">${Object.entries(NOTE_KINDS).map(([kk, v]) => `<button type="button" class="chipb" data-act="n-kind" data-v="${kk}" aria-pressed="${kk === o.type}">${v.label}</button>`).join('')}</div>
+      ${fancy ? `<div class="seg nmode" role="group" aria-label="Mode"><button type="button" class="segb" data-act="n-mode" data-v="edit" aria-pressed="${N.mode === 'edit'}">Edit</button><button type="button" class="segb" data-act="n-mode" data-v="view" aria-pressed="${N.mode === 'view'}">${o.type === 'json' ? 'Check' : 'Preview'}</button></div>` : ''}
+      <button type="button" class="npin" data-act="n-pin" aria-pressed="${o.pinned}" aria-label="${o.pinned ? 'Unpin' : 'Pin'}" title="${o.pinned ? 'Unpin' : 'Pin'}">📌</button></div>
+    <input id="nTitle" type="text" class="ntitle" placeholder="Title (optional)" aria-label="Title" value="${esc(o.title)}">
+    <div class="nlabels" role="group" aria-label="Label">${Object.entries(NOTE_LABELS).map(([kk, v]) => `<button type="button" class="nlab l-${kk}" data-act="n-label" data-v="${kk}" aria-pressed="${kk === o.cat}"><i>${v[0]}</i>${v}</button>`).join('')}</div>
     <div class="nbody" id="nBody">${o.loading ? '<div class="empty">Opening from Google Drive…</div>' : o.failed ? '<div class="empty">Couldn\'t open this note from Google Drive. Check the connection and try again.</div>' : noteBodyHtml()}</div>
-    <div class="nact">${o.type === 'json' ? '<button type="button" class="btn sm" data-act="n-tidy">Tidy JSON</button>' : ''}<button type="button" class="btn sm" data-act="n-copy">Copy</button><button type="button" class="btn sm" data-act="n-dl">Download .${k.ext}</button>${drive ? `<a class="btn sm" href="${drive}" target="_blank" rel="noopener">Open in Drive</a>` : ''}<button type="button" class="btn sm danger" data-act="n-del">Delete</button></div>`;
+    <div class="nact"><button type="button" class="nkindb" data-act="n-kinds" aria-expanded="${N.kinds}">${k.label} ▾</button>
+      ${N.kinds ? `<span class="nkinds">${Object.entries(NOTE_KINDS).filter(([kk]) => kk !== o.type).map(([kk, v]) => `<button type="button" class="chipb" data-act="n-kind" data-v="${kk}">${v.label}</button>`).join('')}</span>` : `${o.type === 'json' ? '<button type="button" class="btn sm" data-act="n-tidy">Tidy JSON</button>' : ''}<button type="button" class="btn sm" data-act="n-copy">Copy</button><button type="button" class="btn sm" data-act="n-dl">Download</button>${drive ? `<a class="btn sm" href="${drive}" target="_blank" rel="noopener">Drive</a>` : ''}<button type="button" class="btn sm danger" data-act="n-del">Delete</button>`}</div>`;
   $('#noteScrim').hidden = false; noteState();
-  const ta = $('#nText'); if (ta && !o.loading && N.mode === 'edit' && !o.content) setTimeout(() => { if (!$('#noteBox').contains(document.activeElement)) focusBox(o.title ? ta : $('#nTitle')); }, 60);
+  const ta = $('#nText'); if (ta && o.fresh && !o.content) { o.fresh = false; setTimeout(() => { if (!$('#noteBox').contains(document.activeElement) || document.activeElement === document.body) focusBox(ta); }, 60); }
 }
 function noteBodyHtml() {
   const o = N.open;
-  if (N.mode === 'edit') return `<textarea id="nText" class="ntext${o.type === 'html' || o.type === 'json' ? ' mono' : ''}" placeholder="${o.type === 'md' ? '# Heading\n\nWrite in **Markdown**…' : o.type === 'html' ? '<h1>Hello</h1>' : o.type === 'json' ? '{\n  "key": "value"\n}' : 'Write anything…'}" aria-label="Note">${esc(o.content)}</textarea>`;
+  if (N.mode === 'edit') return `<textarea id="nText" class="ntext${o.type === 'html' || o.type === 'json' ? ' mono' : ''}" placeholder="${o.type === 'md' ? '# Heading\n\nWrite in **Markdown**…' : o.type === 'html' ? '<h1>Hello</h1>' : o.type === 'json' ? '{\n  "key": "value"\n}' : 'Start typing…'}" aria-label="Note">${esc(o.content)}</textarea>`;
   if (o.type === 'md') return `<div class="mdview">${mdToHtml(o.content) || '<p class="muted">Nothing written yet.</p>'}</div>`;
   if (o.type === 'html') return `<iframe class="htmlview" sandbox title="HTML preview" srcdoc="${esc(o.content || '<p style="font-family:sans-serif;color:#888">Nothing written yet.</p>')}"></iframe>`;
   if (o.type === 'json') { if (!o.content.trim()) return '<p class="muted">Nothing written yet.</p>';
     try { return `<div class="jsonok">${sdot('good')}Valid JSON</div><pre class="jsonview">${jsonHtml(JSON.parse(o.content))}</pre>`; }
     catch (e) { return `<div class="jsonbad">${sdot('bad')}Not valid JSON: ${esc(e.message)}</div><pre class="jsonview plain">${esc(o.content)}</pre>`; } }
-  return `<div class="txtview">${esc(o.content) || '<span class="muted">Nothing written yet.</span>'}</div>`;
+  return `<div class="txtview">${esc(o.content)}</div>`;
 }
 function noteState() {
   const o = N.open, el = $('#nState'); if (!o || !el) return;
   const l = N.local[o.id];
-  el.textContent = o.loading ? 'Opening…' : l ? (Sync.notesOk ? (N.err ? 'Saved on phone · Drive will retry' : 'Saved on phone · going to Drive') : 'Saved on this phone') : o.fileId ? 'Saved in Drive' : '';
+  el.textContent = o.loading ? 'Opening…' : l ? (Sync.notesOk ? (N.err ? 'Saved on phone · Drive will retry' : 'Saving to Drive…') : 'Saved on this phone') : o.fileId ? 'Saved in Drive' : '';
 }
 function noteChanged() {
   const o = N.open; if (!o || o.loading || o.failed) return;
@@ -1557,7 +1674,8 @@ function commitNote() {
   clearTimeout(N.timer); const o = N.open; if (!o || o.loading || o.failed) return;
   const was = N.local[o.id] || (state.notes || []).find(x => x.id === o.id), body = noteBody(o.id);
   const isNew = !was, same = was && (was.title || '') === o.title && was.type === o.type && body === o.content;
-  if (same || (isNew && !o.title && !o.content)) return;
+  if (isNew && !o.title && !o.content) return;
+  if (same) { const cur = noteList().find(x => x.id === o.id) || {}; if (cur.cat !== o.cat || !!cur.pinned !== !!o.pinned) noteSetMeta(o.id, {cat: o.cat, pinned: o.pinned, order: o.order}); return; }
   noteSave(o); noteState(); renderNoteList();
 }
 function closeNote() { commitNote(); N.open = null; $('#noteScrim').hidden = true; renderNotes(); }
@@ -1603,23 +1721,29 @@ document.addEventListener('input', ev => {
 });
 document.addEventListener('click', async ev => {
   const b = ev.target.closest('[data-act^="n-"]'); if (!b) return;
+  if (Date.now() - lpFired < 600 && b.dataset.act === 'n-open') return; // the tap that ended a press-and-hold
   const a = b.dataset.act, o = N.open;
-  if (a === 'n-new') { const id = 'n' + newId(); openNote(id, {id, title: '', type: b.dataset.v, content: ''}); }
+  if (a === 'n-new') { const id = 'n' + newId(); openNote(id, {id, title: '', type: 'txt', cat: N.cat || defaultLabel(), content: ''}); }
   else if (a === 'n-open') openNote(b.dataset.id);
-  else if (a === 'n-type') { N.type = b.dataset.v; document.querySelectorAll('#nTypes .chipb').forEach(x => x.setAttribute('aria-pressed', String(x.dataset.v === N.type))); renderNoteList(); }
+  else if (a === 'n-cat') { N.cat = b.dataset.v; document.querySelectorAll('#nCats .chipb').forEach(x => x.setAttribute('aria-pressed', String(x.dataset.v === N.cat))); renderNoteList(); }
+  else if (a === 'n-m-close') closeNoteMenu();
+  else if (a === 'n-m-pin') { const n = noteList().find(x => x.id === b.dataset.id); pinNote(b.dataset.id, !(n && n.pinned)); closeNoteMenu(); renderNotes(); toast(n && n.pinned ? 'Unpinned' : 'Pinned to the top'); }
+  else if (a === 'n-m-move') { const ids = sortNotes(noteList()).filter(x => x.pinned).map(x => x.id), i = ids.indexOf(b.dataset.id), j = i + (+b.dataset.d);
+    if (i >= 0 && j >= 0 && j < ids.length) { ids.splice(j, 0, ids.splice(i, 1)[0]); movePinned(ids); renderNoteList(); noteMenu(b.dataset.id); } }
+  else if (a === 'n-m-cat') { noteSetMeta(b.dataset.id, {cat: b.dataset.v}); writePref({noteCat: b.dataset.v}); closeNoteMenu(); renderNotes(); }
+  else if (a === 'n-m-del') { if (!arm(b, 'nmdel' + b.dataset.id, 'Tap again to delete')) return; deleteNote(b.dataset.id); closeNoteMenu(); renderNotes(); }
   else if (!o) return;
   else if (a === 'n-close') closeNote();
   else if (a === 'n-mode') { commitNote(); N.mode = b.dataset.v; drawNote(); }
-  else if (a === 'n-kind') { o.type = b.dataset.v; commitNote(); drawNote(); }
+  else if (a === 'n-kinds') { N.kinds = !N.kinds; drawNote(); }
+  else if (a === 'n-kind') { o.type = b.dataset.v; N.kinds = false; if (o.type === 'txt') N.mode = 'edit'; commitNote(); drawNote(); }
+  else if (a === 'n-label') { o.cat = b.dataset.v; writePref({noteCat: o.cat}); document.querySelectorAll('.nlab').forEach(x => x.setAttribute('aria-pressed', String(x.dataset.v === o.cat))); commitNote(); }
+  else if (a === 'n-pin') { if (!o.pinned) { const pins = sortNotes(noteList()).filter(n => n.pinned && n.id !== o.id); o.order = pins.length ? Math.min(...pins.map(n => n.order || 0)) - 1 : 0; } o.pinned = !o.pinned; b.setAttribute('aria-pressed', String(o.pinned)); commitNote(); toast(o.pinned ? 'Pinned to the top' : 'Unpinned'); }
   else if (a === 'n-tidy') { try { o.content = JSON.stringify(JSON.parse(o.content), null, 2); commitNote(); drawNote(); toast('JSON tidied'); } catch (e) { toast('Not valid JSON: ' + e.message, 'bad'); } }
   else if (a === 'n-copy') { try { await navigator.clipboard.writeText(o.content); toast('Copied'); } catch (e) { showCopy(o.title || 'Note', o.content); } }
-  else if (a === 'n-dl') { commitNote(); offerFile((o.title || 'Untitled').replace(/[\\/:*?"<>|]+/g, ' ').trim() + '.' + NOTE_KINDS[o.type].ext, o.content, NOTE_KINDS[o.type].mime); }
-  else if (a === 'n-del') { if (!arm(b, 'ndel' + o.id, 'Tap again to delete')) return;
-    clearTimeout(N.timer); delete N.local[o.id]; const onServer = (state.notes || []).some(x => x.id === o.id);
-    if (onServer) { N.del[o.id] = 1; if (Sync.notesOk) { Sync.outbox.push({t: 'ndel', id: o.id}); saveCache(); setTimeout(flush, 300); } }
-    saveNotes(); N.open = null; $('#noteScrim').hidden = true; renderNotes(); toast('Note deleted' + (onServer ? ' (it goes to the Drive bin)' : '')); }
+  else if (a === 'n-dl') { commitNote(); offerFile((o.title || noteName({preview: notePreview(o.content)})).replace(/[\\/:*?"<>|]+/g, ' ').trim() + '.' + NOTE_KINDS[o.type].ext, o.content, NOTE_KINDS[o.type].mime); }
+  else if (a === 'n-del') { if (!arm(b, 'ndel' + o.id, 'Tap again to delete')) return; deleteNote(o.id); N.open = null; $('#noteScrim').hidden = true; renderNotes(); }
 });
-
 /* ---------- text: font and size, for the whole app ----------
    Every font size in the app is "size × --fs", so one number scales everything. Saved on this phone and
    applied in <head> before the first paint. */
@@ -2795,8 +2919,8 @@ $('#eDel').addEventListener('click', async () => {
   try { await API.delTxn(editing.id, editing._doc); toast('Entry deleted'); closeEntry(); } catch (e) { $('#eErr').textContent = writeErr(e); $('#eErr').hidden = false; }
 });
 $('#balForm').addEventListener('submit', ev => { ev.preventDefault(); saveBalances(); });
-['entryScrim', 'balScrim', 'impScrim', 'copyScrim', 'vaultScrim', 'whyScrim', 'textScrim', 'noteScrim'].forEach(id => $('#' + id).addEventListener('click', ev => { if (ev.target.id === id) { if (id === 'noteScrim') { closeNote(); return; } $('#' + id).hidden = true; if (id === 'whyScrim') W$.stack = []; if (id === 'entryScrim') editing = null; } }));
-document.addEventListener('keydown', ev => { if (ev.key === 'Escape' && N.open) { closeNote(); return; } if (ev.key === 'Escape') ['entryScrim', 'balScrim', 'impScrim', 'copyScrim', 'vaultScrim', 'whyScrim', 'textScrim'].forEach(id => { $('#' + id).hidden = true; }); });
+['entryScrim', 'balScrim', 'impScrim', 'copyScrim', 'vaultScrim', 'whyScrim', 'textScrim', 'noteScrim', 'noteMenu'].forEach(id => $('#' + id).addEventListener('click', ev => { if (ev.target.id === id) { if (id === 'noteScrim') { closeNote(); return; } $('#' + id).hidden = true; if (id === 'whyScrim') W$.stack = []; if (id === 'entryScrim') editing = null; } }));
+document.addEventListener('keydown', ev => { if (ev.key === 'Escape' && !$('#noteMenu').hidden) { closeNoteMenu(); return; } if (ev.key === 'Escape' && N.open) { closeNote(); return; } if (ev.key === 'Escape') ['entryScrim', 'balScrim', 'impScrim', 'copyScrim', 'vaultScrim', 'whyScrim', 'textScrim'].forEach(id => { $('#' + id).hidden = true; }); });
 $('#cycPick').addEventListener('change', ev => { state.cur = ev.target.value; state.curPinned = state.cur !== cycleKeyOf(todayStr()); render(); });
 ['fCat', 'fType'].forEach(id => $('#' + id).addEventListener('change', () => renderEntries(ctx())));
 $('#fQ').addEventListener('input', () => renderEntries(ctx()));
