@@ -1269,6 +1269,7 @@ html.tb-hide:not(.kb) .topbar{transform:translateY(-100%)}
         <option value="">All types</option><option>Expense</option><option>Income</option><option>Transfer</option>
       </select>
       <select id="fPay" aria-label="Filter by payment"></select>
+      <select id="fSort" aria-label="Sort entries"><option value="added">Latest added first</option><option value="date">Entry date (newest first)</option></select>
       <input id="fQ" type="search" placeholder="Search notes, tags, people" aria-label="Search entries">
     </div>
     <div id="entriesBody"></div>
@@ -1307,7 +1308,7 @@ html.tb-hide:not(.kb) .topbar{transform:translateY(-100%)}
     </div>
     <div class="field"><span id="ePayLbl">Paid with</span>
       <div class="seg seg3" id="ePaySeg" role="group" aria-labelledby="ePayLbl">
-        <button type="button" class="segb" data-act="e-pay" data-v="cash" aria-pressed="true">Cash</button><button type="button" class="segb" data-act="e-pay" data-v="bank" aria-pressed="false">Bank</button><button type="button" class="segb" data-act="e-pay" data-v="card" aria-pressed="false">Card</button>
+        <button type="button" class="segb" data-act="e-pay" data-v="cash" aria-pressed="false">Cash</button><button type="button" class="segb" data-act="e-pay" data-v="bank" aria-pressed="true">Bank</button><button type="button" class="segb" data-act="e-pay" data-v="card" aria-pressed="false">Card</button>
       </div>
       <div class="chips" id="ePayChips" role="group" aria-label="Which one" hidden></div>
       <div id="ePayCardBox" hidden><span class="sublbl">Card being paid</span><div class="chips" id="ePayCardChips" role="group" aria-label="Card being paid"></div></div>
@@ -1961,10 +1962,14 @@ function renderEntries(X) {
   if (fc.value) list = list.filter(t => t.cat === fc.value);
   if (ft) list = list.filter(t => X.typeOf(t) === ft);
   if (q) list = list.filter(t => [t.note, t.tag, t.member, (X.cm[t.cat] || {}).name, (X.am[t.acct] || {}).name].join(' ').toLowerCase().includes(q));
-  list.sort((a, b) => a.date === b.date ? (b.at || 0) - (a.at || 0) : (a.date < b.date ? 1 : -1));
-  const byDate = {}; list.forEach(t => { (byDate[t.date] = byDate[t.date] || []).push(t); });
+  const fs = $('#fSort'), sortBy = fs.value === 'date' ? 'date' : 'added';
+  const addedAt = t => t.at || parseYmd(t.date).getTime(); // older entries without an added time fall back to their date
+  if (sortBy === 'added') list.sort((a, b) => addedAt(b) - addedAt(a) || (a.date < b.date ? 1 : a.date > b.date ? -1 : 0));
+  else list.sort((a, b) => a.date === b.date ? (b.at || 0) - (a.at || 0) : (a.date < b.date ? 1 : -1));
+  // Group runs of entries with the same date, keeping the sort order (by-added can revisit a date later)
+  const groups = []; list.forEach(t => { const g = groups[groups.length - 1]; if (g && g.d === t.date) g.day.push(t); else groups.push({d: t.date, day: [t]}); });
   const T = cycleTotals(list, X);
-  const html = Object.keys(byDate).map(d => { const dt = parseYmd(d), day = byDate[d], spent = cycleTotals(day, X).exp, wd = WDAYS[dt.getDay()];
+  const html = groups.map(({d, day}) => { const dt = parseYmd(d), spent = cycleTotals(day, X).exp, wd = WDAYS[dt.getDay()];
     return `<div class="eday"><div class="eday-h"><span>${wd[0].toUpperCase() + wd.slice(1, 3)}, ${dt.getDate()} ${MON[dt.getMonth()]}</span>${Math.abs(spent) > 0.5 ? `<span class="num">${rs(spent)}</span>` : ''}</div>${day.map(t => {
       const ty = X.typeOf(t), c = X.cm[t.cat];
       const meta = [t.note, cardInfo(t, X), t.acct === 'cash' ? 'Cash' : X.am[t.acct] && X.am[t.acct].name, t.member].filter(Boolean).map(esc).join(' · ');
@@ -3448,7 +3453,7 @@ function chipsShow(box, reset) {
 }
 // ---- How it was paid: Cash (nothing more to pick), Bank (pick an account), Card (pick a card).
 // Bank accounts and cards come from the vault (copied as names only into Setup data, so every phone has them).
-let payMode = 'cash', payAcct = '', payCard = '';
+let payMode = 'bank', payAcct = '', payCard = '';
 function payBanks() {
   const am = {}; state.config.accounts.forEach(a => { am[a.id] = a; });
   const list = (state.config.payBanks || []).map(id => am[id]).filter(Boolean);
@@ -3779,7 +3784,7 @@ function openEntry(t) {
   $('#eMore').open = !!(t && (t.member || t.tag || t.refund));
   // How it was paid. New entries start on Cash; an edited entry shows what it was.
   payAcct = ''; payCard = '';
-  if (!t) payMode = 'cash';
+  if (!t) payMode = 'bank';
   else if (isCardPay(t.cat, X.cm)) { payMode = 'bank'; payAcct = X.res(t.acct) || ''; payCard = t.card || ''; }
   else if (t.card) { payMode = 'card'; payCard = t.card; }
   else if (t.acct === 'cash') payMode = 'cash';
@@ -3982,6 +3987,7 @@ $('#balForm').addEventListener('submit', ev => { ev.preventDefault(); saveBalanc
 document.addEventListener('keydown', ev => { if (ev.key === 'Escape' && !$('#noteMenu').hidden) { closeNoteMenu(); return; } if (ev.key === 'Escape' && N.open) { closeNote(); return; } if (ev.key === 'Escape') ['entryScrim', 'balScrim', 'impScrim', 'copyScrim', 'vaultScrim', 'whyScrim', 'textScrim', 'moreScrim'].forEach(id => { $('#' + id).hidden = true; }); });
 $('#cycPick').addEventListener('change', ev => { state.cur = ev.target.value; state.curPinned = state.cur !== cycleKeyOf(todayStr()); render(); });
 ['fCat', 'fType', 'fPay'].forEach(id => $('#' + id).addEventListener('change', () => renderEntries(ctx())));
+{ const fs = $('#fSort'); fs.value = readPref().entSort === 'date' ? 'date' : 'added'; fs.addEventListener('change', () => { writePref({entSort: fs.value}); renderEntries(ctx()); }); }
 $('#fQ').addEventListener('input', () => renderEntries(ctx()));
 $('#impFile').addEventListener('change', ev => { const f = ev.target.files && ev.target.files[0]; if (!f) return; const r = new FileReader(); r.onload = () => { $('#impText').value = String(r.result || ''); checkImport($('#impText').value); }; r.readAsText(f); });
 $('#impText').addEventListener('input', ev => checkImport(ev.target.value));
