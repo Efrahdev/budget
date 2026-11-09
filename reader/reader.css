@@ -96,10 +96,9 @@ kbd{font-family:var(--f-ui);font-size:11px;font-weight:600;color:var(--ink-3);bo
   -webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px);box-shadow:var(--shadow);transition:transform .25s var(--spring),box-shadow .25s,border-color .2s}
 .act:hover{transform:translateY(-2px);border-color:var(--rule-2)}
 .act:active{transform:scale(.98)}
-.act-ic{width:54px;height:54px;border-radius:17px;display:grid;place-items:center;color:#fff;flex:0 0 auto;box-shadow:inset 0 1px 0 rgba(255,255,255,.3),0 10px 22px -10px rgba(0,0,0,.4)}
+.act-ic{width:54px;height:54px;border-radius:17px;display:grid;place-items:center;color:var(--accent);background:var(--accent-soft);flex:0 0 auto;box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--accent) 20%,transparent)}
 .act-ic .ic{width:27px;height:27px;stroke-width:1.9}
-.act-ic.a1{background:linear-gradient(150deg,#4f7dff,#1d3fc4)}
-.act-ic.a2{background:linear-gradient(150deg,#ff9a5a,#e0431f)}
+/* both tiles take the reading theme's accent (blue on Paper, brown on Sepia, soft blue at night): nothing clashes */
 .act-t{display:flex;flex-direction:column;gap:3px;min-width:0}
 .act-t b{font-size:18px;font-weight:700;letter-spacing:-.01em}
 .act-t small{color:var(--ink-3);font-size:13.5px}
@@ -286,7 +285,9 @@ dialog::backdrop{opacity:var(--bdo,1);background:var(--scrim);-webkit-backdrop-f
 .panel{width:min(100%,430px);max-height:calc(100dvh - 24px);overflow-y:auto}
 @media (max-width:640px){
   .sheet,.panel{position:fixed;inset:auto 0 0 0;margin:0;width:100%;border-radius:24px 24px 0 0;max-height:92dvh;overflow-y:auto;padding-bottom:calc(max(18px,env(safe-area-inset-bottom)) + var(--host-bottom));transition:padding .3s ease}
-  .sheet::before,.panel::before{content:"";display:block;width:40px;height:5px;border-radius:99px;background:var(--rule-2);margin:-6px auto 2px}
+  .sheet::before,.panel::before{display:none}
+  .sheet-h,.panel-h{position:relative;padding-top:16px;margin-top:-14px;padding-bottom:4px;touch-action:none;cursor:grab}
+  .sheet-h::before,.panel-h::before{content:"";position:absolute;top:0;left:50%;width:44px;height:5px;margin-left:-22px;border-radius:99px;background:var(--rule-2)}
 }
 @media (min-width:641px){.panel{position:fixed;inset:auto max(16px,env(safe-area-inset-right)) auto auto;top:calc(var(--barh) + 22px);margin:0}}
 .sheet-h,.panel-h{display:flex;align-items:center;justify-content:space-between;gap:10px}
@@ -337,6 +338,11 @@ input[type=range]{width:100%;accent-color:var(--accent);height:28px}
 .tg input:checked+i::after{transform:translateX(18px)}
 .tg input:focus-visible+i{outline:2.5px solid var(--accent);outline-offset:2px}
 /* paste */
+.clipbtn{display:flex;align-items:center;gap:14px;width:100%;text-align:left;border:1px solid color-mix(in srgb,var(--accent) 28%,transparent);background:var(--accent-soft);color:var(--ink);border-radius:18px;padding:14px 16px;transition:transform .15s,background .2s}
+.clipbtn:active{transform:scale(.98)}
+.clipbtn .clip-ic{width:44px;height:44px;border-radius:14px;display:grid;place-items:center;color:var(--accent);background:var(--raise);flex:0 0 auto}
+.clipbtn>span:last-child{display:flex;flex-direction:column;gap:2px;min-width:0}
+.clipbtn b{font-size:15.5px;font-weight:700}.clipbtn small{font-size:12.5px;color:var(--ink-3)}
 .paste-target{min-height:120px;max-height:200px;overflow:auto;border-radius:16px;border:1.5px dashed var(--rule-2);background:var(--bg);padding:14px;font-size:15px;outline:none;color:var(--ink-2);overflow-wrap:anywhere}
 .paste-target:empty::before{content:attr(data-ph);color:var(--ink-3)}
 .paste-target:focus{border-color:var(--accent);box-shadow:0 0 0 4px var(--accent-soft)}
@@ -373,7 +379,7 @@ input[type=range]{width:100%;accent-color:var(--accent);height:28px}
 .mi b{font-size:14.5px}.mi small{font-size:12px;color:var(--ink-3)}
 .mi-ic{width:38px;height:38px;border-radius:12px;display:grid;place-items:center;color:#fff;flex:0 0 auto}
 .mi-ic .ic{width:20px;height:20px}
-.mi-ic.n{background:linear-gradient(150deg,#ffb238,#f07b10)}.mi-ic.f{background:linear-gradient(150deg,#4f7dff,#1d3fc4)}.mi-ic.p{background:linear-gradient(150deg,#7a8496,#4b5363)}
+.mi-ic.n,.mi-ic.f,.mi-ic.p{color:var(--accent);background:var(--accent-soft);box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--accent) 20%,transparent)}
 @keyframes pop{from{transform:scale(.92);opacity:0}to{transform:none;opacity:1}}
 /* toast */
 .toast{position:fixed;z-index:95;left:50%;bottom:calc(var(--host-bottom) + 70px + env(safe-area-inset-bottom));transform:translateX(-50%);display:flex;align-items:center;gap:12px;max-width:min(92vw,520px);

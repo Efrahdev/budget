@@ -176,17 +176,19 @@ const pdlg = $('#pasteDlg'), ptarget = $('#pasteTarget');
 // back to an empty paste box: nothing from a previous paste is kept (text, preview, title, format)
 function resetPaste() {
   S.paste = null; S.pasteFmt = '';
-  ptarget.innerHTML = ''; ptarget.hidden = false;
+  ptarget.innerHTML = ''; ptarget.hidden = false; $('#pasteClip').hidden = false;
   $('#pasteFound').hidden = true; $('#pasteFound').innerHTML = ''; $('#fmtSeg').hidden = true;
   const pv = $('#pastePreview'); pv.hidden = true; pv.innerHTML = '';
   const nm = $('#pasteName'); nm.value = ''; delete nm.dataset.touched; $('#pasteNameF').hidden = true;
   $('#pasteRead').disabled = true;
 }
-async function openPaste(pre) {
+// The window always opens EMPTY: nothing is read from the clipboard until you tap "Paste what you copied".
+function openPaste(pre) {
   resetPaste();
   if (!pdlg.open) pdlg.showModal();
   if (pre) return setPaste(pre);
-  // one tap: read the clipboard directly where the browser allows it
+}
+async function pasteFromClipboard() {
   if (navigator.clipboard && navigator.clipboard.read) {
     try {
       const items = await navigator.clipboard.read(); let html = '', text = '';
@@ -194,7 +196,7 @@ async function openPaste(pre) {
       if (html || text) return setPaste({html, text});
     } catch (e) {}
   } else if (navigator.clipboard && navigator.clipboard.readText) { try { const text = await navigator.clipboard.readText(); if (text) return setPaste({html: '', text}); } catch (e) {} }
-  ptarget.focus();
+  toast('Couldn\u2019t read the clipboard. Long-press the box and choose Paste.'); ptarget.focus();
 }
 ptarget.addEventListener('paste', e => { const d = e.clipboardData; if (!d) return; e.preventDefault(); setPaste({html: d.getData('text/html'), text: d.getData('text/plain')}); });
 ptarget.addEventListener('input', debounce(() => { if (S.paste || !ptarget.textContent.trim()) return; setPaste({html: ptarget.innerHTML, text: ptarget.innerText}); }, 500));
@@ -202,7 +204,7 @@ function setPaste(d) {
   if (!d.text && d.html) { const t = document.createElement('div'); t.innerHTML = d.html.replace(/<(script|style)[\s\S]*?<\/\1>/gi, ''); d.text = t.textContent; }
   if (!(d.html || '').trim() && !(d.text || '').trim()) return toast('The clipboard is empty. Copy something first.');
   S.paste = d;
-  ptarget.hidden = true;
+  ptarget.hidden = true; $('#pasteClip').hidden = true;
   const found = $('#pasteFound'); found.hidden = false;
   const n = (d.html || d.text).length;
   found.innerHTML = `<svg class="ic" aria-hidden="true"><use href="#r-check"/></svg><span>Found <b>${d.html ? 'formatted text' : 'plain text'}</b> · ${bytes(n)}${d.html && d.text ? ' (with a plain-text copy)' : ''}</span>
@@ -249,7 +251,8 @@ function pullToClose(d) {
   const scrolled = t => { for (let n = t; n && n !== d; n = n.parentElement) if (n.scrollTop > 0) return true; return d.scrollTop > 0; };
   const fade = v => (v == null ? d.style.setProperty('--bdo', '1') : d.style.setProperty('--bdo', String(v)));
   d.addEventListener('touchstart', e => {
-    on = phone() && e.touches.length === 1 && !e.target.closest('input,textarea,select,[contenteditable="true"]') && !scrolled(e.target);
+    const ce = e.target.closest('[contenteditable="true"]'); // an empty paste box has nothing to select, so it drags like the rest
+    on = phone() && e.touches.length === 1 && !e.target.closest('input,textarea,select') && !(ce && ce.textContent.trim()) && !scrolled(e.target);
     live = false; dy = 0; if (on) { y0 = e.touches[0].clientY; t0 = Date.now(); trail = [[0, t0]]; }
   }, {passive: true});
   d.addEventListener('touchmove', e => {
@@ -267,6 +270,11 @@ function pullToClose(d) {
   };
   d.addEventListener('touchend', end); d.addEventListener('touchcancel', end);
   d.addEventListener('close', () => { d.style.transform = ''; d.style.transition = ''; d.style.animation = ''; fade(); });
+  // When everything fits (nothing to scroll), the whole sheet is a drag handle: tell the browser not to claim the gesture.
+  // When it must scroll, only the header strip drags (CSS), so scrolling inside keeps working.
+  const grab = () => { d.style.touchAction = phone() && d.scrollHeight <= d.clientHeight + 1 ? 'none' : ''; };
+  new ResizeObserver(grab).observe(d);
+  new MutationObserver(() => { if (d.open) requestAnimationFrame(grab); }).observe(d, {attributes: true, attributeFilter: ['open'], childList: true, subtree: true});
 }
 $$('dialog.sheet,dialog.panel').forEach(pullToClose);
 const progress = rafThrottle(() => {
@@ -626,7 +634,8 @@ document.addEventListener('click', async e => {
     case 'file-save': saveFile(); break;
     case 'fmt': if (!b.disabled) setPasteFmt(v); break;
     case 'paste-read': pasteRead(); break;
-    case 'paste-clear': resetPaste(); ptarget.focus(); break;
+    case 'paste-clear': resetPaste(); break;
+    case 'paste-clip': pasteFromClipboard(); break;
     case 'close-dlg': { const d = b.closest('dialog'); if (d) d.close(); break; }
     case 'ask-cancel': $('#askDlg').close(''); break;
     case 'busy-cancel': if (S.abort) S.abort.abort(); break;

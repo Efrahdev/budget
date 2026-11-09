@@ -199,7 +199,8 @@
 <!-- ============ Paste ============ -->
 <dialog class="sheet" id="pasteDlg" aria-labelledby="pasteH">
   <div class="sheet-h"><b id="pasteH">Paste to read</b><button type="button" class="ibtn sm" data-act="close-dlg" aria-label="Close"><svg class="ic" aria-hidden="true"><use href="#r-x"/></svg></button></div>
-  <div class="paste-target" id="pasteTarget" contenteditable="true" role="textbox" aria-label="Paste here" data-ph="Tap here, then paste (long-press → Paste, or Ctrl V)"></div>
+  <button type="button" class="clipbtn" id="pasteClip" data-act="paste-clip"><span class="clip-ic"><svg class="ic" aria-hidden="true"><use href="#r-paste"/></svg></span><span><b>Paste what you copied</b><small>Reads your clipboard once, only when you tap here</small></span></button>
+  <div class="paste-target" id="pasteTarget" contenteditable="true" role="textbox" aria-label="Paste here" data-ph="…or tap here and long-press → Paste"></div>
   <div class="paste-found" id="pasteFound" hidden></div>
   <div class="fmt" id="fmtSeg" role="radiogroup" aria-label="Read it as" hidden>
     <button type="button" role="radio" class="fmtb" data-act="fmt" data-v="rich"><b>Rich text</b><small>Formatting kept, cleaned</small></button>
