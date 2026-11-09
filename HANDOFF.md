@@ -103,6 +103,8 @@ A household budget PWA for **Arhaanbeta** (aarhaan22@gmail.com). One file app: `
 
 ## Owner's preferences
 - Simple UK English; crisp answers; no needless permission requests (full approval given, except bulk deletes).
+- No haptic feedback anywhere (`buzz()` is a no-op; don't add `navigator.vibrate`). Android only, no iPhone.
+- Bottom sheets close by dragging down (budget More: `pullToClose()`; every Reader sheet: `pullToClose()` in reader/js/app.js). Reader pop-ups get the reading brightness and warmth through the `#rtint` colour filter (prefs.js), because the top layer sits above the page tint.
 - Very visual, low-touch UX; no commentary text on dashboards; keep their canonical names; don't invent categories or structure.
 - Test thoroughly before pushing; never push half-done work.
 

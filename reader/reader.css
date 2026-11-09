@@ -257,6 +257,8 @@ html.recolor .pdfstage .pdfViewer .page .canvasWrapper{filter:var(--page-filter)
 .tint{position:fixed;inset:0;pointer-events:none;z-index:90;opacity:0;transition:opacity .3s ease}
 .tint.warm{background:#ff9a2e;mix-blend-mode:multiply}
 .tint.dim{background:#000}
+/* windows above the tint layers (pop-up sheets, toasts, the drop target) get the same brightness and warmth */
+html.tinted dialog:modal,html.tinted .toast,html.tinted .dropzone{filter:url(#rtint)}
 
 /* ---------------- drawer, scrim ---------------- */
 .scrim{position:fixed;inset:0;z-index:48;background:var(--scrim);-webkit-backdrop-filter:blur(2px);backdrop-filter:blur(2px);animation:fade .25s ease}
@@ -277,7 +279,7 @@ html.recolor .pdfstage .pdfViewer .page .canvasWrapper{filter:var(--page-filter)
 
 /* ---------------- dialogs: bottom sheet on phones, card on bigger screens ---------------- */
 dialog{color:var(--ink);background:var(--raise);border:1px solid var(--rule);padding:0;max-width:none;max-height:none}
-dialog::backdrop{background:var(--scrim);-webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px)}
+dialog::backdrop{opacity:var(--bdo,1);background:var(--scrim);-webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px)}
 .sheet,.panel{width:min(100%,560px);border-radius:24px;box-shadow:var(--shadow);padding:16px 18px 18px;animation:rise .32s var(--spring)}
 .sheet[open],.panel[open]{display:flex;flex-direction:column;gap:14px}
 #askDlg[open]{display:block}#askForm{display:flex;flex-direction:column;gap:14px}
@@ -340,6 +342,10 @@ input[type=range]{width:100%;accent-color:var(--accent);height:28px}
 .paste-target:focus{border-color:var(--accent);box-shadow:0 0 0 4px var(--accent-soft)}
 .paste-found{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--ink-2);padding:10px 12px;border-radius:12px;background:var(--bg-2)}
 .paste-found b{color:var(--ink)}
+.paste-found>span{flex:1;min-width:0}
+.pf-clear{flex:0 0 auto;display:inline-flex;align-items:center;gap:5px;border:1px solid var(--rule-2);background:var(--raise);color:var(--ink-2);border-radius:99px;padding:6px 12px 6px 9px;font-size:12.5px;font-weight:650;transition:color .2s,border-color .2s}
+.pf-clear .ic{width:15px;height:15px}
+.pf-clear:hover,.pf-clear:active{color:#e5484d;border-color:#e5484d}
 .fmt{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
 @media (min-width:520px){.fmt{grid-template-columns:repeat(4,minmax(0,1fr))}}
 .fmtb{display:flex;flex-direction:column;align-items:flex-start;gap:2px;text-align:left;border:1px solid var(--rule);background:var(--bg);border-radius:14px;padding:10px 12px;transition:border-color .2s,background .2s}

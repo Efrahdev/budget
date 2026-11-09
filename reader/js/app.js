@@ -173,9 +173,17 @@ async function setPdfMode(mode, opening) {
 
 /* ================= paste ================= */
 const pdlg = $('#pasteDlg'), ptarget = $('#pasteTarget');
-async function openPaste(pre) {
+// back to an empty paste box: nothing from a previous paste is kept (text, preview, title, format)
+function resetPaste() {
   S.paste = null; S.pasteFmt = '';
-  ptarget.innerHTML = ''; ptarget.hidden = false; $('#pasteFound').hidden = true; $('#fmtSeg').hidden = true; $('#pastePreview').hidden = true; $('#pasteNameF').hidden = true; $('#pasteRead').disabled = true;
+  ptarget.innerHTML = ''; ptarget.hidden = false;
+  $('#pasteFound').hidden = true; $('#pasteFound').innerHTML = ''; $('#fmtSeg').hidden = true;
+  const pv = $('#pastePreview'); pv.hidden = true; pv.innerHTML = '';
+  const nm = $('#pasteName'); nm.value = ''; delete nm.dataset.touched; $('#pasteNameF').hidden = true;
+  $('#pasteRead').disabled = true;
+}
+async function openPaste(pre) {
+  resetPaste();
   if (!pdlg.open) pdlg.showModal();
   if (pre) return setPaste(pre);
   // one tap: read the clipboard directly where the browser allows it
@@ -197,7 +205,8 @@ function setPaste(d) {
   ptarget.hidden = true;
   const found = $('#pasteFound'); found.hidden = false;
   const n = (d.html || d.text).length;
-  found.innerHTML = `<svg class="ic" aria-hidden="true"><use href="#r-check"/></svg><span>Found <b>${d.html ? 'formatted text' : 'plain text'}</b> · ${bytes(n)}${d.html && d.text ? ' (with a plain-text copy)' : ''}</span>`;
+  found.innerHTML = `<svg class="ic" aria-hidden="true"><use href="#r-check"/></svg><span>Found <b>${d.html ? 'formatted text' : 'plain text'}</b> · ${bytes(n)}${d.html && d.text ? ' (with a plain-text copy)' : ''}</span>
+    <button type="button" class="pf-clear" data-act="paste-clear" aria-label="Clear all pasted text"><svg class="ic" aria-hidden="true"><use href="#r-x"/></svg>Clear all</button>`;
   $('#fmtSeg').hidden = false;
   $('#fmtSeg [data-v="rich"]').disabled = !d.html;
   setPasteFmt(detectPaste(d));
@@ -231,6 +240,35 @@ function setChrome(on) {
 // the budget app's bars step aside while you read, and whenever one of our sheets is open (so they never cover its buttons)
 function hostBars() { bridge.setBars((!S.chrome && !el.reader.hidden) || !!document.querySelector('dialog[open]')); }
 { const mo = new MutationObserver(hostBars); $$('dialog').forEach(d => mo.observe(d, {attributes: true, attributeFilter: ['open']})); }
+/* Pull to close: on a phone every bottom sheet can be dragged down from its top (or flicked down) to close it; a short
+   drag springs back. It never starts inside a text box or slider, or while the sheet's contents are scrolled down,
+   so typing, sliders and scrolling inside the sheet work as normal. */
+function pullToClose(d) {
+  let y0 = 0, dy = 0, t0 = 0, on = false, live = false, trail = [];
+  const phone = () => matchMedia('(max-width:640px)').matches;
+  const scrolled = t => { for (let n = t; n && n !== d; n = n.parentElement) if (n.scrollTop > 0) return true; return d.scrollTop > 0; };
+  const fade = v => (v == null ? d.style.setProperty('--bdo', '1') : d.style.setProperty('--bdo', String(v)));
+  d.addEventListener('touchstart', e => {
+    on = phone() && e.touches.length === 1 && !e.target.closest('input,textarea,select,[contenteditable="true"]') && !scrolled(e.target);
+    live = false; dy = 0; if (on) { y0 = e.touches[0].clientY; t0 = Date.now(); trail = [[0, t0]]; }
+  }, {passive: true});
+  d.addEventListener('touchmove', e => {
+    if (!on) return; dy = e.touches[0].clientY - y0; const now = Date.now(); trail.push([dy, now]); while (trail.length > 2 && now - trail[0][1] > 100) trail.shift(); // the last 0.1 s: how fast the finger was going as it let go
+    if (!live) { if (dy < -4) { on = false; return; } if (dy < 8) return; live = true; d.style.transition = 'none'; d.style.animation = 'none'; }
+    e.preventDefault();
+    const k = Math.max(0, dy - 8); d.style.transform = `translateY(${k}px)`; fade(1 - Math.min(0.85, k / (d.offsetHeight || 500)));
+  }, {passive: false});
+  const end = () => {
+    if (!on) return; on = false; if (!live) return; live = false;
+    const a0 = trail[0], a1 = trail[trail.length - 1], fast = (a1[0] - a0[0]) / Math.max(1, a1[1] - a0[1]) > 0.4 && dy > 24, far = dy > Math.min(140, d.offsetHeight * 0.25);
+    d.style.transition = 'transform .3s cubic-bezier(.2,.8,.2,1)';
+    if (fast || far) { d.style.transform = 'translateY(105%)'; fade(0); setTimeout(() => { if (d.open) d.close(); }, 290); }
+    else { d.style.transform = ''; fade(); setTimeout(() => { if (!live) d.style.transition = ''; }, 320); }
+  };
+  d.addEventListener('touchend', end); d.addEventListener('touchcancel', end);
+  d.addEventListener('close', () => { d.style.transform = ''; d.style.transition = ''; d.style.animation = ''; fade(); });
+}
+$$('dialog.sheet,dialog.panel').forEach(pullToClose);
 const progress = rafThrottle(() => {
   if (el.reader.hidden || !S.meta) return;
   let p = 0, left = '';
@@ -588,6 +626,7 @@ document.addEventListener('click', async e => {
     case 'file-save': saveFile(); break;
     case 'fmt': if (!b.disabled) setPasteFmt(v); break;
     case 'paste-read': pasteRead(); break;
+    case 'paste-clear': resetPaste(); ptarget.focus(); break;
     case 'close-dlg': { const d = b.closest('dialog'); if (d) d.close(); break; }
     case 'ask-cancel': $('#askDlg').close(''); break;
     case 'busy-cancel': if (S.abort) S.abort.abort(); break;

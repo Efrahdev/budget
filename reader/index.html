@@ -25,6 +25,8 @@
 </head>
 <body>
 <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <!-- brightness + warmth for windows that float above the page tint (pop-ups live in the browser's top layer) -->
+  <filter id="rtint" color-interpolation-filters="sRGB"><feColorMatrix id="rtintM" type="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 1 0"/></filter>
   <symbol id="r-back" viewBox="0 0 24 24"><path d="M14.5 18 8.5 12l6-6"/></symbol>
   <symbol id="r-lib" viewBox="0 0 24 24"><path d="M4.5 4.5h4v15h-4zM10 4.5h4v15h-4z"/><path d="m15.6 5.2 3.8-1 3.9 14.5-3.9 1z"/></symbol>
   <symbol id="r-search" viewBox="0 0 24 24"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5 21 21"/></symbol>

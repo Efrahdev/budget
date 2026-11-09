@@ -2411,13 +2411,13 @@ function startMic() {
   rec.onresult = ev => { let t = ''; for (const r of ev.results) t += r[0].transcript; const q = $('#nQ'); if (q) q.value = t; N.q = t; renderNoteList(); };
   rec.onerror = ev => { if (ev.error === 'not-allowed' || ev.error === 'service-not-allowed') toast('Allow the microphone to search by voice', 'bad'); };
   rec.onend = () => { rec = null; const m = document.querySelector('.nmic'); if (m) m.classList.remove('on'); };
-  try { rec.start(); if (mic) mic.classList.add('on'); try { navigator.vibrate && navigator.vibrate(10); } catch (e) {} } catch (e) { rec = null; focusBox($('#nQ')); }
+  try { rec.start(); if (mic) mic.classList.add('on'); } catch (e) { rec = null; focusBox($('#nQ')); }
 }
 /* --- press and hold: the note's menu --- */
 let lp = null, lpFired = 0;
 document.addEventListener('pointerdown', ev => {
   const c = ev.target.closest('.ncard'); if (!c || ev.target.closest('.ngrip') || ev.button > 0) return;
-  lp = {id: c.dataset.id, x: ev.clientX, y: ev.clientY, el: c, t: setTimeout(() => { lpFired = Date.now(); c.classList.add('held'); try { navigator.vibrate && navigator.vibrate(12); } catch (e) {} noteMenu(c.dataset.id); lp = null; }, 480)};
+  lp = {id: c.dataset.id, x: ev.clientX, y: ev.clientY, el: c, t: setTimeout(() => { lpFired = Date.now(); c.classList.add('held');  noteMenu(c.dataset.id); lp = null; }, 480)};
 });
 document.addEventListener('pointermove', ev => { if (lp && Math.hypot(ev.clientX - lp.x, ev.clientY - lp.y) > 10) { clearTimeout(lp.t); lp = null; } });
 ['pointerup', 'pointercancel'].forEach(t => document.addEventListener(t, () => { if (lp) { clearTimeout(lp.t); lp = null; } }));
@@ -5310,7 +5310,7 @@ const VIEW_TITLE = {add: 'Add entry', overview: 'Overview', entries: 'Entries', 
 const PRIMARY_VIEWS = ['overview', 'entries', 'wealth', 'notes', 'read'];
 const coarse = matchMedia('(pointer: coarse)');
 const reduceMotion = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
-const buzz = ms => { try { if (coarse.matches && navigator.vibrate && !reduceMotion()) navigator.vibrate(ms); } catch (e) {} };
+const buzz = () => {}; // haptic feedback is switched off everywhere (owner's choice)
 function markNav() {
   document.querySelectorAll('#navbar .nv[data-v]').forEach(a => a.setAttribute('aria-current', a.dataset.v === state.view ? 'page' : 'false'));
   const m = $('#navMore'); if (m) m.setAttribute('aria-current', PRIMARY_VIEWS.includes(state.view) ? 'false' : 'page');
@@ -5361,6 +5361,27 @@ function moreHtml() {
     </div>`;
 }
 function openMore() { paint($('#moreBox'), moreHtml()); $('#moreScrim').hidden = false; }
+/* Pull to close: drag the More sheet down from its top (or flick it) and it slides away. A short drag springs back.
+   Only starts when the sheet is scrolled to the top, so scrolling its contents still works. */
+function pullToClose(sheet, scrim, close) {
+  let y0 = 0, dy = 0, t0 = 0, on = false, live = false, trail = [];
+  sheet.addEventListener('touchstart', e => { on = e.touches.length === 1 && sheet.scrollTop <= 0; live = false; dy = 0; if (on) { y0 = e.touches[0].clientY; t0 = Date.now(); trail = [[0, t0]]; } }, {passive: true});
+  sheet.addEventListener('touchmove', e => {
+    if (!on) return; dy = e.touches[0].clientY - y0; const now = Date.now(); trail.push([dy, now]); while (trail.length > 2 && now - trail[0][1] > 100) trail.shift(); // the last 0.1 s: how fast the finger was going as it let go
+    if (!live) { if (dy < -4) { on = false; return; } if (dy < 8) return; live = true; sheet.style.transition = 'none'; }
+    e.preventDefault();
+    const d = Math.max(0, dy - 8); sheet.style.transform = `translateY(${d}px)`; scrim.style.opacity = String(1 - Math.min(0.75, d / (sheet.offsetHeight || 600)));
+  }, {passive: false});
+  const end = () => {
+    if (!on) return; on = false; if (!live) return; live = false;
+    const a0 = trail[0], a1 = trail[trail.length - 1], fast = (a1[0] - a0[0]) / Math.max(1, a1[1] - a0[1]) > 0.4 && dy > 24, far = dy > Math.min(140, sheet.offsetHeight * 0.25);
+    sheet.style.transition = ''; scrim.style.opacity = '';
+    if (fast || far) { close(); requestAnimationFrame(() => { sheet.style.transform = ''; }); } // slides on from where your finger let go
+    else sheet.style.transform = '';
+  };
+  sheet.addEventListener('touchend', end); sheet.addEventListener('touchcancel', end);
+}
+pullToClose($('#moreBox'), $('#moreScrim'), closeMore);
 function closeMore() { $('#moreScrim').hidden = true; }
 async function installNow() {
   if (installEvt) { installEvt.prompt(); try { await installEvt.userChoice; } catch (e) {} installEvt = null; if (state.config) render(); return; }
@@ -5379,7 +5400,6 @@ document.addEventListener('click', ev => {
   else if (a === 'inst-x') { writePref({instHide: Date.now()}); if (state.config) renderOverview(ctx()); }
 });
 // A small, crisp tick under your finger on Android when you pick something.
-document.addEventListener('click', ev => { if (ev.target.closest && ev.target.closest('.chipb,.segb,.nv,.calcb,.nchip,.nlab,.tx-size,.tx-font,.mtile')) buzz(6); }, true);
 
 /* Keyboard awareness (phones). The viewport is set to resize with the keyboard (interactive-widget=resizes-content),
    so the visible height shrinks when it opens. When a typed box has focus and the height drops well below the

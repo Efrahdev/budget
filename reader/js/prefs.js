@@ -27,8 +27,15 @@ export function applyPrefs(changed) {
   st.setProperty('--rz', prefs.scale);
   h.classList.toggle('recolor', !!prefs.recolor);
   const dim = document.getElementById('tintDim'), warm = document.getElementById('tintWarm');
-  if (dim) dim.style.opacity = (prefs.dim / 100).toFixed(3);
-  if (warm) warm.style.opacity = (prefs.warmth / 100 * 0.32).toFixed(3);
+  const d = prefs.dim / 100, wa = prefs.warmth / 100 * 0.32;
+  if (dim) dim.style.opacity = d.toFixed(3);
+  if (warm) warm.style.opacity = wa.toFixed(3);
+  /* The page is tinted by two layers: warmth (amber #ff9a2e, multiply) then dim (black). Pop-up windows open ABOVE
+     those layers, so they get the same effect as a colour filter: each channel × (1 − w + w·amber) × (1 − dim).
+     Same maths, so a window matches the page around it exactly. */
+  const m = document.getElementById('rtintM');
+  if (m) { const f = a => ((1 - wa + wa * a) * (1 - d)).toFixed(4), r = f(1), g = f(0x9a / 255), b = f(0x2e / 255); m.setAttribute('values', `${r} 0 0 0 0  0 ${g} 0 0 0  0 0 ${b} 0 0  0 0 0 1 0`); }
+  h.classList.toggle('tinted', d > 0 || wa > 0);
   const meta = document.querySelector('meta[name=theme-color]');
   if (meta) meta.content = getComputedStyle(h).getPropertyValue('--bg').trim() || '#fbfaf7';
   subs.forEach(fn => fn(changed));
