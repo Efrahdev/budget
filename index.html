@@ -1363,6 +1363,24 @@ html.tb-hide:not(.kb) .topbar{transform:translateY(-100%)}
   .wx-cols{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:22px 24px;align-items:start}
   .wx-cols>.g0{grid-row:span 3}
 }
+.wx-stats-card{padding:14px 14px 14px}
+.wx-stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.wx-stat{display:flex;flex-direction:column;gap:2px;min-width:0;padding:10px 12px;border-radius:16px;background:var(--sheet-2);cursor:pointer;transition:transform .25s var(--spring),background .2s}
+.wx-stat:hover{background:var(--fill-2)}.wx-stat:active{transform:scale(.97)}
+.wx-stat>span{font-size:calc(12.5px*var(--fs,1));font-weight:650;color:var(--ink-3)}
+.wx-stat b{font-family:var(--f-display);font-size:calc(17.5px*var(--fs,1));font-weight:700;letter-spacing:-.02em;white-space:nowrap;overflow:hidden;font-variant-numeric:tabular-nums}
+.wx-stat small{font-size:calc(12px*var(--fs,1));color:var(--ink-3);line-height:1.3;display:flex;align-items:center;gap:5px}
+.wx-stat.bad{background:color-mix(in srgb,var(--bad) 9%,var(--sheet-2))}.wx-stat.bad b{color:var(--bad-ink)}
+.wx-stat.warn{background:color-mix(in srgb,var(--warn) 11%,var(--sheet-2))}
+.wx-stat.good{background:color-mix(in srgb,var(--good) 9%,var(--sheet-2))}
+.ov-bar{margin:14px 2px 10px}.wx-stats-card .wx-legend{padding:0 2px}
+.wx-vl{font-size:calc(11.5px*var(--fs,1));color:var(--ink-3);font-weight:600}
+.wx-pill{display:inline-flex;align-items:center;gap:5px;padding:1px 8px 1px 6px;border-radius:99px;font-weight:650;color:var(--kc);background:color-mix(in srgb,var(--kc) 13%,transparent);white-space:nowrap}
+.wx-pill i{width:6px;height:6px;border-radius:50%;background:var(--kc)}
+.wx-alert{color:var(--bad-ink)!important;font-weight:600}.wx-warnt{color:var(--warn-ink)!important;font-weight:600}
+.ov-wx{margin-top:4px}
+@media (min-width:1024px){.ov-wx{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:22px 24px;align-items:start}}
+@media (max-width:380px){.wx-stats{grid-template-columns:1fr 1fr}.wx-stats .wx-stat:first-child{grid-column:1/-1}}
 /* ---------- Reader: its own page (reader/), shown edge to edge in this tab through a frame made only when first opened ---------- */
 #v-read{position:fixed;inset:0;z-index:30;display:block;max-width:none!important;margin:0!important;width:auto!important}
 #v-read[hidden]{display:none}
@@ -2182,7 +2200,7 @@ function renderOverview(X) {
 
   const inst = coarse.matches && !isInstalled() && !readPref().instHide ? `<div class="inst"><span class="mt-ic"><svg class="ic" aria-hidden="true"><use href="#i-install"/></svg></span><span class="it"><b>Install the app</b><span>Full screen, with a clean keyboard and no web address above it.</span></span><button class="btn sm primary" type="button" data-act="install-go">Install</button><button class="ix" type="button" data-act="inst-x" aria-label="Not now"><svg class="ic" aria-hidden="true"><use href="#i-x"/></svg></button></div>` : '';
   paint($('#v-overview'), `${inst}${kpis}${tiles ? `<div class="hgrid">${tiles}</div>` : '<div class="card empty">No entries in ' + cycleLabel(key) + ' yet.</div>'}
-    ${cardStripHtml(X)}${bankStripHtml(X)}`);
+    ${cardStripHtml(X) || bankStripHtml(X) ? `<div class="wx ov-wx">${cardStripHtml(X)}${bankStripHtml(X)}</div>` : ''}`);
   if ($('#v-overview').classList.contains('enter')) wcCount($('#v-overview'));
 }
 
@@ -3910,32 +3928,41 @@ function cardStripHtml(X) {
     const rank = st ? (st.c === 'bad' ? 0 : st.c === 'warn' ? 1 : 2) : n ? 3 : 4;
     return {L, first, st, n, rank, when: first ? first.due : n ? n.sd : '9999'};
   }).sort((x, y) => x.rank - y.rank || (x.when < y.when ? -1 : x.when > y.when ? 1 : 0));
-  const th = wcThemes(tiles.map(t => t.L.card.name));
-  const grid = tiles.map(({L, first, st, n}, i) => {
-    const c = L.card, {brand, who} = wcSplit(c.name), vr = (V.rows || []).find(r => r.id === c.id), num = vr ? vr.c[2] : '';
-    const l4 = last4(num) || (String(c.name).match(/··(\d{4})$/) || [])[1] || '', net = vNet(num), lim = +c.limit > 0 ? +c.limit : 0, used = Math.max(0, L.owed);
-    let lbl, amt, sub, pill, tone;
-    if (first) { lbl = 'To pay'; amt = L.dueNow; tone = st.c === 'bad' ? 'bad' : st.c === 'warn' ? 'warn' : 'due'; pill = st.t;
-      sub = (L.unpaid.length > 1 ? L.unpaid.length + ' bills · ' : '') + 'Pay By ' + fmtDM(first.due); }
-    else if (n) { lbl = 'Next bill'; amt = n.left; tone = 'next'; pill = 'Stmt Date ' + fmtDM(n.sd); sub = 'Pay By ' + fmtDM(n.due); }
-    else { lbl = 'Owed'; amt = Math.max(0, L.owed); tone = 'good'; pill = 'All clear'; sub = 'Nothing to pay'; }
-    const lf = lim ? Math.min(1, used / lim) : 0;
-    return `<button type="button" class="wc t-${tone}" style="--ca:${th[i][0]};--cb:${th[i][1]};--i:${i}"${whyAttr('card:' + c.id)} aria-label="${esc(c.name)}: ${lbl} ${rs(amt)}, ${esc(pill)}">
-      <span class="wc-top"><span class="wc-brand">${esc(brand || who)}</span>${net ? `<span class="wc-net">${esc(net)}</span>` : '<span class="wc-chip" aria-hidden="true"></span>'}</span>
-      ${brand && who ? `<span class="wc-who">${esc(who)}</span>` : ''}
-      <span class="wc-mid"><span class="wc-lbl">${lbl}</span><span class="wc-amt" data-v="${r2(amt)}">${rs(amt)}</span><span class="wc-sub">${esc(sub)}</span></span>
-      <span class="wc-bot"><span class="wc-pill"><i></i>${esc(pill)}</span>${l4 ? `<span class="wc-l4">•• ${esc(l4)}</span>` : ''}</span>
-      ${lim ? `<span class="wc-lim" aria-hidden="true"><i class="${lf > 0.8 ? 'bad' : lf > 0.5 ? 'warn' : ''}" style="width:${(lf * 100).toFixed(1)}%"></i></span>` : ''}
-    </button>`;
+  /* Overview, Nov 2026: the same calm language as Wealth (owner's request). A quiet summary panel, then ONE tile that
+     opens into a row per card, instead of a bright gradient wallet card each. Every figure still opens its breakdown. */
+  const TONE_C = {bad: '#ef4444', warn: '#f59e0b', due: '#3b82f6', next: '#8b5cf6', good: '#22c55e'};
+  const rows = tiles.map(({L, first, st, n}) => {
+    const c = L.card, vr = (V.rows || []).find(r => r.id === c.id), num = vr ? vr.c[2] : '';
+    const l4 = last4(num) || (String(c.name).match(/··(\d{4})$/) || [])[1] || '', lim = +c.limit > 0 ? +c.limit : 0, used = Math.max(0, L.owed);
+    let lbl, amt, when, pill, tn;
+    if (first) { lbl = 'to pay'; amt = L.dueNow; tn = st.c === 'bad' ? 'bad' : st.c === 'warn' ? 'warn' : 'due'; pill = st.t; when = (L.unpaid.length > 1 ? L.unpaid.length + ' bills · ' : '') + 'pay by ' + fmtDM(first.due); }
+    else if (n) { lbl = 'next bill'; amt = n.left; tn = 'next'; pill = 'Statement ' + fmtDM(n.sd); when = 'pay by ' + fmtDM(n.due); }
+    else { lbl = 'owed'; amt = Math.max(0, L.owed); tn = 'good'; pill = 'All clear'; when = 'nothing to pay'; }
+    const meta = [when, lim ? Math.round(Math.min(1, used / lim) * 100) + '% of limit used' : '', l4 ? '•• ' + l4 : ''].filter(Boolean).map(esc).join(' · ');
+    return `<div class="wx-acc"${whyAttr('card:' + c.id)} style="--kc:${TONE_C[tn]}"><span class="wx-av card"><svg class="ic" aria-hidden="true"><use href="#c-card"/></svg></span>
+      <span class="wx-m"><b>${esc(c.name)}</b><small><span class="wx-pill"><i></i>${esc(pill)}</span> ${meta}</small></span>
+      <span class="wx-v"><b class="num">${rs(amt)}</b><small class="wx-vl">${lbl}</small></span></div>`;
   }).join('');
-  return `<section class="card ccs wsec">
-    <div class="sec-h"><h2>Credit cards</h2><a class="hint" href="#cards">All cards ›</a></div>
-    <div class="cck">
-      <div class="cckpi ${tone}"${whyAttr('c-due')}><span class="lbl">To pay now</span><span class="v fit">${rs(dueNow)}</span><span class="sub">${sdot(tone)}${dueSub}</span></div>
-      <div class="cckpi"${whyAttr('c-next')}><span class="lbl">Next bills</span><span class="v fit">${rs(nextAmt)}</span><span class="sub">${coming.length} card${coming.length === 1 ? '' : 's'} so far</span></div>
-      <div class="cckpi"${whyAttr('c-owed')}><span class="lbl">Total owed</span><span class="v fit">${rs(owed)}</span><span class="sub">on ${cards.length} card${cards.length === 1 ? '' : 's'}</span></div>
-    </div>${split}
-    <div class="wgrid">${grid}</div>
+  const lead = tiles[0], leadTxt = lead && lead.first ? `${lead.L.card.name} · ${lead.st.t.toLowerCase()}` : lead && lead.n ? `Next: ${lead.L.card.name} on ${fmtDM(lead.n.sd)}` : 'Nothing to pay on any card';
+  const kc = tone === 'bad' ? '#ef4444' : tone === 'warn' ? '#f59e0b' : '#e11d48', bar = owed > 0.5 && (dueNow > 0.5 || nextAmt > 0.5);
+  return `<section class="wx-group ov-cards">
+    <div class="wx-h"><h2>Credit cards</h2><a class="hint" href="#cards">All cards ›</a></div>
+    <div class="wx-card wx-stats-card">
+      <div class="wx-stats">
+        <div class="wx-stat ${tone}"${whyAttr('c-due')}><span>To pay now</span><b class="fit">${rs(dueNow)}</b><small>${sdot(tone)}${dueSub}</small></div>
+        <div class="wx-stat"${whyAttr('c-next')}><span>Next bills</span><b class="fit">${rs(nextAmt)}</b><small>${coming.length} card${coming.length === 1 ? '' : 's'} so far</small></div>
+        <div class="wx-stat"${whyAttr('c-owed')}><span>Total owed</span><b class="fit">${rs(owed)}</b><small>on ${cards.length} card${cards.length === 1 ? '' : 's'}</small></div>
+      </div>
+      ${bar ? `<div class="wx-bar ov-bar" role="img" aria-label="${rs(dueNow)} to pay now, ${rs(nextAmt)} on the next bills"><i style="--kc:${tone === 'bad' ? '#ef4444' : tone === 'warn' ? '#f59e0b' : '#3b82f6'};flex:${Math.max(0, dueNow)}"></i><i style="--kc:#8b5cf6;flex:${Math.max(0, nextAmt)};--i:1"></i></div>
+        <div class="wx-legend"><span><i style="--kc:${tone === 'bad' ? '#ef4444' : tone === 'warn' ? '#f59e0b' : '#3b82f6'}"></i>To pay now</span><span><i style="--kc:#8b5cf6"></i>Next bills</span></div>` : ''}
+    </div>
+    <div class="wx-list">
+      <details class="wx-k wtree" data-tree="ov:cards" style="--kc:${kc};--i:0"${state.openTree && state.openTree['ov:cards'] ? ' open' : ''}>
+        <summary class="wx-row">${wxIc('c-card', kc)}<span class="wx-m"><b>${cards.length} card${cards.length === 1 ? '' : 's'}</b><small class="${tone === 'bad' ? 'wx-alert' : tone === 'warn' ? 'wx-warnt' : ''}">${esc(leadTxt)}</small></span>
+          <span class="wx-v"><b class="num">${rs(owed)}</b><small class="wx-vl">owed</small></span><i class="wx-chev" aria-hidden="true"><svg class="ic"><use href="#i-down"/></svg></i></summary>
+        <div class="wx-in">${rows}</div>
+      </details>
+    </div>
   </section>`;
 }
 // Overview bank accounts: the Bank buttons from Add entry (Setup order), each with its live balance.
@@ -3945,25 +3972,29 @@ function bankStripHtml(X) {
   if (!list.length) list = cfg.accounts.filter(a => !a.pay && a.cls === 'Bank');
   list = list.filter(a => { const id = X.res(a.id) || a.id; if (seen.has(id)) return false; seen.add(id); return true; });
   if (!list.length) return '';
-  const names = list.map(a => a.vaultName || a.name), th = wcThemes(names);
-  let total = 0, any = false;
-  const grid = list.map((a, i) => {
-    const id = X.res(a.id) || a.id, L = X.latest[id], {brand, who} = wcSplit(names[i]);
+  const names = list.map(a => a.vaultName || a.name);
+  let total = 0, any = false; const owners = new Set();
+  const rows = list.map((a, i) => {
+    const id = X.res(a.id) || a.id, L = X.latest[id];
     if (L) { total += L.v; any = true; }
     const vr = a.vault ? (V.rows || []).find(r => r.id === a.vault) : null, l4 = vr ? last4(vr.c[2]) : '';
     const kind = /\bupi\b/i.test(names[i]) ? 'UPI' : 'Savings';
-    const sub = !L ? 'No balance recorded yet' : L.moves && L.moves.length ? `${L.delta < 0 ? '−' : '+'}${rs(Math.abs(L.delta))} since ${fmtDM(L.date)}` : 'Recorded ' + fmtDM(L.date);
-    const owner = a.owner || (X.am[id] && X.am[id].owner) || '';
-    return `<button type="button" class="wc t-${L ? 'plain' : 'none'}" style="--ca:${th[i][0]};--cb:${th[i][1]};--i:${i}"${whyAttr('w-acct:' + id)} aria-label="${esc(names[i])}: balance ${L ? rs(L.v) : 'not recorded'}">
-      <span class="wc-top"><span class="wc-brand">${esc(brand || who)}</span><span class="wc-emb" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M3 9.5 12 4l9 5.5"/><path d="M5 10v8M9.5 10v8M14.5 10v8M19 10v8"/><path d="M3.5 20.5h17"/></svg></span></span>
-      ${brand && who ? `<span class="wc-who">${esc(who)}</span>` : ''}
-      <span class="wc-mid"><span class="wc-lbl">Balance</span><span class="wc-amt"${L ? ` data-v="${r2(L.v)}"` : ''}>${L ? rs(L.v) : '—'}</span><span class="wc-sub">${esc(sub)}</span></span>
-      <span class="wc-bot"><span class="wc-pill"><i></i>${esc(owner && !wcHas(who, owner) ? kind + ' · ' + owner : kind)}</span>${l4 ? `<span class="wc-l4">•• ${esc(l4)}</span>` : ''}</span>
-    </button>`;
+    const sub = !L ? 'no balance recorded yet' : L.moves && L.moves.length ? `${L.delta < 0 ? '−' : '+'}${rs(Math.abs(L.delta))} since ${fmtDM(L.date)}` : 'recorded ' + fmtDM(L.date);
+    const owner = a.owner || (X.am[id] && X.am[id].owner) || ''; if (owner) owners.add(owner);
+    const h = owner ? [...owner].reduce((x, ch) => (x * 31 + ch.charCodeAt(0)) >>> 0, 7) % 360 : 0;
+    return `<div class="wx-acc"${whyAttr('w-acct:' + id)}>${owner ? `<span class="wx-av" style="--h:${h}" title="${esc(owner)}">${esc(owner[0].toUpperCase())}</span>` : '<span class="wx-av none"></span>'}
+      <span class="wx-m"><b>${esc(names[i])}</b><small>${esc([kind, owner, sub, l4 ? '•• ' + l4 : ''].filter(Boolean).join(' · '))}</small></span>
+      <span class="wx-v"><b class="num">${L ? rs(L.v) : '—'}</b></span></div>`;
   }).join('');
-  return `<section class="card wsec">
-    <div class="sec-h"><h2>Bank accounts</h2>${any ? `<span class="wsum num">${rs(total)}</span>` : ''}<a class="hint" href="#wealth">Wealth ›</a></div>
-    <div class="wgrid">${grid}</div>
+  return `<section class="wx-group ov-banks">
+    <div class="wx-h"><h2>Bank accounts</h2><a class="hint" href="#wealth">Wealth ›</a></div>
+    <div class="wx-list">
+      <details class="wx-k wtree" data-tree="ov:banks" style="--kc:#3b82f6;--i:1"${state.openTree && state.openTree['ov:banks'] ? ' open' : ''}>
+        <summary class="wx-row">${wxIc('i-bank', '#3b82f6')}<span class="wx-m"><b>${list.length} account${list.length === 1 ? '' : 's'}</b><small>${esc([...owners].join(' and ') || 'Savings and UPI')}</small></span>
+          <span class="wx-v"><b class="num">${any ? rs(total) : '—'}</b><small class="wx-vl">balance</small></span><i class="wx-chev" aria-hidden="true"><svg class="ic"><use href="#i-down"/></svg></i></summary>
+        <div class="wx-in">${rows}</div>
+      </details>
+    </div>
   </section>`;
 }
 // "HDFC AMMI UPI" → brand HDFC, who "Ammi UPI": the bank on top, the person or card name under it.
