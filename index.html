@@ -201,6 +201,19 @@ img{max-width:100%}
 body[data-view="vault"] .fab,body[data-view="vault"] #addTop,body[data-view="notes"] .fab,body[data-view="disc"] .fab,body[data-view="setup"] .fab{display:none!important}
 #saveSlot{display:contents} /* the unsaved-changes bar floats over Setup while you edit, not only at its very end */
 body[data-view="vault"] #cycBar{display:none!important}
+body[data-view="add"] .fab{display:none!important}
+@media (max-width:1023.98px){html.role-entry .navbar{grid-template-columns:repeat(2,minmax(0,1fr));max-width:320px}}
+.addhome{display:flex;flex-direction:column;gap:14px}
+.addhome .hero-add{padding:22px 20px;display:flex;flex-direction:column;gap:14px;align-items:flex-start}
+.addhome .hero-add h2{margin:0;font-size:calc(24px*var(--fs,1));letter-spacing:-.02em}
+.addhome .hero-add p{margin:0;color:var(--ink-2)}
+.addhome .big-add{font-size:calc(17px*var(--fs,1));padding:14px 26px;border-radius:16px}
+.addhome .big-add .ic{width:22px;height:22px}
+.killed{display:flex;flex-direction:column;gap:12px}
+.killform{display:flex;flex-direction:column;gap:10px;max-width:420px}
+.elinks .elink{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.elinks .elink .l{flex:1 1 160px;min-width:0}
+.elinks .elink .acts{display:flex;gap:6px;flex-wrap:wrap}
 .tb-act{margin-left:auto}
 .cyc-pick{flex:0 1 auto;min-width:0}
 @media (max-width:1023px){.status{width:36px;height:36px;padding:0;justify-content:center}.status .st-t{display:none}}
@@ -1224,6 +1237,7 @@ html.tb-hide:not(.kb) .topbar{transform:translateY(-100%)}
   </div>
 </header>
 <nav class="navbar" id="navbar" aria-label="Sections">
+  <a class="nv" href="#add" data-v="add" hidden><span class="nvi"><svg class="ic" aria-hidden="true"><use href="#i-plus"/></svg></span><span>Add entry</span></a>
   <a class="nv" href="#overview" data-v="overview"><span class="nvi"><svg class="ic" aria-hidden="true"><use href="#i-home"/></svg></span><span>Overview</span></a>
   <a class="nv" href="#entries" data-v="entries"><span class="nvi"><svg class="ic" aria-hidden="true"><use href="#i-entries"/></svg></span><span>Entries</span></a>
   <a class="nv nv-2" href="#cards" data-v="cards"><span class="nvi"><svg class="ic" aria-hidden="true"><use href="#i-card"/></svg></span><span>Card bills</span></a>
@@ -1260,6 +1274,7 @@ html.tb-hide:not(.kb) .topbar{transform:translateY(-100%)}
     <div id="entriesBody"></div>
   </section>
 
+  <section class="view" id="v-add" hidden></section>
   <section class="view" id="v-cards" hidden></section>
   <section class="view" id="v-wealth" hidden></section>
   <section class="view" id="v-notes" hidden></section>
@@ -1398,7 +1413,9 @@ html.tb-hide:not(.kb) .topbar{transform:translateY(-100%)}
 <script>
 (() => {
 'use strict';
-const VIEWS = ['overview','entries','cards','wealth','notes','trend','setup','vault','disc'];
+const VIEWS = ['overview','entries','cards','wealth','notes','trend','setup','vault','disc','add'];
+// An entry link (role Entry) sees only these. The server refuses everything else for it too.
+const ENTRY_VIEWS = ['add', 'notes'];
 const TYPES = ['Expense','Income','Transfer'];
 const GROUPS = ['Fixed','Variable','Discretionary','Sinking'];
 const CLASSES = ['Bank','FD','Bond','Retirement','Equity','ETF','Gold','Cash','Property','Loan','Owed','Other'];
@@ -1589,6 +1606,7 @@ const LS_CONN = 'budgetTracker.conn.v1', LS_OUT = 'budgetTracker.outbox.v1', LS_
 const API_URL = 'https://script.google.com/macros/s/AKfycbzMb_87-nOMCRF10ieNSvUPlBLcIbu6PhpqQHw8riETufRlKF2ZEdBFttyMZc8Rwngg/exec';
 const GOOGLE_CLIENT_ID = '';
 const Sync = { url: '', key: '', session: '', me: null, users: null, outbox: [], busy: false, again: false, last: 0, err: '', timer: null };
+const isEntry = () => !!(Sync.me && Sync.me.role === 'Entry');
 function saveConn() { try { localStorage.setItem(LS_CONN, JSON.stringify({url: Sync.url, key: Sync.key, session: Sync.session, me: Sync.me})); } catch (e) {} }
 function readConn() { try { return JSON.parse(localStorage.getItem(LS_CONN) || 'null'); } catch (e) { return null; } }
 function saveCache() {
@@ -1645,10 +1663,11 @@ async function flush() {
     Sync.outbox.splice(0, sent.length);
     takeReply(j);
     Sync.outbox.forEach(applyLocal); // changes made while this request was in flight
-    Sync.last = Date.now(); Sync.err = ''; state.got.config = true; state.stale = false; state.connErr = '';
+    Sync.last = Date.now(); Sync.err = ''; state.got.config = true; state.stale = false; state.connErr = ''; state.killed = false;
     saveCache();
   } catch (e) {
     Sync.err = (e && e.code) || (navigator.onLine === false ? 'offline' : 'network');
+    if (Sync.err === 'app_killed') { wipeForKill(); Sync.busy = false; render(); return; }
     if (Sync.err === 'signed_out' || Sync.err === 'not_allowed' || Sync.err === 'bad_key') { forgetSignIn(Sync.err); Sync.busy = false; render(); return; }
   }
   Sync.busy = false;
@@ -1662,15 +1681,19 @@ function takeReply(j) {
   if (j.me) Sync.me = j.me;
   if (Sync.me && Sync.me.role === 'Owner' && !V.loaded && !V.loading && !V.err) setTimeout(() => { if (!V.loaded && !V.loading) loadVault(); }, 0);
   Sync.users = j.users || null;
+  Sync.entryLinks = j.entryLinks || null; Sync.killCode = !!j.killCode;
+  if (j.killErr) toast(KILL_MSG[j.killErr] || "The kill code wasn't changed.", 'bad', 6000);
   if (j.session) Sync.session = j.session;
   saveConn();
 }
 // Drop this phone's sign-in but keep any unsynced changes, so they go up after the next sign-in.
 function forgetSignIn(reason) {
+  const wasEntry = isEntry();
   Sync.session = ''; Sync.key = ''; Sync.me = null; Sync.users = null; Sync.err = '';
   lockVault('', true); V.loaded = false; V.meta = null; V.enc = {}; V.pending = [];
   try { localStorage.removeItem(LS_VAULT); } catch (e) {}
-  state.connErr = reason === 'not_allowed' ? 'This Google account is no longer on the family list.' : reason === 'bad_key' ? 'That set-up link has been switched off. Sign in with Google.' : '';
+  state.connErr = reason === 'not_allowed' ? 'This Google account is no longer on the family list.' : reason === 'bad_key' ? 'That set-up link has been switched off. Sign in with Google.' : wasEntry ? 'This entry link has been switched off. Ask the owner for a new one.' : '';
+  if (wasEntry) Sync.outbox = [];
   // Hide the saved copy of the family's data until someone signs in again.
   state.config = null; state.cycles = {}; state.balances = {}; state.cardfix = {}; state.got.config = false; state.dirty = false; state.draft = null;
   if (reason === 'not_allowed') Sync.outbox = [];
@@ -1799,9 +1822,13 @@ function renderChrome(X) {
   const lbl = syncLabel(); $('#statusText').textContent = lbl; st.title = lbl; st.setAttribute('aria-label', lbl);
   markNav();
   const ready = !!state.config;
-  $('#cycBar').hidden = !ready;
+  const entry = isEntry();
+  document.documentElement.classList.toggle('role-entry', entry);
+  $('#cycBar').hidden = !ready || entry;
   document.querySelectorAll('[data-act="add"]').forEach(b => { b.hidden = !ready; });
   $('#navbar').hidden = !ready;
+  document.querySelectorAll('#navbar .nv[data-v]').forEach(a => { if (a.id !== 'vaultTab') a.hidden = entry ? !ENTRY_VIEWS.includes(a.dataset.v) : a.dataset.v === 'add'; });
+  $('#navMore').hidden = entry;
   if (!ready) return;
   const nowKey = cycleKeyOf(todayStr());
   if (!state.curPinned || !state.cur) state.cur = nowKey;
@@ -3476,6 +3503,7 @@ function renderPay() {
 }
 // One line on what the chosen account holds now, or why an entry will not move it.
 function acctHint(X, id, label) {
+  if (isEntry()) return '';
   const a = X.am[id];
   if (!a) return id === 'cash' ? 'Cash in hand is not tracked: add an account of kind Cash in Setup → Accounts.' : '';
   const name = label || a.name;
@@ -3490,7 +3518,10 @@ function setPay(mode) { payMode = mode; if (mode === 'cash') { payCard = ''; } r
 /* ---------- views ---------- */
 function setView(v) {
   const prev = state.view;
-  state.view = VIEWS.includes(v) ? v : 'overview';
+  let want = VIEWS.includes(v) ? v : 'overview';
+  if (isEntry() && !ENTRY_VIEWS.includes(want)) want = 'add';
+  else if (!isEntry() && want === 'add') want = 'overview';
+  state.view = want;
   document.body.dataset.view = state.view;
   VIEWS.forEach(n => { $('#v-' + n).hidden = !state.config || n !== state.view; });
   markNav();
@@ -3503,10 +3534,15 @@ function render() {
   const X = state.config ? ctx() : null;
   renderChrome(X); renderBanner();
   const gate = $('#gate');
+  if (state.killed) {
+    VIEWS.forEach(n => { $('#v-' + n).hidden = true; }); closeWhy();
+    gate.hidden = false; if (!holdIfTyping(gate)) gate.innerHTML = killedHtml(); return;
+  }
   if (!state.config) {
     VIEWS.forEach(n => { $('#v-' + n).hidden = true; }); closeWhy();
     const known = state.got.config;
     gate.hidden = false;
+    if (signedIn() && known && isEntry()) { gate.innerHTML = `<h2>Not set up yet</h2><p>The tracker has no categories yet. Ask the owner to set it up, then open this link again.</p>`; return; }
     if (!signedIn()) { if (!holdIfTyping(gate)) renderSignIn(gate); return; }
     gate.innerHTML = Sync.err && !known
       ? `<h2>Can't reach Google Sheets</h2><p>${esc(state.connErr || 'Check the internet connection, then try again.')}</p><div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn primary" type="button" data-act="sync-now">Try again</button><button class="btn" type="button" data-act="disconnect">Sign out</button></div>`
@@ -3521,6 +3557,14 @@ function render() {
   const isOwner = !!(Sync.me && Sync.me.role === 'Owner');
   $('#vaultTab').hidden = !isOwner;
   if (!isOwner && state.view === 'vault') state.view = 'overview';
+  if (isEntry()) { // add entries and notes only: nothing else is drawn, so nothing else is on the page
+    ['overview', 'cards', 'wealth', 'trend', 'setup', 'vault', 'disc'].forEach(n => { $('#v-' + n).innerHTML = ''; }); $('#entriesBody').innerHTML = '';
+    renderAddHome(X);
+    if (!holdIfTyping('#v-notes')) renderNotes();
+    setView(state.view);
+    if (!render.shown) { render.shown = true; viewEntered(state.view, true); }
+    return;
+  }
   // A screen someone is typing in is left alone; it is redrawn when they leave the box.
   if (!holdIfTyping('#v-overview')) renderOverview(X);
   if (!holdIfTyping('#v-entries')) renderEntries(X);
@@ -3715,6 +3759,7 @@ function impactLines(oldT, newT, X0, X1) {
   return {out, warn};
 }
 function impactToast(head, oldT, newT, X0) {
+  if (isEntry()) { toast(head, '', 2600); return; }
   let r; try { r = impactLines(oldT, newT, X0, ctx()); } catch (e) { r = {out: [], warn: []}; }
   const lines = [head].concat(r.out, r.warn);
   toast(lines.join('\n'), r.warn.length ? 'warn' : '', lines.length > 1 ? (r.warn.length ? 7000 : 4500) : 2600);
@@ -3989,6 +4034,8 @@ document.addEventListener('toggle', ev => { const d = ev.target; if (d && d.matc
 window.addEventListener('hashchange', () => {
   const lg = location.hash.match(/^#login=([a-f0-9]{20,80})$/);
   if (lg) { history.replaceState(null, '', location.pathname + '#overview'); if (!Sync.session) useLoginLink(lg[1]); setView('overview'); return; }
+  const en = location.hash.match(/^#entry=([a-f0-9]{40,80})$/);
+  if (en) { history.replaceState(null, '', location.pathname + '#add'); useEntryLink(en[1]); return; }
   navTo(location.hash.slice(1));
 });
 // Only the charts depend on screen width. Never redraw other screens on resize: the phone keyboard opening
@@ -4614,6 +4661,7 @@ function loadGis() {
   return gisReady;
 }
 function signInMsg(code, email) {
+  if (code === 'app_killed') return 'The app is closed by its owner.';
   if (code === 'not_allowed') return `${email ? esc(email) : 'This Google account'} isn't on the family list yet. Ask the owner to add it in Setup → Family access.`;
   if (code === 'no_client_id') return 'Google sign-in is not switched on in the sheet yet (Config tab: google client id).';
   if (code === 'bad_token') return 'Google sign-in could not be checked. Try again.';
@@ -4635,7 +4683,8 @@ function renderSignIn(gate) {
       <div><button class="btn primary" type="submit" id="mGo">Email me a sign-in link</button></div>
     </form>
     <div class="banner" id="mSent" hidden></div>
-    <details style="margin-top:6px"><summary class="hint" style="cursor:pointer">Have a set-up link instead?</summary>${linkForm()}</details>`;
+    <details style="margin-top:6px"><summary class="hint" style="cursor:pointer">Have a set-up link instead?</summary>${linkForm()}</details>
+    <details style="margin-top:6px"><summary class="hint" style="cursor:pointer">Owner: kill switch</summary>${killFormHtml('both')}</details>`;
   if (GOOGLE_CLIENT_ID) loadGis().then(() => {
     const el = $('#gBtn'); if (!el) return;
     google.accounts.id.renderButton(el, {type: 'standard', theme: 'filled_blue', size: 'large', shape: 'pill', text: 'continue_with', logo_alignment: 'left', width: Math.min(320, el.clientWidth || 320)});
@@ -4720,6 +4769,7 @@ function accountHtml() {
       <div class="ed" style="padding-top:12px"><p class="muted" style="margin:0;font-size:calc(14.5px*var(--fs,1));overflow-wrap:anywhere">${who}. Your data is in the <b>Budget Tracker data</b> Google Sheet.</p></div>
       <div class="row-actions"><button class="btn" type="button" data-act="sync-now">Sync now</button><button class="btn danger" type="button" data-act="disconnect">Sign out of this phone</button></div></section>
     ${installHtml()}
+    ${owner ? entryLinksHtml() + killSwitchHtml() : ''}
     ${users ? `<section class="card list"><div class="sec-h"><h2>Family access</h2><span class="hint">Only these Google accounts can sign in</span></div>${list}
       <form class="row-actions addcard" id="addUserForm" novalidate><input id="newUser" type="email" autocomplete="off" placeholder="name@gmail.com" aria-label="Google account email to add"><button class="btn primary" type="submit">Add person</button></form></section>` : ''}`;
 }
@@ -4761,7 +4811,7 @@ new MutationObserver(list => { for (const m of list) for (const n of m.addedNode
    Phones: a slim top bar (the month) that slides away while you scroll down, and a floating bottom bar with the
    four main screens and More. Laptops, desktops and TVs: the same pieces become a sidebar (CSS only).
    While the phone keyboard is up, every bar steps aside and the box you are typing in is kept in view. */
-const VIEW_TITLE = {overview: 'Overview', entries: 'Entries', cards: 'Card bills', wealth: 'Wealth', notes: 'Notes', trend: 'Trend', setup: 'Setup', vault: 'Vault', disc: 'Discretionary'};
+const VIEW_TITLE = {add: 'Add entry', overview: 'Overview', entries: 'Entries', cards: 'Card bills', wealth: 'Wealth', notes: 'Notes', trend: 'Trend', setup: 'Setup', vault: 'Vault', disc: 'Discretionary'};
 const PRIMARY_VIEWS = ['overview', 'entries', 'wealth', 'notes'];
 const coarse = matchMedia('(pointer: coarse)');
 const reduceMotion = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -4868,6 +4918,136 @@ document.addEventListener('focusin', () => { kbCheck(); setTimeout(kbCheck, 350)
 document.addEventListener('focusout', () => setTimeout(kbCheck, 90));
 kbCheck();
 
+/* ---------- entry-only links ---------- */
+function useEntryLink(tok, starting) {
+  if (signedIn() && Sync.session !== tok) {
+    // Never swap a signed-in phone (for example the owner's) over to an entry link by accident.
+    setTimeout(() => toast('This phone is already signed in. To use the entry link here, sign out first (Setup → Sign out of this phone).', 'warn', 8000), 400);
+    if (!starting) setView(state.view);
+    return;
+  }
+  if (Sync.session === tok) { if (!starting) { setView('add'); flush(); } return; }
+  Sync.session = tok; Sync.key = ''; Sync.me = {role: 'Entry', name: '', email: ''}; Sync.url = API_URL;
+  state.mode = 'cloud'; state.config = null; state.cycles = {}; state.balances = {}; state.cardfix = {}; state.got.config = false;
+  saveConn(); state.view = 'add';
+  if (!starting) { render(); flush(); }
+}
+function renderAddHome(X) {
+  const el = $('#v-add'); if (!el) return;
+  const list = X.txns.slice().sort((a, b) => a.date === b.date ? (b.at || 0) - (a.at || 0) : (a.date < b.date ? 1 : -1)).slice(0, 40);
+  const rows = list.map(t => {
+    const ty = X.typeOf(t), c = X.cm[t.cat], dt = parseYmd(t.date);
+    const meta = [dt.getDate() + ' ' + MON[dt.getMonth()], t.note, t.card ? cardName(t.card) : t.acct === 'cash' ? 'Cash' : X.am[t.acct] && X.am[t.acct].name].filter(Boolean).map(esc).join(' · ');
+    return `<button class="erow" type="button" data-act="edit" data-id="${esc(t.id)}" data-doc="${esc(t._doc)}">${catIco(c)}
+      <span class="l"><span class="t1">${esc(c ? c.name : 'Unlisted')}${t.refund ? ' <span class="tag">Refund</span>' : ''}</span><span class="t2">${meta}</span></span>
+      <span class="amt num ${ty === 'Income' || t.refund ? 'inc' : ty === 'Transfer' ? 'trf' : ''}">${ty === 'Income' ? '+' : t.refund ? '−' : ''}${rs(t.amount)}</span></button>`;
+  }).join('');
+  const who = Sync.me && Sync.me.name ? esc(Sync.me.name) : '';
+  el.innerHTML = `<div class="addhome">
+    <section class="card hero-add"><h2>${who ? 'Hi ' + who : 'Add an entry'}</h2><p>Log what you spent or received. It goes straight to the family tracker.</p>
+      <button class="btn primary big-add" type="button" data-act="add"><svg class="ic" aria-hidden="true"><use href="#i-plus"/></svg>Add entry</button></section>
+    <section class="card ledger"><div class="sec-h"><h2>What you added</h2><span class="hint">Last ${60} days · tap to fix</span></div>${rows || '<div class="empty">Nothing yet. Tap Add entry to log one.</div>'}</section>
+  </div>`;
+}
+function newLinkId() { const a = new Uint8Array(6); crypto.getRandomValues(a); return [...a].map(x => x.toString(36).padStart(2, '0')).join('').slice(0, 10); }
+function entryLinksHtml() {
+  const links = Sync.entryLinks || [];
+  const rows = links.map(l => `<div class="li elink"><div class="l"><div class="t1">${esc(l.name)}</div><div class="t2">Add entry and Notes only · made ${esc(fmtDM(ymd(new Date(l.at))))}</div></div>
+      <div class="acts"><button class="btn" type="button" data-act="elink-copy" data-link="${esc(l.link)}">${navigator.share ? 'Share' : 'Copy link'}</button><button class="btn danger" type="button" data-act="elink-del" data-id="${esc(l.id)}">Switch off</button></div></div>`).join('');
+  return `<section class="card list elinks"><div class="sec-h"><h2>Entry-only links</h2><span class="hint">No sign-in · Add entry and Notes only</span></div>
+    ${rows || '<div class="li"><div class="l"><div class="t2">No links yet. Make one for someone who should only add entries.</div></div></div>'}
+    <form class="row-actions addcard" id="elinkForm" novalidate><input id="elinkName" type="text" autocomplete="off" maxlength="40" placeholder="Whose link? (e.g. Efrah)" aria-label="Whose link"><button class="btn primary" type="submit">Make link</button></form>
+    <div class="ed"><p class="hint" style="margin:0">Anyone who has the link can add entries, so send it only to that person. They never see budgets, balances, cards, the vault or anyone else's entries. Switch it off here at any time.</p></div></section>`;
+}
+
+/* ---------- kill switch ----------
+   The server holds the switch. While it is on, it answers every phone with "app_killed", whoever is signed in;
+   each phone then wipes its saved copy of the data (and anything not yet synced) and shows only this screen. */
+const KILL_MSG = {bad_code: "That kill code isn't right.", too_many: 'Too many wrong codes. Wait an hour, or use reviveApp() in the script editor.',
+  no_kill_code: 'No kill code is set yet. Set one in Setup → Kill switch.', short: 'The kill code needs at least 8 characters.'};
+function wipeForKill() {
+  state.killed = true;
+  lockVault('', true); V.loaded = false; V.meta = null; V.enc = {}; V.pending = [];
+  Object.assign(N, {local: {}, meta: {}, del: {}, bodies: {}, open: null});
+  state.config = null; state.cycles = {}; state.balances = {}; state.cardfix = {}; state.got.config = false; state.dirty = false; state.draft = null;
+  Sync.outbox = []; Sync.users = null; Sync.entryLinks = null;
+  closeMore(); try { closeEntry(); } catch (e) {}
+  try { [LS_CACHE, LS_OUT, LS_VAULT, LS_NOTES].forEach(k => localStorage.removeItem(k)); } catch (e) {}
+}
+function killFormHtml(mode) {
+  return `<form class="killform" id="killForm" data-mode="${mode}" novalidate>
+      <label class="field"><span>Kill code</span><input id="killCode" type="password" autocomplete="new-password" spellcheck="false"></label>
+      <div class="err" id="killErr" hidden></div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">${mode === 'revive' ? '<button class="btn primary" type="submit" data-v="revive">Reopen the app</button>'
+        : mode === 'both' ? '<button class="btn danger" type="submit" data-v="kill">Close the app</button><button class="btn" type="submit" data-v="revive">Reopen the app</button>'
+        : '<button class="btn danger" type="submit" data-v="kill">Kill the app now</button>'}</div></form>`;
+}
+function killedHtml() {
+  const owner = !!(Sync.me && Sync.me.role === 'Owner');
+  return `<div class="killed"><h2>This app is closed</h2><p>The owner has switched it off. Nothing is stored on this phone. It opens again by itself once the owner reopens it.</p>
+    ${owner ? killFormHtml('revive') : `<details><summary class="hint" style="cursor:pointer">Owner</summary>${killFormHtml('revive')}</details>`}</div>`;
+}
+function killSwitchHtml() {
+  if (!Sync.killCode) return `<section class="card"><div class="sec-h"><h2>Kill switch</h2><span class="hint">Not set up</span></div>
+    <div class="ed"><p class="hint" style="margin:0 0 10px">Set a kill code (at least 8 characters). With it you can close the app for everyone, on every phone, from Setup or from the sign-in screen of any phone. Only the same code reopens it. Keep it somewhere safe, outside this app.</p>
+    <form class="killform" id="killSetForm" novalidate><label class="field"><span>New kill code</span><input id="kc1" type="password" autocomplete="new-password" spellcheck="false"></label>
+    <label class="field"><span>Type it again</span><input id="kc2" type="password" autocomplete="new-password" spellcheck="false"></label><div class="err" id="kcErr" hidden></div>
+    <div><button class="btn primary" type="submit">Set kill code</button></div></form></div></section>`;
+  return `<section class="card"><div class="sec-h"><h2>Kill switch</h2><span class="hint">Ready</span></div>
+    <div class="ed"><p class="hint" style="margin:0 0 10px">Closes the app for everyone at once. Every phone wipes its saved copy, including changes not yet synced. Your Google Sheet and Drive keep everything.</p>${killFormHtml('kill')}
+    <details style="margin-top:12px"><summary class="hint" style="cursor:pointer">Change kill code</summary><form class="killform" id="killSetForm" novalidate style="margin-top:10px">
+      <label class="field"><span>Current kill code</span><input id="kc0" type="password" autocomplete="current-password" spellcheck="false"></label>
+      <label class="field"><span>New kill code</span><input id="kc1" type="password" autocomplete="new-password" spellcheck="false"></label>
+      <label class="field"><span>Type it again</span><input id="kc2" type="password" autocomplete="new-password" spellcheck="false"></label><div class="err" id="kcErr" hidden></div>
+      <div><button class="btn" type="submit">Change kill code</button></div></form></details></div></section>`;
+}
+document.addEventListener('submit', async ev => {
+  const f = ev.target; if (!f || !f.id) return;
+  if (f.id === 'elinkForm') {
+    ev.preventDefault(); const name = $('#elinkName').value.trim();
+    if (!name) { toast('Type whose link it is', 'bad'); return; }
+    Sync.outbox.push({t: 'elinkadd', id: newLinkId(), name}); saveCache(); $('#elinkName').value = ''; toast('Making the link…'); flush();
+  } else if (f.id === 'killForm') {
+    ev.preventDefault();
+    const what = (ev.submitter && ev.submitter.dataset.v) || f.dataset.mode, code = $('#killCode').value, err = $('#killErr');
+    err.hidden = true;
+    if (!code) { err.textContent = 'Type the kill code.'; err.hidden = false; return; }
+    if (what === 'kill' && ev.submitter && !arm(ev.submitter, 'kill', 'Tap again to close it for everyone')) return;
+    f.querySelectorAll('button').forEach(b => { b.disabled = true; });
+    try {
+      await call([], what === 'kill' ? {kill: code, session: undefined, key: undefined} : {revive: code, session: undefined, key: undefined});
+      if (what === 'kill') { wipeForKill(); toast('The app is closed for everyone.', '', 5000); render(); }
+      else { state.killed = false; state.connErr = ''; toast('The app is open again.'); render(); if (signedIn()) flush(); }
+    } catch (e) {
+      err.textContent = KILL_MSG[e && e.code] || signInMsg(e && e.code).replace(/<[^>]+>/g, ''); err.hidden = false;
+      f.querySelectorAll('button').forEach(b => { b.disabled = false; });
+    }
+  } else if (f.id === 'killSetForm') {
+    ev.preventDefault();
+    const c0 = $('#kc0') ? $('#kc0').value : '', c1 = $('#kc1').value, c2 = $('#kc2').value, err = $('#kcErr');
+    err.hidden = true;
+    if (c1.length < 8) { err.textContent = KILL_MSG.short; err.hidden = false; return; }
+    if (c1 !== c2) { err.textContent = "The two codes don't match."; err.hidden = false; return; }
+    try {
+      // Sent straight away, never kept in the outbox on this phone.
+      const j = await call([{t: 'killcode', code: c1, old: c0}]);
+      if (j.killErr) { err.textContent = KILL_MSG[j.killErr] || "The kill code wasn't changed."; err.hidden = false; return; }
+      takeReply(j); toast(c0 ? 'Kill code changed' : 'Kill code set. Keep it somewhere safe.', '', 5000); render();
+    } catch (e) { err.textContent = KILL_MSG[e && e.code] || "Couldn't reach the sheet. Try again."; err.hidden = false; if (e && e.code === 'app_killed') { wipeForKill(); render(); } }
+  }
+});
+document.addEventListener('click', async ev => {
+  const b = ev.target.closest('[data-act="elink-copy"],[data-act="elink-del"]'); if (!b) return;
+  if (b.dataset.act === 'elink-del') {
+    if (!arm(b, 'el' + b.dataset.id, 'Tap again')) return;
+    Sync.outbox.push({t: 'elinkdel', id: b.dataset.id}); saveCache(); toast('Switching the link off…'); flush();
+  } else {
+    const link = b.dataset.link;
+    if (navigator.share) { try { await navigator.share({title: 'Budget Tracker', text: 'Add entries to our budget tracker:', url: link}); return; } catch (e) { if (e && e.name === 'AbortError') return; } }
+    try { await navigator.clipboard.writeText(link); toast('Link copied. Send it only to that person.'); } catch (e) { prompt('Copy this link', link); }
+  }
+});
+
 /* ---------- start ---------- */
 function start() {
   // One-tap set-up link: #connect=<base64 of {"url":…,"key":…}>. The part after # never reaches GitHub's server.
@@ -4880,9 +5060,13 @@ function start() {
   // Emailed sign-in link: #login=<one-time code>.
   const lg = location.hash.match(/^#login=([a-f0-9]{20,80})$/);
   if (lg) history.replaceState(null, '', location.pathname + '#overview');
+  // Entry-only link: #entry=<token>. No sign-in: the token is the key, and it only opens Add entry and Notes.
+  const en = location.hash.match(/^#entry=([a-f0-9]{40,80})$/);
+  if (en) history.replaceState(null, '', location.pathname + '#add');
   state.view = VIEWS.includes(location.hash.slice(1)) ? location.hash.slice(1) : 'overview';
   const c = readConn() || {};
   Sync.url = API_URL; Sync.key = c.key || ''; Sync.session = c.session || ''; Sync.me = c.me || null;
+  if (en) useEntryLink(en[1], true);
   if (signedIn()) { state.mode = 'cloud'; loadCache(); }
   if (lg && !Sync.session) { try { Sync.outbox = JSON.parse(localStorage.getItem(LS_OUT) || '[]') || []; } catch (e) {} useLoginLink(lg[1]); }
   else render();

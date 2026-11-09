@@ -10,6 +10,14 @@
  * (Sign in with Google also works once a Client ID is set in the Config tab.)
  * Removing someone from the Users tab locks them out at once.
  *
+ * Entry links: the owner makes a link (Setup > Entry-only links) that opens the app with no sign-in.
+ * Whoever holds it can only add entries (and fix or delete the ones they added) and keep their own notes.
+ * This script refuses everything else for that link, and sends it no budgets, balances or other entries.
+ * Removing the link in Setup switches it off at once.
+ *
+ * Kill switch: the owner sets a kill code in Setup. That code closes the app for everyone, on every
+ * phone, until the same code reopens it. Backup: run killApp() or reviveApp() from the script editor.
+ *
  * The app sends one POST per sync: {session, ops: [...]}. Each op is an
  * upsert or a delete, so sending the same op twice is harmless.
  * The reply is always the full, current data set.
@@ -25,8 +33,12 @@ var TABS = {
   // Encrypted on the phone before it arrives. This script never sees readable vault data.
   Vault: ['ID', 'Encrypted data', 'Saved at'],
   // Notes live as real files in Drive (folder "Budget Tracker notes"); this tab is only the list.
-  Notes: ['ID', 'Title', 'Type', 'Owner', 'Drive file ID', 'Updated at', 'Size', 'Preview', 'Label', 'Pinned', 'Pin order']
+  Notes: ['ID', 'Title', 'Type', 'Owner', 'Drive file ID', 'Updated at', 'Size', 'Preview', 'Label', 'Pinned', 'Pin order'],
+  // Which entries came from an entry link, so that link can see and change only those.
+  EntryLog: ['Entry ID', 'Link ID', 'Link name', 'Added at']
 };
+var ENTRY_OPS = {txn: 1, deltxn: 1, nput: 1, ndel: 1, nmeta: 1};
+var ENTRY_DAYS = 60; // an entry link sees what it added in the last 60 days
 var E = {id: 0, date: 1, cycle: 2, type: 3, catName: 4, amount: 5, acctName: 6, cardName: 7, note: 8, member: 9, tag: 10,
          refund: 11, cat: 12, acct: 13, card: 14, at: 15, saved: 16};
 var CHUNK = 40000; // characters per Config cell
@@ -49,12 +61,21 @@ function doPost(e) {
   try {
     var ss = SpreadsheetApp.getActiveSpreadsheet();
     ensureTabs(ss);
+    var props = PropertiesService.getScriptProperties();
+    if (req.kill || req.revive) return out(killSwitch(props, req));
+    if (props.getProperty('KILLED')) return out({ok: false, error: 'app_killed'});
     if (req.emailLink) return out(sendLoginLink(ss, req.emailLink));
     var who = authorise(ss, req);
     if (!who.ok) return out(who);
-    var ops = Array.isArray(req.ops) ? req.ops : [], vaultOps = [], noteErrors = [];
+    var ops = Array.isArray(req.ops) ? req.ops : [], vaultOps = [], noteErrors = [], role = who.user.role, killErr = '';
     for (var i = 0; i < ops.length; i++) {
       var op = ops[i] || {};
+      if (role === 'Entry') {
+        if (!ENTRY_OPS[op.t]) continue; // everything else is refused for an entry link
+        if (op.t === 'txn' || op.t === 'deltxn') { entryTxnOp(ss, op, who.user); continue; }
+      }
+      if (op.t === 'elinkadd' || op.t === 'elinkdel') { if (role === 'Owner') entryLinkOp(props, op); continue; }
+      if (op.t === 'killcode') { if (role === 'Owner') killErr = setKillCode(props, op); continue; }
       if (op.t === 'signout') { if (req.session) PropertiesService.getScriptProperties().deleteProperty('sess:' + req.session); return out({ok: true, signedOut: true}); }
       if (op.t === 'adduser' || op.t === 'deluser') { userOp(ss, op, who.user); continue; }
       if (op.t === 'vput' || op.t === 'vdel') { vaultOps.push(op); continue; }
@@ -63,9 +84,9 @@ function doPost(e) {
     }
     vaultApply(ss, vaultOps, who.user);
     if (ops.length) SpreadsheetApp.flush();
-    var reply = {ok: true, applied: ops.length, data: readAll(ss), me: who.user, at: Date.now()};
+    var reply = {ok: true, applied: ops.length, data: role === 'Entry' ? entryData(ss, who.user) : readAll(ss), me: who.user, at: Date.now()};
     if (who.session) reply.session = who.session;
-    if (who.user.role === 'Owner') reply.users = listUsers(ss);
+    if (role === 'Owner') { reply.users = listUsers(ss); reply.entryLinks = listEntryLinks(props); reply.killCode = !!props.getProperty('KILL_CODE'); if (killErr) reply.killErr = killErr; }
     if (req.vault && who.user.role === 'Owner') reply.vault = readVault(ss);
     reply.notes = readNotes(ss, who.user); reply.notesV = 2;
     if (noteErrors.length) reply.noteErrors = noteErrors;
@@ -102,7 +123,7 @@ function authorise(ss, req) {
   }
   if (req.session) {
     var raw = props.getProperty('sess:' + req.session);
-    if (!raw) return {ok: false, error: 'signed_out'};
+    if (!raw) { var el = entryUser(props, req.session); return el ? {ok: true, user: el} : {ok: false, error: 'signed_out'}; }
     var u = findUser(ss, JSON.parse(raw).email);
     if (!u) { props.deleteProperty('sess:' + req.session); return {ok: false, error: 'not_allowed'}; }
     return {ok: true, user: u};
@@ -184,6 +205,114 @@ function userOp(ss, op, me) {
     sh.deleteRow(u.row);
   }
 }
+
+/* ---------- entry links: add entries and keep notes, nothing else ---------- */
+function entryUser(props, tok) {
+  tok = String(tok || '');
+  if (!/^[a-f0-9]{40,80}$/.test(tok)) return null;
+  var raw = props.getProperty('elink:' + tok); if (!raw) return null;
+  var L = JSON.parse(raw);
+  return {email: 'entry-' + L.id, name: L.name || 'Entry link', role: 'Entry', link: L.id};
+}
+function listEntryLinks(props) {
+  var all = props.getProperties(), list = [];
+  Object.keys(all).forEach(function (k) {
+    if (k.indexOf('elink:') !== 0) return;
+    try { var L = JSON.parse(all[k]); list.push({id: L.id, name: L.name, at: L.at, link: APP_URL + '#entry=' + k.slice(6)}); } catch (e) {}
+  });
+  return list.sort(function (a, b) { return a.at - b.at; });
+}
+function entryLinkOp(props, op) {
+  var id = String(op.id || '');
+  if (!/^[a-z0-9]{6,16}$/.test(id)) return;
+  var all = props.getProperties(), key = '';
+  Object.keys(all).forEach(function (k) { if (k.indexOf('elink:') === 0) { try { if (JSON.parse(all[k]).id === id) key = k; } catch (e) {} } });
+  if (op.t === 'elinkdel') { if (key) props.deleteProperty(key); return; }
+  if (key) return; // the same request sent twice
+  var name = String(op.name || '').replace(/[\u0000-\u001f<>]/g, '').trim().slice(0, 40) || 'Entry link';
+  props.setProperty('elink:' + newToken(), JSON.stringify({id: id, name: name, at: Date.now()}));
+}
+function entryLog(ss) { return rows(ss.getSheetByName('EntryLog')); }
+function entryIds(ss, user) {
+  var mine = {};
+  entryLog(ss).forEach(function (r) { if (String(r[1]) === user.link) mine[String(r[0])] = true; });
+  return mine;
+}
+// An entry link may add new entries, and change or delete only the ones it added.
+function entryTxnOp(ss, op, user) {
+  var id = String(op.t === 'txn' ? (op.txn || {}).id : op.id || '');
+  if (!/^[A-Za-z0-9_\-]{1,64}$/.test(id)) return;
+  var mine = entryIds(ss, user);
+  if (op.t === 'deltxn') {
+    if (mine[id]) deleteRowsWhere(ss.getSheetByName('Entries'), function (row) { return String(row[0]) === id; });
+    return;
+  }
+  var t = op.txn, cfg = readConfig(ss);
+  if (!cfg || !t || !dstr(t.date) || !(+t.amount > 0) || !maps(cfg).cat[t.cat]) return;
+  if (!mine[id]) {
+    var sh = ss.getSheetByName('Entries'), n = sh.getLastRow() - 1;
+    var taken = n > 0 && sh.getRange(2, 1, n, 1).getValues().some(function (r) { return String(r[0]) === id; });
+    if (taken) return; // someone else's entry
+    var log = ss.getSheetByName('EntryLog');
+    log.getRange(log.getLastRow() + 1, 1, 1, 4).setNumberFormat('@').setValues([[id, user.link, user.name, stamp()]]);
+  }
+  putTxn(ss, t, cfg);
+}
+// What an entry link gets back: the lists the Add entry form needs, and its own recent entries. No budgets, no
+// balances, no card limits, nobody else's entries.
+function entryData(ss, user) {
+  var cfg = readConfig(ss);
+  if (!cfg) return {config: null, txns: [], balances: {}, cardfix: {}};
+  var pick = function (o, keys) { var r = {}; keys.forEach(function (k) { if (o[k] !== undefined) r[k] = o[k]; }); return r; };
+  var c = {
+    cycleStartDay: cfg.cycleStartDay, chips: cfg.chips || [], payBanks: cfg.payBanks || [],
+    categories: (cfg.categories || []).map(function (x) { return pick(x, ['id', 'name', 'short', 'type', 'group', 'role', 'icon', 'emoji', 'color', 'hidden', 'archived']); }),
+    accounts: (cfg.accounts || []).filter(function (a) { return a.cls === 'Bank' || a.cls === 'Cash'; })
+      .map(function (a) { return pick(a, ['id', 'name', 'cls', 'pay', 'vault', 'into', 'owner']); }),
+    cards: (cfg.cards || []).map(function (k) { return pick(k, ['id', 'name', 'stmtDay', 'dueDay']); }),
+    cardsRemoved: (cfg.cardsRemoved || []).map(function (k) { return pick(k, ['id', 'name']); })
+  };
+  var mine = entryIds(ss, user), from = Utilities.formatDate(new Date(Date.now() - ENTRY_DAYS * 86400000), tz(), 'yyyy-MM-dd');
+  var txns = readTxns(ss, cfg).filter(function (t) { return mine[String(t.id)] && t.date >= from; });
+  return {config: c, txns: txns, balances: {}, cardfix: {}};
+}
+
+/* ---------- kill switch ---------- */
+// The kill code is never stored, only a salted, slow fingerprint of it. Five wrong tries lock it for an hour.
+function codeHash(salt, code) {
+  var h = salt + '|' + code;
+  for (var i = 0; i < 1000; i++) h = Utilities.base64Encode(Utilities.computeDigest(Utilities.DigestAlgorithm.SHA_256, h, Utilities.Charset.UTF_8));
+  return h;
+}
+function checkKillCode(props, code) {
+  var saved = props.getProperty('KILL_CODE');
+  if (!saved) return {ok: false, error: 'no_kill_code'};
+  var tr = JSON.parse(props.getProperty('KILL_TRIES') || '{"n":0,"t":0}');
+  if (Date.now() - tr.t > 3600000) tr = {n: 0, t: Date.now()};
+  if (tr.n >= 5) return {ok: false, error: 'too_many'};
+  var s = JSON.parse(saved);
+  if (codeHash(s.salt, String(code || '')) !== s.hash) { tr.n++; props.setProperty('KILL_TRIES', JSON.stringify(tr)); return {ok: false, error: 'bad_code'}; }
+  props.deleteProperty('KILL_TRIES');
+  return {ok: true};
+}
+function setKillCode(props, op) {
+  var code = String(op.code || '');
+  if (code.length < 8) return 'short';
+  if (props.getProperty('KILL_CODE')) { var c = checkKillCode(props, op.old); if (!c.ok) return c.error; }
+  var salt = newToken();
+  props.setProperty('KILL_CODE', JSON.stringify({salt: salt, hash: codeHash(salt, code), at: Date.now()}));
+  return '';
+}
+// Needs only the kill code, not a sign-in, so it works from any phone, even one that was never signed in.
+function killSwitch(props, req) {
+  var kill = !!req.kill, c = checkKillCode(props, kill ? req.kill : req.revive);
+  if (!c.ok) return c;
+  if (kill) props.setProperty('KILLED', JSON.stringify({at: Date.now()})); else props.deleteProperty('KILLED');
+  return {ok: true, killed: kill};
+}
+/* Backup, from the script editor (Run): close or reopen the app without the kill code. */
+function killApp() { PropertiesService.getScriptProperties().setProperty('KILLED', JSON.stringify({at: Date.now()})); Logger.log('App closed for everyone.'); }
+function reviveApp() { var p = PropertiesService.getScriptProperties(); p.deleteProperty('KILLED'); p.deleteProperty('KILL_TRIES'); Logger.log('App open again.'); }
 
 /* ---------- vault (owners only; holds only encrypted text) ---------- */
 // Applies all vault changes in one read and one write.

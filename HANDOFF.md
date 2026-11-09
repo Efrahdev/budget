@@ -63,6 +63,14 @@ A household budget PWA for **Arhaanbeta** (aarhaan22@gmail.com). One file app: `
 - **Numbers**: always full Indian style in whole rupees (`rs()`, `INR`), e.g. ₹68,00,000. Never lakh/crore shorthand, never decimals (months of cover is rounded). `rsShort` is now just `rs`. Input boxes show amounts with Indian commas; parsers accept them.
 - **Trend** (`renderTrend`): range 6/12/All (pref `trendN`); hero (saved, average spend, months within budget, best month); Income and spending columns (spent coloured by status, budget tick); selected month readout; the month day by day (spent vs budget, dashed "at this pace" projection, last month in grey); savings building up; net worth; categories × months heatmap. Tapping a month sets the app's month (`state.cur`); every figure opens a breakdown (`m:KEY`, `ov-cat:ID@KEY`, `t-saved`, `t-avg`, `t-within`).
 
+## Access: entry-only links and the kill switch (Nov 2026)
+- Roles: Owner, Member (Users tab, email or Google sign-in) and Entry. Entry has no sign-in: the owner makes a link in Setup → Entry-only links (`#entry=<64-hex token>`, stored as script property `elink:<token>`). Made for the owner's wife.
+- The server is the lock. For an Entry user, Code.gs accepts only `txn`, `deltxn` (only for entries that link added, tracked in the EntryLog tab) and note ops. Its reply holds a trimmed config (categories without budgets, Bank/Cash accounts, cards without limits) and only its own entries from the last 60 days. No balances, card figures, users, links, vault.
+- The app shows Entry users two screens only: `add` (a home with a big Add entry button and "What you added") and `notes`. `setView` sends every other hash to `add`; other screens are never drawn. Balance hints and impact toasts are off for Entry. A phone already signed in never swaps to an entry link.
+- Switching a link off (Setup) deletes the property; that phone gets `signed_out` and drops back to the sign-in page.
+- Kill switch: the owner sets a kill code in Setup (min 8 chars; stored as a salted 1,000-round SHA-256, `KILL_CODE`). `{kill: code}` or `{revive: code}` needs no sign-in (Setup, the closed screen, or the sign-in screen's "Owner: kill switch"). While `KILLED` is set, every request gets `app_killed`; each phone wipes cache, outbox, vault and notes copies (keeps its sign-in) and shows "This app is closed", then comes back by itself after a reopen. Five wrong codes lock it for an hour. Backup: run `killApp()` / `reviveApp()` in the script editor.
+- Test: scratchpad `t/roles.js` (60 checks: server attacks plus owner and entry phones).
+
 ## Owner's preferences
 - Simple UK English; crisp answers; no needless permission requests (full approval given, except bulk deletes).
 - Very visual, low-touch UX; no commentary text on dashboards; keep their canonical names; don't invent categories or structure.
