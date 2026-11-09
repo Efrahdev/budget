@@ -202,7 +202,8 @@ body[data-view="vault"] .fab,body[data-view="vault"] #addTop,body[data-view="not
 #saveSlot{display:contents} /* the unsaved-changes bar floats over Setup while you edit, not only at its very end */
 body[data-view="vault"] #cycBar{display:none!important}
 body[data-view="add"] .fab{display:none!important}
-@media (max-width:1023.98px){html.role-entry .navbar{grid-template-columns:repeat(2,minmax(0,1fr));max-width:320px}}
+@media (max-width:1023.98px){html.role-entry .navbar{grid-template-columns:repeat(3,minmax(0,1fr));max-width:400px}}
+html.role-entry body:not([data-view="entries"]) #cycBar{display:none!important}
 .addhome{display:flex;flex-direction:column;gap:14px}
 .addhome .hero-add{padding:22px 20px;display:flex;flex-direction:column;gap:14px;align-items:flex-start}
 .addhome .hero-add h2{margin:0;font-size:calc(24px*var(--fs,1));letter-spacing:-.02em}
@@ -1416,7 +1417,7 @@ html.tb-hide:not(.kb) .topbar{transform:translateY(-100%)}
 'use strict';
 const VIEWS = ['overview','entries','cards','wealth','notes','trend','setup','vault','disc','add'];
 // An entry link (role Entry) sees only these. The server refuses everything else for it too.
-const ENTRY_VIEWS = ['add', 'notes'];
+const ENTRY_VIEWS = ['add', 'entries', 'notes'];
 const TYPES = ['Expense','Income','Transfer'];
 const GROUPS = ['Fixed','Variable','Discretionary','Sinking'];
 const CLASSES = ['Bank','FD','Bond','Retirement','Equity','ETF','Gold','Cash','Property','Loan','Owed','Other'];
@@ -1427,7 +1428,7 @@ const state = {
   mode: 'loading', config: null, cycles: {}, balances: {}, cardfix: {}, openHist: {},
   got: {config:false, cycles:false, balances:false}, stale: false, connErr: '',
   cur: null, curPinned: false, view: 'overview',
-  draft: null, dirty: false, setupErr: ''
+  draft: null, dirty: false, setupErr: '', mine: {}
 };
 
 /* ---------- helpers ---------- */
@@ -1611,12 +1612,12 @@ const isEntry = () => !!(Sync.me && Sync.me.role === 'Entry');
 function saveConn() { try { localStorage.setItem(LS_CONN, JSON.stringify({url: Sync.url, key: Sync.key, session: Sync.session, me: Sync.me})); } catch (e) {} }
 function readConn() { try { return JSON.parse(localStorage.getItem(LS_CONN) || 'null'); } catch (e) { return null; } }
 function saveCache() {
-  try { localStorage.setItem(LS_CACHE, JSON.stringify({config: state.config, cycles: state.cycles, balances: state.balances, cardfix: state.cardfix, last: Sync.last})); } catch (e) {}
+  try { localStorage.setItem(LS_CACHE, JSON.stringify({mine: Object.keys(state.mine || {}), config: state.config, cycles: state.cycles, balances: state.balances, cardfix: state.cardfix, last: Sync.last})); } catch (e) {}
   try { localStorage.setItem(LS_OUT, JSON.stringify(Sync.outbox)); } catch (e) { toast("This phone's storage is full. Changes still go to the sheet while online.", 'bad'); }
 }
 function loadCache() {
   try { const d = JSON.parse(localStorage.getItem(LS_CACHE) || 'null');
-    if (d) { state.config = d.config || null; state.cycles = d.cycles || {}; state.balances = d.balances || {}; state.cardfix = d.cardfix || {}; Sync.last = d.last || 0; } } catch (e) {}
+    if (d) { state.mine = {}; (d.mine || []).forEach(id => { state.mine[id] = 1; }); state.config = d.config || null; state.cycles = d.cycles || {}; state.balances = d.balances || {}; state.cardfix = d.cardfix || {}; Sync.last = d.last || 0; } } catch (e) {}
   try { Sync.outbox = JSON.parse(localStorage.getItem(LS_OUT) || '[]') || []; } catch (e) { Sync.outbox = []; }
 }
 const txnBody = t => ({id: t.id, date: t.date, amount: t.amount, cat: t.cat, acct: t.acct || '', note: t.note || '', member: t.member || '', tag: t.tag || '', at: t.at || Date.now(), refund: !!t.refund, card: t.card || ''});
@@ -1635,6 +1636,7 @@ function applyLocal(op) {
   }
 }
 function fromServer(d) {
+  state.mine = {}; (d.mine || []).forEach(id => { state.mine[id] = 1; });
   state.config = d.config || null; state.cycles = {}; state.balances = d.balances || {}; state.cardfix = d.cardfix || {};
   if (state.config) (d.txns || []).forEach(placeTxn);
 }
@@ -1825,7 +1827,7 @@ function renderChrome(X) {
   const ready = !!state.config;
   const entry = isEntry();
   document.documentElement.classList.toggle('role-entry', entry);
-  $('#cycBar').hidden = !ready || entry;
+  $('#cycBar').hidden = !ready;
   document.querySelectorAll('[data-act="add"]').forEach(b => { b.hidden = !ready; });
   $('#navbar').hidden = !ready;
   document.querySelectorAll('#navbar .nv[data-v]').forEach(a => { if (a.id !== 'vaultTab') a.hidden = entry ? !ENTRY_VIEWS.includes(a.dataset.v) : a.dataset.v === 'add'; });
@@ -3563,8 +3565,9 @@ function render() {
   $('#vaultTab').hidden = !isOwner;
   if (!isOwner && state.view === 'vault') state.view = 'overview';
   if (isEntry()) { // add entries and notes only: nothing else is drawn, so nothing else is on the page
-    ['overview', 'cards', 'wealth', 'trend', 'setup', 'vault', 'disc'].forEach(n => { $('#v-' + n).innerHTML = ''; }); $('#entriesBody').innerHTML = '';
+    ['overview', 'cards', 'wealth', 'trend', 'setup', 'vault', 'disc'].forEach(n => { $('#v-' + n).innerHTML = ''; });
     renderAddHome(X);
+    if (!holdIfTyping('#v-entries')) renderEntries(X);
     if (!holdIfTyping('#v-notes')) renderNotes();
     setView(state.view);
     if (!render.shown) { render.shown = true; viewEntered(state.view, true); }
@@ -3823,6 +3826,7 @@ async function saveEntry(again) {
   const t = {id: editing ? editing.id : newId(), date, amount: amt, cat, acct, card, note: $('#eNote').value.trim(),
     member: $('#eMember').value.trim(), tag: $('#eTag').value.trim(), at: editing ? editing.at : Date.now(), refund};
   const wasEditing = editing, oldT = wasEditing ? (X.txns.find(x => x.id === wasEditing.id) || wasEditing) : null;
+  if (isEntry()) state.mine[t.id] = 1;
   try { await API.putTxn(t, wasEditing ? wasEditing._doc : null); } catch (e) { return fail(writeErr(e)); }
   const pref = readPref();
   writePref({cat, bank: (payMode === 'bank' || pay) && payAcct ? payAcct : pref.bank || '', card: card || pref.card || ''});
@@ -3936,7 +3940,9 @@ document.addEventListener('click', async ev => {
   else if (act === 'del-cardrow') { if (!arm(b, 'card' + b.dataset.i, '✓')) return; const k = state.draft.cards.splice(+b.dataset.i, 1)[0]; if (k) { state.draft.cardsRemoved = (state.draft.cardsRemoved || []).filter(x => x.id !== k.id).concat([{id: k.id, name: k.name}]); } state.dirty = true; renderSetup(ctx()); }
   else if (act === 'add') openEntry();
   else if (act === 'close-entry') closeEntry();
-  else if (act === 'edit') { const X = ctx(); const t = X.txns.find(x => x.id === b.dataset.id && x._doc === b.dataset.doc); if (t) openEntry(t); }
+  else if (act === 'edit') { const X = ctx(); const t = X.txns.find(x => x.id === b.dataset.id && x._doc === b.dataset.doc);
+    if (t && isEntry() && !state.mine[t.id]) { toast('Only the person who added this entry can change it.'); return; }
+    if (t) openEntry(t); }
   else if (act === 'cyc-prev' || act === 'cyc-next') { state.cur = shiftKey(state.cur, act === 'cyc-prev' ? -1 : 1); state.curPinned = state.cur !== cycleKeyOf(todayStr()); render(); }
   else if (act === 'balances') openBalances();
   else if (act === 'close-bal') $('#balScrim').hidden = true;
@@ -4940,7 +4946,7 @@ function useEntryLink(tok, starting) {
 }
 function renderAddHome(X) {
   const el = $('#v-add'); if (!el) return;
-  const list = X.txns.slice().sort((a, b) => a.date === b.date ? (b.at || 0) - (a.at || 0) : (a.date < b.date ? 1 : -1)).slice(0, 40);
+  const list = X.txns.filter(t => state.mine[t.id]).sort((a, b) => a.date === b.date ? (b.at || 0) - (a.at || 0) : (a.date < b.date ? 1 : -1)).slice(0, 40);
   const rows = list.map(t => {
     const ty = X.typeOf(t), c = X.cm[t.cat], dt = parseYmd(t.date);
     const meta = [dt.getDate() + ' ' + MON[dt.getMonth()], t.note, t.card ? cardName(t.card) : t.acct === 'cash' ? 'Cash' : X.am[t.acct] && X.am[t.acct].name].filter(Boolean).map(esc).join(' · ');
@@ -4952,18 +4958,18 @@ function renderAddHome(X) {
   el.innerHTML = `<div class="addhome">
     <section class="card hero-add"><h2>${who ? 'Hi ' + who : 'Add an entry'}</h2><p>Log what you spent or received. It goes straight to the family tracker.</p>
       <button class="btn primary big-add" type="button" data-act="add"><svg class="ic" aria-hidden="true"><use href="#i-plus"/></svg>Add entry</button></section>
-    <section class="card ledger"><div class="sec-h"><h2>What you added</h2><span class="hint">Last ${60} days · tap to fix</span></div>${rows || '<div class="empty">Nothing yet. Tap Add entry to log one.</div>'}</section>
+    <section class="card ledger"><div class="sec-h"><h2>What you added</h2><span class="hint">Tap one to fix it</span></div>${rows || '<div class="empty">Nothing yet. Tap Add entry to log one.</div>'}</section>
   </div>`;
 }
 function newLinkId() { const a = new Uint8Array(6); crypto.getRandomValues(a); return [...a].map(x => x.toString(36).padStart(2, '0')).join('').slice(0, 10); }
 function entryLinksHtml() {
   const links = Sync.entryLinks || [];
-  const rows = links.map(l => `<div class="li elink"><div class="l"><div class="t1">${esc(l.name)}</div><div class="t2">Add entry and Notes only · made ${esc(fmtDM(ymd(new Date(l.at))))}</div></div>
+  const rows = links.map(l => `<div class="li elink"><div class="l"><div class="t1">${esc(l.name)}</div><div class="t2">Add, read entries, Notes · made ${esc(fmtDM(ymd(new Date(l.at))))}</div></div>
       <div class="acts"><button class="btn" type="button" data-act="elink-copy" data-link="${esc(l.link)}">${navigator.share ? 'Share' : 'Copy link'}</button><button class="btn danger" type="button" data-act="elink-del" data-id="${esc(l.id)}">Switch off</button></div></div>`).join('');
-  return `<section class="card list elinks"><div class="sec-h"><h2>Entry-only links</h2><span class="hint">No sign-in · Add entry and Notes only</span></div>
+  return `<section class="card list elinks"><div class="sec-h"><h2>Entry-only links</h2><span class="hint">No sign-in · Add entry, Entries and Notes</span></div>
     ${rows || '<div class="li"><div class="l"><div class="t2">No links yet. Make one for someone who should only add entries.</div></div></div>'}
     <form class="row-actions addcard" id="elinkForm" novalidate><input id="elinkName" type="text" autocomplete="off" maxlength="40" placeholder="Whose link? (e.g. Efrah)" aria-label="Whose link"><button class="btn primary" type="submit">Make link</button></form>
-    <div class="ed"><p class="hint" style="margin:0">Anyone who has the link can add entries, so send it only to that person. They never see budgets, balances, cards, the vault or anyone else's entries. Switch it off here at any time.</p></div></section>`;
+    <div class="ed"><p class="hint" style="margin:0">Anyone who has the link can add entries, so send it only to that person. They can read everyone's entries but change only their own. They never see budgets, balances, card bills or the vault. Switch it off here at any time.</p></div></section>`;
 }
 
 /* ---------- kill switch ----------

@@ -11,8 +11,8 @@
  * Removing someone from the Users tab locks them out at once.
  *
  * Entry links: the owner makes a link (Setup > Entry-only links) that opens the app with no sign-in.
- * Whoever holds it can only add entries (and fix or delete the ones they added) and keep their own notes.
- * This script refuses everything else for that link, and sends it no budgets, balances or other entries.
+ * Whoever holds it can add entries, read everyone's entries, fix or delete only the ones they added, and keep
+ * their own notes. This script refuses everything else for that link, and sends it no budgets or balances.
  * Removing the link in Setup switches it off at once.
  *
  * Kill switch: the owner sets a kill code in Setup. That code closes the app for everyone, on every
@@ -38,7 +38,6 @@ var TABS = {
   EntryLog: ['Entry ID', 'Link ID', 'Link name', 'Added at']
 };
 var ENTRY_OPS = {txn: 1, deltxn: 1, nput: 1, ndel: 1, nmeta: 1};
-var ENTRY_DAYS = 60; // an entry link sees what it added in the last 60 days
 var E = {id: 0, date: 1, cycle: 2, type: 3, catName: 4, amount: 5, acctName: 6, cardName: 7, note: 8, member: 9, tag: 10,
          refund: 11, cat: 12, acct: 13, card: 14, at: 15, saved: 16};
 var CHUNK = 40000; // characters per Config cell
@@ -272,9 +271,8 @@ function entryData(ss, user) {
     cards: (cfg.cards || []).map(function (k) { return pick(k, ['id', 'name', 'stmtDay', 'dueDay']); }),
     cardsRemoved: (cfg.cardsRemoved || []).map(function (k) { return pick(k, ['id', 'name']); })
   };
-  var mine = entryIds(ss, user), from = Utilities.formatDate(new Date(Date.now() - ENTRY_DAYS * 86400000), tz(), 'yyyy-MM-dd');
-  var txns = readTxns(ss, cfg).filter(function (t) { return mine[String(t.id)] && t.date >= from; });
-  return {config: c, txns: txns, balances: {}, cardfix: {}};
+  // Everyone's entries, to read; "mine" lists the ones this link added, the only ones it may change.
+  return {config: c, txns: readTxns(ss, cfg), mine: Object.keys(entryIds(ss, user)), balances: {}, cardfix: {}};
 }
 
 /* ---------- kill switch ---------- */
