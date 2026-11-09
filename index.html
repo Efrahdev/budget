@@ -1450,6 +1450,28 @@ html.tb-hide:not(.kb) .topbar{transform:translateY(-100%)}
 }
 @media (max-width:380px){.ovx{padding:16px 14px 6px}.ovx-total{font-size:calc(27px*var(--fs,1))}}
 @media (min-width:1024px){.ovx-total{font-size:calc(32px*var(--fs,1))}}
+/* ---------- Vault credit cards (Nov 2026): read at a glance, from a distance ---------- */
+.vcx{aspect-ratio:auto;padding:16px 18px;justify-content:flex-start;gap:14px;border-radius:22px}
+.vcx .vcc-top{align-items:center;min-height:24px;position:relative;z-index:1}
+.vcx-bank{font-size:calc(16px*var(--fs,1));font-weight:750;letter-spacing:.005em;line-height:1.22;white-space:normal;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+.vcx-body{position:relative;z-index:1;display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:12px 14px}
+.vcx-id{display:flex;flex-direction:column;gap:5px;min-width:0;flex:1 1 auto}
+.vcx-l4{font-family:var(--f-display);font-weight:750;font-size:calc(34px*var(--fs,1));letter-spacing:.05em;line-height:1;font-variant-numeric:tabular-nums;white-space:nowrap;text-shadow:0 1px 3px rgba(0,0,0,.28)}
+.vcx-l4 i{font-style:normal;opacity:.55;font-size:.6em;letter-spacing:.06em;margin-right:7px;vertical-align:.2em}
+.vcx-name{font-size:calc(13px*var(--fs,1));font-weight:650;letter-spacing:.09em;text-transform:uppercase;opacity:.9;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.vcx-dates{display:grid;grid-template-columns:repeat(2,minmax(80px,auto));flex:0 0 auto;border-radius:14px;background:rgba(0,0,0,.2);box-shadow:inset 0 0 0 1px rgba(255,255,255,.15);overflow:hidden;-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px)}
+.vcx-cell{display:flex;flex-direction:column;gap:1px;padding:8px 12px 9px;min-width:0}
+.vcx-cell+.vcx-cell{box-shadow:inset 1px 0 0 rgba(255,255,255,.15)}
+.vcx-cell small{font-size:calc(11px*var(--fs,1));font-weight:700;letter-spacing:.07em;text-transform:uppercase;opacity:.8;white-space:nowrap}
+.vcx-cell b{font-family:var(--f-display);font-size:calc(22px*var(--fs,1));font-weight:750;letter-spacing:-.01em;line-height:1.12;white-space:nowrap}
+.vcx-cell em{font-style:normal;font-size:calc(11.5px*var(--fs,1));font-weight:600;opacity:.88;white-space:nowrap}
+.vcx-cell.none b,.vcx-cell.none em{opacity:.55}
+.vcx-cell.due em,.vcx-cell.due0 em{align-self:flex-start;margin-top:2px;padding:1px 8px;border-radius:99px;opacity:1;font-weight:750;background:#fbbf24;color:#2a1a00}
+.vcx-cell.due0 em{background:#f87171;color:#fff}
+.vcx-mc{display:inline-flex;align-items:center;flex:0 0 auto}.vcx-mc i{width:22px;height:22px;border-radius:50%;background:#eb001b}.vcx-mc i+i{background:#f79e1b;margin-left:-9px;opacity:.92}
+.vcx-amex{flex:0 0 auto;font-weight:800;font-size:calc(12px*var(--fs,1));letter-spacing:.1em;padding:3px 6px;border:1.5px solid rgba(255,255,255,.85);border-radius:5px}
+@media (min-width:1024px){.vgrid:not(.vgrid-b){grid-template-columns:repeat(auto-fill,minmax(400px,1fr))}}
+@media (max-width:400px){.vcx{padding:15px 16px}.vcx-l4{font-size:calc(31px*var(--fs,1))}.vcx-cell{padding:7px 10px 8px}.vcx-cell b{font-size:calc(20px*var(--fs,1))}.vcx-dates{grid-template-columns:repeat(2,minmax(72px,auto))}}
 /* ---------- Reader: its own page (reader/), shown edge to edge in this tab through a frame made only when first opened ---------- */
 #v-read{position:fixed;inset:0;z-index:30;display:block;max-width:none!important;margin:0!important;width:auto!important}
 #v-read[hidden]{display:none}
@@ -5096,13 +5118,43 @@ function vOnCard(r, t, skip) {
       return `<div class="vf2${wide ? ' wide' : ''}"><span class="vl2">${esc(c)}</span><span class="vv2${mono.test(c) ? ' mono' : ''}">${esc(shown)}</span><button class="vcp2" type="button" data-act="v-copy" data-id="${r.id}" data-i="${i}" aria-label="Copy ${esc(c)}">${COPY_ICON}</button></div>`; }).join('')}
     <div class="vonc-act"><button class="vedit" type="button" data-act="v-edit" data-id="${r.id}">✎ Edit</button><span>Tap the card to close</span></div></div>`;
 }
-function vCardFace(r) { // a credit card that looks like the card
-  const [a, b] = vTheme(r.c[0] + ' ' + r.c[1]), net = vNet(r.c[2]), on = !!V.open[r.id], stmt = parseStmtDay(r.c[5]);
-  return `<div class="vitem${on ? ' open' : ''}"><div class="vcc${on ? ' on' : ''}" style="--ca:${a};--cb:${b}" data-act="v-row" data-id="${r.id}" role="button" tabindex="0" aria-expanded="${on}" aria-label="${esc(r.c[0] || 'Card')}, ending ${esc(vLast4(r.c[2]))}. Tap for details.">
-      <div class="vcc-top"><span class="vcc-bank">${esc(r.c[0] || 'Card')}</span>${net ? `<span class="vcc-net n-${net.toLowerCase()}">${net}</span>` : ''}</div>
-      ${on ? vOnCard(r, VAULT_TABLES[0], [0]) : `<div class="vcc-chip" aria-hidden="true"></div>
-      <div class="vcc-num">•••• •••• •••• <b>${esc(vLast4(r.c[2]) || '····')}</b></div>
-      <div class="vcc-bot"><span class="vcc-name">${esc(r.c[1] || '')}</span><span class="vcc-meta">${r.c[3] ? `<small>VALID THRU</small>${esc(r.c[3])}` : ''}${stmt ? `<em>Stmt Date ${ordinal(stmt)}</em>` : ''}${vPayBy(r.id)}</span></div>`}
+/* Credit card face (Nov 2026 redesign): built to be read at a glance, from a distance. Everything on it is what you
+   reach for: the bank, the last four digits (large), the name, and the statement and pay-by dates (large, with "in N days").
+   No chip, no rows of dots: about 40% shorter than a card-shaped face, so more cards fit and each is easier to read. */
+function vNextDay(day) { // days until this day of the month comes round (short months use their last day)
+  const t = new Date(); t.setHours(0, 0, 0, 0);
+  const at = (y, m) => new Date(y, m, Math.min(day, new Date(y, m + 1, 0).getDate()));
+  let d = at(t.getFullYear(), t.getMonth()); if (d < t) d = at(t.getFullYear(), t.getMonth() + 1);
+  return Math.round((d - t) / 864e5);
+}
+const vIn = n => n === 0 ? 'today' : n === 1 ? 'tomorrow' : 'in ' + n + ' days';
+function vNetMark(net) {
+  if (net === 'Mastercard') return '<span class="vcx-mc" role="img" aria-label="Mastercard"><i></i><i></i></span>';
+  if (net === 'AMEX') return '<span class="vcx-amex">AMEX</span>';
+  return net ? `<span class="vcc-net n-${net.toLowerCase()}">${net}</span>` : '';
+}
+// The same card in the budget app's Setup (where its pay-by day lives): by id, else by name, else by its last 4 digits.
+function vBudgetCard(r) {
+  const cs = cardList(), byId = cs.find(c => c.id === r.id); if (byId) return byId;
+  const nm = String(r.c[0] || '').toLowerCase().replace(/\s+/g, ' ').trim(), l4 = vLast4(r.c[2]);
+  return cs.find(c => { const cn = String(c.name || '').toLowerCase().replace(/\s+/g, ' ').trim(), m = cn.match(/··(\d{4})$/);
+    return (m && l4 && m[1] === l4) || (nm && cn.replace(/\s*··\d{4}$/, '').trim() === nm); }) || null;
+}
+function vCardFace(r) {
+  const [a, b] = vTheme(r.c[0] + ' ' + r.c[1]), net = vNet(r.c[2]), on = !!V.open[r.id], k = vBudgetCard(r);
+  const stmt = parseStmtDay(r.c[5]) || (k && +k.stmtDay > 0 && +k.stmtDay <= 31 ? +k.stmtDay : 0), due = k && +k.dueDay ? +k.dueDay : 0, l4 = vLast4(r.c[2]) || '····';
+  const cell = (lbl, day, pay) => {
+    if (!day) return `<span class="vcx-cell none"><small>${lbl}</small><b>—</b><em>not set</em></span>`;
+    const n = vNextDay(day);
+    return `<span class="vcx-cell${pay && n <= 3 ? (n === 0 ? ' due0' : ' due') : ''}"><small>${lbl}</small><b>${ordinal(day)}</b><em>${vIn(n)}</em></span>`;
+  };
+  const say = [r.c[0] || 'Card', 'ending ' + l4, r.c[1] || '', stmt ? 'statement on the ' + ordinal(stmt) : '', due ? 'pay by the ' + ordinal(due) : ''].filter(Boolean).join(', ');
+  return `<div class="vitem${on ? ' open' : ''}"><div class="vcc vcx${on ? ' on' : ''}" style="--ca:${a};--cb:${b}" data-act="v-row" data-id="${r.id}" role="button" tabindex="0" aria-expanded="${on}" aria-label="${esc(say)}. Tap for details.">
+      <div class="vcc-top"><span class="vcc-bank vcx-bank">${esc(r.c[0] || 'Card')}</span>${vNetMark(net)}</div>
+      ${on ? vOnCard(r, VAULT_TABLES[0], [0]) : `<div class="vcx-body">
+        <div class="vcx-id"><span class="vcx-l4"><i aria-hidden="true">••</i>${esc(l4)}</span><span class="vcx-name">${esc(r.c[1] || '')}</span></div>
+        <div class="vcx-dates">${cell('Statement', stmt, false)}${cell('Pay by', due, true)}</div>
+      </div>`}
     </div></div>`;
 }
 function vBankFace(r) { // a bank account drawn exactly like the credit cards: bank colours, emblem, last 4 digits, holder, IFSC
