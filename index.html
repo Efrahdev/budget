@@ -1363,24 +1363,73 @@ html.tb-hide:not(.kb) .topbar{transform:translateY(-100%)}
   .wx-cols{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:22px 24px;align-items:start}
   .wx-cols>.g0{grid-row:span 3}
 }
-.wx-stats-card{padding:14px 14px 14px}
-.wx-stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
-.wx-stat{display:flex;flex-direction:column;gap:2px;min-width:0;padding:10px 12px;border-radius:16px;background:var(--sheet-2);cursor:pointer;transition:transform .25s var(--spring),background .2s}
-.wx-stat:hover{background:var(--fill-2)}.wx-stat:active{transform:scale(.97)}
-.wx-stat>span{font-size:calc(12.5px*var(--fs,1));font-weight:650;color:var(--ink-3)}
-.wx-stat b{font-family:var(--f-display);font-size:calc(17.5px*var(--fs,1));font-weight:700;letter-spacing:-.02em;white-space:nowrap;overflow:hidden;font-variant-numeric:tabular-nums}
-.wx-stat small{font-size:calc(12px*var(--fs,1));color:var(--ink-3);line-height:1.3;display:flex;align-items:center;gap:5px}
-.wx-stat.bad{background:color-mix(in srgb,var(--bad) 9%,var(--sheet-2))}.wx-stat.bad b{color:var(--bad-ink)}
-.wx-stat.warn{background:color-mix(in srgb,var(--warn) 11%,var(--sheet-2))}
-.wx-stat.good{background:color-mix(in srgb,var(--good) 9%,var(--sheet-2))}
-.ov-bar{margin:14px 2px 10px}.wx-stats-card .wx-legend{padding:0 2px}
-.wx-vl{font-size:calc(11.5px*var(--fs,1));color:var(--ink-3);font-weight:600}
-.wx-pill{display:inline-flex;align-items:center;gap:5px;padding:1px 8px 1px 6px;border-radius:99px;font-weight:650;color:var(--kc);background:color-mix(in srgb,var(--kc) 13%,transparent);white-space:nowrap}
-.wx-pill i{width:6px;height:6px;border-radius:50%;background:var(--kc)}
-.wx-alert{color:var(--bad-ink)!important;font-weight:600}.wx-warnt{color:var(--warn-ink)!important;font-weight:600}
+/* ---------- Overview: credit cards and bank balance, the premium finance-app treatment ----------
+   One surface per section with a barely-there colour wash; a small uppercase label; the figure that matters in large
+   type; quiet chips; hairline-separated rows with each bank's wordmark in its own soft hue. No nested boxes. */
+.ovx{position:relative;isolation:isolate;overflow:hidden;border-radius:26px;padding:18px 18px 8px;border:1px solid var(--rule);box-shadow:var(--shade);
+  background:radial-gradient(130% 90% at 100% 0%,color-mix(in srgb,var(--wash) 10%,transparent),transparent 62%),radial-gradient(90% 70% at 0% 100%,color-mix(in srgb,var(--wash2) 6%,transparent),transparent 60%),var(--sheet)}
+.ovx-banks{--wash:#3b82f6;--wash2:#14b8a6}
+.ovx-cards{--wash:#8b5cf6;--wash2:#ec4899}.ovx-cards.tone-bad{--wash:#ef4444;--wash2:#f97316}.ovx-cards.tone-warn{--wash:#f59e0b;--wash2:#f97316}
+.ovx-top{display:flex;align-items:center;justify-content:space-between;gap:10px;min-height:26px}
+.ovx-lbl{font-size:calc(12px*var(--fs,1));font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:var(--ink-3)}
+.ovx-link{display:inline-flex;align-items:center;gap:1px;font-size:calc(13.5px*var(--fs,1));font-weight:650;color:var(--accent);text-decoration:none;padding:4px 2px 4px 10px;border-radius:99px;transition:background .2s}
+.ovx-link:hover{background:var(--accent-soft)}
+.ovx-link .ic{width:15px;height:15px;stroke-width:2.4}
+.ovx-total{font-family:var(--f-display);font-weight:750;font-size:calc(34px*var(--fs,1));letter-spacing:-.032em;line-height:1.1;margin-top:4px;font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;align-self:flex-start;border-radius:10px}
+.ovx-total[data-act]{cursor:pointer}
+.ovx-cards.tone-bad .ovx-total{color:var(--bad-ink)}
+.ovx-chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.ovx-chip{display:inline-flex;align-items:center;gap:6px;padding:5px 11px;border-radius:99px;background:var(--fill-2);color:var(--ink-2);font-size:calc(12.5px*var(--fs,1));font-weight:600;white-space:nowrap;font-variant-numeric:tabular-nums}
+.ovx-chip b{color:var(--ink);font-weight:700}
+.ovx-chip .sd{margin:0}
+.ovx-chip[data-act]{cursor:pointer;transition:background .2s,transform .25s var(--spring)}
+.ovx-chip[data-act]:hover{background:var(--fill)}.ovx-chip[data-act]:active{transform:scale(.96)}
+.ovx-chip.up,.ovx-chip.good{color:var(--good-ink);background:color-mix(in srgb,var(--good) 13%,transparent)}
+.ovx-chip.down,.ovx-chip.bad{color:var(--bad-ink);background:color-mix(in srgb,var(--bad) 12%,transparent)}
+.ovx-chip.warn{color:var(--warn-ink);background:color-mix(in srgb,var(--warn) 15%,transparent)}
+.ovx-chips{align-items:center;row-gap:8px}
+.ovx-meta{display:inline-flex;align-items:center;gap:10px;flex-wrap:wrap;font-size:calc(13px*var(--fs,1));color:var(--ink-3);font-weight:550;font-variant-numeric:tabular-nums;padding:0 4px}
+.ovx-meta b{color:var(--ink-2);font-weight:700}
+.ovx-meta>[data-act]{cursor:pointer;border-radius:8px;transition:color .2s}.ovx-meta>[data-act]:hover b{color:var(--ink)}
+.ovx-sep{width:3px;height:3px;border-radius:50%;background:var(--ink-3);opacity:.6}
 .ov-wx{margin-top:4px}
 @media (min-width:1024px){.ov-wx{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:22px 24px;align-items:start}}
-@media (max-width:380px){.wx-stats{grid-template-columns:1fr 1fr}.wx-stats .wx-stat:first-child{grid-column:1/-1}}
+.ovx-bar{display:flex;gap:3px;height:6px;margin:16px 0 2px;border-radius:99px;overflow:hidden}
+.ovx-bar i{display:block;min-width:4px;border-radius:99px;background:var(--kc);transform-origin:left center}
+.ovx-list{margin-top:8px}
+.ovx-row{position:relative;display:grid;grid-template-columns:42px minmax(0,1fr) auto;align-items:center;gap:12px;padding:12px 8px;margin:0 -8px;border-radius:16px;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:background .2s}
+.ovx-row:hover{background:var(--fill-2)}.ovx-row:active{background:var(--fill)}
+.ovx-row+.ovx-row::before,.ovx-more>summary::before{content:"";position:absolute;left:62px;right:8px;top:0;height:1px;background:var(--rule)}
+.ovx-badge{width:42px;height:42px;border-radius:13px;display:grid;place-items:center;font-family:var(--f-display);font-weight:800;letter-spacing:-.01em;line-height:1;overflow:hidden;
+  color:color-mix(in srgb,var(--kc) 80%,var(--ink));background:color-mix(in srgb,var(--kc) 13%,var(--sheet));box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--kc) 24%,transparent)}
+.ovx-badge.m1,.ovx-badge.m2{font-size:min(calc(15px*var(--fs,1)),17px)}.ovx-badge.m3{font-size:min(calc(12.5px*var(--fs,1)),14px)}
+.ovx-badge.m4{font-size:min(calc(10.5px*var(--fs,1)),11.5px)}.ovx-badge.m5{font-size:min(calc(9px*var(--fs,1)),9.5px);letter-spacing:-.03em}
+.ovx-m{display:flex;flex-direction:column;gap:3px;min-width:0}
+.ovx-m b{font-weight:650;font-size:calc(15.5px*var(--fs,1));letter-spacing:-.01em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ovx-m b em{font-style:normal;font-weight:500;color:var(--ink-3);font-size:.84em}
+.ovx-m small{display:flex;align-items:center;gap:7px;min-width:0;font-size:calc(12.5px*var(--fs,1));color:var(--ink-3);white-space:nowrap;overflow:hidden}
+.ovx-d{min-width:0;overflow:hidden;text-overflow:ellipsis}
+.ovx-st{flex:0 0 auto;display:inline-flex;align-items:center;gap:5px;font-weight:650;color:color-mix(in srgb,var(--kc) 86%,var(--ink));--kc:var(--ink-3)}
+.ovx-st i{width:6px;height:6px;border-radius:50%;background:currentColor}
+.ovx-st.bad{--kc:var(--bad)}.ovx-st.warn{--kc:var(--warn)}.ovx-st.due{--kc:#3b82f6}.ovx-st.next{--kc:#8b5cf6}.ovx-st.good{--kc:var(--good)}
+.ovx-lim{display:block;height:3px;width:min(140px,100%);border-radius:99px;background:var(--fill);overflow:hidden;margin-top:2px}
+.ovx-lim i{display:block;height:100%;border-radius:99px;background:var(--good)}.ovx-lim i.warn{background:var(--warn)}.ovx-lim i.bad{background:var(--bad)}
+.ovx-v{display:flex;flex-direction:column;align-items:flex-end;gap:2px;text-align:right}
+.ovx-v b{font-family:var(--f-display);font-weight:700;font-size:calc(16.5px*var(--fs,1));letter-spacing:-.015em;white-space:nowrap;font-variant-numeric:tabular-nums}
+.ovx-v small{font-size:calc(12px*var(--fs,1));color:var(--ink-3);font-weight:600;font-variant-numeric:tabular-nums}
+.ovx-more{interpolate-size:allow-keywords}
+.ovx-more>summary{position:relative;list-style:none;display:flex;align-items:center;gap:6px;padding:13px 8px 11px 62px;margin:0 -8px;font-size:calc(13.5px*var(--fs,1));font-weight:650;color:var(--accent);cursor:pointer;border-radius:14px}
+.ovx-more>summary::-webkit-details-marker{display:none}
+.ovx-more>summary .ic{width:16px;height:16px;stroke-width:2.4;transition:transform .45s var(--spring)}
+.ovx-more[open]>summary .ic{transform:rotate(180deg)}.ovx-more .c,.ovx-more[open] .o{display:none}.ovx-more[open] .c{display:inline}
+.ovx-more::details-content{block-size:0;overflow:clip;transition:block-size .5s var(--spring),content-visibility .5s allow-discrete}
+.ovx-more[open]::details-content{block-size:auto}
+@media (prefers-reduced-motion:no-preference){
+  .view.enter .ovx{animation:wxIn .55s var(--ease-out) both}
+  .view.enter .ovx-bar i{animation:wxGrow .8s var(--ease-out) both;animation-delay:calc(180ms + var(--i,0) * 70ms)}
+  .view.enter .ovx-row{animation:wxIn .5s var(--ease-out) both;animation-delay:calc(140ms + min(var(--i,0),6) * 50ms)}
+}
+@media (max-width:380px){.ovx{padding:16px 14px 6px}.ovx-total{font-size:calc(30px*var(--fs,1))}}
 /* ---------- Reader: its own page (reader/), shown edge to edge in this tab through a frame made only when first opened ---------- */
 #v-read{position:fixed;inset:0;z-index:30;display:block;max-width:none!important;margin:0!important;width:auto!important}
 #v-read[hidden]{display:none}
@@ -3928,42 +3977,47 @@ function cardStripHtml(X) {
     const rank = st ? (st.c === 'bad' ? 0 : st.c === 'warn' ? 1 : 2) : n ? 3 : 4;
     return {L, first, st, n, rank, when: first ? first.due : n ? n.sd : '9999'};
   }).sort((x, y) => x.rank - y.rank || (x.when < y.when ? -1 : x.when > y.when ? 1 : 0));
-  /* Overview, Nov 2026: the same calm language as Wealth (owner's request). A quiet summary panel, then ONE tile that
-     opens into a row per card, instead of a bright gradient wallet card each. Every figure still opens its breakdown. */
-  const TONE_C = {bad: '#ef4444', warn: '#f59e0b', due: '#3b82f6', next: '#8b5cf6', good: '#22c55e'};
-  const rows = tiles.map(({L, first, st, n}) => {
+  /* Overview, Nov 2026 (second pass): the treatment of the best finance apps. What you have to pay leads, in large type;
+     the other figures are quiet chips; every card is visible as one clean row (bank wordmark in its own soft hue, status,
+     limit used, amount). One surface, hairline rows, no nested boxes. Same data and taps as before. */
+  const rows = tiles.map(({L, first, st, n}, i) => {
     const c = L.card, vr = (V.rows || []).find(r => r.id === c.id), num = vr ? vr.c[2] : '';
     const l4 = last4(num) || (String(c.name).match(/··(\d{4})$/) || [])[1] || '', lim = +c.limit > 0 ? +c.limit : 0, used = Math.max(0, L.owed);
-    let lbl, amt, when, pill, tn;
-    if (first) { lbl = 'to pay'; amt = L.dueNow; tn = st.c === 'bad' ? 'bad' : st.c === 'warn' ? 'warn' : 'due'; pill = st.t; when = (L.unpaid.length > 1 ? L.unpaid.length + ' bills · ' : '') + 'pay by ' + fmtDM(first.due); }
-    else if (n) { lbl = 'next bill'; amt = n.left; tn = 'next'; pill = 'Statement ' + fmtDM(n.sd); when = 'pay by ' + fmtDM(n.due); }
-    else { lbl = 'owed'; amt = Math.max(0, L.owed); tn = 'good'; pill = 'All clear'; when = 'nothing to pay'; }
-    const meta = [when, lim ? Math.round(Math.min(1, used / lim) * 100) + '% of limit used' : '', l4 ? '•• ' + l4 : ''].filter(Boolean).map(esc).join(' · ');
-    return `<div class="wx-acc"${whyAttr('card:' + c.id)} style="--kc:${TONE_C[tn]}"><span class="wx-av card"><svg class="ic" aria-hidden="true"><use href="#c-card"/></svg></span>
-      <span class="wx-m"><b>${esc(c.name)}</b><small><span class="wx-pill"><i></i>${esc(pill)}</span> ${meta}</small></span>
-      <span class="wx-v"><b class="num">${rs(amt)}</b><small class="wx-vl">${lbl}</small></span></div>`;
-  }).join('');
-  const lead = tiles[0], leadTxt = lead && lead.first ? `${lead.L.card.name} · ${lead.st.t.toLowerCase()}` : lead && lead.n ? `Next: ${lead.L.card.name} on ${fmtDM(lead.n.sd)}` : 'Nothing to pay on any card';
-  const kc = tone === 'bad' ? '#ef4444' : tone === 'warn' ? '#f59e0b' : '#e11d48', bar = owed > 0.5 && (dueNow > 0.5 || nextAmt > 0.5);
-  return `<section class="wx-group ov-cards">
-    <div class="wx-h"><h2>Credit cards</h2><a class="hint" href="#cards">All cards ›</a></div>
-    <div class="wx-card wx-stats-card">
-      <div class="wx-stats">
-        <div class="wx-stat ${tone}"${whyAttr('c-due')}><span>To pay now</span><b class="fit">${rs(dueNow)}</b><small>${sdot(tone)}${dueSub}</small></div>
-        <div class="wx-stat"${whyAttr('c-next')}><span>Next bills</span><b class="fit">${rs(nextAmt)}</b><small>${coming.length} card${coming.length === 1 ? '' : 's'} so far</small></div>
-        <div class="wx-stat"${whyAttr('c-owed')}><span>Total owed</span><b class="fit">${rs(owed)}</b><small>on ${cards.length} card${cards.length === 1 ? '' : 's'}</small></div>
-      </div>
-      ${bar ? `<div class="wx-bar ov-bar" role="img" aria-label="${rs(dueNow)} to pay now, ${rs(nextAmt)} on the next bills"><i style="--kc:${tone === 'bad' ? '#ef4444' : tone === 'warn' ? '#f59e0b' : '#3b82f6'};flex:${Math.max(0, dueNow)}"></i><i style="--kc:#8b5cf6;flex:${Math.max(0, nextAmt)};--i:1"></i></div>
-        <div class="wx-legend"><span><i style="--kc:${tone === 'bad' ? '#ef4444' : tone === 'warn' ? '#f59e0b' : '#3b82f6'}"></i>To pay now</span><span><i style="--kc:#8b5cf6"></i>Next bills</span></div>` : ''}
-    </div>
-    <div class="wx-list">
-      <details class="wx-k wtree" data-tree="ov:cards" style="--kc:${kc};--i:0"${state.openTree && state.openTree['ov:cards'] ? ' open' : ''}>
-        <summary class="wx-row">${wxIc('c-card', kc)}<span class="wx-m"><b>${cards.length} card${cards.length === 1 ? '' : 's'}</b><small class="${tone === 'bad' ? 'wx-alert' : tone === 'warn' ? 'wx-warnt' : ''}">${esc(leadTxt)}</small></span>
-          <span class="wx-v"><b class="num">${rs(owed)}</b><small class="wx-vl">owed</small></span><i class="wx-chev" aria-hidden="true"><svg class="ic"><use href="#i-down"/></svg></i></summary>
-        <div class="wx-in">${rows}</div>
-      </details>
-    </div>
+    let lbl, amt, chip, date, tn;
+    if (first) { lbl = 'to pay' + (L.unpaid.length > 1 ? ' · ' + L.unpaid.length + ' bills' : ''); amt = L.dueNow; tn = st.c === 'bad' ? 'bad' : st.c === 'warn' ? 'warn' : 'due'; chip = st.t; date = tn === 'bad' || /today/i.test(st.t) ? '' : fmtDM(first.due); }
+    else if (n) { lbl = 'next bill'; amt = n.left; tn = 'next'; chip = 'Bill on ' + fmtDM(n.sd); date = 'due ' + fmtDM(n.due); }
+    else { lbl = 'owed'; amt = Math.max(0, L.owed); tn = 'good'; chip = 'All clear'; date = ''; }
+    const lf = lim ? Math.min(1, used / lim) : 0;
+    return `<div class="ovx-row" style="--i:${i}"${whyAttr('card:' + c.id)}>${ovBadge(c.name)}
+      <span class="ovx-m"><b>${esc(String(c.name).replace(/\s*··\d{4}$/, ''))}${l4 ? ` <em>•• ${esc(l4)}</em>` : ''}</b><small><span class="ovx-st ${tn}"><i></i>${esc(chip)}</span>${date ? `<span class="ovx-d">${esc(date)}</span>` : ''}</small>
+        ${lim ? `<span class="ovx-lim" title="${Math.round(lf * 100)}% of the limit used"><i class="${lf > 0.8 ? 'bad' : lf > 0.5 ? 'warn' : ''}" style="width:${Math.max(2, lf * 100).toFixed(1)}%"></i></span>` : ''}</span>
+      <span class="ovx-v"><b class="num">${rs(amt)}</b><small>${lbl}</small></span></div>`;
+  });
+  return `<section class="ovx ovx-cards tone-${tone || 'none'}">
+    <div class="ovx-top"><span class="ovx-lbl">Credit cards · to pay now</span><a class="ovx-link" href="#cards">All cards<svg class="ic" aria-hidden="true"><use href="#i-right"/></svg></a></div>
+    <div class="ovx-total"${whyAttr('c-due')} data-count="${r2(dueNow)}">${rs(dueNow)}</div>
+    <div class="ovx-chips"><span class="ovx-chip ${tone || 'good'}">${sdot(tone || 'good')}${esc(dueSub[0].toUpperCase() + dueSub.slice(1))}</span>
+      <span class="ovx-meta"><span${whyAttr('c-next')}>Next bills <b>${rs(nextAmt)}</b></span><span class="ovx-sep" aria-hidden="true"></span><span${whyAttr('c-owed')}>Owed <b>${rs(owed)}</b></span></span></div>
+    <div class="ovx-list">${ovxRows(rows, 'ov:cards-more', 'card')}</div>
   </section>`;
+}
+// Bank identity on the Overview: each bank's own colour, toned to read in day and night, and a short wordmark.
+const BRAND_C = {hdfc: '#2563eb', icici: '#ea580c', sbi: '#0891b2', axis: '#be185d', kotak: '#dc2626', hsbc: '#e11d48', amex: '#0284c7', 'american express': '#0284c7',
+  yes: '#1d4ed8', idfc: '#9f1239', 'idfc first': '#9f1239', indusind: '#b45309', rbl: '#1e40af', federal: '#ca8a04', au: '#ea580c', dcb: '#0f766e', bob: '#f97316',
+  baroda: '#f97316', 'standard chartered': '#0f766e', citi: '#0369a1', onecard: '#475569', 'amazon pay': '#d97706', scapia: '#7c3aed', pnb: '#a16207', canara: '#0ea5e9', union: '#dc2626'};
+const BRAND_MARK = {'AMERICAN EXPRESS': 'AMEX', 'STANDARD CHARTERED': 'SC', 'AMAZON PAY': 'PAY', 'IDFC FIRST': 'IDFC', 'BARODA': 'BOB'};
+function brandOf(name) {
+  const {brand, who} = wcSplit(name), k = brand.toLowerCase();
+  const col = BRAND_C[k] || `hsl(${[...String(name)].reduce((h, ch) => (h * 31 + ch.charCodeAt(0)) >>> 0, 7) % 360} 50% 46%)`;
+  const mark = brand ? (BRAND_MARK[brand] || brand) : String(who || name).split(/\s+/).filter(Boolean).slice(0, 2).map(w => w[0]).join('').toUpperCase() || '•';
+  return {col, mark};
+}
+const ovBadge = name => { const {col, mark} = brandOf(name); return `<span class="ovx-badge m${Math.min(5, mark.length)}" style="--kc:${col}" aria-hidden="true">${esc(mark)}</span>`; };
+// Up to four rows show; the rest fold behind "N more" (same smooth open as Wealth; remembered).
+function ovxRows(rows, key, noun) {
+  if (rows.length <= 4) return rows.join('');
+  const rest = rows.length - 4, open = state.openTree && state.openTree[key];
+  return rows.slice(0, 4).join('') + `<details class="ovx-more wtree" data-tree="${key}"${open ? ' open' : ''}><summary><span class="o">${rest} more ${noun}${rest === 1 ? '' : 's'}</span><span class="c">Show fewer</span><svg class="ic" aria-hidden="true"><use href="#i-down"/></svg></summary>${rows.slice(4).join('')}</details>`;
 }
 // Overview bank accounts: the Bank buttons from Add entry (Setup order), each with its live balance.
 function bankStripHtml(X) {
@@ -3972,29 +4026,32 @@ function bankStripHtml(X) {
   if (!list.length) list = cfg.accounts.filter(a => !a.pay && a.cls === 'Bank');
   list = list.filter(a => { const id = X.res(a.id) || a.id; if (seen.has(id)) return false; seen.add(id); return true; });
   if (!list.length) return '';
-  const names = list.map(a => a.vaultName || a.name);
-  let total = 0, any = false; const owners = new Set();
+  const names = list.map(a => a.vaultName || a.name), ids = list.map(a => X.res(a.id) || a.id);
+  const Ls = ids.map(id => X.latest[id]), any = Ls.some(Boolean), total = Ls.reduce((s, L) => s + (L ? L.v : 0), 0);
+  // change since the record before the latest (the same comparison as the Wealth hero)
+  const snaps = (X.snaps || []).filter(sn => ids.some(id => typeof (sn.values || {})[id] === 'number'));
+  const prev = snaps.length >= 2 ? snaps[snaps.length - 2] : null;
+  const delta = prev && any ? total - ids.reduce((s, id) => s + (typeof prev.values[id] === 'number' ? prev.values[id] : 0), 0) : null;
+  const dates = [...new Set(Ls.filter(Boolean).map(L => L.date))], oneDate = dates.length === 1 ? dates[0] : null;
   const rows = list.map((a, i) => {
-    const id = X.res(a.id) || a.id, L = X.latest[id];
-    if (L) { total += L.v; any = true; }
+    const id = ids[i], L = Ls[i];
     const vr = a.vault ? (V.rows || []).find(r => r.id === a.vault) : null, l4 = vr ? last4(vr.c[2]) : '';
-    const kind = /\bupi\b/i.test(names[i]) ? 'UPI' : 'Savings';
-    const sub = !L ? 'no balance recorded yet' : L.moves && L.moves.length ? `${L.delta < 0 ? '−' : '+'}${rs(Math.abs(L.delta))} since ${fmtDM(L.date)}` : 'recorded ' + fmtDM(L.date);
-    const owner = a.owner || (X.am[id] && X.am[id].owner) || ''; if (owner) owners.add(owner);
-    const h = owner ? [...owner].reduce((x, ch) => (x * 31 + ch.charCodeAt(0)) >>> 0, 7) % 360 : 0;
-    return `<div class="wx-acc"${whyAttr('w-acct:' + id)}>${owner ? `<span class="wx-av" style="--h:${h}" title="${esc(owner)}">${esc(owner[0].toUpperCase())}</span>` : '<span class="wx-av none"></span>'}
-      <span class="wx-m"><b>${esc(names[i])}</b><small>${esc([kind, owner, sub, l4 ? '•• ' + l4 : ''].filter(Boolean).join(' · '))}</small></span>
-      <span class="wx-v"><b class="num">${L ? rs(L.v) : '—'}</b></span></div>`;
-  }).join('');
-  return `<section class="wx-group ov-banks">
-    <div class="wx-h"><h2>Bank accounts</h2><a class="hint" href="#wealth">Wealth ›</a></div>
-    <div class="wx-list">
-      <details class="wx-k wtree" data-tree="ov:banks" style="--kc:#3b82f6;--i:1"${state.openTree && state.openTree['ov:banks'] ? ' open' : ''}>
-        <summary class="wx-row">${wxIc('i-bank', '#3b82f6')}<span class="wx-m"><b>${list.length} account${list.length === 1 ? '' : 's'}</b><small>${esc([...owners].join(' and ') || 'Savings and UPI')}</small></span>
-          <span class="wx-v"><b class="num">${any ? rs(total) : '—'}</b><small class="wx-vl">balance</small></span><i class="wx-chev" aria-hidden="true"><svg class="ic"><use href="#i-down"/></svg></i></summary>
-        <div class="wx-in">${rows}</div>
-      </details>
-    </div>
+    const owner = a.owner || (X.am[id] && X.am[id].owner) || '';
+    const moved = L && L.moves && L.moves.length ? `${L.delta < 0 ? '−' : '+'}${rs(Math.abs(L.delta))} since ${fmtDM(L.date)}` : '';
+    const sub = !L ? 'No balance recorded yet' : [owner, /\bupi\b/i.test(names[i]) ? 'UPI' : '', l4 ? '•• ' + l4 : '', moved, !oneDate && !moved ? fmtDM(L.date) : ''].filter(Boolean).join(' · ') || 'Savings';
+    const share = L && total > 0 && L.v > 0 ? wxPctTxt(L.v, total) : '';
+    return `<div class="ovx-row" style="--i:${i}"${whyAttr('w-acct:' + id)}>${ovBadge(names[i])}
+      <span class="ovx-m"><b>${esc(names[i])}</b><small><span class="ovx-d">${esc(sub)}</span></small></span>
+      <span class="ovx-v"><b class="num">${L ? rs(L.v) : '—'}</b>${share ? `<small>${esc(share)}</small>` : ''}</span></div>`;
+  });
+  const bar = any && total > 0 ? `<div class="ovx-bar" role="img" aria-label="${esc(list.map((a, i) => names[i] + ' ' + (Ls[i] && Ls[i].v > 0 ? wxPctTxt(Ls[i].v, total) : '0%')).join(', '))}">${list.map((a, i) => Ls[i] && Ls[i].v > 0 ? `<i style="--kc:${brandOf(names[i]).col};flex:${Ls[i].v};--i:${i}"></i>` : '').join('')}</div>` : '';
+  return `<section class="ovx ovx-banks">
+    <div class="ovx-top"><span class="ovx-lbl">Bank balance</span><a class="ovx-link" href="#wealth">Wealth<svg class="ic" aria-hidden="true"><use href="#i-right"/></svg></a></div>
+    <div class="ovx-total"${any ? ` data-count="${r2(total)}"` : ''}>${any ? rs(total) : '—'}</div>
+    <div class="ovx-chips">${delta != null && Math.abs(delta) >= 1 ? `<span class="ovx-chip ${delta >= 0 ? 'up' : 'down'}">${delta >= 0 ? '▲' : '▼'} ${rs(Math.abs(delta))} since ${esc(fmtDM(prev.date))}</span>` : ''}
+      <span class="ovx-meta">${list.length} account${list.length === 1 ? '' : 's'}${oneDate ? ' · ' + esc(fmtDM(oneDate)) : ''}</span></div>
+    ${bar}
+    <div class="ovx-list">${ovxRows(rows, 'ov:banks-more', 'account')}</div>
   </section>`;
 }
 // "HDFC AMMI UPI" → brand HDFC, who "Ammi UPI": the bank on top, the person or card name under it.
@@ -4026,8 +4083,8 @@ function wcThemes(names) {
 function wcCount(root) {
   if (!root || matchMedia('(prefers-reduced-motion: reduce)').matches) return;
   const t0 = performance.now();
-  root.querySelectorAll('.wc-amt[data-v]').forEach((el, i) => {
-    const v = +el.dataset.v, start = t0 + Math.min(i, 7) * 55 + 120, D = 850; if (!v) return;
+  root.querySelectorAll('.wc-amt[data-v],[data-count]').forEach((el, i) => {
+    const v = +(el.dataset.v ?? el.dataset.count), start = t0 + Math.min(i, 7) * 55 + 120, D = 850; if (!v) return;
     el.textContent = rs(0);
     const step = now => { if (!el.isConnected) return; const k = Math.min(1, Math.max(0, (now - start) / D)), e = 1 - Math.pow(1 - k, 4);
       el.textContent = rs(v * e); if (k < 1) requestAnimationFrame(step); };
