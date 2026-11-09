@@ -41,6 +41,17 @@
           "sizes": "192x192"
         }
       ]
+    },
+    {
+      "name": "Reader",
+      "short_name": "Reader",
+      "url": "./#read",
+      "icons": [
+        {
+          "src": "icons/icon-192.png",
+          "sizes": "192x192"
+        }
+      ]
     }
   ]
 }

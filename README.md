@@ -33,6 +33,16 @@ Card, bank and personal details live in three tables in the app's **Vault** tab:
 - A copy is kept on the owner's phone so the vault opens instantly; it is removed on sign-out.
 - Card and bank **names** (never numbers) feed the Cash / Bank / Card buttons on the entry form.
 
+## Reader
+
+The **Reader** tab (sidebar on a laptop, **More** on a phone) reads PDFs, web pages, Markdown and text in beautiful type that always fits the screen, at any zoom.
+
+- **Open a file** or **Paste** (rich text, HTML source, Markdown or plain text; it picks the right one, and you can switch).
+- **Appearance:** six themes (Auto, Paper, Sepia, Dusk, Night, Black), brightness, warmth, four typefaces, size, line spacing, width, justify, hyphenation.
+- **PDFs:** *Original* layout, or *Liquid* mode, which rebuilds the text so it re-flows to fit your screen (like Adobe's Liquid Mode).
+- **Save:** to **Notes** (name and label it; it syncs to Drive like any note) or to your **device** (original, web page, Markdown, text, or PDF via print).
+- Documents stay on that device only. The Reader is its own page (`reader/`), loaded only when you open it, so the budget app stays as fast as before. It also works on its own at `https://efrahdev.github.io/budget/reader/`.
+
 ## One-time setup
 
 1. *Optional* **Google sign-in client** (Google Cloud Console → Google Auth Platform): create a *Web application* OAuth client with the authorised JavaScript origin `https://efrahdev.github.io`. Put its Client ID in `GOOGLE_CLIENT_ID` in `index.html` and in the sheet's **Config** tab (`google client id`).

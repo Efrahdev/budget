@@ -788,7 +788,7 @@ details.ct-hist[open] summary::after{transform:rotate(-135deg) translateY(-1px)}
 .mtile.on{box-shadow:inset 0 0 0 2px var(--accent);background:var(--accent-soft)}
 .mt-ic{width:42px;height:42px;border-radius:14px;display:grid;place-items:center;color:#fff;background:linear-gradient(150deg,var(--btn-a),var(--btn-b));box-shadow:0 8px 16px -8px color-mix(in srgb,var(--btn-b) 80%,transparent)}
 .mt-ic .ic{width:22px;height:22px}
-.mt-ic.c2{background:linear-gradient(150deg,#22c1ee,#0e7fbf)}.mt-ic.c3{background:linear-gradient(150deg,#a78bfa,#7c4ddb)}.mt-ic.c4{background:linear-gradient(150deg,#94a3b8,#52607a)}.mt-ic.c5{background:linear-gradient(150deg,#34d399,#0f8a68)}
+.mt-ic.c2{background:linear-gradient(150deg,#22c1ee,#0e7fbf)}.mt-ic.c3{background:linear-gradient(150deg,#a78bfa,#7c4ddb)}.mt-ic.c4{background:linear-gradient(150deg,#94a3b8,#52607a)}.mt-ic.c5{background:linear-gradient(150deg,#34d399,#0f8a68)}.mt-ic.c6{background:linear-gradient(150deg,#ff9a5a,#e0431f)}
 .mtile b{font-size:calc(16px*var(--fs,1));font-weight:700}
 .mtile small{font-size:calc(13px*var(--fs,1));color:var(--ink-3);line-height:1.35}
 .more-set{display:flex;flex-direction:column;border-radius:20px;background:var(--sheet-2);box-shadow:inset 0 0 0 1px var(--rule);overflow:hidden}
@@ -1253,6 +1253,15 @@ html.tb-hide:not(.kb) .topbar{transform:translateY(-100%)}
 }
 @media (min-width:1600px){:root{--fsv:1.12;--sbw:300px;--gut:44px}:focus-visible{outline-width:3px;outline-offset:3px}body{--vw:1400px}body[data-view="entries"],body[data-view="notes"],body[data-view="disc"],body[data-view="setup"]{--vw:1000px}}
 @media (min-width:2400px){:root{--fsv:1.4;--sbw:380px;--gut:60px}body{--vw:1900px}body[data-view="entries"],body[data-view="notes"],body[data-view="disc"],body[data-view="setup"]{--vw:1300px}}
+/* ---------- Reader: its own page (reader/), shown edge to edge in this tab through a frame made only when first opened ---------- */
+#v-read{position:fixed;inset:0;z-index:30;display:block;max-width:none!important;margin:0!important;width:auto!important}
+#v-read[hidden]{display:none}
+#v-read iframe{display:block;width:100%;height:100%;border:0;background:transparent}
+body[data-view="read"] .fab,body[data-view="read"] #pagehead,body[data-view="read"] #banner,body[data-view="read"] #cycBar{display:none!important}
+body[data-view="read"] main{padding:0}
+@media (max-width:1023.98px){body[data-view="read"] .topbar{transform:translateY(-100%);visibility:hidden}
+  html.rd-bars body[data-view="read"] .navbar,html.rd-imm body[data-view="read"] .navbar{transform:translateY(calc(100% + 24px));opacity:0;pointer-events:none}}
+@media (min-width:1024px){#v-read{left:var(--sbw)}html.rd-imm body[data-view="read"] #v-read{left:0;z-index:60}}
 </style>
 </head>
 <body>
@@ -1284,6 +1293,7 @@ html.tb-hide:not(.kb) .topbar{transform:translateY(-100%)}
   <symbol id="i-sync" viewBox="0 0 24 24"><path d="M20 11.5A8 8 0 0 0 6.3 6.3L4 8.5"/><path d="M4 4v4.5h4.5"/><path d="M4 12.5a8 8 0 0 0 13.7 5.2L20 15.5"/><path d="M20 20v-4.5h-4.5"/></symbol>
   <symbol id="i-lock" viewBox="0 0 24 24"><rect x="5" y="10.5" width="14" height="10" rx="2.5"/><path d="M8 10.5V7.5a4 4 0 0 1 8 0v3"/></symbol>
   <symbol id="i-id" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2.8"/><circle cx="9" cy="11" r="2.2"/><path d="M5.8 16.2c.6-1.6 1.8-2.4 3.2-2.4s2.6.8 3.2 2.4M14.5 10h4M14.5 13.5h3"/></symbol>
+  <symbol id="i-read" viewBox="0 0 24 24"><path d="M12 6.6c-1.9-1.6-4.7-2.3-8.5-2.1v13.2c3.8-.2 6.6.5 8.5 2.1 1.9-1.6 4.7-2.3 8.5-2.1V4.5c-3.8-.2-6.6.5-8.5 2.1z"/><path d="M12 6.6v13.2"/></symbol>
   <symbol id="i-bank" viewBox="0 0 24 24"><path d="M3 9.5 12 4l9 5.5"/><path d="M5 10v8M9.5 10v8M14.5 10v8M19 10v8"/><path d="M3.5 20.5h17"/></symbol>
   <symbol id="c-cart" viewBox="0 0 24 24"><circle cx="9.5" cy="19.5" r="1.4"/><circle cx="17" cy="19.5" r="1.4"/><path d="M2.5 3.5h2.4l2.4 11.2h10.4l2.1-7.7H6"/></symbol>
   <symbol id="c-car" viewBox="0 0 24 24"><path d="M4.5 16.5v-4l2.2-5.5h10.6l2.2 5.5v4z"/><path d="M4.5 12.5h15"/><path d="M6.5 16.5v2.5M17.5 16.5v2.5"/><path d="M7.8 14.5h.01M16.2 14.5h.01"/></symbol>
@@ -1337,6 +1347,7 @@ html.tb-hide:not(.kb) .topbar{transform:translateY(-100%)}
   <a class="nv nv-2" href="#cards" data-v="cards"><span class="nvi"><svg class="ic" aria-hidden="true"><use href="#i-card"/></svg></span><span>Card bills</span></a>
   <a class="nv" href="#wealth" data-v="wealth"><span class="nvi"><svg class="ic" aria-hidden="true"><use href="#i-wealth"/></svg></span><span>Wealth</span></a>
   <a class="nv" href="#notes" data-v="notes"><span class="nvi"><svg class="ic" aria-hidden="true"><use href="#i-notes"/></svg></span><span>Notes</span></a>
+  <a class="nv nv-2" href="#read" data-v="read"><span class="nvi"><svg class="ic" aria-hidden="true"><use href="#i-read"/></svg></span><span>Reader</span></a>
   <a class="nv nv-2" href="#trend" data-v="trend"><span class="nvi"><svg class="ic" aria-hidden="true"><use href="#i-trend"/></svg></span><span>Trend</span></a>
   <a class="nv nv-2" href="#disc" data-v="disc"><span class="nvi"><svg class="ic" aria-hidden="true"><use href="#i-spark"/></svg></span><span>Discretionary</span></a>
   <a class="nv nv-2" href="#setup" data-v="setup"><span class="nvi"><svg class="ic" aria-hidden="true"><use href="#i-sliders"/></svg></span><span>Setup</span></a>
@@ -1377,6 +1388,7 @@ html.tb-hide:not(.kb) .topbar{transform:translateY(-100%)}
   <section class="view" id="v-setup" hidden></section>
   <section class="view" id="v-vault" hidden></section>
   <section class="view" id="v-disc" hidden></section>
+  <section class="view" id="v-read" hidden></section>
 </main>
 
 <button class="fab" data-act="add" type="button" aria-label="Add entry"><svg class="ic" aria-hidden="true"><use href="#i-plus"/></svg></button>
@@ -1508,7 +1520,7 @@ html.tb-hide:not(.kb) .topbar{transform:translateY(-100%)}
 <script>
 (() => {
 'use strict';
-const VIEWS = ['overview','entries','cards','wealth','notes','trend','setup','vault','disc','add'];
+const VIEWS = ['overview','entries','cards','wealth','notes','trend','setup','vault','disc','add','read'];
 // An entry link (role Entry) sees only these. The server refuses everything else for it too.
 const ENTRY_VIEWS = ['add', 'entries', 'notes'];
 const TYPES = ['Expense','Income','Transfer'];
@@ -2489,7 +2501,8 @@ function drawNote() {
       <div class="nbtns"><div class="npopw nmorew"><button type="button" class="nmoreb" data-act="n-more" aria-haspopup="true" aria-expanded="false" aria-label="More for this note">⋯</button>
           <div class="npop" hidden role="menu"><button type="button" class="npi" data-act="n-copy"><b>Copy the text</b><small>Puts the whole note on the clipboard</small></button>
             <button type="button" class="npi" data-act="n-dl"><b>Download</b><small>Saves a .${NOTE_KINDS[o.type].ext} file to this phone</small></button>
-            <button type="button" class="npi" data-act="n-dup"><b>Make a copy</b><small>Opens a new note with the same text</small></button></div></div>
+            <button type="button" class="npi" data-act="n-dup"><b>Make a copy</b><small>Opens a new note with the same text</small></button>
+            <button type="button" class="npi" data-act="n-read"><b>Read in Reader</b><small>Full screen, with themes and zoom</small></button></div></div>
         <button type="button" class="nbtn ndel" data-act="n-del">Delete</button><button type="button" class="nbtn nsave" data-act="n-save">✓ Done</button></div></div></div>`);
   $('#noteScrim').hidden = false; noteVV(); noteFit(); noteState();
   histReset(ready ? o.content : '');
@@ -2860,6 +2873,7 @@ document.addEventListener('click', async ev => {
   else if (a === 'n-copy') { commitNote(); try { await navigator.clipboard.writeText(o.content); toast('Copied'); } catch (e) { showCopy(o.title || 'Note', o.content); } }
   else if (a === 'n-dup') { commitNote(); const id = 'n' + newId();
     openNote(id, {id, title: o.title ? o.title + ' (copy)' : '', type: o.type, cat: o.cat, content: o.content}); toast('A copy, ready to change'); }
+  else if (a === 'n-read') { commitNote(); const msg = {type: 'open-text', title: o.title || noteName({preview: notePreview(o.content)}), kind: o.type, content: o.content}; closeNote(); rdFrame(); rdPost(msg); location.hash = '#read'; }
   else if (a === 'n-dl') { commitNote(); offerFile((o.title || noteName({preview: notePreview(o.content)})).replace(/[\\/:*?"<>|]+/g, ' ').trim() + '.' + NOTE_KINDS[o.type].ext, o.content, NOTE_KINDS[o.type].mime); }
   else if (a === 'n-del') { if (!arm(b, 'ndel' + o.id, 'Sure?')) return; deleteNote(o.id); N.open = null; $('#noteScrim').hidden = true; renderNotes(); }
 });
@@ -3990,6 +4004,8 @@ function setView(v) {
   VIEWS.forEach(n => { $('#v-' + n).hidden = !state.config || n !== state.view; });
   markNav();
   if (prev !== state.view && state.config) viewEntered(state.view);
+  if (state.view === 'read' && state.config) { rdFrame(); rdPost({type: 'shown'}); rdPost({type: 'inset', inset: rdInset()}); try { RD.frame.contentWindow.focus(); } catch (e) {} }
+  if (prev === 'read' && state.view !== 'read') { document.documentElement.classList.remove('rd-bars', 'rd-imm'); rdPost({type: 'hidden'}); }
   if (state.config && (state.view === 'trend' || state.view === 'wealth') && !holdIfTyping('#v-' + state.view)) { const X = ctx(); state.view === 'trend' ? renderTrend(X) : renderWealth(X); }
   if (state.config && state.view === 'vault' && !holdIfTyping('#v-vault')) renderVault();
   fitNums($('#v-' + state.view));
@@ -5290,7 +5306,7 @@ document.addEventListener('click', ev => {
    Phones: a slim top bar (the month) that slides away while you scroll down, and a floating bottom bar with the
    four main screens and More. Laptops, desktops and TVs: the same pieces become a sidebar (CSS only).
    While the phone keyboard is up, every bar steps aside and the box you are typing in is kept in view. */
-const VIEW_TITLE = {add: 'Add entry', overview: 'Overview', entries: 'Entries', cards: 'Card bills', wealth: 'Wealth', notes: 'Notes', trend: 'Trend', setup: 'Setup', vault: 'Vault', disc: 'Discretionary'};
+const VIEW_TITLE = {add: 'Add entry', overview: 'Overview', entries: 'Entries', cards: 'Card bills', wealth: 'Wealth', notes: 'Notes', trend: 'Trend', setup: 'Setup', vault: 'Vault', disc: 'Discretionary', read: 'Reader'};
 const PRIMARY_VIEWS = ['overview', 'entries', 'wealth', 'notes'];
 const coarse = matchMedia('(pointer: coarse)');
 const reduceMotion = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -5332,7 +5348,7 @@ function setBarsHidden(h) { document.documentElement.classList.toggle('tb-hide',
 // More (phones): the other screens and the settings, one tap away.
 function moreHtml() {
   const isOwner = !!(Sync.me && Sync.me.role === 'Owner'), dark = darkNow(), size = (TEXT_SIZES.find(x => x.v === readText().size) || {}).l || '';
-  const tiles = [['cards', 'i-card', 'Card bills', 'What to pay, and by when', ''], ['trend', 'i-trend', 'Trend', 'Month by month', 'c2'],
+  const tiles = [['read', 'i-read', 'Reader', 'PDFs, web pages, Markdown', 'c6'], ['cards', 'i-card', 'Card bills', 'What to pay, and by when', ''], ['trend', 'i-trend', 'Trend', 'Month by month', 'c2'],
     ['disc', 'i-spark', 'Discretionary', 'Spending outside the plan', 'c3'], ['setup', 'i-sliders', 'Setup', 'Budgets, accounts, cards', 'c4']]
     .concat(isOwner ? [['vault', 'i-vault', 'Vault', 'Card and account details', 'c5']] : []);
   return `<div class="more-h"><b>More</b><span class="hint">${esc(syncLabel())}</span></div>
@@ -5574,6 +5590,71 @@ document.addEventListener('click', async ev => {
   }
 });
 
+/* ---------- Reader: its own page in reader/, shown in the Reader tab ----------
+   Nothing of it loads with the budget app: the frame is made the first time you open Reader, so this app is exactly
+   as fast as before. The two pages pass a few small messages (postMessage, same site only):
+     from Reader: hello · save-note · bars (hide our bars while reading) · immersive · open-note
+     to Reader:   hello (labels, signed in?) · note-saved · shown · hidden · inset (room our bottom bar takes) · open-text
+   A Reader opened on its own (its own icon or tab) asks over a BroadcastChannel; if no budget tab answers, its note
+   waits in a small mailbox (RD_INBOX) that this app empties the next time it opens. */
+const RD_INBOX = 'budgetTracker.readerInbox.v1';
+const RD = {frame: null, ready: false, queue: [], navInset: 0};
+function rdFrame() {
+  if (RD.frame) return RD.frame;
+  const f = document.createElement('iframe');
+  f.src = 'reader/'; f.title = 'Reader';
+  f.setAttribute('allow', 'fullscreen; clipboard-read; clipboard-write; screen-wake-lock'); f.setAttribute('allowfullscreen', '');
+  $('#v-read').appendChild(f); RD.frame = f; return f;
+}
+function rdPost(m) { m.src = 'budget'; if (RD.frame && RD.ready) RD.frame.contentWindow.postMessage(m, location.origin); else RD.queue.push(m); }
+function rdInset() {
+  const h = document.documentElement;
+  if (matchMedia('(min-width:1024px)').matches || h.classList.contains('rd-bars') || h.classList.contains('rd-imm')) return 0;
+  const nb = $('#navbar'); if (!nb || nb.hidden) return 0;
+  const r = nb.getBoundingClientRect(); if (r.height && r.top < innerHeight) RD.navInset = Math.max(0, Math.round(innerHeight - r.top + 6));
+  return RD.navInset;
+}
+function rdSaveNote(n) {
+  if (!n || typeof n.content !== 'string' || !n.content.trim()) return {ok: false, error: 'Nothing to save.'};
+  if (n.content.length > 400000) return {ok: false, error: 'too-big'};
+  const id = 'n' + newId();
+  noteSave({id, title: String(n.title || '').trim().slice(0, 120), type: NOTE_KINDS[n.type] ? n.type : 'md', content: n.content, cat: okLabel(n.cat) ? n.cat : defaultLabel()});
+  if (state.view === 'notes' && !N.open) renderNoteList();
+  return {ok: true, id};
+}
+function rdHandle(m, reply) {
+  if (!m || m.src !== 'budget-reader') return;
+  const r = o => reply(Object.assign({src: 'budget', rid: m.rid}, o));
+  if (m.type === 'hello') return r({type: 'hello', labels: allLabels().map(k => ({k, name: labelName(k)})), def: defaultLabel(), signedIn: signedIn(), inset: rdInset()});
+  if (m.type === 'save-note') return r(signedIn() ? Object.assign({type: 'note-saved'}, rdSaveNote(m.note)) : {type: 'note-saved', ok: false, error: 'signin'});
+  if (m.type === 'bars' || m.type === 'immersive') { document.documentElement.classList.toggle(m.type === 'bars' ? 'rd-bars' : 'rd-imm', !!(m.hidden || m.on)); rdPost({type: 'inset', inset: rdInset()}); return; }
+  if (m.type === 'open-note' && m.id) { location.hash = '#notes'; setTimeout(() => openNote(m.id), 120); }
+}
+window.addEventListener('message', ev => {
+  if (ev.origin !== location.origin || !RD.frame || ev.source !== RD.frame.contentWindow) return;
+  if (ev.data && ev.data.type === 'hello') RD.ready = true;
+  rdHandle(ev.data, msg => ev.source.postMessage(msg, location.origin));
+  if (RD.ready && RD.queue.length) RD.queue.splice(0).forEach(rdPost);
+});
+if ('BroadcastChannel' in window) {
+  const ch = new BroadcastChannel('budget-reader');
+  ch.onmessage = ev => {
+    const m = ev.data || {};
+    if (m.type === 'save-note') { const k = 'budgetTracker.rdClaim.' + m.rid; try { if (localStorage.getItem(k)) return; localStorage.setItem(k, '1'); setTimeout(() => localStorage.removeItem(k), 10000); } catch (e) {} } // one budget tab answers
+    rdHandle(m, msg => ch.postMessage(msg));
+  };
+}
+function rdDrain() {
+  if (!signedIn()) return;
+  let box = []; try { box = JSON.parse(localStorage.getItem(RD_INBOX) || '[]') || []; } catch (e) {}
+  if (!Array.isArray(box) || !box.length) return;
+  localStorage.removeItem(RD_INBOX);
+  const n = box.filter(x => rdSaveNote(x).ok).length;
+  if (n) toast(n === 1 ? 'A note saved in Reader was added to Notes' : n + ' notes saved in Reader were added to Notes');
+}
+window.addEventListener('storage', e => { if (e.key === RD_INBOX && e.newValue) rdDrain(); });
+window.addEventListener('resize', () => { if (state.view === 'read' && RD.ready) rdPost({type: 'inset', inset: rdInset()}); });
+
 /* ---------- start ---------- */
 function start() {
   // One-tap set-up link: #connect=<base64 of {"url":…,"key":…}>. The part after # never reaches GitHub's server.
@@ -5597,6 +5678,7 @@ function start() {
   if (lg && !Sync.session) { try { Sync.outbox = JSON.parse(localStorage.getItem(LS_OUT) || '[]') || []; } catch (e) {} useLoginLink(lg[1]); }
   else render();
   if (signedIn()) flush();
+  setTimeout(rdDrain, 0); // notes saved in a Reader opened on its own
   // Pick up entries made on other phones.
   setInterval(() => { if (signedIn() && document.visibilityState === 'visible' && !state.dirty) flush(); }, 60000);
   document.addEventListener('visibilitychange', () => { if (signedIn() && document.visibilityState === 'visible') flush(); });

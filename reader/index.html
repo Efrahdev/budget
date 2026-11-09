@@ -1,0 +1,257 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,interactive-widget=resizes-content">
+<!-- Strict policy: only this site's own scripts run (no inline scripts, no eval). Pasted HTML and PDFs are untrusted,
+     so even if something slipped past the cleaner, the browser would refuse to run it. WASM is pdf.js's image decoders. -->
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' data: https://fonts.gstatic.com; img-src * data: blob:; media-src 'none'; connect-src 'self' data: blob:; worker-src 'self' blob:; child-src 'self' blob:; frame-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'; manifest-src 'self'">
+<meta name="referrer" content="no-referrer">
+<title>Reader</title>
+<meta name="description" content="Read PDFs, web pages, Markdown and text beautifully. Save to Notes or to your device.">
+<meta name="theme-color" content="#fbfaf7">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="../icons/icon-192.png" sizes="192x192">
+<link rel="apple-touch-icon" href="../icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Reader">
+<script src="js/boot.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400..800&family=Literata:ital,opsz,wght@0,7..72,300..800;1,7..72,300..800&family=Atkinson+Hyperlegible+Next:ital,wght@0,300..800;1,300..800&family=JetBrains+Mono:wght@400..600&display=swap">
+<link rel="stylesheet" href="reader.css">
+<script type="module" src="js/app.js"></script>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="r-back" viewBox="0 0 24 24"><path d="M14.5 18 8.5 12l6-6"/></symbol>
+  <symbol id="r-lib" viewBox="0 0 24 24"><path d="M4.5 4.5h4v15h-4zM10 4.5h4v15h-4z"/><path d="m15.6 5.2 3.8-1 3.9 14.5-3.9 1z"/></symbol>
+  <symbol id="r-search" viewBox="0 0 24 24"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5 21 21"/></symbol>
+  <symbol id="r-toc" viewBox="0 0 24 24"><path d="M4 6h.01M4 12h.01M4 18h.01M8 6h12M8 12h12M8 18h8"/></symbol>
+  <symbol id="r-aa" viewBox="0 0 24 24"><path d="M2.5 19 8 5l5.5 14M4.6 14h6.8"/><path d="M20.5 19v-6.3a2.7 2.7 0 0 0-5.2-1"/><path d="M20.5 15.4c-3.6-.4-5.6.4-5.6 2 0 2 3.4 2.3 5.6-.4"/></symbol>
+  <symbol id="r-full" viewBox="0 0 24 24"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></symbol>
+  <symbol id="r-unfull" viewBox="0 0 24 24"><path d="M9 4v5H4M15 4v5h5M9 20v-5H4M15 20v-5h5"/></symbol>
+  <symbol id="r-share" viewBox="0 0 24 24"><path d="M12 3.5v12M7.5 8 12 3.5 16.5 8"/><path d="M5 12.5v6a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-6"/></symbol>
+  <symbol id="r-note" viewBox="0 0 24 24"><path d="M14 3.5H6.5a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2h11a2 2 0 0 0 2-2V9z"/><path d="M14 3.5V9h5.5"/><path d="M8.5 13h7M8.5 16.5h4.5"/></symbol>
+  <symbol id="r-down" viewBox="0 0 24 24"><path d="M12 3.5v12M7.5 11 12 15.5 16.5 11"/><path d="M4.5 19.5h15"/></symbol>
+  <symbol id="r-print" viewBox="0 0 24 24"><path d="M6.5 9V3.5h11V9"/><rect x="3.5" y="9" width="17" height="8" rx="2"/><path d="M6.5 14.5h11v6h-11z"/></symbol>
+  <symbol id="r-open" viewBox="0 0 24 24"><path d="M3.5 7.5a2 2 0 0 1 2-2h4l2 2.2h7a2 2 0 0 1 2 2V17a2 2 0 0 1-2 2h-13a2 2 0 0 1-2-2z"/><path d="M12 11v5M9.6 13.4 12 11l2.4 2.4"/></symbol>
+  <symbol id="r-paste" viewBox="0 0 24 24"><rect x="5" y="4.5" width="14" height="16.5" rx="2.5"/><path d="M9 4.5V3.5h6v1"/><rect x="9" y="2.8" width="6" height="3.4" rx="1.2"/><path d="M8.5 11h7M8.5 14.5h7M8.5 18h4"/></symbol>
+  <symbol id="r-x" viewBox="0 0 24 24"><path d="M6.5 6.5l11 11M17.5 6.5l-11 11"/></symbol>
+  <symbol id="r-up" viewBox="0 0 24 24"><path d="M6 14.5l6-6 6 6"/></symbol>
+  <symbol id="r-dn" viewBox="0 0 24 24"><path d="M6 9.5l6 6 6-6"/></symbol>
+  <symbol id="r-check" viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></symbol>
+  <symbol id="r-trash" viewBox="0 0 24 24"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 12.2A2 2 0 0 0 9 21h6a2 2 0 0 0 2-1.8L18 7M9 7V4h6v3"/></symbol>
+  <symbol id="r-liquid" viewBox="0 0 24 24"><path d="M12 3.2c3.4 4 5.6 7.2 5.6 10a5.6 5.6 0 0 1-11.2 0c0-2.8 2.2-6 5.6-10z"/><path d="M9.3 14.2a2.8 2.8 0 0 0 2.4 2.6"/></symbol>
+  <symbol id="r-page" viewBox="0 0 24 24"><path d="M14 3.5H6.5a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2h11a2 2 0 0 0 2-2V9z"/><path d="M14 3.5V9h5.5"/></symbol>
+  <symbol id="r-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2.5v2M12 19.5v2M4.6 4.6 6 6M18 18l1.4 1.4M2.5 12h2M19.5 12h2M4.6 19.4 6 18M18 6l1.4-1.4"/></symbol>
+  <symbol id="r-warm" viewBox="0 0 24 24"><path d="M12 3.5c2.6 3 4.5 5.3 4.5 8.6a4.5 4.5 0 0 1-9 0c0-1.7.6-3 1.6-4.4.6 1.2 1.4 1.9 2.4 2.1-.5-2.4-.2-4.3.5-6.3z"/></symbol>
+  <symbol id="r-budget" viewBox="0 0 24 24"><path d="M3.5 10.5 12 3.5l8.5 7"/><path d="M5.5 9v10.5a1 1 0 0 0 1 1H10v-6h4v6h3.5a1 1 0 0 0 1-1V9"/></symbol>
+</svg>
+
+<!-- ============ Library: the start screen ============ -->
+<section id="home" class="home" aria-label="Reader library">
+  <header class="home-top">
+    <a class="brand" id="toBudget" href="../" hidden><svg class="ic" aria-hidden="true"><use href="#r-budget"/></svg><span>Budget</span></a>
+    <div class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></div>
+    <b class="brand-word">Reader</b>
+    <span class="grow"></span>
+    <button type="button" class="ibtn" data-act="appearance" aria-label="Appearance" title="Appearance"><svg class="ic" aria-hidden="true"><use href="#r-aa"/></svg></button>
+  </header>
+  <div class="hero">
+    <p class="eyebrow">Your private reading room</p>
+    <h1>What would you like to read?</h1>
+    <p class="lede">PDFs, web pages, Markdown and text, set in beautiful type that always fits your screen. Nothing leaves this device unless you save it.</p>
+    <div class="actions">
+      <button type="button" class="act" data-act="open">
+        <span class="act-ic a1"><svg class="ic" aria-hidden="true"><use href="#r-open"/></svg></span>
+        <span class="act-t"><b>Open a file</b><small>PDF · HTML · Markdown · Text</small></span>
+        <kbd class="act-k">Ctrl O</kbd>
+      </button>
+      <button type="button" class="act" data-act="paste">
+        <span class="act-ic a2"><svg class="ic" aria-hidden="true"><use href="#r-paste"/></svg></span>
+        <span class="act-t"><b>Paste</b><small>Rich text · HTML · Markdown · Plain</small></span>
+        <kbd class="act-k">Ctrl V</kbd>
+      </button>
+    </div>
+    <p class="drophint">…or drop a file anywhere on this screen.</p>
+  </div>
+  <div class="lib">
+    <div class="lib-h"><h2>Recently read</h2><span class="lib-use" id="libUse"></span></div>
+    <div class="lib-list" id="libList"></div>
+  </div>
+</section>
+
+<!-- ============ The reading surface ============ -->
+<section id="reader" class="reader" aria-label="Document" hidden>
+  <header class="bar" id="bar">
+    <div class="bar-in">
+      <button type="button" class="ibtn" data-act="home" aria-label="Back to library" title="Library"><svg class="ic" aria-hidden="true"><use href="#r-back"/></svg></button>
+      <div class="ttl"><b id="docTitle">Untitled</b><span id="docMeta"></span></div>
+      <div class="seg mode" id="modeSeg" role="group" aria-label="Layout" hidden>
+        <button type="button" class="segb" data-act="mode" data-v="page" aria-pressed="true" title="Original layout"><svg class="ic" aria-hidden="true"><use href="#r-page"/></svg><span>Original</span></button>
+        <button type="button" class="segb" data-act="mode" data-v="liquid" aria-pressed="false" title="Liquid mode: reflow the text to fit your screen"><svg class="ic" aria-hidden="true"><use href="#r-liquid"/></svg><span>Liquid</span></button>
+      </div>
+      <div class="tools">
+        <button type="button" class="ibtn" data-act="search" aria-label="Search (Ctrl F)" title="Search · Ctrl F"><svg class="ic" aria-hidden="true"><use href="#r-search"/></svg></button>
+        <button type="button" class="ibtn" data-act="toc" aria-label="Contents (T)" title="Contents · T"><svg class="ic" aria-hidden="true"><use href="#r-toc"/></svg></button>
+        <button type="button" class="ibtn" data-act="appearance" aria-label="Appearance" title="Appearance"><svg class="ic" aria-hidden="true"><use href="#r-aa"/></svg></button>
+        <button type="button" class="ibtn" data-act="immersive" aria-label="Full screen (F)" title="Full screen · F"><svg class="ic" aria-hidden="true"><use href="#r-full"/></svg></button>
+        <button type="button" class="ibtn accent" data-act="export" aria-label="Save to Notes or device" title="Save" aria-haspopup="menu"><svg class="ic" aria-hidden="true"><use href="#r-share"/></svg></button>
+      </div>
+    </div>
+    <div class="searchbar" id="searchbar" hidden>
+      <svg class="ic" aria-hidden="true"><use href="#r-search"/></svg>
+      <input id="q" type="search" placeholder="Find in document" aria-label="Find in document" autocomplete="off" enterkeyhint="search">
+      <span class="qcount" id="qCount" aria-live="polite"></span>
+      <button type="button" class="ibtn sm" data-act="q-prev" aria-label="Previous match"><svg class="ic" aria-hidden="true"><use href="#r-up"/></svg></button>
+      <button type="button" class="ibtn sm" data-act="q-next" aria-label="Next match"><svg class="ic" aria-hidden="true"><use href="#r-dn"/></svg></button>
+      <button type="button" class="ibtn sm" data-act="q-close" aria-label="Close search"><svg class="ic" aria-hidden="true"><use href="#r-x"/></svg></button>
+    </div>
+  </header>
+
+  <div class="stage" id="stage" tabindex="-1">
+    <div class="liquid-note" id="liquidNote" hidden></div>
+    <article class="doc" id="doc"></article>
+    <div class="doc-end" id="docEnd" hidden><span>End</span></div>
+  </div>
+  <div class="pdfstage" id="pdfStage" tabindex="-1" hidden><div id="pdfViewer" class="pdfViewer"></div></div>
+
+  <div class="busy" id="busy" hidden><div class="busy-card"><div class="spin" aria-hidden="true"></div><b id="busyT">Opening…</b><div class="busy-bar"><i id="busyBar"></i></div><button type="button" class="link" data-act="busy-cancel" id="busyCancel" hidden>Cancel</button></div></div>
+
+  <footer class="foot" id="foot">
+    <div class="foot-pill"><span id="progT">0%</span><span class="dot" aria-hidden="true">·</span><span id="leftT"></span></div>
+    <div class="progress" aria-hidden="true"><i id="progBar"></i></div>
+  </footer>
+  <div class="hud" id="hud" aria-live="polite"></div>
+</section>
+
+<!-- warmth and dim: a tint over everything, never in the way of a tap -->
+<div class="tint warm" id="tintWarm" aria-hidden="true"></div>
+<div class="tint dim" id="tintDim" aria-hidden="true"></div>
+
+<!-- ============ Contents ============ -->
+<aside class="drawer" id="tocDrawer" aria-label="Contents" hidden>
+  <div class="drawer-h"><b>Contents</b><button type="button" class="ibtn sm" data-act="toc-close" aria-label="Close contents"><svg class="ic" aria-hidden="true"><use href="#r-x"/></svg></button></div>
+  <nav class="toc" id="tocList"></nav>
+</aside>
+<div class="scrim" id="scrim" hidden></div>
+
+<!-- ============ Appearance ============ -->
+<dialog class="panel" id="appearance" aria-label="Appearance">
+  <div class="panel-h"><b>Appearance</b><button type="button" class="ibtn sm" data-act="close-dlg" aria-label="Close"><svg class="ic" aria-hidden="true"><use href="#r-x"/></svg></button></div>
+  <div class="ap-sec">
+    <div class="themes" id="themes" role="radiogroup" aria-label="Theme">
+      <button type="button" role="radio" class="th th-auto" data-act="pref" data-k="theme" data-v="auto"><i>Aa</i><span>Auto</span></button>
+      <button type="button" role="radio" class="th th-paper" data-act="pref" data-k="theme" data-v="paper"><i>Aa</i><span>Paper</span></button>
+      <button type="button" role="radio" class="th th-sepia" data-act="pref" data-k="theme" data-v="sepia"><i>Aa</i><span>Sepia</span></button>
+      <button type="button" role="radio" class="th th-dusk" data-act="pref" data-k="theme" data-v="dusk"><i>Aa</i><span>Dusk</span></button>
+      <button type="button" role="radio" class="th th-night" data-act="pref" data-k="theme" data-v="night"><i>Aa</i><span>Night</span></button>
+      <button type="button" role="radio" class="th th-black" data-act="pref" data-k="theme" data-v="black"><i>Aa</i><span>Black</span></button>
+    </div>
+  </div>
+  <div class="ap-sec sliders">
+    <label class="sl"><svg class="ic" aria-hidden="true"><use href="#r-sun"/></svg><span>Brightness</span><input type="range" id="dimIn" min="0" max="70" step="1" data-k="dim" aria-label="Brightness (dims below your screen's lowest setting)"></label>
+    <label class="sl"><svg class="ic" aria-hidden="true"><use href="#r-warm"/></svg><span>Warmth</span><input type="range" id="warmIn" min="0" max="100" step="1" data-k="warmth" aria-label="Warmth"></label>
+  </div>
+  <div class="ap-sec">
+    <div class="ap-lbl">Typeface</div>
+    <div class="fonts" role="radiogroup" aria-label="Typeface">
+      <button type="button" role="radio" class="fo f-literata" data-act="pref" data-k="font" data-v="literata"><i>Ag</i><span>Literata</span></button>
+      <button type="button" role="radio" class="fo f-charter" data-act="pref" data-k="font" data-v="charter"><i>Ag</i><span>Classic</span></button>
+      <button type="button" role="radio" class="fo f-inter" data-act="pref" data-k="font" data-v="inter"><i>Ag</i><span>Inter</span></button>
+      <button type="button" role="radio" class="fo f-atkinson" data-act="pref" data-k="font" data-v="atkinson"><i>Ag</i><span>Legible</span></button>
+    </div>
+  </div>
+  <div class="ap-sec row">
+    <div class="ap-lbl">Text size</div>
+    <div class="stepper"><button type="button" data-act="zoom" data-v="-1" aria-label="Smaller text"><small>A</small></button><button type="button" class="zval" id="zoomVal" data-act="zoom" data-v="0" title="Reset">100%</button><button type="button" data-act="zoom" data-v="1" aria-label="Larger text"><b>A</b></button></div>
+  </div>
+  <div class="ap-sec row">
+    <div class="ap-lbl">Line spacing</div>
+    <div class="seg sm" role="radiogroup" aria-label="Line spacing">
+      <button type="button" role="radio" class="segb" data-act="pref" data-k="leading" data-v="compact">Compact</button>
+      <button type="button" role="radio" class="segb" data-act="pref" data-k="leading" data-v="normal">Normal</button>
+      <button type="button" role="radio" class="segb" data-act="pref" data-k="leading" data-v="airy">Airy</button>
+    </div>
+  </div>
+  <div class="ap-sec row">
+    <div class="ap-lbl">Width</div>
+    <div class="seg sm" role="radiogroup" aria-label="Column width">
+      <button type="button" role="radio" class="segb" data-act="pref" data-k="width" data-v="narrow">Narrow</button>
+      <button type="button" role="radio" class="segb" data-act="pref" data-k="width" data-v="normal">Normal</button>
+      <button type="button" role="radio" class="segb" data-act="pref" data-k="width" data-v="wide">Wide</button>
+      <button type="button" role="radio" class="segb" data-act="pref" data-k="width" data-v="full">Full</button>
+    </div>
+  </div>
+  <div class="ap-sec toggles">
+    <label class="tg"><span>Justify text</span><input type="checkbox" data-k="justify"><i></i></label>
+    <label class="tg"><span>Hyphenate long words</span><input type="checkbox" data-k="hyphens"><i></i></label>
+    <label class="tg"><span>Recolour PDF pages in dark themes</span><input type="checkbox" data-k="recolor"><i></i></label>
+    <label class="tg"><span>Keep the screen awake while reading</span><input type="checkbox" data-k="awake"><i></i></label>
+  </div>
+</dialog>
+
+<!-- ============ Paste ============ -->
+<dialog class="sheet" id="pasteDlg" aria-labelledby="pasteH">
+  <div class="sheet-h"><b id="pasteH">Paste to read</b><button type="button" class="ibtn sm" data-act="close-dlg" aria-label="Close"><svg class="ic" aria-hidden="true"><use href="#r-x"/></svg></button></div>
+  <div class="paste-target" id="pasteTarget" contenteditable="true" role="textbox" aria-label="Paste here" data-ph="Tap here, then paste (long-press → Paste, or Ctrl V)"></div>
+  <div class="paste-found" id="pasteFound" hidden></div>
+  <div class="fmt" id="fmtSeg" role="radiogroup" aria-label="Read it as" hidden>
+    <button type="button" role="radio" class="fmtb" data-act="fmt" data-v="rich"><b>Rich text</b><small>Formatting kept, cleaned</small></button>
+    <button type="button" role="radio" class="fmtb" data-act="fmt" data-v="html"><b>HTML source</b><small>Code turned into a page</small></button>
+    <button type="button" role="radio" class="fmtb" data-act="fmt" data-v="md"><b>Markdown</b><small># headings, **bold**, lists</small></button>
+    <button type="button" role="radio" class="fmtb" data-act="fmt" data-v="txt"><b>Plain text</b><small>Just the words</small></button>
+  </div>
+  <div class="preview doc mini" id="pastePreview" hidden></div>
+  <label class="field" id="pasteNameF" hidden><span>Title</span><input id="pasteName" type="text" maxlength="140" autocomplete="off"></label>
+  <div class="sheet-a"><button type="button" class="btn" data-act="close-dlg">Cancel</button><button type="button" class="btn primary" data-act="paste-read" id="pasteRead" disabled>Read</button></div>
+</dialog>
+
+<!-- ============ Save menu ============ -->
+<div class="menu" id="exportMenu" role="menu" hidden>
+  <button type="button" role="menuitem" class="mi" data-act="to-note"><span class="mi-ic n"><svg class="ic" aria-hidden="true"><use href="#r-note"/></svg></span><span><b>Save to Notes</b><small>Name it, label it, synced to Drive</small></span></button>
+  <button type="button" role="menuitem" class="mi" data-act="to-file"><span class="mi-ic f"><svg class="ic" aria-hidden="true"><use href="#r-down"/></svg></span><span><b>Save to device</b><small>Original, web page, Markdown, text</small></span></button>
+  <button type="button" role="menuitem" class="mi" data-act="print" id="miPrint"><span class="mi-ic p"><svg class="ic" aria-hidden="true"><use href="#r-print"/></svg></span><span><b>Print or save as PDF</b><small>In your reading theme's type</small></span></button>
+</div>
+
+<!-- ============ Save to Notes ============ -->
+<dialog class="sheet" id="noteDlg" aria-labelledby="noteH">
+  <div class="sheet-h"><b id="noteH">Save to Notes</b><button type="button" class="ibtn sm" data-act="close-dlg" aria-label="Close"><svg class="ic" aria-hidden="true"><use href="#r-x"/></svg></button></div>
+  <label class="field"><span>Name</span><input id="noteName" type="text" maxlength="120" autocomplete="off" enterkeyhint="done"></label>
+  <div class="field"><span>Label</span><div class="chips" id="noteLabels" role="radiogroup" aria-label="Label"></div></div>
+  <div class="field"><span>Format</span>
+    <div class="seg" role="radiogroup" aria-label="Note format">
+      <button type="button" role="radio" class="segb" data-act="note-fmt" data-v="md">Markdown</button>
+      <button type="button" role="radio" class="segb" data-act="note-fmt" data-v="html">Rich (HTML)</button>
+      <button type="button" role="radio" class="segb" data-act="note-fmt" data-v="txt">Plain text</button>
+    </div>
+    <small class="hint" id="noteHint"></small>
+  </div>
+  <div class="sheet-a"><button type="button" class="btn" data-act="close-dlg">Cancel</button><button type="button" class="btn primary" data-act="note-save" id="noteSaveB">Save to Notes</button></div>
+</dialog>
+
+<!-- ============ Save to device ============ -->
+<dialog class="sheet" id="fileDlg" aria-labelledby="fileH">
+  <div class="sheet-h"><b id="fileH">Save to device</b><button type="button" class="ibtn sm" data-act="close-dlg" aria-label="Close"><svg class="ic" aria-hidden="true"><use href="#r-x"/></svg></button></div>
+  <div class="opts" id="fileOpts" role="radiogroup" aria-label="Format"></div>
+  <label class="field"><span>File name</span><input id="fileName" type="text" maxlength="140" autocomplete="off" enterkeyhint="done"></label>
+  <div class="sheet-a"><button type="button" class="btn" data-act="close-dlg">Cancel</button><button type="button" class="btn primary" data-act="file-save">Save</button></div>
+</dialog>
+
+<!-- ============ Ask (password and similar) ============ -->
+<dialog class="sheet" id="askDlg" aria-labelledby="askH">
+  <form method="dialog" id="askForm">
+    <div class="sheet-h"><b id="askH"></b></div>
+    <p class="hint" id="askP"></p>
+    <label class="field"><span id="askL"></span><input id="askIn" type="password" autocomplete="off"></label>
+    <div class="sheet-a"><button type="button" class="btn" data-act="ask-cancel">Cancel</button><button type="submit" class="btn primary" value="ok">Open</button></div>
+  </form>
+</dialog>
+
+<div class="toast" id="toast" role="status" aria-live="polite" hidden><span id="toastT"></span><button type="button" class="toast-a" id="toastA" hidden></button></div>
+<div class="dropzone" id="dropzone" hidden><div><svg class="ic" aria-hidden="true"><use href="#r-open"/></svg><b>Drop to read</b><small>PDF · HTML · Markdown · Text</small></div></div>
+<input type="file" id="fileIn" hidden accept=".pdf,.html,.htm,.xhtml,.md,.markdown,.mdown,.mkd,.txt,.text,.log,.csv,application/pdf,text/html,text/markdown,text/plain">
+</body>
+</html>
