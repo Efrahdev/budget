@@ -3,7 +3,7 @@
 Read this first. It describes how the app is built, where everything lives, the owner's preferences, and how to work safely.
 
 ## What it is
-A household budget PWA for **Arhaanbeta** (aarhaan22@gmail.com). One file app: `index.html` (+ `sw.js`, `manifest.webmanifest`, `icons/`), hosted on **GitHub Pages**: https://arhaanbeta.github.io/budget-tracker/. Data lives in a private Google Sheet, **"Budget Tracker data"** (owner aarhaan22@gmail.com), reached through a **Google Apps Script web app** (`apps-script/Code.gs`).
+A household budget PWA for **Arhaanbeta** (aarhaan22@gmail.com). One file app: `index.html` (+ `sw.js`, `manifest.webmanifest`, `icons/`), hosted on **GitHub Pages**: https://efrahdev.github.io/budget/ (repo `Efrahdev/budget`; moved from `Arhaanbeta/budget-tracker` in Nov 2026 after that GitHub account was blocked). Data lives in a private Google Sheet, **"Budget Tracker data"** (owner aarhaan22@gmail.com), reached through a **Google Apps Script web app** (`apps-script/Code.gs`).
 
 ## Live pieces
 - **Apps Script deployment the app uses** (`API_URL` in `index.html`): `https://script.google.com/macros/s/AKfycbzMb_87-nOMCRF10ieNSvUPlBLcIbu6PhpqQHw8riETufRlKF2ZEdBFttyMZc8Rwngg/exec`
@@ -11,7 +11,7 @@ A household budget PWA for **Arhaanbeta** (aarhaan22@gmail.com). One file app: `
   - **Script change pending (Notes):** `apps-script/Code.gs` now saves notes to Google Drive. The owner must paste it, choose `setupNotes` → Run → allow Drive access, then Deploy → Manage deployments → pencil → New version. Until then the app keeps notes on the phone and shows a banner; they upload by themselves once the script is updated.
 - **Sheet tabs:** Entries, Balances, CardFix, Config (JSON in "config part N" rows), Users (family allow-list; aarhaan22 is Owner), Vault (encrypted rows), Notes (list only; note text lives in Drive).
 - **Sign-in:** emailed one-time link (MailApp) → permanent session in Script Properties. A legacy `APP_KEY` set-up key also works (Owner role). The owner can share it with a new session; it is not stored in this repo.
-- **Cloud environment:** the session environment **"budget-tracker"** allows `script.google.com`, `script.googleusercontent.com`, `arhaanbeta.github.io`. Use it to test against the real script.
+- **Cloud environment:** the session environment **"budget-tracker"** allows `script.google.com`, `script.googleusercontent.com`, `arhaanbeta.github.io` (add `efrahdev.github.io` for the new site). Use it to test against the real script.
 - **Pushing:** commit to `main` and push; Pages goes live in ~30–60 s. Bump `CACHE` in `sw.js` (`budget-tracker-vNN`, currently v58) on every release.
 
 ## App structure (index.html)

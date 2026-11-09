@@ -42,7 +42,7 @@ var ENTRY_OPS = {txn: 1, deltxn: 1, nput: 1, ndel: 1, nmeta: 1};
 var E = {id: 0, date: 1, cycle: 2, type: 3, catName: 4, amount: 5, acctName: 6, cardName: 7, note: 8, member: 9, tag: 10,
          refund: 11, cat: 12, acct: 13, card: 14, at: 15, saved: 16};
 var CHUNK = 40000; // characters per Config cell
-var APP_URL = 'https://arhaanbeta.github.io/budget-tracker/';
+var APP_URL = 'https://efrahdev.github.io/budget/';
 var LINK_MINUTES = 30;
 
 function doGet() {

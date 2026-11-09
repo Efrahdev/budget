@@ -2,7 +2,7 @@
 
 A household budget app that you install on your phone (a PWA). Every entry from every phone goes into one Google Sheet.
 
-- **The app** (this repository) is only code. It holds no money data. GitHub Pages serves it at `https://arhaanbeta.github.io/budget-tracker/`.
+- **The app** (this repository) is only code. It holds no money data. GitHub Pages serves it at `https://efrahdev.github.io/budget/`.
 - **The data** lives in your Google Sheet, *Budget Tracker data*, with four tabs: `Entries`, `Balances`, `CardFix` and `Config`.
 - **The bridge** is a small Google Apps Script (`apps-script/Code.gs`) inside that sheet. The app sends changes to it, and it sends back the full data.
 
@@ -35,7 +35,7 @@ Card, bank and personal details live in three tables in the app's **Vault** tab:
 
 ## One-time setup
 
-1. *Optional* **Google sign-in client** (Google Cloud Console → Google Auth Platform): create a *Web application* OAuth client with the authorised JavaScript origin `https://arhaanbeta.github.io`. Put its Client ID in `GOOGLE_CLIENT_ID` in `index.html` and in the sheet's **Config** tab (`google client id`).
+1. *Optional* **Google sign-in client** (Google Cloud Console → Google Auth Platform): create a *Web application* OAuth client with the authorised JavaScript origin `https://efrahdev.github.io`. Put its Client ID in `GOOGLE_CLIENT_ID` in `index.html` and in the sheet's **Config** tab (`google client id`).
 2. **Apps Script**: in the sheet, **Extensions → Apps Script**, paste [`apps-script/Code.gs`](apps-script/Code.gs), then **Deploy → Manage deployments → Edit → Version: New version → Deploy**, and allow the new permissions (send sign-in emails from your Gmail, and ask Google to check Google sign-ins).
 3. Optional, after Google sign-in works: delete the `APP_KEY` script property to switch off the old set-up links.
 
@@ -43,4 +43,4 @@ Card, bank and personal details live in three tables in the app's **Vault** tab:
 
 ## Install on a phone
 
-Open `https://arhaanbeta.github.io/budget-tracker/` in Chrome → **⋮ → Install app** (or **Add to Home screen**). On iPhone, use Safari → **Share → Add to Home Screen**.
+Open `https://efrahdev.github.io/budget/` in Chrome → **⋮ → Install app** (or **Add to Home screen**). On iPhone, use Safari → **Share → Add to Home Screen**.
