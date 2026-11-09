@@ -843,15 +843,54 @@ details.ct-hist[open] summary::after{transform:rotate(-135deg) translateY(-1px)}
 .nmain .t2{color:var(--ink-2);font-size:calc(14.5px*var(--fs,1));display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
 .nmain .t3{color:var(--ink-3);font-size:calc(13.5px*var(--fs,1))}
 .nsync{color:var(--warn-ink);font-weight:600}
-.sheet.note{max-width:860px;height:calc(100% - 10px - env(safe-area-inset-top,0px));gap:12px}
-@media (min-width:700px){.sheet.note{height:calc(100dvh - 56px)}}
-.nhead{display:flex;align-items:center;gap:10px}
-.nstate{flex:1 1 auto;min-width:0;font-size:calc(13.5px*var(--fs,1));color:var(--ink-3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.nmode{flex:0 0 auto}.nmode .segb{min-height:36px;padding:0 12px}
-.ntitle.tin{font-size:calc(23px*var(--fs,1));font-weight:700;letter-spacing:-.015em;border:0;border-bottom:1px solid var(--rule);border-radius:0;padding:6px 2px;background:transparent;box-shadow:none}
-.ntitle.tin:focus{outline:none;box-shadow:none;background:transparent;border-bottom-color:var(--accent)}
-.nbody{flex:1 1 auto;min-height:0;display:flex;flex-direction:column;overflow:auto}
-.nbody .ntext.tin{flex:1 1 auto;min-height:240px;max-height:none;height:100%;white-space:pre-wrap;line-height:1.6;padding:14px;border-radius:16px}
+/* The note editor is its own layer, sized to the VISUAL viewport (--nvh/--nvt, set in JS). That is the
+   part of the screen the keyboard has NOT covered, so the writing area and the toolbar are always in
+   sight, whatever the browser does to the page itself. Inside it exactly one thing scrolls (#nEdit):
+   the header, the toolbar and the buttons are fixed rows of a grid, so nothing can fight the caret. */
+#noteScrim{align-items:stretch;justify-content:center;padding:0;top:var(--nvt,0px);bottom:auto;height:var(--nvh,100%)}
+.scrim .sheet.note{width:100%;max-width:860px;height:100%;max-height:none;gap:0;padding:0;overflow:hidden;
+  display:grid;grid-template-columns:minmax(0,1fr);grid-template-rows:auto auto minmax(0,1fr) auto;border-radius:20px 20px 0 0}
+.scrim .sheet.note::before{display:none}
+@media (min-width:700px){#noteScrim{align-items:center;padding:24px}.scrim .sheet.note{border-radius:24px}}
+.nhead{display:flex;align-items:center;gap:8px;min-width:0;padding:10px 10px 8px;min-height:54px}
+.nback{display:inline-flex;align-items:center;gap:2px;flex:0 0 auto;height:40px;padding:0 13px 0 7px;border:0;border-radius:12px;background:var(--fill);color:var(--ink);font:inherit;font-weight:700;font-size:calc(14.5px*var(--fs,1));cursor:pointer;transition:transform .12s}
+.nback .ic{width:19px;height:19px;stroke-width:2.3}
+.nback:active{transform:scale(.95)}
+.nstate{flex:1 1 auto;min-width:0;font-size:calc(12.5px*var(--fs,1));color:var(--ink-3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-align:center}
+.nmode{flex:0 0 auto}.nmode .segb{min-height:34px;padding:0 11px}
+.npin{width:40px;height:40px;border-radius:12px}
+/* Title and labels fold away the moment you start writing, so the writing area gets the whole sheet. */
+.nmeta{display:flex;flex-direction:column;gap:8px;padding:0 12px 10px;border-bottom:1px solid var(--rule);overflow:hidden;max-height:260px;
+  transition:max-height .22s var(--ease),opacity .16s ease,padding .22s var(--ease)}
+html.kb .sheet.note.writing:not(.showmeta) .nmeta,.sheet.note.writing.tight:not(.showmeta) .nmeta{max-height:0;opacity:0;padding-top:0;padding-bottom:0;border-bottom-color:transparent;pointer-events:none}
+html.kb .sheet.note.writing:not(.showmeta) .nact,.sheet.note.writing.tight:not(.showmeta) .nact{display:none}
+/* The note's name sits in the header, so it is never out of reach: tap it to open the title and labels. */
+.nttl{flex:1 1 auto;min-width:0;display:flex;flex-direction:column;align-items:center;gap:0;border:0;background:none;color:inherit;font:inherit;padding:3px 8px;border-radius:11px;cursor:pointer;overflow:hidden}
+.nttl b{max-width:100%;font-size:calc(14.5px*var(--fs,1));font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.nttl b.none{color:var(--ink-3);font-weight:600}
+.nttl:active{background:var(--fill-2)}
+.sheet.note.showmeta .nttl{background:var(--accent-soft);color:var(--accent)}
+.ntitle{width:100%;box-sizing:border-box;font-size:calc(21px*var(--fs,1));font-weight:700;letter-spacing:-.015em;border:0;border-radius:11px;padding:8px 11px;min-height:44px;background:var(--fill-2);color:var(--ink);box-shadow:none;-webkit-appearance:none;appearance:none}
+.ntitle::placeholder,.ntitle:empty::before{color:var(--ink-3);font-weight:600}
+.ntitle:focus{outline:none;background:var(--fill-2);box-shadow:0 0 0 2px var(--accent)}
+.nmeta .nlabels{flex-wrap:nowrap;overflow-x:auto;overflow-y:hidden;scrollbar-width:none;padding-bottom:2px}
+.nmeta .nlabels::-webkit-scrollbar{display:none}
+.nmeta .nlab{flex:0 0 auto}
+/* the one and only scroller */
+.nedit{min-height:0;display:flex;flex-direction:column;overflow:hidden;position:relative}
+.nedit.scroll{display:block;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;overscroll-behavior:contain}
+.nedit.pad{padding:14px}
+.nedit>.htmlview{min-height:min(70vh,560px);margin:0}
+.nedit>.empty{flex:0 0 auto}
+.ntext.rich{display:block;width:100%;min-height:100%;box-sizing:border-box;margin:0;padding:12px 14px 30vh;border:0;border-radius:0;background:none;box-shadow:none;
+  white-space:pre-wrap;overflow:visible;overflow-wrap:anywhere;line-height:1.65;outline:none;caret-color:var(--accent);-webkit-user-select:text;user-select:text;cursor:text}
+.ntext.rich:focus{outline:none;background:none;box-shadow:none}
+.ntext.rich:empty::before{content:attr(data-placeholder);color:var(--ink-3);pointer-events:none}
+.ntext.rich b,.ntext.rich strong{font-weight:800}
+.ntext.rich .nli{padding-left:1.7em;text-indent:-1.7em}
+.nedit>.ntext.multi,.nedit>textarea.ntext{flex:1 1 auto;width:100%;min-height:0;max-height:none;box-sizing:border-box;margin:0;padding:12px 14px 30vh;border:0;border-radius:0;background:none;color:var(--ink);font:inherit;
+  white-space:pre-wrap;overflow-wrap:anywhere;line-height:1.65;resize:none;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;outline:none;box-shadow:none;caret-color:var(--accent)}
+.nedit>.ntext.multi:focus,.nedit>textarea.ntext:focus{outline:none;background:none;box-shadow:none}
 .ntext.mono,.jsonview,.mdview pre,.mdview code{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,"Roboto Mono",monospace;font-size:calc(14.5px*var(--fs,1))}
 .mdview{line-height:1.6;overflow-wrap:anywhere}
 .mdview h1,.mdview h2,.mdview h3{line-height:1.25;margin:.8em 0 .35em;letter-spacing:-.015em}.mdview h1{font-size:calc(26px*var(--fs,1))}.mdview h2{font-size:calc(22px*var(--fs,1))}.mdview h3{font-size:calc(19px*var(--fs,1))}
@@ -868,17 +907,26 @@ details.ct-hist[open] summary::after{transform:rotate(-135deg) translateY(-1px)}
 .jsonview .jk{color:var(--accent)}.jsonview .js{color:var(--good-ink)}.jsonview .jn{color:var(--pur-ink)}.jsonview .jl{color:var(--warn-ink);font-weight:600}
 .jsonok,.jsonbad{display:flex;align-items:baseline;margin-bottom:8px;font-weight:600}.jsonbad{color:var(--bad-ink)}
 .txtview{white-space:pre-wrap;line-height:1.6;overflow-wrap:anywhere}
-.ntools{display:flex;align-items:center;gap:6px;padding:0 0 8px}
-.ntool{min-width:46px;height:42px;padding:0 10px;border:0;border-radius:12px;background:var(--fill);color:var(--ink);font-size:18px;font-weight:700;cursor:pointer;transition:background .2s,transform .15s}
-.ntool b{font-size:20px;font-weight:900}.ntool small{font-size:13px;margin-left:1px}.ntool.big{font-size:22px}
+/* Toolbar and buttons: the last rows of the sheet's grid, so they sit right on top of the keyboard. */
+.nfoot{display:flex;flex-direction:column;border-top:1px solid var(--rule);background:var(--sheet-2)}
+.ntools{display:flex;align-items:center;gap:5px;padding:8px 10px;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+.ntools::-webkit-scrollbar{display:none}
+.ntool{flex:0 0 auto;min-width:42px;height:40px;padding:0 10px;border:0;border-radius:12px;background:var(--fill);color:var(--ink);font-size:17px;font-weight:700;line-height:1;cursor:pointer;display:inline-grid;place-items:center;transition:background .18s,color .18s,transform .12s}
+.ntool b{font-size:19px;font-weight:900}.ntool .ic{width:19px;height:19px;stroke-width:2}
 .ntool[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink)}
-.ntool:active{transform:scale(.94)}
-.nsep{width:1px;height:26px;background:var(--rule-2);margin:0 4px}
-.nsize{font-size:calc(13.5px*var(--fs,1));color:var(--ink-3);margin-left:4px}
-.nbody .ntext.rich{white-space:pre-wrap;overflow-y:auto;-webkit-user-select:text;user-select:text}
-.nbody .ntext,.txtview,.mdview{font-size:calc(17px*var(--fs,1)*var(--nfs,1))}
-.ntext.rich b,.ntext.rich strong{font-weight:800}
-.nact{display:flex;gap:8px;align-items:center;flex-wrap:nowrap}
+.ntool[disabled]{opacity:.34;cursor:default}
+.ntool:active{transform:scale(.93)}
+.ntool.wide{padding:0 13px;font-size:calc(14.5px*var(--fs,1))}
+.ntool.red{color:var(--bad-ink);background:var(--bad-soft)}.ntool.red.armed{background:var(--bad);color:#fff}
+.nkbdone{display:none;background:var(--accent-soft);color:var(--accent);padding:0 15px;font-size:calc(14.5px*var(--fs,1))}
+.sheet.note.writing .nkbdone{display:inline-grid}
+.sheet.note.writing .npin{display:none}
+.nsep{flex:0 0 auto;width:1px;height:24px;background:var(--rule-2);margin:0 3px}
+.ncount{flex:0 0 auto;margin-left:auto;padding:0 8px;font-size:calc(12.5px*var(--fs,1));color:var(--ink-3);white-space:nowrap;font-variant-numeric:tabular-nums}
+@media (max-width:400px){.ntools{gap:4px;padding:8px 8px}.ntool{min-width:38px;padding:0 8px}.ntool.wide{padding:0 9px}.nsep{margin:0 1px}}
+.nedit .ntext:not(.mono),.txtview,.mdview{font-size:calc(17px*var(--fs,1))}
+.nact{display:flex;gap:8px;align-items:center;flex-wrap:nowrap;min-width:0;padding:2px 10px calc(10px + env(safe-area-inset-bottom,0px))}
+.nact .nkindb{min-width:0;overflow:hidden;text-overflow:ellipsis}
 .nact .danger{margin-left:auto}
 .npopw{position:relative}
 .npop{position:absolute;bottom:calc(100% + 8px);left:0;z-index:30;min-width:230px;display:flex;flex-direction:column;padding:6px;border:1px solid var(--rule);border-radius:18px;background:var(--glass-2);-webkit-backdrop-filter:blur(24px) saturate(170%);backdrop-filter:blur(24px) saturate(170%);box-shadow:var(--shade-2)}
@@ -2143,7 +2191,7 @@ const labelName = k => NOTE_LABELS[k] || String(k || 'Others');
 const okLabel = v => NOTE_LABELS[v] || (/^[^\u0000-\u001f<>"]{1,24}$/.test(v || '') && v.trim() === v) ? v : '';
 function extraLabels() { const set = new Set((readPref().noteLabels || []).filter(okLabel)); noteList().forEach(n => { if (!NOTE_LABELS[n.cat] && okLabel(n.cat)) set.add(n.cat); }); return [...set].sort((a, b) => a.localeCompare(b)); }
 const allLabels = () => ['arhaan', 'efrah', 'other'].concat(extraLabels().filter(x => !NOTE_LABELS[x]));
-const N = {local: {}, meta: {}, del: {}, bodies: {}, err: '', q: '', cat: '', open: null, mode: 'edit', timer: 0, kinds: false};
+const N = {local: {}, meta: {}, del: {}, bodies: {}, err: '', q: '', cat: '', open: null, mode: 'edit', timer: 0, kinds: false, hist: null};
 try { const s = JSON.parse(localStorage.getItem(LS_NOTES) || '{}') || {}; N.local = s.local || {}; N.meta = s.meta || {}; N.del = s.del || {}; N.bodies = s.bodies || {}; } catch (e) {}
 function saveNotes() { try { localStorage.setItem(LS_NOTES, JSON.stringify({local: N.local, meta: N.meta, del: N.del, bodies: N.bodies})); } catch (e) {} }
 const defaultLabel = () => { const p = readPref().noteCat; if (okLabel(p)) return p; const e = ((Sync.me || {}).email || '').toLowerCase(); return /aarhaan|arhaan/.test(e) ? 'arhaan' : /efrah|ifra/.test(e) ? 'efrah' : 'other'; };
@@ -2340,23 +2388,50 @@ async function openNote(id, fresh) {
     drawNote();
   }
 }
+// Small inline icons for the writing toolbar.
+const NT_BULLET = '<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><circle cx="4.5" cy="7" r="1.5" fill="currentColor" stroke="none"/><circle cx="4.5" cy="12" r="1.5" fill="currentColor" stroke="none"/><circle cx="4.5" cy="17" r="1.5" fill="currentColor" stroke="none"/><path d="M9.5 7h11M9.5 12h11M9.5 17h11"/></svg>';
+const NT_TASK = '<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><rect x="3" y="4" width="8.5" height="8.5" rx="2.4"/><path d="M5.3 8.3 7 10l2.4-2.8"/><rect x="3" y="14.5" width="8.5" height="6.5" rx="2.4"/><path d="M14.5 8h6.5M14.5 17.5h6.5"/></svg>';
 function drawNote() {
-  const o = N.open, k = NOTE_KINDS[o.type], drive = o.fileId ? `https://drive.google.com/file/d/${encodeURIComponent(o.fileId)}/view` : '', fancy = o.type !== 'txt';
-  $('#noteBox').innerHTML = `<div class="nhead"><button type="button" class="btn ghost sm" data-act="n-close">‹ Notes</button><span class="nstate" id="nState"></span>
+  const o = N.open, k = NOTE_KINDS[o.type], fancy = o.type !== 'txt', ready = !o.loading && !o.failed;
+  const rich = ready && N.mode === 'edit' && o.type === 'txt';
+  const ecls = !ready ? ' pad' : rich ? ' scroll' : N.mode === 'edit' ? '' : ' pad scroll';
+  $('#noteBox').innerHTML = `<div class="nhead">
+      <button type="button" class="nback" data-act="n-close" aria-label="Back to all notes"><svg class="ic" aria-hidden="true"><use href="#i-left"/></svg><span>Notes</span></button>
+      <button type="button" class="nttl" data-act="n-meta" aria-label="Title and label for this note"><b id="nTtl" class="${o.title ? '' : 'none'}">${esc(o.title || 'Untitled note')}</b><span class="nstate" id="nState"></span></button>
       ${fancy ? `<div class="seg nmode" role="group" aria-label="Mode"><button type="button" class="segb" data-act="n-mode" data-v="edit" aria-pressed="${N.mode === 'edit'}">Edit</button><button type="button" class="segb" data-act="n-mode" data-v="view" aria-pressed="${N.mode === 'view'}">${o.type === 'json' ? 'Check' : 'Preview'}</button></div>` : ''}
-      <button type="button" class="npin" data-act="n-pin" aria-pressed="${o.pinned}" aria-label="${o.pinned ? 'Unpin' : 'Pin'}" title="${o.pinned ? 'Unpin' : 'Pin'}"><svg class="ic" aria-hidden="true"><use href="#i-pin"/></svg></button></div>
-    <input id="nTitle" type="text" class="ntitle" placeholder="Title (optional)" aria-label="Title" value="${esc(o.title)}">
-    <div class="nlabels" role="group" aria-label="Label">${allLabels().map(k => [k, labelName(k)]).map(([kk, v]) => `<button type="button" class="nlab l-${esc(kk)}" data-act="n-label" data-v="${esc(kk)}" aria-pressed="${kk === o.cat}"><i>${esc(v[0].toUpperCase())}</i>${esc(v)}</button>`).join('')}<button type="button" class="nlab nlab-add" data-act="n-addlabel" data-for="note" aria-label="Add a person"><i>+</i></button></div>
-    <div class="nbody" id="nBody">${o.loading ? '<div class="empty">Opening from Google Drive…</div>' : o.failed ? '<div class="empty">Couldn\'t open this note from Google Drive. Check the connection and try again.</div>' : noteBodyHtml()}</div>
-    <div class="nact"><div class="npopw"><button type="button" class="nkindb" data-act="n-kinds" aria-haspopup="true" aria-expanded="false">${k.label} ▾</button>
+      <button type="button" class="npin" data-act="n-pin" aria-pressed="${o.pinned}" aria-label="${o.pinned ? 'Unpin' : 'Pin'}" title="${o.pinned ? 'Unpin' : 'Pin'}"><svg class="ic" aria-hidden="true"><use href="#i-pin"/></svg></button>
+      <button type="button" class="ntool nkbdone" data-tool="done" aria-label="Hide the keyboard">Done</button></div>
+    <div class="nmeta">
+      <input id="nTitle" type="text" class="ntitle" placeholder="Title (optional)" aria-label="Title" value="${esc(o.title)}">
+      <div class="nlabels" role="group" aria-label="Label">${allLabels().map(k => [k, labelName(k)]).map(([kk, v]) => `<button type="button" class="nlab l-${esc(kk)}" data-act="n-label" data-v="${esc(kk)}" aria-pressed="${kk === o.cat}"><i>${esc(v[0].toUpperCase())}</i>${esc(v)}</button>`).join('')}<button type="button" class="nlab nlab-add" data-act="n-addlabel" data-for="note" aria-label="Add a person"><i>+</i></button></div></div>
+    <div class="nedit${ecls}" id="nEdit">${o.loading ? '<div class="empty">Opening from Google Drive…</div>' : o.failed ? '<div class="empty">Couldn\'t open this note from Google Drive. Check the connection and try again.</div>' : noteBodyHtml()}</div>
+    <div class="nfoot">${noteToolsHtml()}
+      <div class="nact"><div class="npopw"><button type="button" class="nkindb" data-act="n-kinds" aria-haspopup="true" aria-expanded="false">${k.label} ▾</button>
         <div class="npop nkpop" hidden role="menu">${Object.entries(NOTE_KINDS).map(([kk, v]) => `<button type="button" class="npi" role="menuitemradio" data-act="n-kind" data-v="${kk}" aria-checked="${kk === o.type}"><b>${v.label}</b><small>${{txt: 'Simple text, with bold', md: 'Headings, lists, tables', html: 'A web page', json: 'Data, checked and tidied'}[kk]}</small></button>`).join('')}</div></div>
-      <div class="nbtns"><button type="button" class="nbtn" data-act="n-copy">Copy</button><button type="button" class="nbtn ndel" data-act="n-del">Delete</button><button type="button" class="nbtn nsave" data-act="n-save">✓ Save</button></div></div>`;
-  $('#noteScrim').hidden = false; noteState(); richBox(); noteSizeShow();
+      <div class="nbtns"><div class="npopw nmorew"><button type="button" class="nmoreb" data-act="n-more" aria-haspopup="true" aria-expanded="false" aria-label="More for this note">⋯</button>
+          <div class="npop" hidden role="menu"><button type="button" class="npi" data-act="n-copy"><b>Copy the text</b><small>Puts the whole note on the clipboard</small></button>
+            <button type="button" class="npi" data-act="n-dl"><b>Download</b><small>Saves a .${NOTE_KINDS[o.type].ext} file to this phone</small></button>
+            <button type="button" class="npi" data-act="n-dup"><b>Make a copy</b><small>Opens a new note with the same text</small></button></div></div>
+        <button type="button" class="nbtn ndel" data-act="n-del">Delete</button><button type="button" class="nbtn nsave" data-act="n-save">✓ Done</button></div></div></div>`;
+  $('#noteScrim').hidden = false; noteVV(); noteFit(); noteState();
+  histReset(ready ? o.content : '');
+  richBox(); plainBox(); titleBox(); noteCount(); noteToolState();
   const ta = $('#nText'); if (ta && o.fresh && !o.content) { o.fresh = false; setTimeout(() => { if (!$('#noteBox').contains(document.activeElement) || document.activeElement === document.body) focusBox(ta); }, 60); }
+}
+// The writing toolbar. Undo and redo are our own, so Clear and the list buttons can always be taken back.
+function noteToolsHtml() {
+  const o = N.open; if (o.loading || o.failed || N.mode !== 'edit') return '';
+  const rich = o.type === 'txt';
+  const T = (tool, label, inner, cls) => `<button type="button" class="ntool${cls ? ' ' + cls : ''}" data-tool="${tool}" aria-label="${esc(label)}" title="${esc(label)}">${inner}</button>`;
+  return `<div class="ntools" role="toolbar" aria-label="Writing tools">
+    ${T('undo', 'Undo', '↶')}${T('redo', 'Redo', '↷')}<span class="nsep"></span>
+    ${rich ? T('bold', 'Bold', '<b>B</b>') + T('bullet', 'Bullet list', NT_BULLET) + T('task', 'Checklist: tap to add a box, tap again to tick it', NT_TASK) + T('stamp', 'Put today\u2019s date and time in', '<svg class="ic" aria-hidden="true"><use href="#i-cal"/></svg>') + '<span class="nsep"></span>' : ''}
+    ${o.type === 'json' ? T('tidy', 'Tidy the JSON', 'Tidy', 'wide') : ''}${T('clear', 'Clear the whole note', 'Clear', 'wide red')}
+    <span class="ncount" id="nCount"></span></div>`;
 }
 function noteBodyHtml() {
   const o = N.open;
-  if (N.mode === 'edit' && o.type === 'txt') return `<div class="ntools" role="toolbar" aria-label="Text"><button type="button" class="ntool" data-tool="bold" aria-label="Bold" aria-pressed="false"><b>B</b></button><span class="nsep"></span><button type="button" class="ntool" data-tool="smaller" aria-label="Smaller text">A<small>−</small></button><button type="button" class="ntool big" data-tool="bigger" aria-label="Bigger text">A<small>+</small></button><span class="nsize" id="nSize"></span></div><div id="nText" class="ntext tbox tin multi rich" role="textbox" aria-multiline="true" aria-label="Note" data-placeholder="Start typing…" inputmode="text" autocorrect="off" spellcheck="false">${textToRich(o.content)}</div>`;
+  if (N.mode === 'edit' && o.type === 'txt') return `<div id="nText" class="ntext rich" role="textbox" aria-multiline="true" aria-label="Note" data-placeholder="Start typing…" inputmode="text" enterkeyhint="enter" autocorrect="on" autocapitalize="sentences" spellcheck="false">${textToRich(o.content)}</div>`;
   if (N.mode === 'edit') return `<textarea id="nText" class="ntext${o.type === 'html' || o.type === 'json' ? ' mono' : ''}" placeholder="${o.type === 'md' ? '# Heading\n\nWrite in **Markdown**…' : o.type === 'html' ? '<h1>Hello</h1>' : o.type === 'json' ? '{\n  "key": "value"\n}' : 'Start typing…'}" aria-label="Note">${esc(o.content)}</textarea>`;
   if (o.type === 'md') return `<div class="mdview">${mdToHtml(o.content) || '<p class="muted">Nothing written yet.</p>'}</div>`;
   if (o.type === 'html') return `<iframe class="htmlview" sandbox title="HTML preview" srcdoc="${esc(o.content || '<p style="font-family:sans-serif;color:#888">Nothing written yet.</p>')}"></iframe>`;
@@ -2366,7 +2441,15 @@ function noteBodyHtml() {
   return `<div class="txtview">${esc(o.content)}</div>`;
 }
 // Plain-text notes: a box where selected words can be made bold. Bold is stored as **word** (readable anywhere).
-function textToRich(s) { return esc(s).replace(/\*\*([^*\n]+?)\*\*/g, '<b>$1</b>').split('\n').map(l => l || '<br>').map((l, i) => i ? '<div>' + l + '</div>' : l).join(''); }
+function textToRich(s) {
+  const t = s == null ? '' : String(s);
+  if (!t) return '';
+  return t.split('\n').map(l => {
+    if (!l) return '<div><br></div>';
+    const li = NLIST_RE.test(l) ? ' class="nli"' : '';   // a list line that wraps hangs under its own first word
+    return '<div' + li + '>' + esc(l).replace(/\*\*([^*\n]+?)\*\*/g, '<b>$1</b>') + '</div>';
+  }).join('');
+}
 function richToText(el) {
   let out = '';
   const walk = (n, bold) => n.childNodes.forEach(c => {
@@ -2387,33 +2470,224 @@ function richBox() {
   const el = document.querySelector('#nText.rich'); if (!el) return;
   el.setAttribute('contenteditable', 'true');
   Object.defineProperty(el, 'value', {configurable: true, get: () => richToText(el), set: v => { el.innerHTML = textToRich(v); }});
-  el.addEventListener('paste', ev => { ev.preventDefault(); document.execCommand('insertText', false, (ev.clipboardData && ev.clipboardData.getData('text/plain')) || ''); });
-  el.addEventListener('input', () => { if (!el.textContent && !el.querySelector('div')) el.innerHTML = ''; });
+  el.addEventListener('paste', ev => { ev.preventDefault(); const t = ((ev.clipboardData && ev.clipboardData.getData('text/plain')) || '').replace(/\r\n?/g, '\n');
+    if (!t) return; clearTimeout(N.hist.t); histPush(el.value); pasteText(el, t); histPush(el.value); noteChanged(true); noteCount(); });
+  el.addEventListener('input', () => {
+    if (el.textContent === '' && el.innerHTML !== '') { el.innerHTML = ''; focusBox(el); } // brings the placeholder back
+    histType(); noteCount(); noteToolState(); noteCaretView();
+  });
+  el.addEventListener('keydown', richKeys);
+  el.addEventListener('keyup', ev => { if (/^(Arrow|Page|Home|End|Enter)/.test(ev.key)) noteCaretView(); });
+  el.addEventListener('focus', () => { const b = $('#noteBox'); b.classList.add('writing'); b.classList.remove('showmeta'); setTimeout(noteCaretView, 80); });
+  el.addEventListener('blur', () => { const b = $('#noteBox'); if (b) b.classList.remove('writing'); });
+  el.addEventListener('click', () => noteToolState());
 }
-const NOTE_SIZES = [0.85, 1, 1.15, 1.3, 1.5, 1.75];
-const noteSize = () => { const v = +readPref().noteSize; return NOTE_SIZES.includes(v) ? v : 1; };
-function noteSizeShow() { document.documentElement.style.setProperty('--nfs', String(noteSize())); const e = $('#nSize'); if (e) e.textContent = Math.round(noteSize() * 100) + '%'; }
+// Markdown, HTML and JSON notes write in the app's own multi-line box. Same toolbar, minus bold and lists.
+function plainBox() {
+  const el = $('#nText'); if (!el || el.classList.contains('rich')) return;
+  el.addEventListener('focus', () => { $('#noteBox').classList.add('writing'); $('#noteBox').classList.remove('showmeta'); });
+  el.addEventListener('blur', () => { const b = $('#noteBox'); if (b) b.classList.remove('writing'); });
+  el.addEventListener('input', () => { histType(); noteCount(); noteToolState(); });
+}
+// The title also lives in the header, so it shows even when the title box is folded away.
+function titleBox() {
+  const t = $('#nTitle'); if (!t) return;
+  t.addEventListener('input', () => { const e = $('#nTtl'); if (!e) return; const v = (t.value || '').trim(); e.textContent = v || 'Untitled note'; e.classList.toggle('none', !v); });
+  t.addEventListener('focus', () => { const b = $('#noteBox'); if (b) b.classList.remove('writing'); });
+}
+const isRich = box => !!box && box.classList.contains('rich');
+function pasteText(el, t) {
+  if (document.execCommand('insertText', false, t)) return;
+  const lines = el.value.split('\n'), i = Math.min(caretLines(el)[1], lines.length - 1);
+  lines[i] = (lines[i] || '') + t; setBoxText(el, lines.join('\n'), 'line', i + t.split('\n').length - 1);
+}
+
+/* --- the visual viewport: the part of the screen the keyboard has not covered --- */
+function noteVV() {
+  const vv = window.visualViewport, st = document.documentElement.style;
+  st.setProperty('--nvh', Math.round(vv ? vv.height : window.innerHeight) + 'px');
+  st.setProperty('--nvt', Math.max(0, Math.round(vv ? vv.offsetTop : 0)) + 'px');
+  if (N.open) noteFit();
+}
+// Short sheet (a phone, or the keyboard up): the title and the buttons fold away while you write.
+function noteFit() {
+  const b = $('#noteBox'); if (!b) return;
+  const h = window.visualViewport ? window.visualViewport.height : window.innerHeight;
+  b.classList.toggle('tight', h < 760 || window.innerWidth < 700);
+}
+if (window.visualViewport) { visualViewport.addEventListener('resize', noteVV); visualViewport.addEventListener('scroll', noteVV); }
+window.addEventListener('resize', noteVV);
+noteVV();
+
+/* --- keeping the caret in sight. The editor is the only scroller, so this is the only mover: it
+       nudges that one box by the few pixels needed, never smoothly and never the whole page. --- */
+let ncvRaf = 0;
+function noteCaretView() { if (ncvRaf) return; ncvRaf = requestAnimationFrame(() => { ncvRaf = 0; caretIntoView(); }); }
+function caretIntoView() {
+  const sc = $('#nEdit'); if (!sc || !sc.classList.contains('scroll')) return;
+  const a = document.activeElement; if (!a || a.id !== 'nText') return;
+  const sel = getSelection(); if (!sel || !sel.rangeCount) return;
+  const rg = sel.getRangeAt(0); if (!sc.contains(rg.startContainer)) return;
+  let r = rg.getBoundingClientRect();
+  if (!r || !r.height) { const n = rg.startContainer, e = n.nodeType === 1 ? n : n.parentElement; if (!e) return; r = e.getBoundingClientRect(); }
+  if (!r.height && !r.top) return;
+  const b = sc.getBoundingClientRect(), pad = 30;
+  if (r.bottom > b.bottom - pad) sc.scrollTop += r.bottom - b.bottom + pad;
+  else if (r.top < b.top + pad) sc.scrollTop -= b.top + pad - r.top;
+}
+
+/* --- undo and redo of our own, on the plain text. Every toolbar button is one step, and typing
+       becomes a step after a short pause, so Undo moves in jumps that make sense. --- */
+function histReset(text) { if (N.hist) clearTimeout(N.hist.t); N.hist = {s: [text == null ? '' : text], i: 0, t: 0}; }
+function histPush(text) {
+  const h = N.hist; if (!h || text == null) return;
+  clearTimeout(h.t); if (h.s[h.i] === text) return;
+  h.s = h.s.slice(0, h.i + 1); h.s.push(text);
+  if (h.s.length > 150) h.s.shift();
+  h.i = h.s.length - 1; noteToolState();
+}
+function histType() { const h = N.hist; if (!h) return; clearTimeout(h.t); h.t = setTimeout(() => { const b = $('#nText'); if (b) histPush(b.value); }, 650); }
+function histGo(d) {
+  const h = N.hist, box = $('#nText'); if (!h || !box) return;
+  clearTimeout(h.t);
+  if (d < 0 && box.value !== h.s[h.i]) histPush(box.value);   // fold in whatever was typed since the last step
+  const j = h.i + d; if (j < 0 || j >= h.s.length) { noteToolState(); return; }
+  h.i = j; setBoxText(box, h.s[j], 'end'); noteChanged(true); noteCount(); noteToolState(); noteCaretView();
+}
+function noteToolState() {
+  const h = N.hist, box = $('#nText');
+  const u = document.querySelector('.ntool[data-tool="undo"]'), r = document.querySelector('.ntool[data-tool="redo"]');
+  if (u) u.disabled = !h || (h.i <= 0 && (!box || box.value === h.s[0]));
+  if (r) r.disabled = !h || h.i >= h.s.length - 1;
+  boldState();
+}
+function noteCount() {
+  const e = $('#nCount'); if (!e) return;
+  const box = $('#nText'), t = box ? box.value : (N.open ? N.open.content : '');
+  const w = (String(t).match(/[^\s]+/g) || []).length;
+  e.textContent = w === 1 ? '1 word' : w + ' words';
+}
+
+/* --- where the caret is, in lines. Every line of a plain-text note is its own <div>, so this is exact. --- */
+function caretLines(box) {
+  if (!isRich(box)) return [0, 0];
+  const sel = getSelection(); if (!sel || !sel.rangeCount) return [0, 0];
+  const rg = sel.getRangeAt(0);
+  const at = (c, off) => {
+    if (c === box) return Math.max(0, Math.min(off, box.childNodes.length - 1));
+    let n = c; while (n && n.parentNode !== box) n = n.parentNode;
+    const i = n ? [].indexOf.call(box.childNodes, n) : -1; return i < 0 ? 0 : i;
+  };
+  const a = at(rg.startContainer, rg.startOffset), b = at(rg.endContainer, rg.endOffset);
+  return a <= b ? [a, b] : [b, a];
+}
+function caretCol(box, lineNode) {
+  const sel = getSelection(); if (!sel || !sel.rangeCount) return -1;
+  try { const r = sel.getRangeAt(0).cloneRange(); r.setStart(lineNode, 0); return r.toString().replace(/\u00a0/g, ' ').length; } catch (e) { return -1; }
+}
+function setBoxText(box, text, where, line) {
+  if (!isRich(box)) { box.value = text; focusBox(box); return; }   // the plain box: its own .value setter
+  box.innerHTML = textToRich(text);
+  if (where === 'line') putCaretLine(box, line); else focusBox(box);
+}
+function putCaretLine(box, i) {
+  box.focus();
+  const n = box.childNodes[Math.max(0, Math.min(i | 0, box.childNodes.length - 1))];
+  try { const r = document.createRange(); r.selectNodeContents(n || box); r.collapse(false); const s = getSelection(); s.removeAllRanges(); s.addRange(r); } catch (e) {}
+  noteCaretView();
+}
+
+/* --- the buttons --- */
+// A bullet or a checklist box on each line the caret touches. Stored as "- " and "- [ ] ", which read
+// as a list in Markdown and as plain lines anywhere else, so nothing is ever locked into this app.
+function lineOp(kind) {
+  const box = $('#nText'); if (!isRich(box)) return;
+  const txt = box.value, lines = txt.split('\n'), lim = lines.length - 1;
+  const A = Math.min(caretLines(box)[0], lim), B = Math.min(caretLines(box)[1], lim);
+  clearTimeout(N.hist.t); histPush(txt);
+  for (let i = A; i <= B; i++) {
+    const l = lines[i], ind = (l.match(/^[ \t]*/) || [''])[0];
+    const task = l.match(/^[ \t]*[-*+][ \t]+\[([ xX])\][ \t]*/), bull = !task && l.match(/^[ \t]*[-*+][ \t]+/);
+    const body = task ? l.slice(task[0].length) : bull ? l.slice(bull[0].length) : l.slice(ind.length);
+    if (kind === 'bullet') lines[i] = bull ? ind + body : ind + '- ' + body;
+    else lines[i] = task ? (task[1] === ' ' ? ind + '- [x] ' + body : ind + body) : ind + '- [ ] ' + body;
+  }
+  const out = lines.join('\n');
+  setBoxText(box, out, 'line', B); histPush(out); noteChanged(true); noteCount();
+}
+function stampDate() {
+  const box = $('#nText'); if (!box) return;
+  const d = new Date(), h = d.getHours();
+  const when = d.getDate() + ' ' + MON[d.getMonth()] + ' ' + d.getFullYear() + ', ' + ((h % 12) || 12) + ':' + pad(d.getMinutes()) + (h < 12 ? ' am' : ' pm');
+  const txt = box.value, lines = txt.split('\n'), i = Math.min(caretLines(box)[1], lines.length - 1);
+  clearTimeout(N.hist.t); histPush(txt);
+  lines[i] = lines[i] ? lines[i].replace(/\s+$/, '') + ' ' + when : '**' + when + '**';
+  const out = lines.join('\n');
+  setBoxText(box, out, 'line', i); histPush(out); noteChanged(true); noteCount();
+}
+const NLIST_RE = /^([ \t]*(?:[-*+][ \t]+\[[ xX]\][ \t]+|[-*+][ \t]+))/;
+function richKeys(ev) {
+  const box = ev.currentTarget, mod = ev.metaKey || ev.ctrlKey;
+  if (mod && /^[bB]$/.test(ev.key)) { ev.preventDefault(); noteTool('bold'); return; }
+  if (mod && /^[sS]$/.test(ev.key)) { ev.preventDefault(); commitNote(); toast('Saved'); return; }
+  if (mod && /^[zZ]$/.test(ev.key)) { ev.preventDefault(); histGo(ev.shiftKey ? 1 : -1); return; }
+  if (mod && /^[yY]$/.test(ev.key)) { ev.preventDefault(); histGo(1); return; }
+  // Enter at the end of a list line carries the list on; on an empty item it ends the list.
+  if (ev.key !== 'Enter' || ev.shiftKey || mod || ev.isComposing) return;
+  const txt = box.value, lines = txt.split('\n'), ls = caretLines(box);
+  if (ls[0] !== ls[1]) return;
+  const i = Math.min(ls[0], lines.length - 1), l = lines[i] || '', m = l.match(NLIST_RE);
+  if (!m) return;
+  const node = box.childNodes[i]; if (!node) return;
+  if (caretCol(box, node) !== (node.textContent || '').replace(/\u00a0/g, ' ').length) return; // only at the end of the line
+  ev.preventDefault();
+  clearTimeout(N.hist.t); histPush(txt);
+  let at = i + 1;
+  if (!l.slice(m[1].length).trim()) { lines[i] = ''; at = i; }                      // an empty item: stop the list
+  else lines.splice(i + 1, 0, m[1].replace(/\[[xX]\]/, '[ ]'));
+  const out = lines.join('\n');
+  setBoxText(box, out, 'line', at); histPush(out); noteChanged(true); noteCount();
+}
+function noteTool(tool, btn) {
+  const box = $('#nText'); if (!box) return;
+  const plain = !isRich(box);
+  if (tool === 'done') { box.blur(); return; }
+  if (tool === 'undo') return histGo(-1);
+  if (tool === 'redo') return histGo(1);
+  if (tool === 'clear') {
+    if (!box.value) { toast('This note is already empty'); return; }
+    if (btn && !arm(btn, 'nclear', 'Clear all?')) return;
+    clearTimeout(N.hist.t); histPush(box.value);
+    setBoxText(box, '', 'end'); histPush(''); noteChanged(true); noteCount(); noteToolState();
+    if (btn) { armed.delete('nclear'); btn.classList.remove('armed'); btn.textContent = 'Clear'; }
+    toast('Cleared · tap ↶ to put it back', '', 4000); return;
+  }
+  if (tool === 'tidy') {
+    try { const out = JSON.stringify(JSON.parse(box.value), null, 2); clearTimeout(N.hist.t); histPush(box.value);
+      setBoxText(box, out, 'end'); histPush(out); noteChanged(true); noteCount(); toast('JSON tidied'); }
+    catch (e) { toast('Not valid JSON: ' + e.message, 'bad'); } return;
+  }
+  if (plain) return;
+  if (tool === 'bold') { if (document.activeElement !== box) box.focus(); clearTimeout(N.hist.t); histPush(box.value); document.execCommand('bold'); histPush(box.value); noteChanged(true); noteToolState(); noteCaretView(); return; }
+  if (tool === 'bullet' || tool === 'task') return lineOp(tool);
+  if (tool === 'stamp') return stampDate();
+}
 function boldState() { const b = document.querySelector('.ntool[data-tool="bold"]'); if (b) { let on = false; try { on = document.queryCommandState('bold'); } catch (e) {} b.setAttribute('aria-pressed', String(on)); } }
 document.addEventListener('selectionchange', () => { if (N.open && document.activeElement && document.activeElement.id === 'nText') boldState(); });
 document.addEventListener('pointerdown', ev => { if (ev.target.closest('.ntool')) ev.preventDefault(); }); // keep the selection and the keyboard
 document.addEventListener('mousedown', ev => { if (ev.target.closest('.ntool')) ev.preventDefault(); });
-document.addEventListener('click', ev => {
-  const t = ev.target.closest('.ntool'); if (!t) return;
-  const box = $('#nText');
-  if (t.dataset.tool === 'bold') { if (document.activeElement !== box) box.focus(); document.execCommand('bold'); boldState(); noteChanged(); }
-  else { const i = NOTE_SIZES.indexOf(noteSize()), j = Math.max(0, Math.min(NOTE_SIZES.length - 1, i + (t.dataset.tool === 'bigger' ? 1 : -1))); writePref({noteSize: NOTE_SIZES[j]}); noteSizeShow(); }
-});
+document.addEventListener('click', ev => { const t = ev.target.closest('.ntool'); if (t && !t.disabled) noteTool(t.dataset.tool, t); });
 document.addEventListener('click', ev => { const it = ev.target.closest('.npi'); if (it && !it.classList.contains('danger') && it.dataset.act !== 'n-kind') setTimeout(() => document.querySelectorAll('#noteBox .npop').forEach(x => { x.hidden = true; }), 0); if (!ev.target.closest('.npopw')) document.querySelectorAll('.npop').forEach(x => { x.hidden = true; }); }, true);
 function noteState() {
   const o = N.open, el = $('#nState'); if (!o || !el) return;
   const l = N.local[o.id];
   el.textContent = o.loading ? 'Opening…' : l ? (Sync.notesOk ? (N.err ? 'Saved on phone · Drive will retry' : 'Saving to Drive…') : 'Saved on this phone') : o.fileId ? 'Saved in Drive' : '';
 }
-function noteChanged() {
+function noteChanged(now) {
   const o = N.open; if (!o || o.loading || o.failed) return;
   const t = $('#nTitle'), x = $('#nText');
   if (t) o.title = t.value.trim(); if (x) o.content = x.value;
-  clearTimeout(N.timer); N.timer = setTimeout(() => commitNote(), 900);
+  clearTimeout(N.timer); N.timer = setTimeout(() => commitNote(), now ? 150 : 900);
 }
 function commitNote() {
   clearTimeout(N.timer); const o = N.open; if (!o || o.loading || o.failed) return;
@@ -2421,9 +2695,14 @@ function commitNote() {
   const isNew = !was, same = was && (was.title || '') === o.title && was.type === o.type && body === o.content;
   if (isNew && !o.title && !o.content) return;
   if (same) { const cur = noteList().find(x => x.id === o.id) || {}; if (cur.cat !== o.cat || !!cur.pinned !== !!o.pinned) noteSetMeta(o.id, {cat: o.cat, pinned: o.pinned, order: o.order}); return; }
-  noteSave(o); noteState(); renderNoteList();
+  noteSave(o); noteState(); if (!N.open) renderNoteList();
 }
-function closeNote() { commitNote(); N.open = null; $('#noteScrim').hidden = true; renderNotes(); }
+function closeNote() {
+  const box = $('#nText'); if (box && box.blur) box.blur();
+  commitNote(); N.open = null; N.hist = null;
+  const b = $('#noteBox'); if (b) b.classList.remove('writing');
+  $('#noteScrim').hidden = true; renderNotes();
+}
 // Markdown, rendered safely: everything is escaped first, then only these marks become formatting.
 function mdInline(t) {
   return esc(t).replace(/`([^`]+)`/g, '<code>$1</code>').replace(/\*\*([^*]+)\*\*/g, '<b>$1</b>').replace(/__([^_]+)__/g, '<b>$1</b>')
@@ -2487,8 +2766,10 @@ document.addEventListener('click', async ev => {
   else if (a === 'n-m-del') { if (!arm(b, 'nmdel' + b.dataset.id, 'Tap again to delete')) return; deleteNote(b.dataset.id); closeNoteMenu(); renderNotes(); }
   else if (!o) return;
   else if (a === 'n-close') closeNote();
+  else if (a === 'n-meta') { const sh = $('#noteBox'), on = sh.classList.toggle('showmeta');
+    if (on) setTimeout(() => focusBox($('#nTitle')), 90); else { const t = $('#nText'); if (t) t.focus(); } }
   else if (a === 'n-mode') { commitNote(); N.mode = b.dataset.v; drawNote(); }
-  else if (a === 'n-kinds') { const pop = b.parentElement.querySelector('.npop'), show = pop.hidden; document.querySelectorAll('#noteBox .npop').forEach(x => { x.hidden = true; }); pop.hidden = !show; b.setAttribute('aria-expanded', String(show)); }
+  else if (a === 'n-kinds' || a === 'n-more') { const pop = b.parentElement.querySelector('.npop'), show = pop.hidden; document.querySelectorAll('#noteBox .npop').forEach(x => { x.hidden = true; }); pop.hidden = !show; b.setAttribute('aria-expanded', String(show)); }
   else if (a === 'n-save') { closeNote(); toast('Saved'); }
   else if (a === 'n-kind') { // show the note formatted for its new kind straight away
     if (o.type === 'txt' && b.dataset.v !== 'txt' && $('#nText')) o.content = $('#nText').value;
@@ -2498,7 +2779,9 @@ document.addEventListener('click', async ev => {
   else if (a === 'n-label') { o.cat = b.dataset.v; writePref({noteCat: o.cat}); document.querySelectorAll('.nlab').forEach(x => x.setAttribute('aria-pressed', String(x.dataset.v === o.cat))); commitNote(); }
   else if (a === 'n-pin') { if (!o.pinned) { const pins = sortNotes(noteList()).filter(n => n.pinned && n.id !== o.id); o.order = pins.length ? Math.min(...pins.map(n => n.order || 0)) - 1 : 0; } o.pinned = !o.pinned; b.setAttribute('aria-pressed', String(o.pinned)); commitNote(); toast(o.pinned ? 'Pinned to the top' : 'Unpinned'); }
   else if (a === 'n-tidy') { try { o.content = JSON.stringify(JSON.parse(o.content), null, 2); commitNote(); drawNote(); toast('JSON tidied'); } catch (e) { toast('Not valid JSON: ' + e.message, 'bad'); } }
-  else if (a === 'n-copy') { try { await navigator.clipboard.writeText(o.content); toast('Copied'); } catch (e) { showCopy(o.title || 'Note', o.content); } }
+  else if (a === 'n-copy') { commitNote(); try { await navigator.clipboard.writeText(o.content); toast('Copied'); } catch (e) { showCopy(o.title || 'Note', o.content); } }
+  else if (a === 'n-dup') { commitNote(); const id = 'n' + newId();
+    openNote(id, {id, title: o.title ? o.title + ' (copy)' : '', type: o.type, cat: o.cat, content: o.content}); toast('A copy, ready to change'); }
   else if (a === 'n-dl') { commitNote(); offerFile((o.title || noteName({preview: notePreview(o.content)})).replace(/[\\/:*?"<>|]+/g, ' ').trim() + '.' + NOTE_KINDS[o.type].ext, o.content, NOTE_KINDS[o.type].mime); }
   else if (a === 'n-del') { if (!arm(b, 'ndel' + o.id, 'Sure?')) return; deleteNote(o.id); N.open = null; $('#noteScrim').hidden = true; renderNotes(); }
 });
@@ -4917,8 +5200,9 @@ function keepInView(delay) {
   clearTimeout(kvT);
   kvT = setTimeout(() => {
     const a = document.activeElement; if (!editingNow()) return;
+    if (a.closest && a.closest('#noteBox')) return; // the note editor moves its own one scroller (caretIntoView)
     const vv = window.visualViewport, H = vv ? vv.height : window.innerHeight, r = a.getBoundingClientRect();
-    if (r.height > H * 0.55) return; // a big note box: the browser keeps the cursor in view
+    if (r.height > H * 0.55) return; // a big box: the browser keeps the cursor in view
     const sh = a.closest('.sheet'), foot = sh ? ((sh.querySelector('.sheet-actions') || {}).offsetHeight || 0) : 0;
     if (r.top < 10 || r.bottom > H - foot - 10) a.scrollIntoView({block: 'center', behavior: reduceMotion() ? 'auto' : 'smooth'});
   }, delay || 0);
