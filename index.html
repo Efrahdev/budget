@@ -331,15 +331,15 @@ textarea{resize:vertical}
   background:radial-gradient(120% 120% at 100% 0%,var(--hero-glow-1),transparent 52%),radial-gradient(90% 110% at 0% 100%,var(--hero-glow-2),transparent 56%),linear-gradient(140deg,var(--hero-a) 0%,var(--hero-b) 58%,var(--hero-c) 100%);
   box-shadow:0 26px 50px -26px color-mix(in srgb,var(--hero-b) 75%,transparent),inset 0 1px 0 rgba(255,255,255,.14)}
 .kpis::after{content:"";position:absolute;inset:0;z-index:-1;pointer-events:none;background:radial-gradient(60% 50% at 80% -10%,rgba(255,255,255,.18),transparent 70%)}
-.kpi{position:relative;display:flex;flex-direction:column;gap:2px;min-width:0;padding:11px 12px;border-radius:17px;background:rgba(255,255,255,.09);box-shadow:inset 0 0 0 1px rgba(255,255,255,.08);transition:background .2s,transform .18s var(--spring)}
-.kpi .lbl{font-size:calc(13px*var(--fs,1));color:rgba(255,255,255,.74);font-weight:600;letter-spacing:.005em}
-.kpi .val{font-family:var(--f-display);font-weight:700;font-size:calc(19px*var(--fs,1));line-height:1.2;letter-spacing:-.02em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.kpi{position:relative;display:flex;flex-direction:column;gap:3px;min-width:0;padding:11px 11px;border-radius:17px;background:rgba(255,255,255,.09);box-shadow:inset 0 0 0 1px rgba(255,255,255,.08);transition:background .2s,transform .18s var(--spring)}
+.kpi .lbl{font-size:calc(13.5px*var(--fs,1));color:rgba(255,255,255,.8);font-weight:600;letter-spacing:.005em}
+.kpi .val{font-family:var(--f-display);font-weight:700;font-size:calc(20px*var(--fs,1));line-height:1.2;letter-spacing:-.02em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .kpi .sub{font-size:calc(13px*var(--fs,1));color:rgba(255,255,255,.78);line-height:1.35}
 .kpi .sub .sd{margin-right:6px}
 .kpi.head{grid-column:1/-1;order:-1;background:none;box-shadow:none;padding:8px 8px 10px;gap:4px}
 .kpi.head .lbl{font-size:calc(14px*var(--fs,1))}
-.kpi.head .val{font-size:calc(40px*var(--fs,1));font-weight:700;letter-spacing:-.03em;line-height:1.08}
-.kpi.head .sub{font-size:calc(14px*var(--fs,1))}
+.kpi.head .val{font-size:calc(30px*var(--fs,1));font-weight:700;letter-spacing:-.028em;line-height:1.1}
+.kpi.head .sub{font-size:calc(13.5px*var(--fs,1))}
 .hbar{position:relative;display:block;height:8px;border-radius:99px;background:rgba(255,255,255,.18);margin:8px 0 4px}
 .hbar i{position:absolute;left:0;top:0;bottom:0;border-radius:99px;background:#fff;transition:width .9s var(--ease)}
 .hbar i.good{background:linear-gradient(90deg,#86efac,#4ade80)}.hbar i.warn{background:linear-gradient(90deg,#fde68a,#fbbf24)}.hbar i.bad{background:linear-gradient(90deg,#fda4af,#fb7185)}
@@ -1144,7 +1144,7 @@ html.kb .sheet-actions .btn{min-height:42px;padding-left:12px;padding-right:12px
 html.tb-hide:not(.kb) .topbar{transform:translateY(-100%)}
 
 /* ---------- screen sizes ---------- */
-@media (max-width:380px){:root{--gut:12px}.kpi .val{font-size:calc(17px*var(--fs,1))}.kpi.head .val{font-size:calc(34px*var(--fs,1))}.hgrid{gap:10px}.htile{padding:12px}.htile .ha{font-size:calc(21px*var(--fs,1))}.cyc-arrow{width:34px}}
+@media (max-width:380px){:root{--gut:12px}.kpi .val{font-size:calc(18px*var(--fs,1))}.kpi.head .val{font-size:calc(27px*var(--fs,1))}.hgrid{gap:10px}.htile{padding:12px}.htile .ha{font-size:calc(21px*var(--fs,1))}.cyc-arrow{width:34px}}
 @media (max-width:640px){
   .cck{grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;padding:10px 10px 0}.cckpi{padding:10px}.cckpi .v{font-size:calc(17.5px*var(--fs,1))}
   .ct-grid{grid-template-columns:1fr}
@@ -1210,6 +1210,7 @@ html.tb-hide:not(.kb) .topbar{transform:translateY(-100%)}
   .kpi.head{grid-column:auto;padding:10px 12px}
   .kpi{padding:14px 16px;justify-content:center}
   .kpi .val{font-size:calc(22px*var(--fs,1))}
+  .kpi.head .val{font-size:calc(34px*var(--fs,1))}
   .kpis:has(.kpi:nth-child(5)){grid-template-columns:1.7fr repeat(4,minmax(0,1fr))}
 }
 /* laptops, desktops and TVs: a sidebar instead of the top and bottom bars */
@@ -1256,27 +1257,31 @@ html.tb-hide:not(.kb) .topbar{transform:translateY(-100%)}
 @media (min-width:2400px){:root{--fsv:1.4;--sbw:380px;--gut:60px}body{--vw:1900px}body[data-view="entries"],body[data-view="notes"],body[data-view="disc"],body[data-view="setup"]{--vw:1300px}}
 /* ---------- Wealth (Nov 2026 redesign): its own identity. Emerald, not the app's blue; tiles, not rows ---------- */
 .wx{display:flex;flex-direction:column;gap:18px}
-.wx-hero{position:relative;isolation:isolate;overflow:hidden;border-radius:30px;padding:20px 18px 16px;color:#fff;
+.wx-hero{position:relative;isolation:isolate;overflow:hidden;border-radius:28px;padding:18px 18px 16px;color:#fff;
   background:radial-gradient(110% 80% at 100% 0%,rgba(110,231,183,.34),transparent 55%),radial-gradient(90% 70% at 0% 100%,rgba(45,212,191,.28),transparent 60%),linear-gradient(150deg,#022c22 0%,#065f46 50%,#0f766e 100%);
   box-shadow:0 26px 50px -26px rgba(6,95,70,.7),inset 0 1px 0 rgba(255,255,255,.14)}
+.wx-hero::after{content:"";position:absolute;inset:0;z-index:-1;pointer-events:none;background:radial-gradient(60% 50% at 80% -10%,rgba(255,255,255,.16),transparent 70%)}
 .wx-top{display:flex;align-items:center;justify-content:space-between;gap:10px;min-height:28px}
 .wx-lbl{font-size:calc(12.5px*var(--fs,1));font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:rgba(255,255,255,.7)}
 .wx-delta{font-size:calc(12.5px*var(--fs,1));font-weight:700;padding:5px 11px;border-radius:99px;background:rgba(255,255,255,.14);box-shadow:inset 0 0 0 1px rgba(255,255,255,.12);white-space:nowrap;font-variant-numeric:tabular-nums}
 .wx-delta.up{color:#a7f3d0}.wx-delta.down{color:#fecaca}
 .wx-since{font-weight:550;color:rgba(255,255,255,.7)}
-.wx-nw{font-family:var(--f-display);font-weight:750;font-size:calc(44px*var(--fs,1));letter-spacing:-.035em;line-height:1.06;margin-top:6px;white-space:nowrap;overflow:hidden;font-variant-numeric:tabular-nums;cursor:pointer;border-radius:12px}
-.wx-sub{font-size:calc(13.5px*var(--fs,1));color:rgba(255,255,255,.72);margin-top:4px;line-height:1.4}
-.wx-sparkw{position:relative;width:calc(100% + 36px);height:76px;margin:10px -18px 8px}
-.wx-spark{display:block;width:100%;height:100%;overflow:visible}
-.wx-end{position:absolute;width:10px;height:10px;margin:-5px 0 0 -5px;border-radius:50%;background:#fff;box-shadow:0 0 0 4px rgba(255,255,255,.22),0 0 14px rgba(167,243,208,.8)}
-.wx-line{filter:drop-shadow(0 0 6px rgba(167,243,208,.55))}
-.wx-chips{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
-.wx-chip{display:flex;flex-direction:column;gap:2px;min-width:0;padding:11px 12px;border-radius:18px;background:rgba(255,255,255,.1);box-shadow:inset 0 0 0 1px rgba(255,255,255,.12);
-  -webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);cursor:pointer;transition:transform .25s var(--spring),background .2s}
-.wx-chip:hover{background:rgba(255,255,255,.15)}.wx-chip:active{transform:scale(.96)}
-.wx-chip span{font-size:calc(12px*var(--fs,1));color:rgba(255,255,255,.72);font-weight:650}
-.wx-chip b{font-family:var(--f-display);font-size:calc(17px*var(--fs,1));font-weight:700;letter-spacing:-.02em;white-space:nowrap;overflow:hidden;font-variant-numeric:tabular-nums}
-.wx-chip small{font-size:calc(11.5px*var(--fs,1));color:rgba(255,255,255,.66);line-height:1.3;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.wx-nw{font-family:var(--f-display);font-weight:750;font-size:calc(32px*var(--fs,1));letter-spacing:-.03em;line-height:1.1;margin-top:6px;white-space:nowrap;overflow:hidden;font-variant-numeric:tabular-nums;cursor:pointer;border-radius:12px}
+.wx-sub{font-size:calc(13.5px*var(--fs,1));color:rgba(255,255,255,.74);margin-top:4px;line-height:1.4}
+.wx-chips{display:grid;grid-template-columns:1fr;margin-top:16px;border-radius:18px;background:rgba(255,255,255,.09);box-shadow:inset 0 0 0 1px rgba(255,255,255,.11);overflow:hidden}
+.wx-chip{display:grid;grid-template-columns:minmax(0,1fr) auto;grid-template-areas:"l v" "s v";align-items:center;column-gap:12px;row-gap:1px;min-width:0;padding:12px 14px;cursor:pointer;transition:background .2s}
+.wx-chip+.wx-chip{box-shadow:inset 0 1px 0 rgba(255,255,255,.1)}
+.wx-chip:hover{background:rgba(255,255,255,.07)}.wx-chip:active{background:rgba(255,255,255,.12)}
+.wx-chip span{grid-area:l;font-size:calc(14px*var(--fs,1));color:rgba(255,255,255,.88);font-weight:600}
+.wx-chip b{grid-area:v;font-family:var(--f-display);font-size:calc(18px*var(--fs,1));font-weight:700;letter-spacing:-.015em;white-space:nowrap;font-variant-numeric:tabular-nums;text-align:right}
+.wx-chip small{grid-area:s;font-size:calc(12.5px*var(--fs,1));color:rgba(255,255,255,.66);line-height:1.3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+@media (min-width:760px){
+  .wx-chips{grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;background:none;box-shadow:none;border-radius:0;overflow:visible}
+  .wx-chip{grid-template-columns:1fr;grid-template-areas:"l" "v" "s";row-gap:3px;align-items:start;padding:13px 16px;border-radius:18px;background:rgba(255,255,255,.1);box-shadow:inset 0 0 0 1px rgba(255,255,255,.12)}
+  .wx-chip+.wx-chip{box-shadow:inset 0 0 0 1px rgba(255,255,255,.12)}
+  .wx-chip:hover{background:rgba(255,255,255,.15)}
+  .wx-chip span{font-size:calc(13.5px*var(--fs,1))}.wx-chip b{font-size:calc(21px*var(--fs,1));text-align:left}
+}
 .wx-seg{align-self:flex-start}
 .wx-card{background:var(--sheet);border-radius:24px;box-shadow:var(--shade);border:1px solid var(--rule);overflow:clip}
 .wx-h{display:flex;align-items:baseline;justify-content:space-between;gap:6px 12px;flex-wrap:wrap;padding:0 6px}
@@ -1349,16 +1354,14 @@ html.tb-hide:not(.kb) .topbar{transform:translateY(-100%)}
 /* arrival: the hero rises, the line draws itself, the bar grows, tiles follow one after another */
 @media (prefers-reduced-motion:no-preference){
   .view.enter .wx-hero{animation:wxIn .55s var(--ease-out) both}
-  .view.enter .wx-sparkw{animation:wxWipe 1.3s .15s var(--ease-out) both}
   .view.enter .wx-bar i{animation:wxGrow .8s var(--ease-out) both;animation-delay:calc(120ms + var(--i,0) * 70ms)}
   .view.enter .wx-k,.view.enter .wx-card,.view.enter .wx-record{animation:wxIn .55s var(--ease-out) both;animation-delay:calc(80ms + min(var(--i,0),8) * 45ms)}
 }
 @keyframes wxIn{from{opacity:0;transform:translateY(14px)}}
-@keyframes wxWipe{from{clip-path:inset(0 100% 0 0)}to{clip-path:inset(0 0 0 0)}}
 @keyframes wxGrow{from{transform:scaleX(0)}}
-@media (max-width:380px){.wx-chips{grid-template-columns:1fr 1fr}.wx-chips .wx-chip:first-child{grid-column:1/-1}.wx-nw{font-size:calc(38px*var(--fs,1))}}
+@media (max-width:380px){.wx-nw{font-size:calc(29px*var(--fs,1))}.wx-chip{padding:11px 12px}.wx-chip b{font-size:calc(17px*var(--fs,1))}}
 @media (min-width:1024px){
-  .wx-hero{padding:26px 26px 20px}.wx-nw{font-size:calc(54px*var(--fs,1))}.wx-sparkw{width:calc(100% + 52px);margin:12px -26px 10px;height:96px}
+  .wx-hero{padding:24px 24px 20px}.wx-nw{font-size:calc(38px*var(--fs,1))}
   .wx-chips{max-width:760px}
   .wx-cols{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:22px 24px;align-items:start}
   .wx-cols>.g0{grid-row:span 3}
@@ -1375,7 +1378,7 @@ html.tb-hide:not(.kb) .topbar{transform:translateY(-100%)}
 .ovx-link{display:inline-flex;align-items:center;gap:1px;font-size:calc(13.5px*var(--fs,1));font-weight:650;color:var(--accent);text-decoration:none;padding:4px 2px 4px 10px;border-radius:99px;transition:background .2s}
 .ovx-link:hover{background:var(--accent-soft)}
 .ovx-link .ic{width:15px;height:15px;stroke-width:2.4}
-.ovx-total{font-family:var(--f-display);font-weight:750;font-size:calc(34px*var(--fs,1));letter-spacing:-.032em;line-height:1.1;margin-top:4px;font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;align-self:flex-start;border-radius:10px}
+.ovx-total{font-family:var(--f-display);font-weight:750;font-size:calc(30px*var(--fs,1));letter-spacing:-.032em;line-height:1.1;margin-top:4px;font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;align-self:flex-start;border-radius:10px}
 .ovx-total[data-act]{cursor:pointer}
 .ovx-cards.tone-bad .ovx-total{color:var(--bad-ink)}
 .ovx-chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
@@ -1393,7 +1396,23 @@ html.tb-hide:not(.kb) .topbar{transform:translateY(-100%)}
 .ovx-meta>[data-act]{cursor:pointer;border-radius:8px;transition:color .2s}.ovx-meta>[data-act]:hover b{color:var(--ink)}
 .ovx-sep{width:3px;height:3px;border-radius:50%;background:var(--ink-3);opacity:.6}
 .ov-wx{margin-top:4px}
-@media (min-width:1024px){.ov-wx{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:22px 24px;align-items:start}}
+@media (min-width:1024px){.ov-wx{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:22px 24px;align-items:start}.ov-wx>.ovx-net{grid-column:1/-1}}
+/* the net card: the answer large, the bar that shows where the bank money goes, the sum as three quiet cells */
+.ovx-net{--wash:#10b981;--wash2:#14b8a6;padding-bottom:0}
+.ovx-net.neg{--wash:#ef4444;--wash2:#f97316}.ovx-net.neg .ovx-total{color:var(--bad-ink)}
+.ovx-tag{font-size:calc(12px*var(--fs,1));font-weight:650;color:var(--ink-2);background:var(--fill-2);padding:3px 10px;border-radius:99px;white-space:nowrap}
+.ovx-lede{margin-top:6px;font-size:calc(13.5px*var(--fs,1));color:var(--ink-3);line-height:1.45}
+.ovx-net .ovx-bar{margin:16px 0 0}
+.ovx-eq{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));margin:16px -18px 0;border-top:1px solid var(--rule)}
+.ovx-cell{display:flex;flex-direction:column;gap:4px;min-width:0;padding:13px 18px 15px;cursor:pointer;transition:background .2s}
+.ovx-cell+.ovx-cell{border-left:1px solid var(--rule)}
+.ovx-cell:hover{background:var(--fill-2)}.ovx-cell:active{background:var(--fill)}
+.ovx-cell span{display:flex;align-items:center;gap:6px;font-size:calc(12.5px*var(--fs,1));font-weight:600;color:var(--ink-3);white-space:nowrap}
+.ovx-cell span i{width:8px;height:8px;border-radius:3px;background:var(--kc);flex:0 0 auto}
+.ovx-cell span i.ring{background:transparent;box-shadow:inset 0 0 0 1.5px var(--ink-3)}
+.ovx-cell b{font-family:var(--f-display);font-size:calc(16.5px*var(--fs,1));font-weight:700;letter-spacing:-.015em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-variant-numeric:tabular-nums}
+@media (max-width:440px){.ovx-eq{margin:16px -16px 0}.ovx-cell{padding:12px 12px 14px}.ovx-cell b{font-size:calc(15px*var(--fs,1))}.ovx-cell span{font-size:calc(12px*var(--fs,1))}}
+@media (max-width:380px){.ovx-eq{margin:16px -14px 0}.ovx-cell{padding:11px 10px 13px}.ovx-cell b{font-size:calc(14px*var(--fs,1))}}
 .ovx-bar{display:flex;gap:3px;height:6px;margin:16px 0 2px;border-radius:99px;overflow:hidden}
 .ovx-bar i{display:block;min-width:4px;border-radius:99px;background:var(--kc);transform-origin:left center}
 .ovx-list{margin-top:8px}
@@ -1429,7 +1448,8 @@ html.tb-hide:not(.kb) .topbar{transform:translateY(-100%)}
   .view.enter .ovx-bar i{animation:wxGrow .8s var(--ease-out) both;animation-delay:calc(180ms + var(--i,0) * 70ms)}
   .view.enter .ovx-row{animation:wxIn .5s var(--ease-out) both;animation-delay:calc(140ms + min(var(--i,0),6) * 50ms)}
 }
-@media (max-width:380px){.ovx{padding:16px 14px 6px}.ovx-total{font-size:calc(30px*var(--fs,1))}}
+@media (max-width:380px){.ovx{padding:16px 14px 6px}.ovx-total{font-size:calc(27px*var(--fs,1))}}
+@media (min-width:1024px){.ovx-total{font-size:calc(32px*var(--fs,1))}}
 /* ---------- Reader: its own page (reader/), shown edge to edge in this tab through a frame made only when first opened ---------- */
 #v-read{position:fixed;inset:0;z-index:30;display:block;max-width:none!important;margin:0!important;width:auto!important}
 #v-read[hidden]{display:none}
@@ -2249,7 +2269,7 @@ function renderOverview(X) {
 
   const inst = coarse.matches && !isInstalled() && !readPref().instHide ? `<div class="inst"><span class="mt-ic"><svg class="ic" aria-hidden="true"><use href="#i-install"/></svg></span><span class="it"><b>Install the app</b><span>Full screen, with a clean keyboard and no web address above it.</span></span><button class="btn sm primary" type="button" data-act="install-go">Install</button><button class="ix" type="button" data-act="inst-x" aria-label="Not now"><svg class="ic" aria-hidden="true"><use href="#i-x"/></svg></button></div>` : '';
   paint($('#v-overview'), `${inst}${kpis}${tiles ? `<div class="hgrid">${tiles}</div>` : '<div class="card empty">No entries in ' + cycleLabel(key) + ' yet.</div>'}
-    ${cardStripHtml(X) || bankStripHtml(X) ? `<div class="wx ov-wx">${cardStripHtml(X)}${bankStripHtml(X)}</div>` : ''}`);
+    ${(() => { const nt = netStripHtml(X), cs = cardStripHtml(X), bs = bankStripHtml(X); return nt || cs || bs ? `<div class="wx ov-wx">${nt}${cs}${bs}</div>` : ''; })()}`);
   if ($('#v-overview').classList.contains('enter')) wcCount($('#v-overview'));
 }
 
@@ -2394,19 +2414,6 @@ const wkOf = k => WK[k] || [KIND_LABEL[k] || k, 'c-tag', '#94a3b8'];
 const wxIc = (icon, col) => `<span class="wx-ic" style="--kc:${col}"><svg class="ic" aria-hidden="true"><use href="#${icon}"/></svg></span>`;
 const wxPct = (v, of) => of > 0 ? Math.round(Math.abs(v) / of * 100) : 0;
 const wxPctTxt = (v, of) => { if (!(of > 0) || !v) return '0%'; const x = Math.abs(v) / of * 100; return x > 0 && x < 1 ? '<1%' : Math.round(x) + '%'; }; // a small amount is "<1%", never a misleading 0%
-// the net worth line inside the hero: a smooth curve and a soft glow under it
-function wxSpark(series) {
-  if (!series || series.length < 2) return '';
-  const W = 320, H = 70, vs = series.map(p => p.nw), lo = Math.min(...vs), hi = Math.max(...vs), span = hi - lo || Math.abs(hi) || 1;
-  const pts = series.map((p, i) => [i / (series.length - 1) * (W - 8), 8 + (1 - (p.nw - lo) / span) * (H - 16)]);
-  let d = `M${pts[0][0].toFixed(1)},${pts[0][1].toFixed(1)}`;
-  for (let i = 1; i < pts.length; i++) { const [x0, y0] = pts[i - 1], [x1, y1] = pts[i], cx = (x0 + x1) / 2; d += ` C${cx.toFixed(1)},${y0.toFixed(1)} ${cx.toFixed(1)},${y1.toFixed(1)} ${x1.toFixed(1)},${y1.toFixed(1)}`; }
-  const [ex, ey] = pts[pts.length - 1];
-  // the line stretches to any width; the end dot is drawn on top as its own element, so it always stays round
-  return `<div class="wx-sparkw"><svg class="wx-spark" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" aria-hidden="true"><defs><linearGradient id="wxg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".28"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></linearGradient></defs>
-    <path d="${d} L${ex.toFixed(1)},${H} L0,${H} Z" fill="url(#wxg)"/><path class="wx-line" d="${d}" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" vector-effect="non-scaling-stroke"/>
-    </svg><i class="wx-end" style="left:${(ex / W * 100).toFixed(2)}%;top:${(ey / H * 100).toFixed(2)}%"></i></div>`;
-}
 function renderWealth(X) {
   const W0 = wealthCalc(X), {accts, nw, liquid, debts, hasAny, cardLs, cardOwed, bl, series, cover} = W0;
   const view = readPref().wealthView === 'fd' ? 'fd' : 'nw';
@@ -2418,11 +2425,10 @@ function renderWealth(X) {
     <div class="wx-top"><span class="wx-lbl">Net worth</span>${delta != null ? `<span class="wx-delta ${delta >= 0 ? 'up' : 'down'}" title="${esc(fmtDM(last.date))} against ${esc(fmtDM(prev.date))}">${delta >= 0 ? '▲' : '▼'} ${rs(Math.abs(delta))}${pct != null ? ` · ${Math.abs(pct).toFixed(1)}%` : ''} <span class="wx-since">since ${esc(fmtDM(prev.date))}</span></span>` : ''}</div>
     <div class="wx-nw fit"${whyAttr('w-nw')}>${rs(nw)}</div>
     <div class="wx-sub">Liquid money + non-liquid assets</div>
-    ${wxSpark(series)}
     <div class="wx-chips">
-      <div class="wx-chip"${whyAttr('w-liq')}><span>Liquid money</span><b class="fit">${rs(liquid)}</b>${coverTxt ? `<small>${coverTxt}</small>` : '<small>After liabilities and this month’s budget</small>'}</div>
-      <div class="wx-chip"${whyAttr('w-debt')}><span>Liabilities</span><b class="fit">${rs(-debts)}</b><small>Loans, cards, money owed</small></div>
-      <div class="wx-chip"${whyAttr('w-gross')}><span>Gross assets</span><b class="fit">${rs(gross)}</b><small>Before liabilities</small></div>
+      <div class="wx-chip"${whyAttr('w-liq')}><span>Liquid money</span><b>${rs(liquid)}</b>${coverTxt ? `<small>${coverTxt}</small>` : '<small>After liabilities and this month’s budget</small>'}</div>
+      <div class="wx-chip"${whyAttr('w-debt')}><span>Liabilities</span><b>${rs(-debts)}</b><small>Loans, cards, money owed</small></div>
+      <div class="wx-chip"${whyAttr('w-gross')}><span>Gross assets</span><b>${rs(gross)}</b><small>Before liabilities</small></div>
     </div></section>`;
   const tabs = `<div class="seg wx-seg" role="group" aria-label="Wealth view"><button type="button" class="segb" data-act="w-view" data-v="nw" aria-pressed="${view === 'nw'}">Net worth</button><button type="button" class="segb" data-act="w-view" data-v="fd" aria-pressed="${view === 'fd'}">FD growth</button></div>`;
   if (view === 'fd') { paint($('#v-wealth'), `<div class="wx">${hero}${tabs}${fdHtml(X)}</div>`); return; }
@@ -3367,6 +3373,13 @@ function whyBuild(k) {
     const bk = W0.bl.key, lines = W0.bl.rows.map(r => ({label: r.c.name, sub: `budget ${rs(r.b)} − spent ${rs(r.sp)}` + (r.sp > r.b ? ' · over, so nothing left' : ''), v: r.left, k: 'ov-cat:' + r.c.id + '@' + bk}));
     return {title: 'Still to spend', head: cycleLabel(bk) + ' · taken off net worth', value: rs(W0.bl.left), sections: [{title: 'Left in each budgeted category', note: (cycleLabel(bk) !== cl ? 'This is always the current month, ' + cycleLabel(bk) + '. ' : '') + 'Discretionary has no budget, so nothing is set aside for it.', lines: lines.length ? lines : [{label: 'No budgets set', text: ''}], total: {label: 'Still to spend', v: W0.bl.left}}]};
   }
+  if (kind === 'ov-net') { // Overview: banks − card bills − budget left
+    const N = ovNet(X);
+    return {title: 'Left after bills and budget', head: 'Bank balance − card bills − budget left in ' + cycleLabel(N.key), value: rs(N.net), sections: [
+      {title: 'In your bank accounts', lines: N.banks.map(b => ({label: b.name, sub: balNote(b.L), v: b.L ? b.L.v : 0, k: 'w-acct:' + b.id})), total: {label: 'In banks', v: N.bank}},
+      {title: 'Taken off', lines: [{label: 'Owed on credit cards', sub: 'billed plus not yet billed', v: -N.cards, k: cardList().length ? 'c-owed' : ''},
+        {label: 'Budget still to spend', sub: cycleLabel(N.key) + ': left in each budgeted category', v: -N.left, k: 'w-left'}], total: {label: N.net < 0 ? 'Short by' : 'Left', v: N.net}}]};
+  }
   if (kind === 'w-acct') return whyAcct(arg, X);
   if (kind === 'w-snap') {
     const run = {}; X.snaps.forEach(s => { if (s.date <= arg) for (const [id, v] of Object.entries(s.values || {})) if (typeof v === 'number') run[id] = v; });
@@ -4020,11 +4033,39 @@ function ovxRows(rows, key, noun) {
   return rows.slice(0, 4).join('') + `<details class="ovx-more wtree" data-tree="${key}"${open ? ' open' : ''}><summary><span class="o">${rest} more ${noun}${rest === 1 ? '' : 's'}</span><span class="c">Show fewer</span><svg class="ic" aria-hidden="true"><use href="#i-down"/></svg></summary>${rows.slice(4).join('')}</details>`;
 }
 // Overview bank accounts: the Bank buttons from Add entry (Setup order), each with its live balance.
-function bankStripHtml(X) {
+// The Overview's bank accounts: the Bank buttons from Add entry (Setup order), each resolved to its live account.
+function ovBanks(X) {
   const cfg = state.config, seen = new Set();
   let list = (cfg.payBanks || []).map(id => X.am[id]).filter(Boolean);
   if (!list.length) list = cfg.accounts.filter(a => !a.pay && a.cls === 'Bank');
-  list = list.filter(a => { const id = X.res(a.id) || a.id; if (seen.has(id)) return false; seen.add(id); return true; });
+  return list.filter(a => { const id = X.res(a.id) || a.id; if (seen.has(id)) return false; seen.add(id); return true; })
+    .map(a => { const id = X.res(a.id) || a.id; return {a, id, name: a.vaultName || a.name, L: X.latest[id]}; });
+}
+// What is left: money in the bank − everything owed on cards − this month's budget still to spend.
+function ovNet(X) {
+  const banks = ovBanks(X), any = banks.some(b => b.L), bank = banks.reduce((t, b) => t + (b.L ? b.L.v : 0), 0);
+  const cards = cardList().reduce((t, c) => t + cardLedger(c, X).owed, 0), bl = budgetLeft(X);
+  return {banks, any, bank, cards, left: bl.left, key: bl.key, net: bank - cards - bl.left};
+}
+function netStripHtml(X) {
+  const N = ovNet(X); if (!N.banks.length) return '';
+  const neg = N.any && N.net < 0, hasCards = cardList().length > 0;
+  const segs = N.any && N.bank > 0 ? [[Math.max(0, N.net), '#10b981', 'left'], [Math.max(0, N.cards), '#f43f5e', 'card bills'], [Math.max(0, N.left), '#f59e0b', 'budget left']].filter(x => x[0] > 0.5) : [];
+  const sign = v => (v >= 0 ? '−' : '+') + rs(Math.abs(v));
+  return `<section class="ovx ovx-net${neg ? ' neg' : ''}">
+    <div class="ovx-top"><span class="ovx-lbl">Left after bills and budget</span><span class="ovx-tag">${esc(cycleLabel(N.key))}</span></div>
+    <div class="ovx-total"${whyAttr('ov-net')}${N.any ? ` data-count="${r2(N.net)}"` : ''}>${N.any ? rs(N.net) : '—'}</div>
+    <div class="ovx-lede">${!N.any ? 'Record your bank balances in Wealth to see this.' : neg ? `Short by ${rs(-N.net)}: card bills and the budget left are more than your banks hold.` : 'What your banks hold once every card bill and this month\u2019s budget are covered.'}</div>
+    ${segs.length ? `<div class="ovx-bar" role="img" aria-label="${esc(segs.map(x => rs(x[0]) + ' ' + x[2]).join(', '))}">${segs.map(([v, c], i) => `<i style="--kc:${c};flex:${v};--i:${i}"></i>`).join('')}</div>` : ''}
+    <div class="ovx-eq">
+      <div class="ovx-cell"${whyAttr('ov-net')}><span><i class="ring"></i>In banks</span><b class="num">${N.any ? rs(N.bank) : '—'}</b></div>
+      <div class="ovx-cell"${whyAttr(hasCards ? 'c-owed' : '')}><span><i style="--kc:#f43f5e"></i>Card bills</span><b class="num">${sign(N.cards)}</b></div>
+      <div class="ovx-cell"${whyAttr('w-left')}><span><i style="--kc:#f59e0b"></i>Budget left</span><b class="num">${sign(N.left)}</b></div>
+    </div>
+  </section>`;
+}
+function bankStripHtml(X) {
+  const list = ovBanks(X).map(b => b.a);
   if (!list.length) return '';
   const names = list.map(a => a.vaultName || a.name), ids = list.map(a => X.res(a.id) || a.id);
   const Ls = ids.map(id => X.latest[id]), any = Ls.some(Boolean), total = Ls.reduce((s, L) => s + (L ? L.v : 0), 0);
