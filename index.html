@@ -202,7 +202,7 @@ body[data-view="vault"] .fab,body[data-view="vault"] #addTop,body[data-view="not
 #saveSlot{display:contents} /* the unsaved-changes bar floats over Setup while you edit, not only at its very end */
 body[data-view="vault"] #cycBar{display:none!important}
 body[data-view="add"] .fab{display:none!important}
-@media (max-width:1023.98px){html.role-entry .navbar{grid-template-columns:repeat(3,minmax(0,1fr));max-width:400px}}
+@media (max-width:1023.98px){html.role-entry .navbar{grid-template-columns:repeat(4,minmax(0,1fr));max-width:480px}}
 html.role-entry body:not([data-view="entries"]) #cycBar{display:none!important}
 .addhome{display:flex;flex-direction:column;gap:14px}
 .addhome .hero-add{padding:22px 20px;display:flex;flex-direction:column;gap:14px;align-items:flex-start}
@@ -780,7 +780,7 @@ details.ct-hist[open] summary::after{transform:rotate(-135deg) translateY(-1px)}
 .tx-font b{font-size:16px}.tx-font span{font-size:15px;color:var(--ink-2)}.tx-font small{font-size:13px;color:var(--ink-3)}
 /* More (phones): the other screens and the settings, one tap away */
 .sheet.more{gap:14px}
-.more-h{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;touch-action:none;padding-top:14px;margin-top:-14px}
+.more-h{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
 .more-h b{font-size:calc(24px*var(--fs,1));font-weight:700;letter-spacing:-.02em}
 .more-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
 .mtile{display:flex;flex-direction:column;align-items:flex-start;gap:6px;padding:14px;border-radius:20px;background:var(--sheet-2);box-shadow:inset 0 0 0 1px var(--rule);color:var(--ink);text-decoration:none;transition:transform .18s var(--spring),background .2s,box-shadow .2s;min-width:0}
@@ -886,7 +886,8 @@ details.ct-hist[open] summary::after{transform:rotate(-135deg) translateY(-1px)}
   display:grid;grid-template-columns:minmax(0,1fr);grid-template-rows:auto auto minmax(0,1fr) auto;border-radius:20px 20px 0 0}
 .scrim .sheet.note::before{display:none}
 @media (min-width:700px){#noteScrim{align-items:center;padding:24px}.scrim .sheet.note{border-radius:24px}}
-.nhead{display:flex;align-items:center;gap:8px;min-width:0;padding:10px 10px 8px;min-height:54px}
+.nhead{display:flex;align-items:center;gap:8px;min-width:0;padding:10px 10px 8px;min-height:54px;touch-action:none} /* also the drag handle that closes the editor */
+.sheet-grab{position:sticky;top:0;z-index:5;flex:0 0 auto;align-self:stretch;touch-action:none;cursor:grab;background:transparent}
 .nback{display:inline-flex;align-items:center;gap:2px;flex:0 0 auto;height:40px;padding:0 13px 0 7px;border:0;border-radius:12px;background:var(--fill);color:var(--ink);font:inherit;font-weight:700;font-size:calc(14.5px*var(--fs,1));cursor:pointer;transition:transform .12s}
 .nback .ic{width:19px;height:19px;stroke-width:2.3}
 .nback:active{transform:scale(.95)}
@@ -1253,6 +1254,115 @@ html.tb-hide:not(.kb) .topbar{transform:translateY(-100%)}
 }
 @media (min-width:1600px){:root{--fsv:1.12;--sbw:300px;--gut:44px}:focus-visible{outline-width:3px;outline-offset:3px}body{--vw:1400px}body[data-view="entries"],body[data-view="notes"],body[data-view="disc"],body[data-view="setup"]{--vw:1000px}}
 @media (min-width:2400px){:root{--fsv:1.4;--sbw:380px;--gut:60px}body{--vw:1900px}body[data-view="entries"],body[data-view="notes"],body[data-view="disc"],body[data-view="setup"]{--vw:1300px}}
+/* ---------- Wealth (Nov 2026 redesign): its own identity. Emerald, not the app's blue; tiles, not rows ---------- */
+.wx{display:flex;flex-direction:column;gap:18px}
+.wx-hero{position:relative;isolation:isolate;overflow:hidden;border-radius:30px;padding:20px 18px 16px;color:#fff;
+  background:radial-gradient(110% 80% at 100% 0%,rgba(110,231,183,.34),transparent 55%),radial-gradient(90% 70% at 0% 100%,rgba(45,212,191,.28),transparent 60%),linear-gradient(150deg,#022c22 0%,#065f46 50%,#0f766e 100%);
+  box-shadow:0 26px 50px -26px rgba(6,95,70,.7),inset 0 1px 0 rgba(255,255,255,.14)}
+.wx-top{display:flex;align-items:center;justify-content:space-between;gap:10px;min-height:28px}
+.wx-lbl{font-size:calc(12.5px*var(--fs,1));font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:rgba(255,255,255,.7)}
+.wx-delta{font-size:calc(12.5px*var(--fs,1));font-weight:700;padding:5px 11px;border-radius:99px;background:rgba(255,255,255,.14);box-shadow:inset 0 0 0 1px rgba(255,255,255,.12);white-space:nowrap;font-variant-numeric:tabular-nums}
+.wx-delta.up{color:#a7f3d0}.wx-delta.down{color:#fecaca}
+.wx-since{font-weight:550;color:rgba(255,255,255,.7)}
+.wx-nw{font-family:var(--f-display);font-weight:750;font-size:calc(44px*var(--fs,1));letter-spacing:-.035em;line-height:1.06;margin-top:6px;white-space:nowrap;overflow:hidden;font-variant-numeric:tabular-nums;cursor:pointer;border-radius:12px}
+.wx-sub{font-size:calc(13.5px*var(--fs,1));color:rgba(255,255,255,.72);margin-top:4px;line-height:1.4}
+.wx-sparkw{position:relative;width:calc(100% + 36px);height:76px;margin:10px -18px 8px}
+.wx-spark{display:block;width:100%;height:100%;overflow:visible}
+.wx-end{position:absolute;width:10px;height:10px;margin:-5px 0 0 -5px;border-radius:50%;background:#fff;box-shadow:0 0 0 4px rgba(255,255,255,.22),0 0 14px rgba(167,243,208,.8)}
+.wx-line{filter:drop-shadow(0 0 6px rgba(167,243,208,.55))}
+.wx-chips{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.wx-chip{display:flex;flex-direction:column;gap:2px;min-width:0;padding:11px 12px;border-radius:18px;background:rgba(255,255,255,.1);box-shadow:inset 0 0 0 1px rgba(255,255,255,.12);
+  -webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);cursor:pointer;transition:transform .25s var(--spring),background .2s}
+.wx-chip:hover{background:rgba(255,255,255,.15)}.wx-chip:active{transform:scale(.96)}
+.wx-chip span{font-size:calc(12px*var(--fs,1));color:rgba(255,255,255,.72);font-weight:650}
+.wx-chip b{font-family:var(--f-display);font-size:calc(17px*var(--fs,1));font-weight:700;letter-spacing:-.02em;white-space:nowrap;overflow:hidden;font-variant-numeric:tabular-nums}
+.wx-chip small{font-size:calc(11.5px*var(--fs,1));color:rgba(255,255,255,.66);line-height:1.3;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.wx-seg{align-self:flex-start}
+.wx-card{background:var(--sheet);border-radius:24px;box-shadow:var(--shade);border:1px solid var(--rule);overflow:clip}
+.wx-h{display:flex;align-items:baseline;justify-content:space-between;gap:6px 12px;flex-wrap:wrap;padding:0 6px}
+.wx-h h2{margin:0;font-family:var(--f-display);font-size:calc(19px*var(--fs,1));font-weight:700;letter-spacing:-.02em}
+.wx-h .num{font-weight:700;color:var(--ink-2);font-variant-numeric:tabular-nums;white-space:nowrap}
+.wx-h>span:not(.num){font-size:calc(13px*var(--fs,1));color:var(--ink-3)}
+.wx-h.in{padding:16px 18px 10px}
+.wx-h.tap{cursor:pointer;border-radius:12px}
+/* where it sits */
+.wx-alloc{padding-bottom:16px}
+.wx-bar{display:flex;gap:3px;height:14px;margin:4px 18px 14px;border-radius:99px;overflow:hidden}
+.wx-bar i{display:block;min-width:4px;background:var(--kc);border-radius:3px;transform-origin:left center}
+.wx-legend{display:flex;flex-wrap:wrap;gap:9px 16px;padding:0 18px}
+.wx-legend span{display:inline-flex;align-items:center;gap:7px;font-size:calc(13.5px*var(--fs,1));color:var(--ink-2);font-weight:550}
+.wx-legend i{width:10px;height:10px;border-radius:3px;background:var(--kc);flex:0 0 auto}
+.wx-legend b{color:var(--ink);font-weight:700;font-variant-numeric:tabular-nums}
+/* groups and tiles */
+.wx-cols{display:flex;flex-direction:column;gap:22px}
+.wx-group{display:flex;flex-direction:column;gap:10px;min-width:0}
+.wx-list{display:flex;flex-direction:column;gap:10px}
+.wx-k{position:relative;background:var(--sheet);border-radius:22px;box-shadow:var(--shade);border:1px solid var(--rule);overflow:clip;interpolate-size:allow-keywords;transition:box-shadow .35s var(--ease),border-color .35s}
+.wx-k[open]{box-shadow:var(--shade-2);border-color:color-mix(in srgb,var(--kc) 28%,var(--rule))}
+.wx-row{position:relative;display:grid;grid-template-columns:auto minmax(0,1fr) auto auto;align-items:center;gap:12px;padding:14px 14px 18px;cursor:pointer;list-style:none;-webkit-tap-highlight-color:transparent;transition:background .2s}
+.wx-row::-webkit-details-marker{display:none}
+.wx-row:hover{background:var(--fill-2)}.wx-row:active{background:var(--fill)}
+.wx-ic{width:44px;height:44px;border-radius:14px;display:grid;place-items:center;color:var(--kc);background:color-mix(in srgb,var(--kc) 15%,transparent);box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--kc) 18%,transparent);flex:0 0 auto}
+.wx-ic .ic{width:22px;height:22px;stroke-width:2}
+.wx-m{display:flex;flex-direction:column;gap:2px;min-width:0}
+.wx-m b{font-weight:650;font-size:calc(16px*var(--fs,1));letter-spacing:-.01em;line-height:1.25;overflow-wrap:anywhere}
+.wx-m small{font-size:calc(13px*var(--fs,1));color:var(--ink-3);line-height:1.35;overflow-wrap:anywhere}
+.wx-v{display:flex;flex-direction:column;align-items:flex-end;gap:3px;text-align:right}
+.wx-v b{font-family:var(--f-display);font-weight:700;font-size:calc(16.5px*var(--fs,1));letter-spacing:-.015em;white-space:nowrap;font-variant-numeric:tabular-nums}
+.wx-chev{width:30px;height:30px;border-radius:50%;display:grid;place-items:center;color:var(--ink-3);background:var(--fill-2);transition:transform .5s var(--spring),background .25s,color .25s}
+.wx-chev .ic{width:16px;height:16px;stroke-width:2.4}
+.wx-k[open] .wx-chev{transform:rotate(180deg);background:color-mix(in srgb,var(--kc) 16%,transparent);color:var(--kc)}
+.wx-share{position:absolute;left:70px;right:56px;bottom:9px;height:3px;border-radius:99px;background:var(--fill-2);overflow:hidden}
+.wx-share i{display:block;height:100%;border-radius:99px;background:var(--kc)}
+/* smooth open and close (browsers without it simply open at once) */
+.wx-k::details-content{block-size:0;overflow:clip;transition:block-size .5s var(--spring),content-visibility .5s allow-discrete}
+.wx-k[open]::details-content{block-size:auto}
+.wx-in{margin:0 10px 10px;padding:4px;border-radius:18px;background:var(--sheet-2);display:flex;flex-direction:column;gap:2px}
+.wx-acc{display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:12px;padding:11px 10px;border-radius:15px;cursor:pointer;transition:background .2s}
+.wx-acc:hover{background:var(--fill-2)}.wx-acc:active{background:var(--fill)}
+.wx-acc .wx-m b{font-size:calc(15px*var(--fs,1))}.wx-acc .wx-v b{font-size:calc(15.5px*var(--fs,1))}
+.wx-av{width:32px;height:32px;border-radius:50%;display:grid;place-items:center;font-size:calc(13px*var(--fs,1));font-weight:750;color:#fff;background:hsl(var(--h) 52% 46%);flex:0 0 auto}
+.wx-av.none{width:10px;height:10px;margin:0 11px;background:var(--kc)}
+.wx-av.card{color:var(--kc);background:color-mix(in srgb,var(--kc) 15%,transparent)}.wx-av.card .ic{width:17px;height:17px}
+.wx-k.solo .wx-row{padding-bottom:18px}
+.g2 .wx-k{background:transparent;box-shadow:none;border-style:dashed}
+.g2 .wx-h .num,.g2 .wx-v b{color:var(--ink-2)}
+.wx-trend .chart{padding:0 8px 10px}
+/* record */
+.wx-record{display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:12px;width:100%;text-align:left;padding:14px;border-radius:22px;font:inherit;color:var(--ink);cursor:pointer;
+  border:1px solid color-mix(in srgb,#10b981 30%,var(--rule));background:linear-gradient(135deg,color-mix(in srgb,#10b981 13%,var(--sheet)),var(--sheet) 70%);box-shadow:var(--shade);transition:transform .25s var(--spring)}
+.wx-record:active{transform:scale(.985)}
+.wx-record .wx-ic{color:#fff;background:linear-gradient(150deg,#34d399,#059669);box-shadow:0 8px 18px -8px rgba(5,150,105,.7)}
+/* balance history timeline */
+.wx-tl{list-style:none;margin:0;padding:2px 10px 10px}
+.wx-snap{position:relative;display:grid;grid-template-columns:22px minmax(0,1fr) auto auto;align-items:center;gap:10px;padding:12px 4px 12px 6px;border-radius:16px;cursor:pointer;transition:background .2s}
+.wx-snap:hover{background:var(--fill-2)}.wx-snap:active{background:var(--fill)}
+.wx-snap::before{content:"";position:absolute;left:16px;top:0;bottom:0;width:2px;background:var(--rule-2)}
+.wx-snap:first-child::before{top:50%}.wx-snap:last-child::before{bottom:50%}.wx-snap:only-child::before{display:none}
+.wx-dot{position:relative;z-index:1;width:12px;height:12px;border-radius:50%;justify-self:center;background:var(--sheet);box-shadow:0 0 0 2.5px #10b981}
+.wx-snap:first-child .wx-dot{background:#10b981;box-shadow:0 0 0 2.5px #10b981,0 0 0 6px color-mix(in srgb,#10b981 22%,transparent)}
+.wx-v em{font-style:normal;font-size:calc(12px*var(--fs,1));font-weight:700;font-variant-numeric:tabular-nums;white-space:nowrap}
+.wx-v em.up{color:var(--good-ink)}.wx-v em.down{color:var(--bad-ink)}
+.wx-del{width:36px;height:36px;border:0;border-radius:50%;display:grid;place-items:center;background:transparent;color:var(--ink-3);cursor:pointer;font-size:13px;font-weight:700;transition:background .2s,color .2s}
+.wx-del:hover,.wx-del:active{background:color-mix(in srgb,var(--bad) 12%,transparent);color:var(--bad)}
+.wx-del .ic{width:17px;height:17px}
+/* arrival: the hero rises, the line draws itself, the bar grows, tiles follow one after another */
+@media (prefers-reduced-motion:no-preference){
+  .view.enter .wx-hero{animation:wxIn .55s var(--ease-out) both}
+  .view.enter .wx-sparkw{animation:wxWipe 1.3s .15s var(--ease-out) both}
+  .view.enter .wx-bar i{animation:wxGrow .8s var(--ease-out) both;animation-delay:calc(120ms + var(--i,0) * 70ms)}
+  .view.enter .wx-k,.view.enter .wx-card,.view.enter .wx-record{animation:wxIn .55s var(--ease-out) both;animation-delay:calc(80ms + min(var(--i,0),8) * 45ms)}
+}
+@keyframes wxIn{from{opacity:0;transform:translateY(14px)}}
+@keyframes wxWipe{from{clip-path:inset(0 100% 0 0)}to{clip-path:inset(0 0 0 0)}}
+@keyframes wxGrow{from{transform:scaleX(0)}}
+@media (max-width:380px){.wx-chips{grid-template-columns:1fr 1fr}.wx-chips .wx-chip:first-child{grid-column:1/-1}.wx-nw{font-size:calc(38px*var(--fs,1))}}
+@media (min-width:1024px){
+  .wx-hero{padding:26px 26px 20px}.wx-nw{font-size:calc(54px*var(--fs,1))}.wx-sparkw{width:calc(100% + 52px);margin:12px -26px 10px;height:96px}
+  .wx-chips{max-width:760px}
+  .wx-cols{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:22px 24px;align-items:start}
+  .wx-cols>.g0{grid-row:span 3}
+}
 /* ---------- Reader: its own page (reader/), shown edge to edge in this tab through a frame made only when first opened ---------- */
 #v-read{position:fixed;inset:0;z-index:30;display:block;max-width:none!important;margin:0!important;width:auto!important}
 #v-read[hidden]{display:none}
@@ -1522,7 +1632,7 @@ body[data-view="read"] main{padding:0}
 'use strict';
 const VIEWS = ['overview','entries','cards','wealth','notes','trend','setup','vault','disc','add','read'];
 // An entry link (role Entry) sees only these. The server refuses everything else for it too.
-const ENTRY_VIEWS = ['add', 'entries', 'notes'];
+const ENTRY_VIEWS = ['add', 'entries', 'notes', 'read']; // shared entry links: add, see entries, notes, and the Reader
 const TYPES = ['Expense','Income','Transfer'];
 const GROUPS = ['Fixed','Variable','Discretionary','Sinking'];
 const CLASSES = ['Bank','FD','Bond','Retirement','Equity','ETF','Gold','Cash','Property','Loan','Owed','Other'];
@@ -2205,57 +2315,106 @@ function wealthGroups(X) {
     ['Not counted in net worth', a => a.counted === false]
   ];
 }
+/* Wealth, redesigned (Nov 2026): its own identity, not the same rows as Cards.
+   An emerald hero with your net worth over its own history; "Where it sits" (one bar showing how assets split);
+   modern account tiles per kind (colour icon, share of the total, smooth open/close); a balance-history timeline.
+   The sums are unchanged (wealthCalc, wealthGroups); every figure still opens its breakdown. */
+const WK = {Bank: ['Bank accounts', 'i-bank', '#3b82f6'], FD: ['Fixed deposits', 'i-lock', '#8b5cf6'], Bond: ['Bonds', 'c-pct', '#6366f1'],
+  Retirement: ['Retirement', 'c-shield', '#14b8a6'], Equity: ['Shares', 'i-trend', '#22c55e'], ETF: ['ETFs', 'i-trend', '#10b981'], Gold: ['Gold', 'c-spark', '#eab308'],
+  Cash: ['Cash', 'c-cash', '#64748b'], Property: ['Property', 'c-home', '#ec4899'], Loan: ['Loans', 'c-swap', '#ef4444'], Owed: ['Money owed', 'c-user', '#f97316'],
+  Card: ['Credit cards', 'c-card', '#e11d48'], Other: ['Other', 'c-tag', '#94a3b8']};
+const wkOf = k => WK[k] || [KIND_LABEL[k] || k, 'c-tag', '#94a3b8'];
+const wxIc = (icon, col) => `<span class="wx-ic" style="--kc:${col}"><svg class="ic" aria-hidden="true"><use href="#${icon}"/></svg></span>`;
+const wxPct = (v, of) => of > 0 ? Math.round(Math.abs(v) / of * 100) : 0;
+const wxPctTxt = (v, of) => { if (!(of > 0) || !v) return '0%'; const x = Math.abs(v) / of * 100; return x > 0 && x < 1 ? '<1%' : Math.round(x) + '%'; }; // a small amount is "<1%", never a misleading 0%
+// the net worth line inside the hero: a smooth curve and a soft glow under it
+function wxSpark(series) {
+  if (!series || series.length < 2) return '';
+  const W = 320, H = 70, vs = series.map(p => p.nw), lo = Math.min(...vs), hi = Math.max(...vs), span = hi - lo || Math.abs(hi) || 1;
+  const pts = series.map((p, i) => [i / (series.length - 1) * (W - 8), 8 + (1 - (p.nw - lo) / span) * (H - 16)]);
+  let d = `M${pts[0][0].toFixed(1)},${pts[0][1].toFixed(1)}`;
+  for (let i = 1; i < pts.length; i++) { const [x0, y0] = pts[i - 1], [x1, y1] = pts[i], cx = (x0 + x1) / 2; d += ` C${cx.toFixed(1)},${y0.toFixed(1)} ${cx.toFixed(1)},${y1.toFixed(1)} ${x1.toFixed(1)},${y1.toFixed(1)}`; }
+  const [ex, ey] = pts[pts.length - 1];
+  // the line stretches to any width; the end dot is drawn on top as its own element, so it always stays round
+  return `<div class="wx-sparkw"><svg class="wx-spark" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" aria-hidden="true"><defs><linearGradient id="wxg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".28"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></linearGradient></defs>
+    <path d="${d} L${ex.toFixed(1)},${H} L0,${H} Z" fill="url(#wxg)"/><path class="wx-line" d="${d}" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" vector-effect="non-scaling-stroke"/>
+    </svg><i class="wx-end" style="left:${(ex / W * 100).toFixed(2)}%;top:${(ey / H * 100).toFixed(2)}%"></i></div>`;
+}
 function renderWealth(X) {
-  const W0 = wealthCalc(X), {accts, nw, liquid, debts, hasAny, cardLs, cardOwed, bl, series, sp, cover} = W0;
+  const W0 = wealthCalc(X), {accts, nw, liquid, debts, hasAny, cardLs, cardOwed, bl, series, cover} = W0;
   const view = readPref().wealthView === 'fd' ? 'fd' : 'nw';
-  const kpis = `<div class="card kpis">
-    <div class="kpi head"${whyAttr('w-nw')}><span class="lbl">Net worth</span><span class="val fit">${rsShort(nw)}</span><span class="sub">Liquid money + non-liquid assets</span></div>
-    <div class="kpi"${whyAttr('w-liq')}><span class="lbl">Liquid money</span><span class="val fit">${rsShort(liquid)}</span><span class="sub">After liabilities and this month's budget</span></div>
-    <div class="kpi"${whyAttr('w-debt')}><span class="lbl">Liabilities</span><span class="val fit">${rsShort(-debts)}</span><span class="sub">Loans, cards, money owed</span></div>
-    <div class="kpi"${whyAttr('w-gross')}><span class="lbl">Gross assets</span><span class="val fit">${rsShort(W0.liqAssets + W0.nonLiq)}</span><span class="sub">Liquid + non-liquid, before liabilities</span></div>
-  </div>`;
-  const tabs = `<div class="seg" role="group" aria-label="Wealth view"><button type="button" class="segb" data-act="w-view" data-v="nw" aria-pressed="${view === 'nw'}">Net worth</button><button type="button" class="segb" data-act="w-view" data-v="fd" aria-pressed="${view === 'fd'}">FD growth</button></div>`;
-  if (view === 'fd') { paint($('#v-wealth'), `${kpis}${tabs}${fdHtml(X)}`); return; }
-  const W = Math.max(320, Math.round(($('#v-wealth').clientWidth || 700) - 18));
-  const chart = series.length >= 2
-    ? `<div class="chart">${chartLine(series.map(p => ({l: fmtDM(p.date), v: p.nw})), '', W - 16, 'Net worth over time')}</div>`
-    : `<div class="empty">Record balances at the end of each cycle and your net worth line will appear here.</div>`;
+  const gross = W0.liqAssets + W0.nonLiq;
+  const last = series[series.length - 1], prev = series[series.length - 2];
+  const delta = last && prev ? last.nw - prev.nw : null, pct = delta != null && prev.nw ? delta / Math.abs(prev.nw) * 100 : null;
+  const coverTxt = cover == null ? '' : cover >= 1 ? `${Math.floor(cover)} month${Math.floor(cover) === 1 ? '' : 's'} of spending` : 'Under a month of spending';
+  const hero = `<section class="wx-hero">
+    <div class="wx-top"><span class="wx-lbl">Net worth</span>${delta != null ? `<span class="wx-delta ${delta >= 0 ? 'up' : 'down'}" title="${esc(fmtDM(last.date))} against ${esc(fmtDM(prev.date))}">${delta >= 0 ? '▲' : '▼'} ${rs(Math.abs(delta))}${pct != null ? ` · ${Math.abs(pct).toFixed(1)}%` : ''} <span class="wx-since">since ${esc(fmtDM(prev.date))}</span></span>` : ''}</div>
+    <div class="wx-nw fit"${whyAttr('w-nw')}>${rs(nw)}</div>
+    <div class="wx-sub">Liquid money + non-liquid assets</div>
+    ${wxSpark(series)}
+    <div class="wx-chips">
+      <div class="wx-chip"${whyAttr('w-liq')}><span>Liquid money</span><b class="fit">${rs(liquid)}</b>${coverTxt ? `<small>${coverTxt}</small>` : '<small>After liabilities and this month’s budget</small>'}</div>
+      <div class="wx-chip"${whyAttr('w-debt')}><span>Liabilities</span><b class="fit">${rs(-debts)}</b><small>Loans, cards, money owed</small></div>
+      <div class="wx-chip"${whyAttr('w-gross')}><span>Gross assets</span><b class="fit">${rs(gross)}</b><small>Before liabilities</small></div>
+    </div></section>`;
+  const tabs = `<div class="seg wx-seg" role="group" aria-label="Wealth view"><button type="button" class="segb" data-act="w-view" data-v="nw" aria-pressed="${view === 'nw'}">Net worth</button><button type="button" class="segb" data-act="w-view" data-v="fd" aria-pressed="${view === 'fd'}">FD growth</button></div>`;
+  if (view === 'fd') { paint($('#v-wealth'), `<div class="wx">${hero}${tabs}${fdHtml(X)}</div>`); return; }
+  const v = a => X.latest[a.id] ? X.latest[a.id].v : 0;
   const groupsDef = wealthGroups(X);
-  // Assets and Liabilities as a tree: a kind with several accounts (e.g. Bank accounts) is one row that opens
-  // into its accounts; a kind with one account stays a single row. Credit cards open into each card.
-  const accRow = (a, inner) => { const L = X.latest[a.id], meta = [a.owner, inner ? '' : a.cls, a.liquid ? 'Liquid' : '', a.matures ? 'Matures ' + a.matures : ''].filter(Boolean).map(esc).join(' · ');
-    return `<div class="li tap${inner ? ' twig' : ''}"${whyAttr('w-acct:' + a.id)}><div class="l"><div class="t1">${esc(a.name)}</div><div class="t2">${meta}</div></div>
-      <div style="text-align:right"><div class="amt num">${L ? rs(L.v) : '—'}</div><div class="t2">${balNote(L)}</div></div></div>`; };
-  const branch = (key, title, sub, total, rows) => `<details class="wtree" data-tree="${esc(key)}"${state.openTree && state.openTree[key] ? ' open' : ''}><summary class="li"><div class="l"><div class="t1">${esc(title)}</div><div class="t2">${esc(sub)}</div></div>
-      <div class="wt-r"><span class="amt num">${rs(total)}</span><span class="wt-chev" aria-hidden="true">▾</span></div></summary>${rows}</details>`;
-  const cardTwigs = () => cardLs.map(L => `<div class="li tap twig"${whyAttr('card:' + L.card.id)}><div class="l"><div class="t1">${esc(L.card.name)}</div>
-      <div class="t2">${L.dueNow > 0.5 ? `Billed ${rs(L.dueNow)}${L.unpaid[0] ? ', Pay By ' + fmtDM(L.unpaid[0].due) : ''}` : 'Nothing billed to pay'}${L.nextSt ? ` · Next Stmt Date ${fmtDM(L.nextSt.sd)}: ${rs(L.nextSt.left)}` : ''}${L.laterAmt > 0.5 ? ` · later ${rs(L.laterAmt)}` : ''}</div></div>
-      <div class="amt num">${rs(-L.owed)}</div></div>`).join('');
+  // Where it sits: counted assets by kind, as one bar
+  const alloc = {}; accts.filter(groupsDef[0][1]).forEach(a => { const x = v(a); if (x > 0) alloc[a.cls || 'Other'] = (alloc[a.cls || 'Other'] || 0) + x; });
+  const allocList = Object.entries(alloc).sort((a, b) => b[1] - a[1]), allocSum = allocList.reduce((s, [, x]) => s + x, 0);
+  const allocHtml = allocSum > 0 ? `<section class="wx-card wx-alloc"><div class="wx-h in"><h2>Where it sits</h2><span class="num">${rs(allocSum)}</span></div>
+    <div class="wx-bar" role="img" aria-label="${esc(allocList.map(([k, x]) => wkOf(k)[0] + ' ' + wxPct(x, allocSum) + '%').join(', '))}">${allocList.map(([k, x], i) => `<i style="--kc:${wkOf(k)[2]};flex:${x};--i:${i}"></i>`).join('')}</div>
+    <div class="wx-legend">${allocList.map(([k, x]) => `<span><i style="--kc:${wkOf(k)[2]}"></i>${esc(wkOf(k)[0])}<b>${esc(wxPctTxt(x, allocSum))}</b></span>`).join('')}</div></section>` : '';
+  // tiles
+  let ti = 0;
+  const owner = o => { if (!o) return ''; const n = String(o).trim(), h = [...n].reduce((s, c) => (s * 31 + c.charCodeAt(0)) >>> 0, 7) % 360; return `<span class="wx-av" style="--h:${h}" title="${esc(n)}">${esc(n[0].toUpperCase())}</span>`; };
+  const accItem = (a) => { const L = X.latest[a.id], meta = [a.owner, a.liquid ? 'Liquid' : '', a.matures ? 'Matures ' + fmtDM(a.matures) : '', balNote(L)].filter(Boolean).map(esc).join(' · ');
+    return `<div class="wx-acc"${whyAttr('w-acct:' + a.id)}>${owner(a.owner) || '<span class="wx-av none"></span>'}<span class="wx-m"><b>${esc(a.name)}</b><small>${meta}</small></span><span class="wx-v"><b class="num">${L ? rs(L.v) : '—'}</b></span></div>`; };
+  const tile = (key, kind, title, sub, total, share, inner, solo) => {
+    const [, icon, col] = wkOf(kind), i = ti++;
+    const row = `${wxIc(icon, col)}<span class="wx-m"><b>${esc(title)}</b><small>${esc(sub)}</small></span><span class="wx-v"><b class="num">${rs(total)}</b></span><i class="wx-chev" aria-hidden="true"><svg class="ic"><use href="#${solo ? 'i-right' : 'i-down'}"/></svg></i>${share != null ? `<span class="wx-share"><i style="width:${Math.max(2, share)}%"></i></span>` : ''}`;
+    if (solo) return `<div class="wx-k solo" style="--kc:${col};--i:${i}"${whyAttr(solo)}><div class="wx-row">${row}</div></div>`;
+    return `<details class="wx-k wtree" data-tree="${esc(key)}" style="--kc:${col};--i:${i}"${state.openTree && state.openTree[key] ? ' open' : ''}><summary class="wx-row">${row}</summary><div class="wx-in">${inner}</div></details>`;
+  };
+  const cardItems = () => cardLs.map(L => `<div class="wx-acc"${whyAttr('card:' + L.card.id)}><span class="wx-av card"><svg class="ic" aria-hidden="true"><use href="#c-card"/></svg></span><span class="wx-m"><b>${esc(L.card.name)}</b>
+      <small>${L.dueNow > 0.5 ? `Billed ${rs(L.dueNow)}${L.unpaid[0] ? ', pay by ' + fmtDM(L.unpaid[0].due) : ''}` : 'Nothing billed to pay'}${L.nextSt ? ` · next statement ${fmtDM(L.nextSt.sd)}: ${rs(L.nextSt.left)}` : ''}${L.laterAmt > 0.5 ? ` · later ${rs(L.laterAmt)}` : ''}</small></span><span class="wx-v"><b class="num">${rs(-L.owed)}</b></span></div>`).join('');
   const sections = groupsDef.map(([title, test], gi) => {
     const xs = accts.filter(test), extra = title === 'Liabilities' && cardLs.length > 0; if (!xs.length && !extra) return '';
-    const total = xs.reduce((s, a) => s + (X.latest[a.id] ? X.latest[a.id].v : 0), 0) - (extra ? cardOwed : 0);
+    const total = xs.reduce((s, a) => s + v(a), 0) - (extra ? cardOwed : 0);
+    const base = gi === 2 ? 0 : Math.abs(total);
     const byKind = {}; xs.forEach(a => { (byKind[a.cls || 'Other'] = byKind[a.cls || 'Other'] || []).push(a); });
-    const rows = Object.entries(byKind).map(([k, list]) => list.length === 1 ? accRow(list[0], false)
-      : branch(gi + ':' + k, KIND_LABEL[k] || k, list.length + ' accounts', list.reduce((s, a) => s + (X.latest[a.id] ? X.latest[a.id].v : 0), 0), list.map(a => accRow(a, true)).join(''))).join('')
-      + (extra ? branch(gi + ':cards', 'Credit cards', cardLs.length + ' card' + (cardLs.length === 1 ? '' : 's') + ' · tap for each card', -cardOwed, cardTwigs()) : '');
-    const block = `<section class="card list"><div class="sec-h tap"${whyAttr('w-grp:' + gi)}><h2>${title}</h2><span class="hint num">${rs(total)}</span></div>${rows}</section>`;
-    // after Liabilities: this month's budget still to be spent, also taken off net worth
+    const kinds = Object.entries(byKind).map(([k, list]) => ({k, list, sum: list.reduce((s, a) => s + v(a), 0)})).sort((a, b) => Math.abs(b.sum) - Math.abs(a.sum));
+    const tiles = kinds.map(({k, list, sum}) => {
+      const share = gi === 2 ? null : wxPct(sum, base);
+      if (list.length === 1) { const a = list[0]; return tile('', k, a.name, [wkOf(k)[0], a.owner, share != null ? wxPctTxt(sum, base) : ''].filter(Boolean).join(' · '), v(a), share, '', 'w-acct:' + a.id); }
+      return tile(gi + ':' + k, k, wkOf(k)[0], `${list.length} accounts${share != null ? ' · ' + wxPctTxt(sum, base) : ''}`, sum, share, list.map(accItem).join(''));
+    }).join('') + (extra ? tile(gi + ':cards', 'Card', 'Credit cards', `${cardLs.length} card${cardLs.length === 1 ? '' : 's'} · ${wxPctTxt(cardOwed, base)}`, -cardOwed, wxPct(cardOwed, base), cardItems()) : '');
+    const block = `<section class="wx-group g${gi}"><div class="wx-h tap"${whyAttr('w-grp:' + gi)}><h2>${title}</h2><span class="num">${rs(total)}</span></div><div class="wx-list">${tiles}</div></section>`;
     return block + (title === 'Liabilities' || (title === 'Assets' && !accts.some(groupsDef[1][1]) && !cardLs.length) ? setAside() : '');
   }).join('');
   function setAside() {
-    return `<section class="card list"><div class="sec-h tap"${whyAttr('w-left')}><h2>Still to spend this month</h2><span class="hint num">${rs(-bl.left)}</span></div>
-      <div class="li tap"${whyAttr('w-left')}><div class="l"><div class="t1">${esc(cycleLabel(bl.key))} budget left</div><div class="t2">Left in each budgeted category · taken off net worth</div></div><div class="amt num">${rs(-bl.left)}</div></div></section>`;
+    return `<section class="wx-group g-aside"><div class="wx-h tap"${whyAttr('w-left')}><h2>Set aside</h2><span class="num">${rs(-bl.left)}</span></div><div class="wx-list">
+      <div class="wx-k solo" style="--kc:#f59e0b"${whyAttr('w-left')}><div class="wx-row">${wxIc('i-cal', '#f59e0b')}<span class="wx-m"><b>Still to spend this month</b><small>${esc(cycleLabel(bl.key))} budget left · taken off net worth</small></span><span class="wx-v"><b class="num">${rs(-bl.left)}</b></span><i class="wx-chev" aria-hidden="true"><svg class="ic"><use href="#i-right"/></svg></i></div></div></div></section>`;
   }
-  const snapsHtml = X.snaps.slice().reverse().map(s => { const p = series.find(z => z.date === s.date);
-    return `<div class="li tap"${whyAttr('w-snap:' + s.date)}><div class="l"><div class="t1">${fmtDay(parseYmd(s.date))} ${parseYmd(s.date).getFullYear()}</div><div class="t2">${Object.keys(s.values || {}).filter(id => !isTimeKey(id)).length} accounts</div></div>
-      <div style="display:flex;gap:10px;align-items:center"><span class="amt num">${p ? rs(p.nw) : ''}</span><button class="icon-btn" type="button" data-act="del-snap" data-date="${esc(s.date)}" aria-label="Delete snapshot">×</button></div></div>`; }).join('');
-  // Order: summary, assets and debts first; the chart and recording balances at the bottom.
-  paint($('#v-wealth'), `${kpis}${tabs}
-    ${sections}
-    <section class="card"><div class="sec-h"><h2>Net worth over time</h2><span class="hint">From recorded balances</span></div>${chart}</section>
-    <div class="row-actions" style="padding:0"><button class="btn primary" type="button" data-act="balances">Record today's balances</button>
-      <span class="hint" style="align-self:center">${hasAny ? '' : 'No balances recorded yet.'} Your home's value isn't counted unless you add it as an account.</span></div>
-    <section class="card list"><div class="sec-h"><h2>Balance snapshots</h2><span class="hint">One per cycle end is enough</span></div>${snapsHtml || '<div class="empty">None yet.</div>'}</section>`);
+  const Wc = Math.max(300, Math.round(($('#v-wealth').clientWidth || 700) - 40));
+  const chart = series.length >= 2 ? `<div class="chart">${chartLine(series.map(p => ({l: fmtDM(p.date), v: p.nw})), '', Math.min(Wc, 1100), 'Net worth over time')}</div>`
+    : `<div class="empty">Record balances at the end of each cycle and your net worth line will appear here.</div>`;
+  const snaps = X.snaps.slice().reverse();
+  const daysAgo = snaps[0] ? Math.round((Date.now() - parseYmd(snaps[0].date).getTime()) / 864e5) : null;
+  const record = `<button type="button" class="wx-record" data-act="balances"><span class="wx-ic" style="--kc:#10b981"><svg class="ic" aria-hidden="true"><use href="#i-plus"/></svg></span>
+    <span class="wx-m"><b>Record today’s balances</b><small>${snaps[0] ? `Last recorded ${esc(fmtDM(snaps[0].date))} · ${daysAgo <= 0 ? 'today' : daysAgo === 1 ? 'yesterday' : daysAgo + ' days ago'}` : 'No balances recorded yet'}. Your home counts only if added as an account.</small></span><i class="wx-chev" aria-hidden="true"><svg class="ic"><use href="#i-right"/></svg></i></button>`;
+  const hist = snaps.map((s, i) => { const p = series.find(z => z.date === s.date), q = snaps[i + 1] && series.find(z => z.date === snaps[i + 1].date), d = p && q ? p.nw - q.nw : null, dt = parseYmd(s.date);
+    return `<li class="wx-snap"${whyAttr('w-snap:' + s.date)}><span class="wx-dot" aria-hidden="true"></span><span class="wx-m"><b>${fmtDay(dt)} ${dt.getFullYear()}</b><small>${Object.keys(s.values || {}).filter(id => !isTimeKey(id)).length} accounts</small></span>
+      <span class="wx-v"><b class="num">${p ? rs(p.nw) : ''}</b>${d != null ? `<em class="${d >= 0 ? 'up' : 'down'}">${d >= 0 ? '▲' : '▼'} ${rs(Math.abs(d))}</em>` : ''}</span>
+      <button class="wx-del" type="button" data-act="del-snap" data-date="${esc(s.date)}" aria-label="Delete the ${esc(fmtDay(dt))} snapshot"><svg class="ic" aria-hidden="true"><use href="#i-trash"/></svg></button></li>`; }).join('');
+  paint($('#v-wealth'), `<div class="wx">${hero}${tabs}${allocHtml}
+    <div class="wx-cols">${sections}</div>
+    <section class="wx-card wx-trend"><div class="wx-h in"><h2>Net worth over time</h2><span>From recorded balances</span></div>${chart}</section>
+    ${record}
+    <section class="wx-card"><div class="wx-h in"><h2>Balance history</h2><span>One per cycle end is enough</span></div>${hist ? `<ol class="wx-tl">${hist}</ol>` : '<div class="empty">None yet.</div>'}</section>
+  </div>`);
 }
 document.addEventListener('click', ev => {
   const b = ev.target.closest('[data-act="w-view"]'); if (!b) return;
@@ -5361,15 +5520,53 @@ function moreHtml() {
     </div>`;
 }
 function openMore() { paint($('#moreBox'), moreHtml()); $('#moreScrim').hidden = false; }
-/* Pull to close: drag the More sheet down from its top (or flick it) and it slides away. A short drag springs back.
-   Only starts when the sheet is scrolled to the top, so scrolling its contents still works. */
-function pullToClose(sheet, scrim, close) {
-  let y0 = 0, dy = 0, t0 = 0, on = false, live = false, trail = [];
-  sheet.addEventListener('touchstart', e => { on = e.touches.length === 1 && sheet.scrollTop <= 0; live = false; dy = 0; if (on) { y0 = e.touches[0].clientY; t0 = Date.now(); trail = [[0, t0]]; } }, {passive: true});
+/* PULL TO CLOSE, on every pop-up (all ten sheets). Drag a sheet down, or flick it, and it slides away; a short or slow
+   drag springs back. It closes exactly as tapping outside does (an entry being edited is let go, a note is saved).
+   - A grab strip across the top of every sheet (where the grab bar is) always drags, even on long sheets that scroll.
+     The note editor, a full-screen grid, uses its header row instead.
+   - From anywhere else: only when the sheet is scrolled to the top, the drag is downward rather than sideways (so chip
+     rows still swipe), and it doesn't start in a text box. While the keyboard is up, only the grab strip drags.
+   - The browser is told not to claim these gestures for scrolling (touch-action), so the sheet follows the finger. */
+function closeScrim(id) {
+  if (id === 'noteScrim') return closeNote();
+  if (id === 'noteMenu') return closeNoteMenu();
+  if (id === 'whyScrim') return closeWhy();
+  if (id === 'entryScrim') return closeEntry();
+  if (id === 'moreScrim') return closeMore();
+  $('#' + id).hidden = true;
+}
+function pullToClose(sheet, scrim, close, opt = {}) {
+  let y0 = 0, x0 = 0, dy = 0, t0 = 0, on = false, live = false, grab = false, trail = [];
+  const handle = opt.handle || '.sheet-grab';
+  // the grab strip: exactly the sheet's top padding (where the grab bar is), kept as the first child even when the sheet is
+  // redrawn, and re-measured whenever the sheet changes shape (the keyboard opening changes its padding)
+  let fit = () => {};
+  if (!opt.handle) {
+    const g = document.createElement('div'); g.className = 'sheet-grab'; g.setAttribute('aria-hidden', 'true');
+    fit = () => { const cs = getComputedStyle(sheet), gap = cs.display.includes('flex') && cs.rowGap !== 'normal' ? cs.rowGap : '0px';
+      g.style.height = cs.paddingTop; g.style.top = `-${cs.paddingTop}`; // a sticky box may only rise into the padding if allowed to
+      g.style.margin = `-${cs.paddingTop} -${cs.paddingRight} -${gap} -${cs.paddingLeft}`; };
+    const keep = () => { if (sheet.firstChild !== g) { sheet.prepend(g); fit(); } };
+    keep(); new MutationObserver(keep).observe(sheet, {childList: true});
+    new MutationObserver(() => { if (!scrim.hidden) requestAnimationFrame(fit); }).observe(scrim, {attributes: true, attributeFilter: ['hidden']});
+  }
+  const blocked = t => t.closest('input,textarea,select,[contenteditable]:not([contenteditable="false"]),[role="textbox"]');
+  const scrolled = t => { for (let n = t; n && n !== sheet; n = n.parentElement) if (n.scrollTop > 0) return true; return sheet.scrollTop > 0; };
+  sheet.addEventListener('touchstart', e => {
+    const t = e.target; grab = !!t.closest(handle); live = false; dy = 0;
+    on = e.touches.length === 1 && (grab || (!blocked(t) && !scrolled(t) && !document.documentElement.classList.contains('kb')));
+    if (on) { y0 = e.touches[0].clientY; x0 = e.touches[0].clientX; t0 = Date.now(); trail = [[0, t0]]; }
+  }, {passive: true});
   sheet.addEventListener('touchmove', e => {
-    if (!on) return; dy = e.touches[0].clientY - y0; const now = Date.now(); trail.push([dy, now]); while (trail.length > 2 && now - trail[0][1] > 100) trail.shift(); // the last 0.1 s: how fast the finger was going as it let go
-    if (!live) { if (dy < -4) { on = false; return; } if (dy < 8) return; live = true; sheet.style.transition = 'none'; }
-    e.preventDefault();
+    if (!on) return;
+    dy = e.touches[0].clientY - y0; const dx = e.touches[0].clientX - x0, now = Date.now();
+    trail.push([dy, now]); while (trail.length > 2 && now - trail[0][1] > 100) trail.shift(); // the last 0.1 s: how fast the finger was going as it let go
+    if (!live) {
+      if (dy < -4 || (!grab && Math.abs(dx) > Math.abs(dy) + 2)) { on = false; return; } // upward, or sideways (a chip row): not ours
+      if (dy < 8) return;
+      live = true; sheet.style.transition = 'none';
+    }
+    if (e.cancelable) e.preventDefault();
     const d = Math.max(0, dy - 8); sheet.style.transform = `translateY(${d}px)`; scrim.style.opacity = String(1 - Math.min(0.75, d / (sheet.offsetHeight || 600)));
   }, {passive: false});
   const end = () => {
@@ -5380,13 +5577,14 @@ function pullToClose(sheet, scrim, close) {
     else sheet.style.transform = '';
   };
   sheet.addEventListener('touchend', end); sheet.addEventListener('touchcancel', end);
-  // When the sheet's contents fit (nothing to scroll), the whole sheet is a drag handle and the browser must not claim
-  // the gesture for scrolling; when it does scroll, its header strip still drags (CSS: .more-h).
-  const grab = () => { sheet.style.touchAction = sheet.scrollHeight <= sheet.clientHeight + 1 ? 'none' : ''; };
-  new ResizeObserver(grab).observe(sheet);
-  new MutationObserver(() => requestAnimationFrame(grab)).observe(sheet, {childList: true, subtree: true});
+  // When the sheet's contents fit (nothing to scroll), the whole sheet is a drag handle; never the note editor (it has a text area).
+  if (!opt.handle) {
+    const fitTouch = () => { fit(); sheet.style.touchAction = sheet.scrollHeight <= sheet.clientHeight + 1 ? 'none' : ''; };
+    new ResizeObserver(fitTouch).observe(sheet);
+    new MutationObserver(() => requestAnimationFrame(fitTouch)).observe(sheet, {childList: true, subtree: true});
+  }
 }
-pullToClose($('#moreBox'), $('#moreScrim'), closeMore);
+document.querySelectorAll('.scrim').forEach(sc => { const sh = sc.querySelector(':scope > .sheet'); if (sh) pullToClose(sh, sc, () => closeScrim(sc.id), sc.id === 'noteScrim' ? {handle: '.nhead'} : {}); });
 function closeMore() { $('#moreScrim').hidden = true; }
 async function installNow() {
   if (installEvt) { installEvt.prompt(); try { await installEvt.userChoice; } catch (e) {} installEvt = null; if (state.config) render(); return; }
