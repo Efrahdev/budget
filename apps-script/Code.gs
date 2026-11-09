@@ -20,7 +20,8 @@
  *
  * The app sends one POST per sync: {session, ops: [...]}. Each op is an
  * upsert or a delete, so sending the same op twice is harmless.
- * The reply is always the full, current data set.
+ * The reply is the full, current data set and its version (rev). A request with no ops and
+ * {since: rev} for the current version gets a tiny {same: true} reply instead.
  */
 
 var TABS = {
@@ -67,6 +68,9 @@ function doPost(e) {
     var who = authorise(ss, req);
     if (!who.ok) return out(who);
     var ops = Array.isArray(req.ops) ? req.ops : [], vaultOps = [], noteErrors = [], role = who.user.role, killErr = '';
+    var rev = props.getProperty('REV') || '';
+    if (!ops.length && req.since && rev && req.since === rev && !req.vault && !(Array.isArray(req.noteIds) && req.noteIds.length) && !who.session)
+      return out({ok: true, same: true, rev: rev, me: who.user, at: Date.now()});
     for (var i = 0; i < ops.length; i++) {
       var op = ops[i] || {};
       if (role === 'Entry') {
@@ -82,8 +86,9 @@ function doPost(e) {
       applyOp(ss, op);
     }
     vaultApply(ss, vaultOps, who.user);
-    if (ops.length) SpreadsheetApp.flush();
-    var reply = {ok: true, applied: ops.length, data: role === 'Entry' ? entryData(ss, who.user) : readAll(ss), me: who.user, at: Date.now()};
+    if (ops.length) { SpreadsheetApp.flush(); rev = Date.now().toString(36) + Math.random().toString(36).slice(2, 7); props.setProperty('REV', rev); }
+    if (!rev) { rev = Date.now().toString(36); props.setProperty('REV', rev); }
+    var reply = {ok: true, applied: ops.length, rev: rev, data: role === 'Entry' ? entryData(ss, who.user) : readAll(ss), me: who.user, at: Date.now()};
     if (who.session) reply.session = who.session;
     if (role === 'Owner') { reply.users = listUsers(ss); reply.entryLinks = listEntryLinks(props); reply.killCode = !!props.getProperty('KILL_CODE'); if (killErr) reply.killErr = killErr; }
     if (req.vault && who.user.role === 'Owner') reply.vault = readVault(ss);

@@ -231,6 +231,8 @@ main{padding-top:calc(var(--tbh) + env(safe-area-inset-top,0px) + 14px);padding-
 .pagehead{display:none}
 .view{display:flex;flex-direction:column;gap:16px}
 #banner:not([hidden]){margin-bottom:14px}
+.bstale,.bunsent{display:flex;align-items:center;flex-wrap:wrap;gap:8px 12px}.bstale>span,.bunsent>span:first-child{flex:1 1 240px}.bact{display:flex;gap:6px;flex-wrap:wrap}
+#banner:not([hidden]){display:flex;flex-direction:column;gap:8px}
 .banner{border:1px solid var(--rule);background:var(--glass-2);-webkit-backdrop-filter:blur(16px);backdrop-filter:blur(16px);border-radius:var(--r-sm);padding:12px 16px;font-size:calc(14.5px*var(--fs,1));color:var(--ink-2);box-shadow:var(--shade)}
 .banner.warn{background:var(--warn-soft);border-color:color-mix(in srgb,var(--warn) 35%,transparent);color:var(--ink)}
 .card{background:var(--sheet);border:1px solid var(--rule);border-radius:var(--r);box-shadow:var(--shade)}
@@ -661,6 +663,7 @@ details.ct-hist[open] summary::after{transform:rotate(-135deg) translateY(-1px)}
 .card-row{grid-template-columns:minmax(0,2fr) 130px 170px auto;align-items:end}
 .card-row .k-more{grid-column:1/-1}
 .card-row .k-more summary{cursor:pointer;padding:6px 0;color:var(--accent);font-weight:600}
+.card-row .k-how{margin:4px 0 0;line-height:1.45}.card-row .k-pv{margin:10px 0 2px;padding:9px 12px;border-radius:12px;background:var(--fill);color:var(--ink-2);line-height:1.45}
 .card-row .kgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;padding-top:8px}
 .edhead{font-size:calc(13px*var(--fs,1));color:var(--ink-3);font-weight:700;padding:10px 0 4px;border-top:0}
 .edrow input[type=text],.edrow input[type=number],.edrow select,.edrow .tin{width:100%;min-width:0}
@@ -1571,11 +1574,8 @@ function noAutofill(root) {
   root.querySelectorAll('input, textarea').forEach(toTextBox);
   root.querySelectorAll('form').forEach(f => f.setAttribute('autocomplete', 'off'));
 }
-{ // watch every innerHTML the app writes, so boxes are converted before any code touches them
-  const d = Object.getOwnPropertyDescriptor(Element.prototype, 'innerHTML');
-  Object.defineProperty(Element.prototype, 'innerHTML', {configurable: true, enumerable: d.enumerable, get() { return d.get.call(this); },
-    set(v) { d.set.call(this, v); if (typeof v === 'string' && /<(input|textarea)\b/i.test(v)) noAutofill(this); }});
-}
+// Every screen is drawn through paint(), so its boxes become text boxes before any code touches them.
+function paint(el, html) { el.innerHTML = html; if (typeof html === 'string' && /<(input|textarea)\b/i.test(html)) noAutofill(el); }
 // 'change' when you leave a box or press Enter, like a normal input. Enter submits the form if it has a submit button.
 const boxStart = new WeakMap();
 document.addEventListener('focusin', ev => { const t = ev.target; if (t && t.classList && t.classList.contains('tin')) boxStart.set(t, t.value); });
@@ -1700,7 +1700,7 @@ const LS_CONN = 'budgetTracker.conn.v1', LS_OUT = 'budgetTracker.outbox.v1', LS_
 // the script only answers people who sign in with an email on the sheet's Users tab.
 const API_URL = 'https://script.google.com/macros/s/AKfycbzMb_87-nOMCRF10ieNSvUPlBLcIbu6PhpqQHw8riETufRlKF2ZEdBFttyMZc8Rwngg/exec';
 const GOOGLE_CLIENT_ID = '';
-const Sync = { url: '', key: '', session: '', me: null, users: null, outbox: [], busy: false, again: false, last: 0, err: '', timer: null };
+const Sync = { url: '', key: '', session: '', me: null, users: null, outbox: [], busy: false, again: false, last: 0, err: '', timer: null, rev: '', full: 0 };
 const isEntry = () => !!(Sync.me && Sync.me.role === 'Entry');
 function saveConn() { try { localStorage.setItem(LS_CONN, JSON.stringify({url: Sync.url, key: Sync.key, session: Sync.session, me: Sync.me})); } catch (e) {} }
 function readConn() { try { return JSON.parse(localStorage.getItem(LS_CONN) || 'null'); } catch (e) { return null; } }
@@ -1754,8 +1754,10 @@ async function flush() {
   if (Sync.busy) { Sync.again = true; return; }
   Sync.busy = true; Sync.again = false;
   const sent = Sync.outbox.slice(0, 200);
+  // Nothing to send and a full copy fetched in the last 10 minutes: ask only "anything new?" (the server's version).
+  const quick = !sent.length && Sync.rev && state.config && Date.now() - Sync.full < 10 * 60000;
   try {
-    const j = await call(sent);
+    const j = await call(sent, quick ? {since: Sync.rev} : {});
     Sync.outbox.splice(0, sent.length);
     takeReply(j);
     Sync.outbox.forEach(applyLocal); // changes made while this request was in flight
@@ -1765,6 +1767,7 @@ async function flush() {
     Sync.err = (e && e.code) || (navigator.onLine === false ? 'offline' : 'network');
     if (Sync.err === 'app_killed') { wipeForKill(); Sync.busy = false; render(); return; }
     if (Sync.err === 'signed_out' || Sync.err === 'not_allowed' || Sync.err === 'bad_key') { forgetSignIn(Sync.err); Sync.busy = false; render(); return; }
+    state.stale = true;
   }
   Sync.busy = false;
   render();
@@ -1772,6 +1775,9 @@ async function flush() {
   else if (Sync.outbox.length) { clearTimeout(Sync.timer); Sync.timer = setTimeout(flush, 15000); }
 }
 function takeReply(j) {
+  if (j.rev) Sync.rev = j.rev;
+  if (j.same) return; // nothing changed on the sheet since our copy
+  if (j.data) Sync.full = Date.now();
   fromServer(j.data);
   notesReply(j);
   if (j.me) Sync.me = j.me;
@@ -1785,17 +1791,32 @@ function takeReply(j) {
 // Drop this phone's sign-in but keep any unsynced changes, so they go up after the next sign-in.
 function forgetSignIn(reason) {
   const wasEntry = isEntry();
-  Sync.session = ''; Sync.key = ''; Sync.me = null; Sync.users = null; Sync.err = '';
+  Sync.session = ''; Sync.key = ''; Sync.me = null; Sync.users = null; Sync.err = ''; Sync.rev = ''; Sync.full = 0;
   lockVault('', true); V.loaded = false; V.meta = null; V.enc = {}; V.pending = [];
   try { localStorage.removeItem(LS_VAULT); } catch (e) {}
   state.connErr = reason === 'not_allowed' ? 'This Google account is no longer on the family list.' : reason === 'bad_key' ? 'That set-up link has been switched off. Sign in with Google.' : wasEntry ? 'This entry link has been switched off. Ask the owner for a new one.' : '';
-  if (wasEntry) Sync.outbox = [];
+  if (wasEntry) { keepUnsent(Sync.outbox); Sync.outbox = []; } // never sent under someone else's sign-in without asking
   // Hide the saved copy of the family's data until someone signs in again.
   state.config = null; state.cycles = {}; state.balances = {}; state.cardfix = {}; state.got.config = false; state.dirty = false; state.draft = null;
   if (reason === 'not_allowed') Sync.outbox = [];
   try { localStorage.removeItem(LS_CACHE); } catch (e) {}
   saveConn(); saveCache();
 }
+/* Entries typed on an entry link that was switched off before they reached the sheet. Kept on this phone so they
+   can be copied, or saved once someone signs in here again (only when they tap Save). */
+const LS_UNSENT = 'budgetTracker.unsent.v1';
+function readUnsent() { try { const u = JSON.parse(localStorage.getItem(LS_UNSENT) || '[]'); return Array.isArray(u) ? u : []; } catch (e) { return []; } }
+function writeUnsent(list) { try { if (list.length) localStorage.setItem(LS_UNSENT, JSON.stringify(list)); else localStorage.removeItem(LS_UNSENT); } catch (e) {} }
+function keepUnsent(ops) {
+  const cfg = state.config || {}, cat = id => ((cfg.categories || []).find(c => c.id === id) || {}).name || '';
+  const list = readUnsent(), have = new Set(list.map(u => u.txn.id));
+  ops.forEach(op => { if (op && op.t === 'txn' && op.txn && op.txn.id) {
+    const u = {txn: op.txn, catName: cat(op.txn.cat), payName: ((cfg.accounts || []).find(a => a.id === op.txn.acct) || {}).name || (op.txn.card ? cardName(op.txn.card) : '')};
+    if (have.has(op.txn.id)) list[list.findIndex(x => x.txn.id === op.txn.id)] = u; else { list.push(u); have.add(op.txn.id); } } });
+  ops.forEach(op => { if (op && op.t === 'deltxn') { const i = list.findIndex(x => x.txn.id === op.id); if (i >= 0) list.splice(i, 1); } });
+  writeUnsent(list);
+}
+const unsentText = list => list.map(u => [u.txn.date, rs(u.txn.amount), u.catName, u.payName, u.txn.note].filter(Boolean).join(' · ')).join('\n');
 function queue(op) { applyLocal(op); Sync.outbox.push(op); saveCache(); render(); flush(); }
 const API = {
   async saveConfig(c) { queue({t: 'config', config: clone(c)}); },
@@ -1816,7 +1837,7 @@ function syncLabel() {
   const n = Sync.outbox.length;
   if (Sync.busy) return n ? `Syncing ${n} change${n === 1 ? '' : 's'}…` : 'Syncing…';
   if (n) return `${n} change${n === 1 ? '' : 's'} waiting to sync`;
-  if (Sync.err) return Sync.err === 'offline' || Sync.err === 'network' ? 'Offline · showing saved copy' : 'Sync problem';
+  if (Sync.err) return (Sync.err === 'offline' || Sync.err === 'network' || Sync.err === 'no_answer' ? 'Offline · showing saved copy' : 'Sync problem') + (Sync.last ? ' from ' + agoText(Sync.last) : '');
   if (!Sync.last) return 'Connecting…';
   const m = Math.round((Date.now() - Sync.last) / 60000);
   return 'Synced to Google Sheets' + (m >= 1 ? ` · ${m} min ago` : '');
@@ -1934,7 +1955,7 @@ function renderChrome(X) {
   const opts = []; let guard = 0;
   while (k <= last && guard++ < 240) { opts.push(k); k = shiftKey(k, 1); }
   const sel = $('#cycPick');
-  sel.innerHTML = opts.slice().reverse().map(o => `<option value="${o}"${o === state.cur ? ' selected' : ''}>${cycleLabel(o)}${o === nowKey ? ' (now)' : ''}</option>`).join('');
+  paint(sel, opts.slice().reverse().map(o => `<option value="${o}"${o === state.cur ? ' selected' : ''}>${cycleLabel(o)}${o === nowKey ? ' (now)' : ''}</option>`).join(''));
   $('#cycLabel').textContent = cycleLabel(state.cur) + (state.cur === nowKey ? ' (now)' : '');
   const {start, end} = cycleRange(state.cur); const e = elapsed(state.cur);
   $('#cycRange').textContent = fmtDay(start) + ' – ' + fmtDay(end);
@@ -1943,10 +1964,21 @@ function renderChrome(X) {
 }
 function renderBanner() {
   const b = $('#banner'); let h = '';
-  if (state.connErr) h = `<div class="banner warn">${esc(state.connErr)}</div>`;
-  else if (state.stale) h = `<div class="banner warn">Can't reach your saved data yet. What you see may be out of date.</div>`;
-  else if (signedIn() && Sync.err && Sync.outbox.length) h = `<div class="banner warn">You are offline or the sheet can't be reached. ${Sync.outbox.length} change${Sync.outbox.length === 1 ? ' is' : 's are'} saved on this phone and will go to Google Sheets when the connection is back.</div>`;
-  b.innerHTML = h; b.hidden = !h;
+  const n = Sync.outbox.length, waiting = n ? ` ${n} change${n === 1 ? ' is' : 's are'} saved on this phone and will go to Google Sheets when the connection is back.` : '';
+  // A failed sync shows at once if the saved copy is already old, else after 5 minutes (one missed sync is not news).
+  const old = !Sync.last || Date.now() - Sync.last > 5 * 60000;
+  if (state.connErr && signedIn()) h = `<div class="banner warn">${esc(state.connErr)}</div>`;
+  else if (signedIn() && state.stale && state.config && (old || n)) h = `<div class="banner warn bstale"><span><b>Can't reach Google Sheets.</b> ${Sync.last ? `You're seeing the copy saved on this phone, last updated ${agoText(Sync.last)}. Figures may be out of date.` : 'Figures may be out of date.'}${waiting}</span><button class="btn sm" type="button" data-act="sync-now">Try again</button></div>`;
+  const un = readUnsent();
+  if (un.length) h += `<div class="banner warn bunsent"><span><b>${un.length} entr${un.length === 1 ? 'y was' : 'ies were'} not saved.</b> The entry link was switched off before ${un.length === 1 ? 'it' : 'they'} reached Google Sheets. ${signedIn() && state.config ? 'Save them now, or copy them.' : 'Copy them now, or open a new link on this phone to save them.'}</span>
+    <span class="bact">${signedIn() && state.config ? '<button class="btn sm primary" type="button" data-act="unsent-save">Save them</button>' : ''}<button class="btn sm" type="button" data-act="unsent-copy">Copy</button><button class="btn sm" type="button" data-act="unsent-drop">Discard</button></span></div>`;
+  paint(b, h); b.hidden = !h;
+}
+function agoText(t) {
+  const m = Math.max(0, Math.round((Date.now() - t) / 60000));
+  if (m < 1) return 'just now'; if (m < 60) return m + ' min ago';
+  const h = Math.round(m / 60); if (h < 24) return h + (h === 1 ? ' hour' : ' hours') + ' ago';
+  const d = Math.round(h / 24); return d + (d === 1 ? ' day' : ' days') + ' ago';
 }
 
 /* ---------- overview ---------- */
@@ -2027,8 +2059,8 @@ function renderOverview(X) {
     + (unknown ? tile(null, 'Unlisted', unknown, 0, false, 'ov-unl') : '');
 
   const inst = coarse.matches && !isInstalled() && !readPref().instHide ? `<div class="inst"><span class="mt-ic"><svg class="ic" aria-hidden="true"><use href="#i-install"/></svg></span><span class="it"><b>Install the app</b><span>Full screen, with a clean keyboard and no web address above it.</span></span><button class="btn sm primary" type="button" data-act="install-go">Install</button><button class="ix" type="button" data-act="inst-x" aria-label="Not now"><svg class="ic" aria-hidden="true"><use href="#i-x"/></svg></button></div>` : '';
-  $('#v-overview').innerHTML = `${inst}${kpis}${tiles ? `<div class="hgrid">${tiles}</div>` : '<div class="card empty">No entries in ' + cycleLabel(key) + ' yet.</div>'}
-    ${cardStripHtml(X)}${bankStripHtml(X)}`;
+  paint($('#v-overview'), `${inst}${kpis}${tiles ? `<div class="hgrid">${tiles}</div>` : '<div class="card empty">No entries in ' + cycleLabel(key) + ' yet.</div>'}
+    ${cardStripHtml(X)}${bankStripHtml(X)}`);
   if ($('#v-overview').classList.contains('enter')) wcCount($('#v-overview'));
 }
 
@@ -2038,7 +2070,7 @@ function fillCatOptions(sel, X, withAll, value) {
   const spend = c.filter(x => x.type === 'Expense');
   if (spend.length) h += '<optgroup label="Spending">' + spend.map(x => `<option value="${esc(x.id)}">${esc(x.name)}</option>`).join('') + '</optgroup>';
   ['Income', 'Transfer'].forEach(ty => { const xs = c.filter(x => x.type === ty); if (xs.length) h += `<optgroup label="${ty === 'Transfer' ? 'Transfer (not spending)' : ty}">` + xs.map(x => `<option value="${esc(x.id)}">${esc(x.name)}</option>`).join('') + '</optgroup>'; });
-  sel.innerHTML = h; if (value != null) sel.value = value;
+  paint(sel, h); if (value != null) sel.value = value;
 }
 function renderEntries(X) {
   const fc = $('#fCat'), keep = fc.value; fillCatOptions(fc, X, true, keep);
@@ -2047,8 +2079,8 @@ function renderEntries(X) {
   const fp = $('#fPay'), keepP = fp.value, usedA = new Set(), usedK = new Set(); X.txns.forEach(t => { if (t.acct && t.acct !== 'cash') usedA.add(t._acct); if (t.card) usedK.add(t.card); });
   const banks = payBanks().concat([...usedA].filter(id => X.am[id] && !payBanks().some(a => a.id === id)).map(id => X.am[id]));
   const cardsF = cardList().concat([...usedK].filter(id => !cardList().some(k => k.id === id)).map(id => ({id, name: cardName(id)})));
-  fp.innerHTML = '<option value="">All payments</option><option value="cash">Cash</option>' + (banks.length ? '<optgroup label="Bank accounts">' + banks.map(a => `<option value="a:${esc(a.id)}">${esc(a.name)} · bank</option>`).join('') + '</optgroup>' : '')
-    + (cardsF.length ? '<optgroup label="Credit cards">' + cardsF.map(k => `<option value="k:${esc(k.id)}">${esc(k.name)} · card</option>`).join('') + '</optgroup>' : '') + '<option value="none">Not recorded</option>';
+  paint(fp, '<option value="">All payments</option><option value="cash">Cash</option>' + (banks.length ? '<optgroup label="Bank accounts">' + banks.map(a => `<option value="a:${esc(a.id)}">${esc(a.name)} · bank</option>`).join('') + '</optgroup>' : '')
+    + (cardsF.length ? '<optgroup label="Credit cards">' + cardsF.map(k => `<option value="k:${esc(k.id)}">${esc(k.name)} · card</option>`).join('') + '</optgroup>' : '') + '<option value="none">Not recorded</option>');
   fp.value = [...fp.options].some(o => o.value === keepP) ? keepP : '';
   let list = (X.byCycle[state.cur] || []).slice();
   if (fp.value === 'cash') list = list.filter(t => t.acct === 'cash');
@@ -2073,8 +2105,8 @@ function renderEntries(X) {
         <span class="l"><span class="t1">${esc(c ? c.name : 'Unlisted')}${ty === 'Transfer' ? ' <span class="tag">Transfer</span>' : ''}${t.refund ? ' <span class="tag">Refund</span>' : ''}${t.tag ? ` <span class="tag">${esc(t.tag)}</span>` : ''}</span>
         <span class="t2">${meta || '&nbsp;'}</span></span>
         <span class="amt num ${ty === 'Income' || t.refund ? 'inc' : ty === 'Transfer' ? 'trf' : ''}">${ty === 'Income' ? '+' : t.refund ? '−' : ''}${rs(t.amount)}</span></button>`; }).join('')}</div>`; }).join('');
-  $('#entriesBody').innerHTML = `<div class="card ledger">${html || `<div class="empty">No entries match. ${(fc.value || ft || q || fp.value) ? 'Clear the filters to see everything in ' + cycleLabel(state.cur) + '.' : 'Tap Add entry to log one.'}</div>`}
-    ${list.length ? `<div class="foot"><span>${list.length} entr${list.length === 1 ? 'y' : 'ies'}</span><span>Spent <b class="num">${rs(T.exp)}</b></span><span>Income <b class="num">${rs(T.inc)}</b></span><span>Moved between accounts <b class="num">${rs(T.trf)}</b></span></div>` : ''}</div>`;
+  paint($('#entriesBody'), `<div class="card ledger">${html || `<div class="empty">No entries match. ${(fc.value || ft || q || fp.value) ? 'Clear the filters to see everything in ' + cycleLabel(state.cur) + '.' : 'Tap Add entry to log one.'}</div>`}
+    ${list.length ? `<div class="foot"><span>${list.length} entr${list.length === 1 ? 'y' : 'ies'}</span><span>Spent <b class="num">${rs(T.exp)}</b></span><span>Income <b class="num">${rs(T.inc)}</b></span><span>Moved between accounts <b class="num">${rs(T.trf)}</b></span></div>` : ''}</div>`);
 }
 
 /* ---------- wealth ---------- */
@@ -2171,7 +2203,7 @@ function renderWealth(X) {
     <div class="kpi"${whyAttr('w-gross')}><span class="lbl">Gross assets</span><span class="val fit">${rsShort(W0.liqAssets + W0.nonLiq)}</span><span class="sub">Liquid + non-liquid, before liabilities</span></div>
   </div>`;
   const tabs = `<div class="seg" role="group" aria-label="Wealth view"><button type="button" class="segb" data-act="w-view" data-v="nw" aria-pressed="${view === 'nw'}">Net worth</button><button type="button" class="segb" data-act="w-view" data-v="fd" aria-pressed="${view === 'fd'}">FD growth</button></div>`;
-  if (view === 'fd') { $('#v-wealth').innerHTML = `${kpis}${tabs}${fdHtml(X)}`; return; }
+  if (view === 'fd') { paint($('#v-wealth'), `${kpis}${tabs}${fdHtml(X)}`); return; }
   const W = Math.max(320, Math.round(($('#v-wealth').clientWidth || 700) - 18));
   const chart = series.length >= 2
     ? `<div class="chart">${chartLine(series.map(p => ({l: fmtDM(p.date), v: p.nw})), '', W - 16, 'Net worth over time')}</div>`
@@ -2206,12 +2238,12 @@ function renderWealth(X) {
     return `<div class="li tap"${whyAttr('w-snap:' + s.date)}><div class="l"><div class="t1">${fmtDay(parseYmd(s.date))} ${parseYmd(s.date).getFullYear()}</div><div class="t2">${Object.keys(s.values || {}).filter(id => !isTimeKey(id)).length} accounts</div></div>
       <div style="display:flex;gap:10px;align-items:center"><span class="amt num">${p ? rs(p.nw) : ''}</span><button class="icon-btn" type="button" data-act="del-snap" data-date="${esc(s.date)}" aria-label="Delete snapshot">×</button></div></div>`; }).join('');
   // Order: summary, assets and debts first; the chart and recording balances at the bottom.
-  $('#v-wealth').innerHTML = `${kpis}${tabs}
+  paint($('#v-wealth'), `${kpis}${tabs}
     ${sections}
     <section class="card"><div class="sec-h"><h2>Net worth over time</h2><span class="hint">From recorded balances</span></div>${chart}</section>
     <div class="row-actions" style="padding:0"><button class="btn primary" type="button" data-act="balances">Record today's balances</button>
       <span class="hint" style="align-self:center">${hasAny ? '' : 'No balances recorded yet.'} Your home's value isn't counted unless you add it as an account.</span></div>
-    <section class="card list"><div class="sec-h"><h2>Balance snapshots</h2><span class="hint">One per cycle end is enough</span></div>${snapsHtml || '<div class="empty">None yet.</div>'}</section>`;
+    <section class="card list"><div class="sec-h"><h2>Balance snapshots</h2><span class="hint">One per cycle end is enough</span></div>${snapsHtml || '<div class="empty">None yet.</div>'}</section>`);
 }
 document.addEventListener('click', ev => {
   const b = ev.target.closest('[data-act="w-view"]'); if (!b) return;
@@ -2311,7 +2343,7 @@ const fmtWhen = ms => { if (!ms) return ''; const d = new Date(ms), t = new Date
   if (d.toDateString() === y.toDateString()) return 'Yesterday ' + hm; return d.getDate() + ' ' + MON[d.getMonth()] + (d.getFullYear() !== t.getFullYear() ? ' ' + d.getFullYear() : ''); };
 function renderNotes() {
   const el = $('#v-notes'); if (!el) return;
-    el.innerHTML = `<button type="button" class="nfab" data-act="n-new" aria-label="New note"><b>+</b> Note</button>
+    paint(el, `<button type="button" class="nfab" data-act="n-new" aria-label="New note"><b>+</b> Note</button>
     <div class="nfilter${N.searchOpen ? ' searching' : ''}" id="nFilter">
       <div class="nchips" id="nCats" role="group" aria-label="Show">
         <div class="npopw"><button type="button" class="nchip nall" data-act="n-allmenu" aria-haspopup="true" aria-pressed="${N.cat !== 'arhaan' && N.cat !== 'efrah'}">${N.cat && N.cat !== 'arhaan' && N.cat !== 'efrah' ? esc(labelName(N.cat)) : 'All'} ▾</button>
@@ -2328,7 +2360,7 @@ function renderNotes() {
         <button type="button" class="nmic" data-act="n-mic" aria-label="Search by voice"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21"/></svg></button>
         <button type="button" class="nsx" data-act="n-searchx" aria-label="Close search">✕</button></div>
     </div>
-    <div id="nList"></div>`;
+    <div id="nList"></div>`);
   renderNoteList();
 }
 function noteCard(n, pinned) {
@@ -2342,18 +2374,18 @@ function renderNoteList() {
   const box = $('#nList'); if (!box) return;
   const q = N.q.trim().toLowerCase(), list = sortNotes(noteList()).filter(n => (!N.cat || n.cat === N.cat) && (!q || (n.title + ' ' + n.preview + ' ' + ((N.local[n.id] || {}).content || (N.bodies[n.id] || {}).c || '')).toLowerCase().includes(q)));
   const pins = list.filter(n => n.pinned), rest = list.filter(n => !n.pinned);
-  box.innerHTML = list.length ? `${pins.length ? `<div class="ngrp">Pinned</div><div class="nlist" id="nPinned">${pins.map(n => noteCard(n, true)).join('')}</div>` : ''}
+  paint(box, list.length ? `${pins.length ? `<div class="ngrp">Pinned</div><div class="nlist" id="nPinned">${pins.map(n => noteCard(n, true)).join('')}</div>` : ''}
       ${rest.length ? `${pins.length ? '<div class="ngrp">Notes</div>' : ''}<div class="nlist">${rest.map(n => noteCard(n, false)).join('')}</div>` : ''}
       <p class="hint nhint">Press and hold a note to pin, move, label or delete it.</p>`
-    : `<div class="card empty">${q || N.cat ? 'No notes match.' : 'No notes yet. Tap “+ Note” at the bottom and start typing.'}</div>`;
+    : `<div class="card empty">${q || N.cat ? 'No notes match.' : 'No notes yet. Tap “+ Note” at the bottom and start typing.'}</div>`);
 }
 
 document.addEventListener('submit', ev => { if (ev.target.closest('.nlabform')) { ev.preventDefault(); const go = ev.target.querySelector('[data-act="n-addlabel-go"]'); if (go) go.click(); } });
 // Add a person or label: a small sheet with one box.
 function addLabelSheet(forNote) {
-  $('#noteMenuBox').innerHTML = `<form class="nlabform"><div class="nm-h"><b>Add a person</b></div>
+  paint($('#noteMenuBox'), `<form class="nlabform"><div class="nm-h"><b>Add a person</b></div>
     <input id="nNewLabel" type="text" placeholder="Name, like Ammi" aria-label="Name" maxlength="24">
-    <div class="nm-row"><button type="button" class="btn ghost" data-act="n-m-close">Cancel</button><button type="submit" class="btn primary" data-act="n-addlabel-go" data-for="${forNote ? 'note' : ''}">Add</button></div></form>`;
+    <div class="nm-row"><button type="button" class="btn ghost" data-act="n-m-close">Cancel</button><button type="submit" class="btn primary" data-act="n-addlabel-go" data-for="${forNote ? 'note' : ''}">Add</button></div></form>`);
   $('#noteMenu').hidden = false; setTimeout(() => focusBox($('#nNewLabel')), 60);
 }
 // Voice search: the phone's own speech recognition (Chrome), started straight from the mic button.
@@ -2381,12 +2413,12 @@ document.addEventListener('contextmenu', ev => { if (ev.target.closest('.ncard')
 function noteMenu(id) {
   const n = noteList().find(x => x.id === id); if (!n) return;
   const pins = sortNotes(noteList()).filter(x => x.pinned), pi = pins.findIndex(x => x.id === id);
-  $('#noteMenuBox').innerHTML = `<div class="nm-h"><span class="nav l-${esc(n.cat)}">${esc(labelName(n.cat)[0].toUpperCase())}</span><b>${esc(noteName(n))}</b></div>
+  paint($('#noteMenuBox'), `<div class="nm-h"><span class="nav l-${esc(n.cat)}">${esc(labelName(n.cat)[0].toUpperCase())}</span><b>${esc(noteName(n))}</b></div>
     <button type="button" class="nm-b" data-act="n-m-pin" data-id="${esc(id)}"><span><svg class="ic" aria-hidden="true"><use href="#i-pin"/></svg></span>${n.pinned ? 'Unpin' : 'Pin to the top'}</button>
     ${n.pinned && pins.length > 1 ? `<div class="nm-row"><button type="button" class="nm-b" data-act="n-m-move" data-d="-1" data-id="${esc(id)}"${pi <= 0 ? ' disabled' : ''}><span>↑</span>Move up</button><button type="button" class="nm-b" data-act="n-m-move" data-d="1" data-id="${esc(id)}"${pi >= pins.length - 1 ? ' disabled' : ''}><span>↓</span>Move down</button></div>` : ''}
     <div class="nm-lbl">Label</div><div class="nm-row nm-wrap">${allLabels().map(k => [k, labelName(k)]).map(([k, v]) => `<button type="button" class="nm-b nm-c" data-act="n-m-cat" data-v="${esc(k)}" data-id="${esc(id)}" aria-pressed="${n.cat === k}">${v}</button>`).join('')}</div>
     <button type="button" class="nm-b danger" data-act="n-m-del" data-id="${esc(id)}"><span><svg class="ic" aria-hidden="true"><use href="#i-trash"/></svg></span>Delete</button>
-    <button type="button" class="btn ghost nm-close" data-act="n-m-close">Cancel</button>`;
+    <button type="button" class="btn ghost nm-close" data-act="n-m-close">Cancel</button>`);
   $('#noteMenu').hidden = false;
   document.querySelectorAll('.ncard.held').forEach(x => x.classList.remove('held'));
 }
@@ -2441,7 +2473,7 @@ function drawNote() {
   const o = N.open, k = NOTE_KINDS[o.type], fancy = o.type !== 'txt', ready = !o.loading && !o.failed;
   const rich = ready && N.mode === 'edit' && o.type === 'txt';
   const ecls = !ready ? ' pad' : rich ? ' scroll' : N.mode === 'edit' ? '' : ' pad scroll';
-  $('#noteBox').innerHTML = `<div class="nhead">
+  paint($('#noteBox'), `<div class="nhead">
       <button type="button" class="nback" data-act="n-close" aria-label="Back to all notes"><svg class="ic" aria-hidden="true"><use href="#i-left"/></svg><span>Notes</span></button>
       <button type="button" class="nttl" data-act="n-meta" aria-label="Title and label for this note"><b id="nTtl" class="${o.title ? '' : 'none'}">${esc(o.title || 'Untitled note')}</b><span class="nstate" id="nState"></span></button>
       ${fancy ? `<div class="seg nmode" role="group" aria-label="Mode"><button type="button" class="segb" data-act="n-mode" data-v="edit" aria-pressed="${N.mode === 'edit'}">Edit</button><button type="button" class="segb" data-act="n-mode" data-v="view" aria-pressed="${N.mode === 'view'}">${o.type === 'json' ? 'Check' : 'Preview'}</button></div>` : ''}
@@ -2458,7 +2490,7 @@ function drawNote() {
           <div class="npop" hidden role="menu"><button type="button" class="npi" data-act="n-copy"><b>Copy the text</b><small>Puts the whole note on the clipboard</small></button>
             <button type="button" class="npi" data-act="n-dl"><b>Download</b><small>Saves a .${NOTE_KINDS[o.type].ext} file to this phone</small></button>
             <button type="button" class="npi" data-act="n-dup"><b>Make a copy</b><small>Opens a new note with the same text</small></button></div></div>
-        <button type="button" class="nbtn ndel" data-act="n-del">Delete</button><button type="button" class="nbtn nsave" data-act="n-save">✓ Done</button></div></div></div>`;
+        <button type="button" class="nbtn ndel" data-act="n-del">Delete</button><button type="button" class="nbtn nsave" data-act="n-save">✓ Done</button></div></div></div>`);
   $('#noteScrim').hidden = false; noteVV(); noteFit(); noteState();
   histReset(ready ? o.content : '');
   richBox(); plainBox(); titleBox(); noteCount(); noteToolState();
@@ -2858,11 +2890,11 @@ function applyText(t, redraw) {
 function textSheet() {
   const t = readText(), cur = TEXT_FONTS.find(f => f.id === t.font);
   TEXT_FONTS.forEach(loadFont); // so each choice shows in its own font
-  $('#textBox').innerHTML = `<h3>Text</h3>
+  paint($('#textBox'), `<h3>Text</h3>
     <div class="tx-prev" style="font-family:${esc(cur.css)},system-ui,sans-serif"><span class="lbl">Preview</span><b class="num">₹1,23,45,678</b><span>Groceries & household · of ₹20,000 · ₹3,800 left</span></div>
     <div class="tx-sec"><span class="lbl">Size</span><div class="tx-sizes" role="group" aria-label="Text size">${TEXT_SIZES.map((s, i) => `<button type="button" class="tx-size" data-act="tx-size" data-v="${s.v}" aria-pressed="${s.v === t.size}"><span style="font-size:${Math.round(14 + i * 3)}px">A</span><small>${s.l}</small></button>`).join('')}</div></div>
     <div class="tx-sec"><span class="lbl">Font</span><div class="tx-fonts" role="group" aria-label="Font">${TEXT_FONTS.map(f => `<button type="button" class="tx-font" data-act="tx-font" data-v="${f.id}" aria-pressed="${f.id === t.font}" style="font-family:${esc(f.css)},system-ui,sans-serif"><b>${esc(f.name)}</b><span class="num">₹4,10,000 · 25 Oct</span><small>${esc(f.note)}</small></button>`).join('')}</div></div>
-    <div class="sheet-actions"><button type="button" class="btn ghost left" data-act="tx-reset">Reset</button><button type="button" class="btn primary" data-act="tx-close">Done</button></div>`;
+    <div class="sheet-actions"><button type="button" class="btn ghost left" data-act="tx-reset">Reset</button><button type="button" class="btn primary" data-act="tx-close">Done</button></div>`);
   $('#textScrim').hidden = false;
 }
 document.addEventListener('click', ev => {
@@ -3153,7 +3185,7 @@ function whyShow() {
   if (!d) { W$.stack.pop(); if (W$.stack.length) return whyShow(); $('#whyScrim').hidden = true; return; }
   const h = whyHtml(d); if (box.dataset.k === k && box.innerHTML === h) return;
   const same = box.dataset.k === k, open = same ? [...box.querySelectorAll('details')].map(x => x.open) : [], top = same ? box.scrollTop : 0;
-  box.innerHTML = h; box.dataset.k = k;
+  paint(box, h); box.dataset.k = k;
   if (same) { box.querySelectorAll('details').forEach((x, i) => { if (open[i]) x.open = true; }); box.scrollTop = top; } else box.scrollTop = 0;
   $('#whyScrim').hidden = false; fitNums(box);
 }
@@ -3302,7 +3334,7 @@ function renderTrend(X) {
       ${hrows.map(h => { const cv = h.cells.filter(x => !x.r.open), avg = cv.length ? cv.reduce((a, x) => a + x.v, 0) / cv.length : null;
         return `<tr><th scope="row">${esc(h.c.name)}<small>${h.c.unplanned ? 'unplanned' : h.c.budget > 0 ? rs(h.c.budget) + ' a month' : 'no budget'}${avg == null ? '' : `<span class="havg"> · avg ${rs(avg)}</span>`}</small></th>${h.cells.map(x => `<td class="n hc ${x.v ? x.st : 'zero'}${x.r.k === sel ? ' on' : ''}"${whyAttr('ov-cat:' + h.c.id + '@' + x.r.k)} title="${esc(h.c.name)}, ${cycleLabel(x.r.k)}: ${rs(x.v)}${x.st ? ', ' + STATUS_WORD[x.st].toLowerCase() : ''}">${x.v ? `<span class="hv">${rs(x.v)}</span>` : '—'}</td>`).join('')}<td class="n avg">${avg == null ? '—' : rs(avg)}</td></tr>`; }).join('')}
     </tbody></table></div><div class="legend"><span><i class="sw cell good"></i>Within budget</span><span><i class="sw cell warn"></i>Running fast</span><span><i class="sw cell bad"></i>Over budget</span><span><i class="sw cell pur"></i>Outside the plan</span></div>` : '<div class="empty">No spending yet.</div>';
-  $('#v-trend').innerHTML = `${range}${hero}
+  paint($('#v-trend'), `${range}${hero}
     <section class="card"><div class="sec-h"><h2>Income and spending</h2><span class="hint">Tap a month</span></div>
       <div class="chart">${chartCycles(rows, sel, W)}</div>${legend1}${readout}</section>
     <section class="card"><div class="sec-h"><h2>${cycleLabel(sel)}, day by day</h2><span class="hint chipline">${sdot(M.O.st)}${STATUS_WORD[M.O.st]}</span></div>
@@ -3310,7 +3342,7 @@ function renderTrend(X) {
     <section class="card"><div class="sec-h"><h2>Savings building up</h2><span class="hint">Income − spent, added month after month</span></div>
       <div class="chart">${chartLine(cumPts, sel, W, 'Savings added up over time')}</div></section>
     ${nwPts.length >= 2 ? `<section class="card"><div class="sec-h"><h2>Net worth</h2><span class="hint">From the balances you record</span></div><div class="chart">${chartLine(nwPts, '', W, 'Net worth over time')}</div></section>` : ''}
-    <section class="card"><div class="sec-h"><h2>Categories, month by month</h2><span class="hint">Tap a cell</span></div>${heat}</section>`;
+    <section class="card"><div class="sec-h"><h2>Categories, month by month</h2><span class="hint">Tap a cell</span></div>${heat}</section>`);
   const hw = $('#v-trend .heatwrap'); if (hw) hw.scrollLeft = hw.scrollWidth; // latest months first in view
 }
 document.addEventListener('click', ev => {
@@ -3334,8 +3366,8 @@ function discTagChips() {
   const box = $('#eDiscTagBox'); if (!box || !state.config) return;
   const on = discIds().includes($('#eCat').value); box.hidden = !on; if (!on) return;
   const cur = ($('#eTag').value || '').trim();
-  $('#eDiscTags').innerHTML = discTagList().map(t => `<button type="button" class="chipb" data-act="e-dtag" data-v="${esc(t)}" aria-pressed="${t === cur}">${esc(t)}</button>`).join('')
-    + `<button type="button" class="chipb chip-new" data-act="e-dtag-new">+ New tag</button>`;
+  paint($('#eDiscTags'), discTagList().map(t => `<button type="button" class="chipb" data-act="e-dtag" data-v="${esc(t)}" aria-pressed="${t === cur}">${esc(t)}</button>`).join('')
+    + `<button type="button" class="chipb chip-new" data-act="e-dtag-new">+ New tag</button>`);
 }
 document.addEventListener('click', ev => {
   const b = ev.target.closest('[data-act="e-dtag"], [data-act="e-dtag-new"]'); if (!b) return;
@@ -3364,13 +3396,13 @@ function renderDisc(X) {
       <span class="damt num${t.refund ? ' rec' : ''}">${t.refund ? '+' + rs(t.amount) + '<small>received</small>' : rs(t.amount)}</span></button>`; };
   const body = Object.keys(groups).sort().reverse().map(k => { const g = groups[k], gp = g.filter(t => !t.refund).reduce((s, t) => s + t.amount, 0), gr = g.filter(t => t.refund).reduce((s, t) => s + t.amount, 0);
     return `<div class="dgrp"><div class="dgh"><span>${cycleLabel(k)}</span><span class="num">${rs(gp)}${gr ? `<small>${rs(gr)} received</small>` : ''}</span></div>${g.map(row).join('')}</div>`; }).join('');
-  el.innerHTML = `<section class="card dtop">
+  paint(el, `<section class="card dtop">
       <div class="dt-main"><span class="lbl">Discretionary ${range === 'month' ? 'in ' + cycleLabel(state.cur) : 'so far'}${ftag ? ' · ' + esc(ftag) : ftag === '' ? ' · no tag' : ''}</span><span class="v fit">${rs(paid - recd)}</span><span class="sub">spent outside the budget · ${list.length} entr${list.length === 1 ? 'y' : 'ies'}</span></div>
       <div class="dt-row"><div><span class="lbl">Paid</span><span class="v2 num">${rs(paid)}</span></div><div><span class="lbl">Received</span><span class="v2 num">${rs(recd)}</span></div></div></section>
     <div class="dbar"><div class="seg" role="group" aria-label="Show"><button type="button" class="segb" data-act="d-range" data-v="all" aria-pressed="${range === 'all'}">All time</button><button type="button" class="segb" data-act="d-range" data-v="month" aria-pressed="${range === 'month'}">${cycleLabel(state.cur)}</button></div>
       <button type="button" class="btn primary sm" data-act="d-add">+ Add</button></div>${tagBar}
     <section class="card dlist"><div class="dhead"><span>Date</span><span>Description</span><span>Amount</span></div>
-      ${body || `<div class="empty">No discretionary spending ${range === 'month' ? 'in ' + cycleLabel(state.cur) : 'yet'}. Pick <b>Discretionary</b> when you add an entry, or tap + Add.</div>`}</section>`;
+      ${body || `<div class="empty">No discretionary spending ${range === 'month' ? 'in ' + cycleLabel(state.cur) : 'yet'}. Pick <b>Discretionary</b> when you add an entry, or tap + Add.</div>`}</section>`);
 }
 document.addEventListener('click', ev => {
   const b = ev.target.closest('[data-act="d-range"], [data-act="d-add"], [data-act="d-tag"]'); if (!b) return;
@@ -3404,7 +3436,7 @@ function renderSetup(X) {
       <button class="icon-btn a-del" type="button" data-act="del-acct" data-i="${i}" aria-label="Remove account">×</button>
     </div>`).join('');
   const days = Array.from({length: 28}, (_, i) => i + 1);
-  $('#v-setup').innerHTML = `
+  paint($('#v-setup'), `
     <section class="card"><div class="sec-h"><h2>Cycle</h2></div><div class="ed" style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;padding-top:12px">
       <label for="sDay">Each cycle starts on day</label>
       <select id="sDay" style="border:1px solid var(--rule-2);background:var(--sheet);border-radius:7px;padding:6px 8px">${days.map(n => `<option${n === +d.cycleStartDay ? ' selected' : ''}>${n}</option>`).join('')}</select>
@@ -3426,7 +3458,7 @@ function renderSetup(X) {
         <button class="btn" type="button" data-act="export-csv">Export entries (CSV)</button>
         <button class="btn danger" type="button" data-act="import">Restore a backup</button>
       </div></section>
-    <div id="saveSlot"></div>`;
+    <div id="saveSlot"></div>`);
   renderSaveBar();
   if (focusId) { const el = document.getElementById(focusId); if (el) { if (el.classList.contains('tin')) focusBox(el); else { el.focus(); try { if (sel != null && el.setSelectionRange) el.setSelectionRange(sel, sel); } catch (e) {} } } }
 }
@@ -3439,12 +3471,25 @@ function cardRowHtml(k, i) {
       <label class="f k-sd"><span class="fl2">Stmt Date</span><select id="k-sd-${id}" data-k="stmtDay" aria-label="Stmt Date">${days(k.stmtDay)}</select></label>
       <label class="f k-dd"><span class="fl2">Pay By</span><select id="k-dd-${id}" data-k="dueDay" aria-label="Pay By">${days(k.dueDay, 'About 20 days later')}</select></label>
       <button class="icon-btn k-del" type="button" data-act="del-cardrow" data-i="${i}" aria-label="Remove card" title="Remove card">×</button>
-      <details class="k-more"><summary class="hint">Limit, and what you owed when you started</summary><div class="kgrid">
+      <details class="k-more"><summary class="hint">Limit, and what you owed when you started</summary>
+        <p class="hint k-how">Start in one of two ways, not both: type what you owed on a day here, <b>or</b> leave these at 0 and add every past spend as an entry. Entries dated <b>before</b> the As of day are treated as already inside these figures and left out; entries <b>on or after</b> it are added on top.</p><div class="kgrid">
         <label class="f"><span class="fl2">Limit ₹</span><input id="k-lim-${id}" type="text" inputmode="numeric" value="${amt(k.limit)}" data-k="limit" placeholder="—"></label>
         <label class="f"><span class="fl2">Billed, unpaid ₹</span><input id="k-ob-${id}" type="text" inputmode="numeric" value="${amt(k.openBilled)}" data-k="openBilled" placeholder="0"></label>
         <label class="f"><span class="fl2">Not yet billed ₹</span><input id="k-ou-${id}" type="text" inputmode="numeric" value="${amt(k.openUnbilled)}" data-k="openUnbilled" placeholder="0"></label>
-        <label class="f"><span class="fl2">As of</span><input id="k-od-${id}" type="date" value="${esc(k.openDate || '')}" data-k="openDate"></label>
-      </div></details></div>`;
+        <label class="f"><span class="fl2">As of (start of day)</span><input id="k-od-${id}" type="date" value="${esc(k.openDate || '')}" data-k="openDate"></label>
+      </div><p class="hint k-pv" id="k-pv-${id}" aria-live="polite">${esc(cardOpenPreview(k))}</p></details></div>`;
+}
+// Live check under the starting figures: what the card will owe, and which entries are left out or added on top.
+function cardOpenPreview(k) {
+  if (!state.config) return '';
+  const n = v => Math.max(0, Math.round(parseSigned(v) || 0)), od = /^\d{4}-\d{2}-\d{2}$/.test(k.openDate || '') ? k.openDate : '';
+  const card = Object.assign({}, k, {openBilled: n(k.openBilled), openUnbilled: n(k.openUnbilled), stmtDay: +k.stmtDay || 1, dueDay: +k.dueDay || null, openDate: od});
+  if (!card.openBilled && !card.openUnbilled) return 'At 0, every entry on this card counts and nothing is left out.';
+  if (!od) return 'Pick the day these figures are from.';
+  const X = ctx(), L = cardLedger(card, X), same = X.txns.filter(t => t.card === k.id && t.date === od && !isCardPay(t.cat, X.cm));
+  const tot = list => rs(list.reduce((a, t) => a + (t.refund ? -t.amount : t.amount), 0)), es = c => c === 1 ? 'entry' : 'entries';
+  return `Owed now: ${rs(L.owed)}.` + (L.before.length ? ` ${L.before.length} earlier ${es(L.before.length)} (${tot(L.before)}) left out, as they are inside these figures.` : ' No earlier entries are left out.')
+    + (same.length ? ` ${same.length} ${es(same.length)} dated ${fmtDM(od)} (${tot(same)}) added on top. If your figures already include ${same.length === 1 ? 'it' : 'them'}, set As of to the next day.` : '');
 }
 /* ---------- Setup: manual adjustments ----------
    Two kinds, saved as ordinary entries tagged "Adjustment" (so they show in Entries, breakdowns and the sheet):
@@ -3497,7 +3542,7 @@ document.addEventListener('input', ev => {
   const id = ev.target && ev.target.id, A = state.adj, map = {adjAmt: 'amt', adjDate: 'date', adjCat: 'cat', adjCard1: 'card1', adjCard2: 'card2', adjBill: 'bill', adjNote: 'note'};
   if (!map[id]) return; A[map[id]] = ev.target.value;
   if (id === 'adjCard2') { const bills = adjBills(A.card2, ctx()), sel = $('#adjBill'); A.bill = ''; const L = cardLedger(cardList().find(k => k.id === A.card2), ctx()); A.bill = L.nextSt ? L.nextSt.sd : bills[0] || '';
-    if (sel) sel.innerHTML = bills.map(sd => `<option value="${sd}"${sd === A.bill ? ' selected' : ''}>${billLabel(sd)}</option>`).join(''); }
+    if (sel) paint(sel, bills.map(sd => `<option value="${sd}"${sd === A.bill ? ' selected' : ''}>${billLabel(sd)}</option>`).join('')); }
   if (id === 'adjDate') { const l = ev.target.closest('label').querySelector('.fl2'); if (l && /^\d{4}-\d{2}-\d{2}$/.test(A.date)) l.textContent = 'Date (counts in ' + cycleLabel(cycleKeyOf(A.date)) + ')'; }
 });
 document.addEventListener('change', ev => { const id = ev.target && ev.target.id; if (/^adj(Cat|Card1|Card2|Bill|Date)$/.test(id || '')) ev.target.dispatchEvent(new Event('input', {bubbles: true})); });
@@ -3532,7 +3577,7 @@ document.addEventListener('click', async ev => {
 
 function renderSaveBar() {
   const slot = $('#saveSlot'); if (!slot) return;
-  slot.innerHTML = state.dirty ? `<div class="savebar"><span>${state.setupErr ? esc(state.setupErr) : 'You have unsaved changes.'}</span><span style="display:flex;gap:8px"><button class="btn ghost" type="button" data-act="discard-setup">Discard</button><button class="btn primary" type="button" data-act="save-setup">Save changes</button></span></div>` : '';
+  paint(slot, state.dirty ? `<div class="savebar"><span>${state.setupErr ? esc(state.setupErr) : 'You have unsaved changes.'}</span><span style="display:flex;gap:8px"><button class="btn ghost" type="button" data-act="discard-setup">Discard</button><button class="btn primary" type="button" data-act="save-setup">Save changes</button></span></div>` : '');
 }
 function markDirty() { if (!state.dirty) { state.dirty = true; renderSaveBar(); } }
 
@@ -3824,9 +3869,9 @@ function renderCards(X) {
   const ae = document.activeElement, focusId = ae && ae.id && ae.closest && ae.closest('#v-cards') ? ae.id : null;
   const cards = cardList();
   if (!cards.length) {
-    $('#v-cards').innerHTML = `<section class="card"><div class="empty" style="display:flex;flex-direction:column;gap:12px;align-items:flex-start"><b>No cards yet</b>
+    paint($('#v-cards'), `<section class="card"><div class="empty" style="display:flex;flex-direction:column;gap:12px;align-items:flex-start"><b>No cards yet</b>
       <span>Your cards come from the Vault's Credit cards table. Then choose <b>Paid with: Card</b> when you add an expense, and it goes on the right bill.</span>
-      <a class="btn primary" href="#vault">Open the Vault</a></div></section>`;
+      <a class="btn primary" href="#vault">Open the Vault</a></div></section>`);
     return;
   }
   const Ls = cards.map(c => cardLedger(c, X));
@@ -3853,8 +3898,8 @@ function renderCards(X) {
     ${rowsB.length ? `<div class="tscroll"><table class="rt"><thead><tr><th>Card</th><th>Stmt Date</th><th>Pay By</th><th class="n">Spent this budget cycle</th><th>Bill status</th></tr></thead>
       <tbody>${rowsB.join('')}<tr class="sum"><td colspan="3">Total on cards in ${cycleLabel(state.cur)}</td><td class="n">${rs(tot)}</td><td></td></tr></tbody></table></div>`
       : `<div class="empty">No card spends in ${cycleLabel(state.cur)} yet. Pick a card when you add an entry.</div>`}</section>`;
-  $('#v-cards').innerHTML = `<a class="hint" href="#overview">‹ Back to Overview</a><p class="lede">${lede}</p>${kpis}<div class="ctiles">${Ls.map(tileHtml).join('')}</div>${bridge}
-    <p class="hint" style="margin:0">Your budget counts a card spend on the day you spend. Your bank collects it on the bill shown here. Paying a card bill is a transfer, not new spending, so nothing counts twice. Your cards come from the <a href="#vault">Vault</a>.</p>`;
+  paint($('#v-cards'), `<a class="hint" href="#overview">‹ Back to Overview</a><p class="lede">${lede}</p>${kpis}<div class="ctiles">${Ls.map(tileHtml).join('')}</div>${bridge}
+    <p class="hint" style="margin:0">Your budget counts a card spend on the day you spend. Your bank collects it on the bill shown here. Paying a card bill is a transfer, not new spending, so nothing counts twice. Your cards come from the <a href="#vault">Vault</a>.</p>`);
   if (focusId) { const el = document.getElementById(focusId); if (el) { if (el.classList.contains('tin')) focusBox(el); else el.focus(); } }
 }
 function chipsShow(box, reset) {
@@ -3899,11 +3944,11 @@ function renderPay() {
   const chip = (id, label, act, on) => `<button type="button" class="chipb" data-act="${act}" data-id="${esc(id)}" aria-pressed="${on}">${esc(label)}</button>`;
   const pc = $('#ePayChips'), keep = pc.dataset.mode === payMode ? pc.scrollLeft : 0;
   pc.dataset.mode = payMode;
-  if (payMode === 'bank') { pc.innerHTML = banks.map(a => chip(a.id, a.name, 'e-acct', a.id === payAcct)).join(''); pc.hidden = !banks.length; }
-  else if (payMode === 'card') { pc.innerHTML = cards.map(k => chip(k.id, k.name, 'e-cardpick', k.id === payCard)).join(''); pc.hidden = !cards.length; }
-  else { pc.innerHTML = ''; pc.hidden = true; }
+  if (payMode === 'bank') { paint(pc, banks.map(a => chip(a.id, a.name, 'e-acct', a.id === payAcct)).join('')); pc.hidden = !banks.length; }
+  else if (payMode === 'card') { paint(pc, cards.map(k => chip(k.id, k.name, 'e-cardpick', k.id === payCard)).join('')); pc.hidden = !cards.length; }
+  else { paint(pc, ''); pc.hidden = true; }
   $('#ePayCardBox').hidden = !pay;
-  $('#ePayCardChips').innerHTML = pay ? cards.map(k => chip(k.id, k.name, 'e-cardpick', k.id === payCard)).join('') : '';
+  paint($('#ePayCardChips'), pay ? cards.map(k => chip(k.id, k.name, 'e-cardpick', k.id === payCard)).join('') : '');
   let h = '';
   const card = cards.find(k => k.id === payCard);
   if (!payMode) h = 'Payment not recorded for this entry. Tap Cash, Bank or Card to set it.';
@@ -3955,21 +4000,21 @@ function render() {
   const gate = $('#gate');
   if (state.killed) {
     VIEWS.forEach(n => { $('#v-' + n).hidden = true; }); closeWhy();
-    gate.hidden = false; if (!holdIfTyping(gate)) gate.innerHTML = killedHtml(); return;
+    gate.hidden = false; if (!holdIfTyping(gate)) paint(gate, killedHtml()); return;
   }
   if (!state.config) {
     VIEWS.forEach(n => { $('#v-' + n).hidden = true; }); closeWhy();
     const known = state.got.config;
     gate.hidden = false;
-    if (signedIn() && known && isEntry()) { gate.innerHTML = `<h2>Not set up yet</h2><p>The tracker has no categories yet. Ask the owner to set it up, then open this link again.</p>`; return; }
+    if (signedIn() && known && isEntry()) { paint(gate, `<h2>Not set up yet</h2><p>The tracker has no categories yet. Ask the owner to set it up, then open this link again.</p>`); return; }
     if (!signedIn()) { if (!holdIfTyping(gate)) renderSignIn(gate); return; }
-    gate.innerHTML = Sync.err && !known
+    paint(gate, Sync.err && !known
       ? `<h2>Can't reach Google Sheets</h2><p>${esc(state.connErr || 'Check the internet connection, then try again.')}</p><div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn primary" type="button" data-act="sync-now">Try again</button><button class="btn" type="button" data-act="disconnect">Sign out</button></div>`
       : !known
       ? `<h2>Opening your tracker</h2><p>Your budget, entries and balances will appear here in a moment.</p>`
       : `<h2>Your tracker is empty</h2><p>Start with a ready set of household categories, then set your budgets and accounts in Setup. Or restore a backup you exported earlier.</p>
          <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn primary" type="button" data-act="start">Start with suggested categories</button><button class="btn" type="button" data-act="import">Restore a backup</button></div>
-         <p class="hint">Everything you add is saved to your Google Sheet and shows on every phone that is connected to it.</p>`;
+         <p class="hint">Everything you add is saved to your Google Sheet and shows on every phone that is connected to it.</p>`);
     return;
   }
   gate.hidden = true;
@@ -3977,7 +4022,7 @@ function render() {
   $('#vaultTab').hidden = !isOwner;
   if (!isOwner && state.view === 'vault') state.view = 'overview';
   if (isEntry()) { // add entries and notes only: nothing else is drawn, so nothing else is on the page
-    ['overview', 'cards', 'wealth', 'trend', 'setup', 'vault', 'disc'].forEach(n => { $('#v-' + n).innerHTML = ''; });
+    ['overview', 'cards', 'wealth', 'trend', 'setup', 'vault', 'disc'].forEach(n => { paint($('#v-' + n), ''); });
     renderAddHome(X);
     if (!holdIfTyping('#v-entries')) renderEntries(X);
     if (!holdIfTyping('#v-notes')) renderNotes();
@@ -4004,8 +4049,8 @@ function fillDatalists(X) {
   const members = new Set(), tags = new Set();
   state.config.accounts.forEach(a => a.owner && members.add(a.owner));
   X.txns.forEach(t => { if (t.member) members.add(t.member); if (t.tag) tags.add(t.tag); });
-  $('#dlMembers').innerHTML = [...members].map(m => `<option value="${esc(m)}">`).join('');
-  $('#dlTags').innerHTML = [...tags].map(m => `<option value="${esc(m)}">`).join('');
+  paint($('#dlMembers'), [...members].map(m => `<option value="${esc(m)}">`).join(''));
+  paint($('#dlTags'), [...tags].map(m => `<option value="${esc(m)}">`).join(''));
 }
 
 /* ---------- dictation-friendly date and category ---------- */
@@ -4047,7 +4092,7 @@ function setEntryDate(iso) {
   const today = todayStr(), yday = ymd(new Date(parseYmd(today).getTime() - 864e5)), which = iso === today ? '0' : iso === yday ? '-1' : 'cal';
   document.querySelectorAll('#eDateSeg .segb').forEach(b => b.setAttribute('aria-pressed', String((b.dataset.d || 'cal') === which)));
   const d = parseYmd(iso);
-  $('#eCalBtn').innerHTML = '<svg class="ic" aria-hidden="true"><use href="#i-cal"/></svg>' + esc(which === 'cal' ? fmtDay(d) + (d.getFullYear() !== parseYmd(today).getFullYear() ? ' ' + d.getFullYear() : '') : 'Other day');
+  paint($('#eCalBtn'), '<svg class="ic" aria-hidden="true"><use href="#i-cal"/></svg>' + esc(which === 'cal' ? fmtDay(d) + (d.getFullYear() !== parseYmd(today).getFullYear() ? ' ' + d.getFullYear() : '') : 'Other day'));
   renderPay();
 }
 
@@ -4090,7 +4135,7 @@ function fillCatChips() {
   const cats = state.config.categories, chip = c => `<button type="button" class="chipb" data-act="e-chip" data-id="${esc(c.id)}" aria-pressed="false" title="${esc(c.name)}">${esc(c.short || c.name)}</button>`;
   const pins = (state.config.chips || []).map(id => cats.find(c => c.id === id && c.type === 'Expense')).filter(Boolean);
   const spend = pins.concat(cats.filter(c => c.type === 'Expense' && !pins.includes(c))), rest = cats.filter(c => c.type !== 'Expense' && c.role !== 'cardadj');
-  $('#eCatChips').innerHTML = spend.map(chip).join('') + (rest.length ? '<span class="chipsep" aria-hidden="true"></span>' + rest.map(chip).join('') : '');
+  paint($('#eCatChips'), spend.map(chip).join('') + (rest.length ? '<span class="chipsep" aria-hidden="true"></span>' + rest.map(chip).join('') : ''));
 }
 
 /* ---------- entry form text boxes ----------
@@ -4170,7 +4215,10 @@ function impactLines(oldT, newT, X0, X1) {
     const k = cardList().find(c => c.id === id);
     if (!k) { warn.push((cardName(id) || 'That card') + ' was removed, so nothing owed changed.'); return; }
     const d = (S1['k:' + id] || 0) - (S0['k:' + id] || 0);
-    if (Math.abs(d) > 0.004) { out.push(k.name + ' owes ' + rs(S0['k:' + id] || 0) + ' → ' + rs(S1['k:' + id])); return; }
+    if (Math.abs(d) > 0.004) { out.push(k.name + ' owes ' + rs(S0['k:' + id] || 0) + ' → ' + rs(S1['k:' + id]));
+      const u0 = uses.find(x => x.X === X1), L0 = u0 && cardLedger(k, X1);
+      if (L0 && L0.sd0 && u0.t.date === L0.openDate) warn.push(k.name + ': dated ' + fmtDM(L0.openDate) + ', the day your starting figure in Setup is from. If that figure already includes it, it now counts twice: set As of to the next day.');
+      return; }
     const u = uses.find(x => x.X === X1); if (!u) return;
     const L = cardLedger(k, X1);
     if (L.before.some(t => t.id === u.t.id)) warn.push(k.name + ': dated before ' + fmtDM(L.openDate) + ', so it is inside what you owed when you started tracking (Setup → Credit cards).');
@@ -4256,10 +4304,10 @@ function openBalances(only) {
   $('#bDate').value = todayStr(); $('#bErr').hidden = true; $('#balForm').scrollTop = 0;
   $('#balForm h3').textContent = one ? 'Update ' + one.name : 'Record balances';
   $('#balForm h3 + p').textContent = one ? 'Type what ' + one.name + ' holds now. Only this account changes.' : 'Type what each account holds today. Enter debts as negative numbers, like −50,000.';
-  $('#balGrid').innerHTML = state.config.accounts.filter(a => !a.pay && (!one || a.id === one.id)).map(a => { const L = X.latest[a.id];
+  paint($('#balGrid'), state.config.accounts.filter(a => !a.pay && (!one || a.id === one.id)).map(a => { const L = X.latest[a.id];
     return `<div class="balrow"><div><div class="bn">${esc(a.name)}</div><div class="bm">${esc([a.owner, a.cls].filter(Boolean).join(' · '))}${L ? ' · last ' + rs(L.v) : ''}</div></div>
       <input id="bal-${esc(a.id)}" data-id="${esc(a.id)}" type="text" inputmode="numeric" value="${L ? INR.format(Math.round(L.v)) : ''}" aria-label="Balance for ${esc(a.name)}"></div>`; }).join('')
-    || '<p class="muted">Add accounts in Setup first.</p>';
+    || '<p class="muted">Add accounts in Setup first.</p>');
   $('#balScrim').hidden = false;
   if (one) setTimeout(() => { const b = $('#bal-' + one.id); if (b) b.select(); }, 60);
 }
@@ -4425,6 +4473,7 @@ $('#main').addEventListener('input', ev => {
   item[k] = ev.target.type === 'checkbox' ? ev.target.checked : ev.target.value;
   if (k === 'type' || k === 'group') { state.dirty = true; renderSetup(ctx()); return; }
   markDirty();
+  if (row.classList.contains('card-row') && /^(openBilled|openUnbilled|openDate|stmtDay|dueDay)$/.test(k)) { const pv = row.querySelector('.k-pv'); if (pv) pv.textContent = cardOpenPreview(item); }
 });
 $('#main').addEventListener('change', ev => {
   if (ev.target.id === 'sDay' && state.draft) { state.draft.cycleStartDay = +ev.target.value; state.dirty = true; renderSetup(ctx()); }
@@ -4661,7 +4710,7 @@ function lockVault(why, quiet) {
   const el = $('#v-vault'); if (el) delete el.dataset.screen;
   V.epoch++; // any unlock or save still in flight is abandoned
   V.key = null; V.rows = []; V.schema = null; V.showAll = {}; V.open = {}; V.q = ''; V.loaded = false;
-  $('#vaultScrim').hidden = true; $('#vaultForm').innerHTML = '';
+  $('#vaultScrim').hidden = true; paint($('#vaultForm'), '');
   if (!quiet && $('#v-vault').innerHTML) renderVault();
   if (why) toast(why);
 }
@@ -4671,16 +4720,16 @@ function renderVault() {
   if (screen === 'load') { loadVault(); return; }
   if (el.dataset.screen === screen && el.innerHTML) return; // same screen already showing: leave the text boxes (and keyboard) alone
   el.dataset.screen = screen;
-  if (screen === 'owner') { el.innerHTML = '<div class="card empty">Only the owner can open the vault.</div>'; return; }
-  if (V.loading) { el.innerHTML = '<div class="card empty">Opening the vault…</div>'; return; }
+  if (screen === 'owner') { paint(el, '<div class="card empty">Only the owner can open the vault.</div>'); return; }
+  if (V.loading) { paint(el, '<div class="card empty">Opening the vault…</div>'); return; }
   if (V.err) {
-    el.innerHTML = `<div class="card lockcard"><h2>Vault</h2><p class="muted" style="margin:0">${V.err === 'old_script'
+    paint(el, `<div class="card lockcard"><h2>Vault</h2><p class="muted" style="margin:0">${V.err === 'old_script'
       ? "Your sheet's script is an older version without the vault. Paste the latest Code.gs into Apps Script, then Deploy → Manage deployments → pencil → New version."
-      : "Couldn't reach the sheet. Check the connection."}</p><div><button class="btn primary" type="button" data-act="v-retry">Try again</button></div></div>`;
+      : "Couldn't reach the sheet. Check the connection."}</p><div><button class="btn primary" type="button" data-act="v-retry">Try again</button></div></div>`);
     return;
   }
   if (!V.meta) {
-    el.innerHTML = `<div class="card lockcard"><h2>Create your vault</h2>
+    paint(el, `<div class="card lockcard"><h2>Create your vault</h2>
       <p style="margin:0">Choose a <b>master passphrase</b>. Everything in the vault is locked with it on this phone before it goes to Google. The sheet only ever holds scrambled text.</p>
       <div class="warnbox"><b>Write it on paper and keep it safe.</b> If you forget it, the vault cannot be opened by anyone, not even you, Google or Claude.</div>
       <form id="vCreate" class="connect" novalidate autocomplete="off">
@@ -4689,26 +4738,26 @@ function renderVault() {
         <label class="ck-line"><input id="vPaper" type="checkbox"> I have written my passphrase on paper.</label>
         <div class="err" id="vErr" hidden></div>
         <div><button class="btn primary" type="submit" id="vGo">Create vault</button></div>
-      </form></div>`;
+      </form></div>`);
     return;
   }
   if (!V.key) {
-    el.innerHTML = `<div class="card lockcard"><h2>Remove the vault passphrase</h2>
+    paint(el, `<div class="card lockcard"><h2>Remove the vault passphrase</h2>
       <p style="margin:0">Enter your current passphrase <b>one last time</b>. The vault then opens straight away on every phone, with nothing to type.</p>
       <form id="vUnlock" class="connect" novalidate autocomplete="off">
         <label class="field"><span>Master passphrase</span><input id="vPass" type="password" autocomplete="current-password" spellcheck="false"></label>
         <div class="err" id="vErr" hidden></div>
         <div><button class="btn primary" type="submit" id="vGo">Unlock and remove passphrase</button></div>
-      </form></div>`;
+      </form></div>`);
     return;
   }
   const open = isOpenMode();
-  el.innerHTML = `<div class="vbar"><input id="vQ" type="search" placeholder="Search the vault" aria-label="Search the vault" value="${esc(V.q)}" autocomplete="off">
+  paint(el, `<div class="vbar"><input id="vQ" type="search" placeholder="Search the vault" aria-label="Search the vault" value="${esc(V.q)}" autocomplete="off">
       ${open ? '' : '<button class="btn" type="button" data-act="v-lock">🔒 Lock</button>'}</div>
     <div class="chips" id="vTabs" role="group" aria-label="Show"></div>
     <p class="hint" style="margin:0">Tap a card to see every detail and copy it. <span id="vSync"></span></p>
     <div id="vLists" class="vlists"></div>
-    ${open ? '' : `<div class="row-actions" style="padding:0"><button class="btn sm" type="button" data-act="v-pass">Change passphrase</button></div>`}`;
+    ${open ? '' : `<div class="row-actions" style="padding:0"><button class="btn sm" type="button" data-act="v-pass">Change passphrase</button></div>`}`);
   renderVaultLists(); vStatus();
 }
 const COPY_ICON = '<svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg>';
@@ -4777,12 +4826,12 @@ function renderVaultLists() {
   const count = k => SUBS[k] ? V.rows.filter(r => r.t === 'personal' && SUBS[k].test(r)).length : V.rows.filter(r => r.t === k).length;
   const tabBtn = (k, label, n) => `<button type="button" class="chipb" data-act="v-tab" data-t="${k}" aria-pressed="${tab === k}">${esc(label)} <span class="cnt">${n}</span></button>`;
   const tabs = $('#vTabs');
-  if (tabs) tabs.innerHTML = tabBtn('all', 'All', V.rows.filter(r => r.t !== 'broken').length) + VAULT_TABLES.map(t => tabBtn(t.k, t.k === 'personal' ? 'Personal' : t.k === 'banks' ? 'Bank accounts' : t.title, count(t.k))).join('')
-    + Object.entries(SUBS).map(([k, x]) => tabBtn(k, x.label, count(k))).join('');
+  if (tabs) paint(tabs, tabBtn('all', 'All', V.rows.filter(r => r.t !== 'broken').length) + VAULT_TABLES.map(t => tabBtn(t.k, t.k === 'personal' ? 'Personal' : t.k === 'banks' ? 'Bank accounts' : t.title, count(t.k))).join('')
+    + Object.entries(SUBS).map(([k, x]) => tabBtn(k, x.label, count(k))).join(''));
   const hero = tab === 'all' && !q ? `<div class="vhero"><div class="vh-ic" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 2.5 4 5.5v6c0 5 3.4 8.6 8 10 4.6-1.4 8-5 8-10v-6l-8-3Z"/><path d="m8.5 12 2.4 2.4 4.6-4.8"/></svg></div>
       <div class="vh-t"><b>Your vault</b><span>Locked on this phone before it goes to Google</span></div>
       <div class="vh-n"><button type="button" data-act="v-tab" data-t="cards"><b>${count('cards')}</b>cards</button><button type="button" data-act="v-tab" data-t="banks"><b>${count('banks')}</b>accounts</button><button type="button" data-act="v-tab" data-t="personal"><b>${count('personal')}</b>personal</button></div></div>` : '';
-  box.innerHTML = hero + VAULT_TABLES.filter(t => tab === 'all' || t.k === tab || (sub && t.k === 'personal')).map(t => {
+  paint(box, hero + VAULT_TABLES.filter(t => tab === 'all' || t.k === tab || (sub && t.k === 'personal')).map(t => {
     let list = V.rows.filter(r => r.t === t.k && (!sub || sub.test(r))).sort((a, b) => String(a.c[0] || '').localeCompare(String(b.c[0] || '')) || String(a.c[1] || '').localeCompare(String(b.c[1] || '')));
     const total = list.length;
     if (q) list = list.filter(r => r.c.some(v => String(v || '').toLowerCase().includes(q)));
@@ -4792,11 +4841,11 @@ function renderVaultLists() {
       ${items ? `<div class="${t.k === 'cards' ? 'vgrid' : t.k === 'banks' ? 'vgrid vgrid-b' : 'vplist'}">${items}</div>` : `<div class="card empty">${q ? 'No match.' : 'Nothing yet. Add your first ' + t.one + ', or paste many at once.'}</div>`}
       <div class="vs-act"><button class="btn sm primary" type="button" data-act="v-add" data-t="${t.k}">+ Add ${t.one}</button><button class="btn sm" type="button" data-act="v-import" data-t="${t.k}">Paste many</button>
         <div class="npopw"><button class="btn sm" type="button" data-act="v-more" aria-label="More">⋯</button><div class="npop vmore" hidden><button class="npi" type="button" data-act="v-cols" data-t="${t.k}"><b>Rename columns</b></button>${t.delAll && total ? `<button class="npi danger" type="button" data-act="v-delall" data-t="${t.k}"><b>Delete all ${esc(t.many)}</b></button>` : ''}</div></div></div></section>`;
-  }).join('') + (broken ? `<div class="banner warn">${broken} row${broken === 1 ? '' : 's'} could not be opened. They may have been changed outside the app.</div>` : '');
+  }).join('') + (broken ? `<div class="banner warn">${broken} row${broken === 1 ? '' : 's'} could not be opened. They may have been changed outside the app.</div>` : ''));
 }
 document.addEventListener('click', ev => { const b = ev.target.closest('[data-act="v-more"]'); if (!b) return; const pop = b.parentElement.querySelector('.npop'), show = pop.hidden; document.querySelectorAll('.npop').forEach(x => { x.hidden = true; }); pop.hidden = !show; });
 document.addEventListener('keydown', ev => { if ((ev.key === 'Enter' || ev.key === ' ') && ev.target.matches && ev.target.matches('[data-act="v-row"]')) { ev.preventDefault(); ev.target.click(); } });
-function vForm(html) { const f = $('#vaultForm'); f.innerHTML = html; errToFoot(f); f.scrollTop = 0; $('#vaultScrim').hidden = false; setTimeout(() => { const i = f.querySelector('.tin, input:not([type=hidden]):not([type=checkbox])'); if (i && !f.contains(document.activeElement)) i.focus(); }, 30); }
+function vForm(html) { const f = $('#vaultForm'); paint(f, html); errToFoot(f); f.scrollTop = 0; $('#vaultScrim').hidden = false; setTimeout(() => { const i = f.querySelector('.tin, input:not([type=hidden]):not([type=checkbox])'); if (i && !f.contains(document.activeElement)) i.focus(); }, 30); }
 function vEditRow(tk, id) {
   const t = VAULT_TABLES.find(x => x.k === tk), cols = vCols(tk), r = id ? V.rows.find(x => x.id === id) : null;
   vForm(`<h3>${r ? 'Edit' : 'Add'} ${esc(t.one)}</h3>
@@ -4813,7 +4862,7 @@ async function vSaveRow(again) {
   if (!c[0]) { err.textContent = 'Fill in the first box (a name for this row).'; err.hidden = false; return; }
   err.hidden = true;
   const data = await vSeal(V.key, id, {t: tk, c, at: Date.now(), L: vLayout(tk)});
-  if (again) vEditRow(tk, null); else { $('#vaultScrim').hidden = true; $('#vaultForm').innerHTML = ''; }
+  if (again) vEditRow(tk, null); else { $('#vaultScrim').hidden = true; paint($('#vaultForm'), ''); }
   toast('Saved');
   await vQueue([{t: 'vput', id, data}]);
 }
@@ -4976,10 +5025,10 @@ function vImportPreview() {
   box.hidden = !rows.length && !warn.length;
   // A small preview under the table's own headings, so you can see every value sits in the right column.
   const sample = rows.slice(0, 3).map(r => `<tr>${r.map((v, i) => `<td data-l="${esc(cols[i] || '')}">${!v ? '<span class="nil">—</span>' : t.show.includes(i) ? esc(v) : esc(v.slice(0, 2)) + '••'}</td>`).join('')}</tr>`).join('');
-  box.innerHTML = (rows.length ? `<b>${rows.length} row${rows.length === 1 ? '' : 's'} will be added.</b> ${how} Check they line up:
+  paint(box, (rows.length ? `<b>${rows.length} row${rows.length === 1 ? '' : 's'} will be added.</b> ${how} Check they line up:
     <div class="vwrap" style="margin-top:8px"><table class="vt prev-t"><thead><tr>${cols.map(c => `<th>${esc(c)}</th>`).join('')}</tr></thead><tbody>${sample}</tbody></table></div>
     ${rows.length > 3 ? `<span class="hint">…and ${rows.length - 3} more.</span>` : ''}` : '')
-    + (warn.length ? `<div class="warnbox" style="margin-top:8px">${warn.join('<br>')}</div>` : '');
+    + (warn.length ? `<div class="warnbox" style="margin-top:8px">${warn.join('<br>')}</div>` : ''));
 }
 async function vImportSave() {
   const tk = $('#viT').value, rows = vImportRows(), err = $('#vfErr'), go = $('#viGo');
@@ -4987,7 +5036,7 @@ async function vImportSave() {
   V.busy = true; go.disabled = true; err.hidden = true;
   const ops = [], now = Date.now();
   for (let i = 0; i < rows.length; i++) { const id = vId(); ops.push({t: 'vput', id, data: await vSeal(V.key, id, {t: tk, c: rows[i], at: now + i, L: vLayout(tk)})}); }
-  $('#vaultScrim').hidden = true; $('#vaultForm').innerHTML = '';
+  $('#vaultScrim').hidden = true; paint($('#vaultForm'), '');
   toast(`${rows.length} rows added`);
   V.busy = false;
   await vQueue(ops);
@@ -5009,7 +5058,7 @@ async function vDelAll() {
   if ($('#vdConfirm').value.trim() !== 'DELETE' || V.busy) return;
   const ids = V.rows.filter(r => r.t === tk).map(r => r.id);
   if (!ids.length) return;
-  $('#vaultScrim').hidden = true; $('#vaultForm').innerHTML = '';
+  $('#vaultScrim').hidden = true; paint($('#vaultForm'), '');
   toast(`Deleted ${ids.length} ${ids.length === 1 ? 'row' : 'rows'}`);
   await vQueue(ids.map(id => ({t: 'vdel', id})));
 }
@@ -5050,7 +5099,7 @@ document.addEventListener('click', ev => {
   else if (a === 'v-add') vEditRow(b.dataset.t, null);
   else if (a === 'v-edit') { const r = V.rows.find(x => x.id === b.dataset.id); if (r) vEditRow(r.t, r.id); }
   else if (a === 'v-save-again') vSaveRow(true);
-  else if (a === 'v-close') { $('#vaultScrim').hidden = true; $('#vaultForm').innerHTML = ''; }
+  else if (a === 'v-close') { $('#vaultScrim').hidden = true; paint($('#vaultForm'), ''); }
   else if (a === 'v-cols') vColsForm(b.dataset.t);
   else if (a === 'v-import') vImportForm(b.dataset.t);
   else if (a === 'v-import-save') vImportSave();
@@ -5061,7 +5110,7 @@ document.addEventListener('click', ev => {
   else if (a === 'v-pass-save') vSavePass();
   else if (a === 'v-del') {
     if (!arm(b, 'vdel' + b.dataset.id, 'Tap again to delete')) return;
-    $('#vaultScrim').hidden = true; $('#vaultForm').innerHTML = ''; toast('Deleted');
+    $('#vaultScrim').hidden = true; paint($('#vaultForm'), ''); toast('Deleted');
     vQueue([{t: 'vdel', id: b.dataset.id}]);
   }
 });
@@ -5098,8 +5147,8 @@ const LS_EMAIL = 'budgetTracker.email.v1';
 function renderSignIn(gate) {
   const msg = state.connErr ? `<div class="banner warn">${esc(state.connErr)}</div>` : '';
   let last = ''; try { last = localStorage.getItem(LS_EMAIL) || ''; } catch (e) {}
-  if (state.signingIn) { gate.innerHTML = `<h2>Signing you in…</h2><p>One moment.</p>`; return; }
-  gate.innerHTML = `<h2>Sign in</h2>${msg}
+  if (state.signingIn) { paint(gate, `<h2>Signing you in…</h2><p>One moment.</p>`); return; }
+  paint(gate, `<h2>Sign in</h2>${msg}
     <p>You sign in once on each phone. After that it stays signed in.</p>
     ${GOOGLE_CLIENT_ID ? `<div id="gBtn" style="min-height:44px"></div><div class="err" id="gErr" hidden></div><p class="hint" style="margin:0">or</p>` : ''}
     <form class="connect" id="mailForm" novalidate>
@@ -5109,7 +5158,7 @@ function renderSignIn(gate) {
     </form>
     <div class="banner" id="mSent" hidden></div>
     <details style="margin-top:6px"><summary class="hint" style="cursor:pointer">Have a set-up link instead?</summary>${linkForm()}</details>
-    <details style="margin-top:6px"><summary class="hint" style="cursor:pointer">Owner: kill switch</summary>${killFormHtml('both')}</details>`;
+    <details style="margin-top:6px"><summary class="hint" style="cursor:pointer">Owner: kill switch</summary>${killFormHtml('both')}</details>`);
   if (GOOGLE_CLIENT_ID) loadGis().then(() => {
     const el = $('#gBtn'); if (!el) return;
     google.accounts.id.renderButton(el, {type: 'standard', theme: 'filled_blue', size: 'large', shape: 'pill', text: 'continue_with', logo_alignment: 'left', width: Math.min(320, el.clientWidth || 320)});
@@ -5125,12 +5174,12 @@ async function sendMailLink(ev) {
   go.disabled = true; go.textContent = 'Sending…';
   try {
     await call([], {emailLink: email, session: undefined, key: undefined});
-    sent.innerHTML = `<b>Check your Gmail.</b> If ${esc(email)} is on the family list, a sign-in email is on its way. Open it <b>on this phone</b> and tap <b>Sign in to Budget Tracker</b>. Not there in a minute? Look in Spam.`;
+    paint(sent, `<b>Check your Gmail.</b> If ${esc(email)} is on the family list, a sign-in email is on its way. Open it <b>on this phone</b> and tap <b>Sign in to Budget Tracker</b>. Not there in a minute? Look in Spam.`);
     sent.hidden = false; go.textContent = 'Send again';
   } catch (e) {
-    err.innerHTML = e && e.code === 'too_many' ? 'Too many links asked for in the last hour. Use the newest email you got, or try again later.'
+    paint(err, e && e.code === 'too_many' ? 'Too many links asked for in the last hour. Use the newest email you got, or try again later.'
       : e && e.code === 'signed_out' ? 'The sheet needs the latest script before email sign-in works (Apps Script → Deploy → Manage deployments → New version).'
-      : signInMsg(e && e.code);
+      : signInMsg(e && e.code));
     err.hidden = false; go.textContent = 'Email me a sign-in link';
   }
   go.disabled = false;
@@ -5169,7 +5218,7 @@ async function onGoogleCredential(resp) {
     await finishSignIn(j, {session: j.session, key: ''});
   } catch (e) {
     let email = ''; try { email = JSON.parse(atob(resp.credential.split('.')[1].replace(/-/g, '+').replace(/_/g, '/'))).email; } catch (x) {}
-    const el = $('#gErr'); if (el) { el.innerHTML = signInMsg(e && e.code, email); el.hidden = false; }
+    const el = $('#gErr'); if (el) { paint(el, signInMsg(e && e.code, email)); el.hidden = false; }
   } finally { if (gate) gate.removeAttribute('aria-busy'); }
 }
 async function connect(ev) {
@@ -5182,7 +5231,7 @@ async function connect(ev) {
   if (!key) { err.textContent = 'Paste the whole set-up link.'; err.hidden = false; return; }
   go.disabled = true; go.textContent = 'Connecting…';
   try { const j = await call([], {url, key, session: undefined}); await finishSignIn(j, {url, key, session: ''}); }
-  catch (e) { err.innerHTML = e && e.code === 'bad_key' ? 'That link has been switched off. Use the email sign-in above.' : signInMsg(e && e.code); err.hidden = false; go.disabled = false; go.textContent = 'Connect'; }
+  catch (e) { paint(err, e && e.code === 'bad_key' ? 'That link has been switched off. Use the email sign-in above.' : signInMsg(e && e.code)); err.hidden = false; go.disabled = false; go.textContent = 'Connect'; }
 }
 function accountHtml() {
   const me = Sync.me || {}, owner = me.role === 'Owner';
@@ -5210,6 +5259,14 @@ document.addEventListener('submit', ev => {
 document.addEventListener('click', ev => {
   const b = ev.target.closest('[data-act]'); if (!b) return;
   if (b.dataset.act === 'sync-now') { Sync.err = ''; render(); flush(); }
+  else if (b.dataset.act === 'unsent-copy') { const t = unsentText(readUnsent()); navigator.clipboard.writeText(t).then(() => toast('Copied. Paste them somewhere safe.'), () => showCopy('Entries not saved', t)); }
+  else if (b.dataset.act === 'unsent-drop') { if (!arm(b, 'unsent-drop', 'Delete them?')) return; writeUnsent([]); renderBanner(); toast('Discarded'); }
+  else if (b.dataset.act === 'unsent-save') {
+    if (!signedIn() || !state.config) return;
+    const list = readUnsent(); writeUnsent([]);
+    list.forEach(u => { const op = {t: 'txn', txn: u.txn}; applyLocal(op); Sync.outbox.push(op); });
+    saveCache(); render(); flush(); toast(list.length + (list.length === 1 ? ' entry' : ' entries') + ' sent to Google Sheets');
+  }
   else if (b.dataset.act === 'del-user') { if (!arm(b, 'du' + b.dataset.email, '✓')) return; Sync.outbox.push({t: 'deluser', email: b.dataset.email}); saveCache(); flush(); }
   else if (b.dataset.act === 'disconnect') {
     if (Sync.outbox.length && !arm(b, 'disc', Sync.outbox.length + ' unsynced, tap again')) return;
@@ -5218,7 +5275,7 @@ document.addEventListener('click', ev => {
     try { localStorage.removeItem(LS_CONN); localStorage.removeItem(LS_CACHE); localStorage.removeItem(LS_OUT); localStorage.removeItem(LS_VAULT); } catch (e) {}
     V.pending = [];
     lockVault('', true); V.loaded = false; V.meta = null; V.enc = {};
-    Sync.key = ''; Sync.session = ''; Sync.me = null; Sync.users = null; Sync.outbox = []; Sync.last = 0;
+    Sync.key = ''; Sync.session = ''; Sync.me = null; Sync.users = null; Sync.outbox = []; Sync.last = 0; Sync.rev = ''; Sync.full = 0;
     state.config = null; state.cycles = {}; state.balances = {}; state.cardfix = {}; state.got.config = false; state.dirty = false; state.draft = null;
     render();
   }
@@ -5228,9 +5285,6 @@ document.addEventListener('click', ev => {
    Chrome shows its autofill bar (saved cards with "scan card", addresses, passwords) above the keyboard when boxes
    look like a payment or address form (e.g. the vault's CC number / Exp / CVV columns). It ignores autocomplete="off"
    for card fields but respects a value it does not recognise, so every box the app draws gets one. */
-// Anything added to the page some other way than innerHTML also follows the keyboard rules.
-new MutationObserver(list => { for (const m of list) for (const n of m.addedNodes) if (n.nodeType === 1 && (n.matches('input, textarea') || n.querySelector('input, textarea'))) noAutofill(n.parentNode || n); })
-  .observe(document.body, {childList: true, subtree: true});
 
 /* ---------- app shell: navigation, More, keyboard awareness, motion, haptics ----------
    Phones: a slim top bar (the month) that slides away while you scroll down, and a floating bottom bar with the
@@ -5290,7 +5344,7 @@ function moreHtml() {
       <button type="button" class="mset" data-act="more-sync"><svg class="ic" aria-hidden="true"><use href="#i-sync"/></svg><span>Sync now</span></button>
     </div>`;
 }
-function openMore() { $('#moreBox').innerHTML = moreHtml(); $('#moreScrim').hidden = false; }
+function openMore() { paint($('#moreBox'), moreHtml()); $('#moreScrim').hidden = false; }
 function closeMore() { $('#moreScrim').hidden = true; }
 async function installNow() {
   if (installEvt) { installEvt.prompt(); try { await installEvt.userChoice; } catch (e) {} installEvt = null; if (state.config) render(); return; }
@@ -5301,7 +5355,7 @@ document.addEventListener('click', ev => {
   const a = b.dataset.act;
   if (a === 'more') openMore();
   else if (a === 'more-go') { skipTransition = true; closeMore(); } // the link itself changes the screen; the sheet sliding away is the motion
-  else if (a === 'more-theme') { flipTheme(); setTimeout(() => { if (!$('#moreScrim').hidden) $('#moreBox').innerHTML = moreHtml(); }, 20); }
+  else if (a === 'more-theme') { flipTheme(); setTimeout(() => { if (!$('#moreScrim').hidden) paint($('#moreBox'), moreHtml()); }, 20); }
   else if (a === 'more-text') { closeMore(); textSheet(); }
   else if (a === 'install-go') { closeMore(); installNow(); }
   else if (a === 'more-sync') { closeMore(); Sync.err = ''; if (signedIn()) flush(); toast('Syncing with Google Sheets…'); }
@@ -5415,11 +5469,11 @@ function renderAddHome(X) {
       <span class="amt num ${ty === 'Income' || t.refund ? 'inc' : ty === 'Transfer' ? 'trf' : ''}">${ty === 'Income' ? '+' : t.refund ? '−' : ''}${rs(t.amount)}</span></button>`;
   }).join('');
   const who = Sync.me && Sync.me.name ? esc(Sync.me.name) : '';
-  el.innerHTML = `<div class="addhome">
+  paint(el, `<div class="addhome">
     <section class="card hero-add"><h2>${who ? 'Hi ' + who : 'Add an entry'}</h2><p>Log what you spent or received. It goes straight to the family tracker.</p>
       <button class="btn primary big-add" type="button" data-act="add"><svg class="ic" aria-hidden="true"><use href="#i-plus"/></svg>Add entry</button></section>
     <section class="card ledger"><div class="sec-h"><h2>What you added</h2><span class="hint">Tap one to fix it</span></div>${rows || '<div class="empty">Nothing yet. Tap Add entry to log one.</div>'}</section>
-  </div>`;
+  </div>`);
 }
 function newLinkId() { const a = new Uint8Array(6); crypto.getRandomValues(a); return [...a].map(x => x.toString(36).padStart(2, '0')).join('').slice(0, 10); }
 function entryLinksHtml() {
@@ -5544,10 +5598,10 @@ function start() {
   else render();
   if (signedIn()) flush();
   // Pick up entries made on other phones.
-  setInterval(() => { if (signedIn() && document.visibilityState === 'visible' && !state.dirty) flush(); }, 30000);
+  setInterval(() => { if (signedIn() && document.visibilityState === 'visible' && !state.dirty) flush(); }, 60000);
   document.addEventListener('visibilitychange', () => { if (signedIn() && document.visibilityState === 'visible') flush(); });
   window.addEventListener('online', () => { if (signedIn()) flush(); });
-  setInterval(() => { if (signedIn()) renderChrome(state.config ? ctx() : null); }, 60000);
+  setInterval(() => { if (signedIn()) renderChrome(state.config ? ctx() : null); renderBanner(); }, 60000);
   if ('serviceWorker' in navigator && location.protocol === 'https:') navigator.serviceWorker.register('sw.js').catch(() => {});
 }
 start();
