@@ -33,6 +33,7 @@ if (location.hash === '#paste') openPaste();
 async function renderLibrary() {
   let docs = []; try { docs = await store.listDocs(); } catch (e) {}
   const list = $('#libList');
+  $('#libFoot').hidden = !docs.length;
   if (!docs.length) { list.innerHTML = '<div class="lib-empty">Nothing here yet. Open a file or paste something, and it will be kept here, on this device only, with your place remembered.</div>'; $('#libUse').textContent = ''; return; }
   list.innerHTML = docs.map(d => {
     const k = KINDS[d.kind] || KINDS.txt, h = hue(d.title || d.id);
@@ -558,6 +559,10 @@ document.addEventListener('click', async e => {
       e.stopPropagation();
       if (b.dataset.armed) { await store.deleteDoc(b.dataset.id); toast('Removed from this device.'); renderLibrary(); }
       else { b.dataset.armed = '1'; b.style.color = '#e5484d'; b.title = 'Tap again to remove'; toast('Tap the bin again to remove it from this device.'); setTimeout(() => { delete b.dataset.armed; b.style.color = ''; }, 3000); }
+      break; }
+    case 'lib-clear': {
+      if (b.classList.contains('armed')) { await store.clearAll(); b.classList.remove('armed'); b.querySelector('span').textContent = 'Clear all'; toast('Library cleared from this device.'); renderLibrary(); }
+      else { b.classList.add('armed'); b.querySelector('span').textContent = 'Tap again to clear everything'; setTimeout(() => { b.classList.remove('armed'); b.querySelector('span').textContent = 'Clear all'; }, 3500); }
       break; }
     case 'home': goHome(); if (!bridge.embedded && history.state && history.state.doc) history.back(); break;
     case 'mode': setPdfMode(v); break;

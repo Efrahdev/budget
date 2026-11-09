@@ -124,6 +124,11 @@ kbd{font-family:var(--f-ui);font-size:11px;font-weight:600;color:var(--ink-3);bo
 .item-t small{color:var(--ink-3);font-size:12.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .item-p{height:4px;border-radius:99px;background:var(--bg-2);overflow:hidden;margin-top:4px}
 .item-p i{display:block;height:100%;background:var(--accent);border-radius:99px}
+.lib-foot{display:flex;justify-content:center;padding:26px 0 8px}
+.clearall{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--rule-2);background:transparent;color:var(--ink-3);border-radius:99px;padding:6px 14px;font-size:12.5px;font-weight:600;transition:color .2s,border-color .2s,background .2s}
+.clearall .ic{width:15px;height:15px}
+.clearall:hover{color:#e5484d;border-color:#e5484d}
+.clearall.armed{color:#fff;background:#e5484d;border-color:#e5484d}
 .item-x{position:absolute;top:6px;right:6px;opacity:0;transition:opacity .2s}
 .item:hover .item-x,.item:focus-within .item-x{opacity:1}
 @media (pointer:coarse){.item-x{opacity:.7}}

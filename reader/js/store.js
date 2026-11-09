@@ -30,5 +30,6 @@ export async function listDocs() { const all = await tx(['docs'], 'readonly', t 
 export async function deleteDoc(id) {
   await tx(['docs', 'bodies'], 'readwrite', async t => { t.objectStore('docs').delete(id); const b = t.objectStore('bodies'); b.delete(id); b.delete(id + ':liquid'); });
 }
+export async function clearAll() { await tx(['docs', 'bodies'], 'readwrite', t => { t.objectStore('docs').clear(); t.objectStore('bodies').clear(); }); }
 async function trim() { const all = await listDocs(); for (const d of all.slice(MAX_DOCS)) await deleteDoc(d.id); }
 export async function usage() { try { const e = await navigator.storage.estimate(); return e.usage || 0; } catch (x) { return 0; } }
