@@ -1089,11 +1089,23 @@ html.kb .topbar{transform:translateY(-110%);pointer-events:none}
 html.kb .navbar,html.kb .fab,html.kb .nfab,html.kb .savebar{opacity:0;pointer-events:none;transform:translateY(30px)}
 html.kb main{padding-top:calc(env(safe-area-inset-top,0px) + 10px);padding-bottom:28px}
 html.kb .eday-h{top:env(safe-area-inset-top,0px)}
-html.kb .toast{bottom:14px}
+/* Every sheet covers exactly the part of the screen the keyboard leaves visible (--nvh/--nvt from noteVV),
+   so a sheet's fields and buttons can never sit behind the keyboard, on Android or iPhone. */
+.scrim{top:var(--nvt,0px);bottom:auto;height:var(--nvh,100%)}
+/* Messages never cover what you are typing: with a sheet open or the keyboard up they sit at the top.
+   Taps always pass through them, and any tap clears them. */
+.toast{pointer-events:none}
+html.kb .toast,html:has(.scrim:not([hidden])) .toast{top:calc(var(--nvt,0px) + env(safe-area-inset-top,0px) + 10px);bottom:auto}
+html.kb .toast[hidden],html:has(.scrim:not([hidden])) .toast[hidden]{transform:translate(-50%,-14px) scale(.97)}
+@starting-style{html.kb .toast:not([hidden]),html:has(.scrim:not([hidden])) .toast:not([hidden]){transform:translate(-50%,-14px) scale(.97)}}
+/* A form's error line lives in its button bar, which is always on screen, right where you tapped Save. */
+.sheet-actions .err{flex:1 0 100%;margin:0 0 2px;line-height:1.4}
 html.kb .scrim{align-items:stretch;padding:0}
 html.kb .sheet{max-height:100%;height:100%;border-radius:0;padding-top:18px;max-width:none}
 html.kb .sheet::before{display:none}
-html.kb .sheet-actions{border-radius:0}
+html.kb .sheet-actions,.sheet-actions:has(.err:not([hidden])){background:var(--sheet);box-shadow:0 -1px 0 var(--rule)}
+html.kb .sheet-actions{border-radius:0;padding-top:8px;padding-bottom:8px;gap:6px}
+html.kb .sheet-actions .btn{min-height:42px;padding-left:12px;padding-right:12px;white-space:nowrap}
 html.tb-hide:not(.kb) .topbar{transform:translateY(-100%)}
 
 /* ---------- screen sizes ---------- */
@@ -1636,8 +1648,11 @@ function parseSigned(s) {
 }
 function toast(msg, kind, ms) {
   const t = $('#toast'); t.textContent = msg; t.className = 'toast' + (kind ? ' ' + kind : '') + (/\n/.test(msg) ? ' long' : ''); t.hidden = false;
-  clearTimeout(toast._t); toast._t = setTimeout(() => { t.hidden = true; }, ms || 2600);
+  clearTimeout(toast._t); toast._t = setTimeout(() => { t.hidden = true; }, ms || 2600); toast._at = Date.now();
 }
+function toastAway(after) { const t = $('#toast'); if (t && !t.hidden && Date.now() - (toast._at || 0) > after) { clearTimeout(toast._t); t.hidden = true; } }
+document.addEventListener('pointerdown', () => toastAway(600), true);
+document.addEventListener('input', () => toastAway(1200), true); // typing again means you have moved on
 function writeErr(e) {
   const c = e && e.code;
   if (c === 'bad_key') return 'The sheet refused this access key. Check it in the Apps Script, then connect again.';
@@ -3294,7 +3309,7 @@ function discTagChips() {
 document.addEventListener('click', ev => {
   const b = ev.target.closest('[data-act="e-dtag"], [data-act="e-dtag-new"]'); if (!b) return;
   if (b.dataset.act === 'e-dtag') { const tg = $('#eTag'); tg.value = tg.value.trim() === b.dataset.v ? '' : b.dataset.v; discTagChips(); return; }
-  $('#eMore').open = true; focusBox($('#eTag')); toast('Type the new tag in Tag below');
+  $('#eMore').open = true; focusBox($('#eTag'));
 });
 document.addEventListener('input', ev => { if (ev.target && ev.target.id === 'eTag') discTagChips(); });
 function renderDisc(X) {
@@ -4082,7 +4097,8 @@ function openEntry(t) {
   setCat(startCat); setEntryDate(t ? t.date : todayStr());
   $('#eDel').hidden = !t; $('#eDel').classList.remove('armed'); $('#eDel').textContent = 'Delete';
   $('#eAgain').hidden = !!t; $('#eErr').hidden = true;
-  $('#entryScrim').hidden = false; setTimeout(() => { if (!$('#entryForm').contains(document.activeElement)) focusBox($('#eAmt')); }, 30);
+  $('#entryForm').scrollTop = 0;
+  $('#entryScrim').hidden = false; if (!t) setTimeout(() => { if (!$('#entryForm').contains(document.activeElement)) focusBox($('#eAmt')); }, 30);
 }
 function closeEntry() { $('#entryScrim').hidden = true; editing = null; }
 async function saveEntry(again) {
@@ -4123,7 +4139,7 @@ async function saveEntry(again) {
 // Record balances: all accounts, or just one (e.g. EPF or NPS each month) via openBalances(id).
 function openBalances(only) {
   const X = ctx(), one = typeof only === 'string' ? state.config.accounts.find(a => a.id === only) : null;
-  $('#bDate').value = todayStr(); $('#bErr').hidden = true;
+  $('#bDate').value = todayStr(); $('#bErr').hidden = true; $('#balForm').scrollTop = 0;
   $('#balForm h3').textContent = one ? 'Update ' + one.name : 'Record balances';
   $('#balForm h3 + p').textContent = one ? 'Type what ' + one.name + ' holds now. Only this account changes.' : 'Type what each account holds today. Enter debts as negative numbers, like −50,000.';
   $('#balGrid').innerHTML = state.config.accounts.filter(a => !a.pay && (!one || a.id === one.id)).map(a => { const L = X.latest[a.id];
@@ -4666,7 +4682,7 @@ function renderVaultLists() {
 }
 document.addEventListener('click', ev => { const b = ev.target.closest('[data-act="v-more"]'); if (!b) return; const pop = b.parentElement.querySelector('.npop'), show = pop.hidden; document.querySelectorAll('.npop').forEach(x => { x.hidden = true; }); pop.hidden = !show; });
 document.addEventListener('keydown', ev => { if ((ev.key === 'Enter' || ev.key === ' ') && ev.target.matches && ev.target.matches('[data-act="v-row"]')) { ev.preventDefault(); ev.target.click(); } });
-function vForm(html) { const f = $('#vaultForm'); f.innerHTML = html; $('#vaultScrim').hidden = false; setTimeout(() => { const i = f.querySelector('.tin, input:not([type=hidden]):not([type=checkbox])'); if (i && !f.contains(document.activeElement)) i.focus(); }, 30); }
+function vForm(html) { const f = $('#vaultForm'); f.innerHTML = html; errToFoot(f); f.scrollTop = 0; $('#vaultScrim').hidden = false; setTimeout(() => { const i = f.querySelector('.tin, input:not([type=hidden]):not([type=checkbox])'); if (i && !f.contains(document.activeElement)) i.focus(); }, 30); }
 function vEditRow(tk, id) {
   const t = VAULT_TABLES.find(x => x.k === tk), cols = vCols(tk), r = id ? V.rows.find(x => x.id === id) : null;
   vForm(`<h3>${r ? 'Edit' : 'Add'} ${esc(t.one)}</h3>
@@ -5194,23 +5210,68 @@ function kbCheck() {
   if (open !== was) html.classList.toggle('kb', open);
   if (open) keepInView(was ? 40 : 260);
 }
-// Keep the box you are typing in on screen: centred if the keyboard, a bar or the sheet's buttons would cover it.
-let kvT;
+/* Keep the box you are typing in on screen. It moves only the box's own sheet (or the page when there is no
+   sheet), instantly and only by the pixels needed, so it never fights the browser's own scrolling and nothing
+   jumps. Inside a sheet, "on screen" means above the sheet's buttons; on the page, between the bars. */
+function caretRect(a) {
+  const sel = getSelection(); if (!sel || !sel.rangeCount) return null;
+  const rg = sel.getRangeAt(0); if (!a.contains(rg.startContainer)) return null;
+  let r = rg.getBoundingClientRect();
+  if (!r || !r.height) { const n = rg.startContainer, e = n.nodeType === 1 ? n : n.parentElement; r = e ? e.getBoundingClientRect() : null; }
+  return r && r.height ? r : null;
+}
+function reveal(el, tries) {
+  if (!el || !el.isConnected || el.closest('#noteBox')) return; // the note editor moves its own one scroller (caretIntoView)
+  const sh = el.closest('.sheet');
+  if (sh && getComputedStyle(sh).transform !== 'none') { if ((tries || 0) < 8) setTimeout(() => reveal(el, (tries || 0) + 1), 90); return; } // still sliding in
+  const vv = window.visualViewport, top = vv ? vv.offsetTop : 0, H = vv ? vv.height : window.innerHeight;
+  const sc = sh || document.scrollingElement;
+  let lo = top + 10, hi = top + H - 10;
+  if (sh) {
+    const b = sh.getBoundingClientRect(); lo = Math.max(lo, b.top + 12); hi = Math.min(hi, b.bottom - 10);
+    const foot = sh.querySelector(':scope > .sheet-actions'); if (foot && foot.offsetHeight) hi = Math.min(hi, foot.getBoundingClientRect().top - 8);
+  } else {
+    const tb = document.querySelector('.topbar'), nb = document.querySelector('.navbar');
+    if (tb) { const r = tb.getBoundingClientRect(); if (r.bottom > top && r.top < top + H / 2 && getComputedStyle(tb).pointerEvents !== 'none') lo = Math.max(lo, r.bottom + 10); }
+    if (nb) { const r = nb.getBoundingClientRect(); if (r.height && r.top > top + H / 2 && getComputedStyle(nb).pointerEvents !== 'none') hi = Math.min(hi, r.top - 10); }
+  }
+  if (hi - lo < 40) return;
+  let r = el.getBoundingClientRect();
+  if (r.height > hi - lo) r = caretRect(el) || r;           // a tall box: keep its cursor in sight, not the whole box
+  if (r.height > hi - lo) { if (r.top > hi || r.bottom < lo) sc.scrollTop += r.top - lo; return; }
+  if (r.bottom > hi) sc.scrollTop += r.bottom - hi;
+  else if (r.top < lo) sc.scrollTop -= lo - r.top;
+}
+let kvT, kvRaf = 0;
 function keepInView(delay) {
   clearTimeout(kvT);
-  kvT = setTimeout(() => {
-    const a = document.activeElement; if (!editingNow()) return;
-    if (a.closest && a.closest('#noteBox')) return; // the note editor moves its own one scroller (caretIntoView)
-    const vv = window.visualViewport, H = vv ? vv.height : window.innerHeight, r = a.getBoundingClientRect();
-    if (r.height > H * 0.55) return; // a big box: the browser keeps the cursor in view
-    const sh = a.closest('.sheet'), foot = sh ? ((sh.querySelector('.sheet-actions') || {}).offsetHeight || 0) : 0;
-    if (r.top < 10 || r.bottom > H - foot - 10) a.scrollIntoView({block: 'center', behavior: reduceMotion() ? 'auto' : 'smooth'});
-  }, delay || 0);
+  kvT = setTimeout(() => { if (editingNow()) reveal(document.activeElement); }, delay || 0);
 }
+// While you type (a box growing a line, a long line), keep the cursor in sight on the next frame.
+document.addEventListener('input', ev => {
+  const a = ev.target; if (!a || !a.matches || !a.matches(EDITING) || (a.closest && a.closest('#noteBox'))) return;
+  if (!kvRaf) kvRaf = requestAnimationFrame(() => { kvRaf = 0; if (document.activeElement === a) reveal(a); });
+});
+// While you type in a sheet, its buttons don't take the focus: the keyboard stays up, the sheet stays still
+// under your finger, and the tap lands where you aimed (Save, a chip, More). The box's change is still sent.
+function keepKb(ev) {
+  const b = ev.target.closest && ev.target.closest('.sheet button, .sheet summary'), a = document.activeElement;
+  if (!b || b.disabled || !editingNow() || !b.closest('.sheet').contains(a) || a.closest('#noteBox')) return;
+  if (ev.type === 'pointerdown' && a.classList.contains('tin')) boxChanged(a);
+  ev.preventDefault();
+}
+document.addEventListener('pointerdown', keepKb); document.addEventListener('mousedown', keepKb);
+// A form's error line goes into its button bar, and clears as soon as you change something.
+function errToFoot(root) { (root || document).querySelectorAll('.sheet .err').forEach(e => { const f = e.nextElementSibling; if (f && f.classList.contains('sheet-actions')) f.prepend(e); }); }
+function clearSheetErr(t) { const sh = t && t.closest && t.closest('.sheet'); if (sh && sh.id !== 'noteBox') sh.querySelectorAll('.err:not([hidden])').forEach(e => { e.hidden = true; }); }
+document.addEventListener('input', ev => clearSheetErr(ev.target), true);
+document.addEventListener('click', ev => { if (ev.target.closest && ev.target.closest('.chipb,.segb,.calcb,input[type=checkbox]')) clearSheetErr(ev.target); }, true);
+errToFoot();
 if (window.visualViewport) window.visualViewport.addEventListener('resize', kbCheck);
 window.addEventListener('resize', kbCheck);
 window.addEventListener('orientationchange', () => setTimeout(kbCheck, 300));
-document.addEventListener('focusin', () => { kbCheck(); setTimeout(kbCheck, 350); keepInView(420); });
+if (window.visualViewport) window.visualViewport.addEventListener('scroll', () => keepInView(40)); // iPhone: the visible part slides instead of shrinking
+document.addEventListener('focusin', () => { kbCheck(); setTimeout(kbCheck, 350); keepInView(80); setTimeout(() => keepInView(0), 450); });
 document.addEventListener('focusout', () => setTimeout(kbCheck, 90));
 kbCheck();
 
