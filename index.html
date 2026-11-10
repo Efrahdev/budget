@@ -46,7 +46,6 @@
   --s1:#2a78d6; --s2:#eb6834; --s3:#1baf7a; --s4:#eda100;
   --glass:rgba(248,249,252,.72); --glass-2:rgba(255,255,255,.80); --glass-line:rgba(255,255,255,.7); --glass-edge:rgba(16,24,40,.08);
   --hero-a:#0a1a4a; --hero-b:#1c3da8; --hero-c:#2563eb; --hero-glow-1:rgba(56,189,248,.38); --hero-glow-2:rgba(45,212,191,.22);
-  --seg-on:#ffffff;
   --shade:0 1px 2px rgba(16,24,40,.04),0 8px 24px -14px rgba(16,24,40,.16);
   --shade-2:0 2px 6px rgba(16,24,40,.06),0 24px 48px -20px rgba(16,24,40,.28);
   --shade-float:0 10px 30px -10px rgba(16,24,40,.28),0 2px 8px rgba(16,24,40,.06);
@@ -80,7 +79,6 @@
   --s1:#3987e5; --s2:#d95926; --s3:#199e70; --s4:#c98500;
   --glass:rgba(16,18,24,.70); --glass-2:rgba(24,27,34,.82); --glass-line:rgba(255,255,255,.07); --glass-edge:rgba(255,255,255,.08);
   --hero-a:#081233; --hero-b:#16348f; --hero-c:#2a5ff0; --hero-glow-1:rgba(56,189,248,.28); --hero-glow-2:rgba(45,212,191,.16);
-  --seg-on:#2b2f3a;
   --shade:0 0 0 1px rgba(255,255,255,.02),0 10px 28px -16px rgba(0,0,0,.9);
   --shade-2:0 0 0 1px rgba(255,255,255,.03),0 26px 50px -20px rgba(0,0,0,.95);
   --shade-float:0 14px 34px -12px rgba(0,0,0,.85),0 0 0 1px rgba(255,255,255,.05);
@@ -104,7 +102,6 @@
   --s1:#3987e5; --s2:#d95926; --s3:#199e70; --s4:#c98500;
   --glass:rgba(16,18,24,.70); --glass-2:rgba(24,27,34,.82); --glass-line:rgba(255,255,255,.07); --glass-edge:rgba(255,255,255,.08);
   --hero-a:#081233; --hero-b:#16348f; --hero-c:#2a5ff0; --hero-glow-1:rgba(56,189,248,.28); --hero-glow-2:rgba(45,212,191,.16);
-  --seg-on:#2b2f3a;
   --shade:0 0 0 1px rgba(255,255,255,.02),0 10px 28px -16px rgba(0,0,0,.9);
   --shade-2:0 0 0 1px rgba(255,255,255,.03),0 26px 50px -20px rgba(0,0,0,.95);
   --shade-float:0 14px 34px -12px rgba(0,0,0,.85),0 0 0 1px rgba(255,255,255,.05);
@@ -319,7 +316,8 @@ textarea{resize:vertical}
   transition:background .25s var(--ease),color .2s,box-shadow .25s,transform .15s}
 .segb .ic{width:18px;height:18px}
 .segb:active{transform:scale(.96)}
-.segb[aria-pressed="true"]{background:var(--seg-on);color:var(--ink);box-shadow:0 1px 2px rgba(0,0,0,.08),0 3px 10px -3px rgba(0,0,0,.18)}
+/* The chosen one is filled with the accent (like the category chips), never white-on-white: it must read at a glance. */
+.segb[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink);box-shadow:0 4px 12px -5px color-mix(in srgb,var(--accent) 75%,transparent)}
 .seg3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));width:100%}
 .seg3 .segb{padding:0 6px;overflow:hidden;text-overflow:ellipsis}
 .sd{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:7px;vertical-align:.06em;flex:0 0 auto;background:var(--ink-3)}
@@ -4506,8 +4504,9 @@ function focusBox(el) { // focus with the cursor at the end
 }
 ['eAmt', 'eCatText', 'eNote', 'eMember', 'eTag'].forEach(id => makeTextBox($('#' + id)));
 noAutofill(document.body); // the boxes already on the page (search, restore backup)
-// Tapping a box's label puts the cursor in the box, like a normal form.
-document.querySelectorAll('#entryForm [data-focus]').forEach(f => f.addEventListener('click', ev => { if (!ev.target.closest('.tbox, button, a, details')) focusBox($('#' + f.dataset.focus)); }));
+// Tapping a box's label puts the cursor in the box, like a normal form. Only the label itself: a stray tap on the empty
+// space around the calculator keys or the "= ₹…" line must never bring the keyboard up.
+document.querySelectorAll('#entryForm [data-focus]').forEach(f => f.addEventListener('click', ev => { const lbl = f.firstElementChild; if (lbl && lbl.tagName === 'SPAN' && lbl.contains(ev.target)) focusBox($('#' + f.dataset.focus)); }));
 
 // Calculator: live result under the amount, plus + − × ÷ = buttons (they keep the keyboard open).
 function showCalc() {
@@ -4604,7 +4603,12 @@ function openEntry(t) {
   $('#eDel').hidden = !t; $('#eDel').classList.remove('armed'); $('#eDel').textContent = 'Delete';
   $('#eAgain').hidden = !!t; $('#eErr').hidden = true;
   $('#entryForm').scrollTop = 0;
-  $('#entryScrim').hidden = false; if (!t) setTimeout(() => { if (!$('#entryForm').contains(document.activeElement)) focusBox($('#eAmt')); }, 30);
+  $('#entryScrim').hidden = false;
+  /* The keyboard belongs to the boxes you tap, never to opening the sheet. On a phone nothing is focused here, so no
+     keyboard appears until you touch Amount, Note or another box. (With a mouse there is no on-screen keyboard to get in
+     the way, so a new entry still starts with the cursor in Amount.) */
+  dropKeyboard();
+  if (!t && !coarse.matches) setTimeout(() => { if (!$('#entryScrim').hidden && !$('#entryForm').contains(document.activeElement)) focusBox($('#eAmt')); }, 30);
 }
 function closeEntry() { $('#entryScrim').hidden = true; editing = null; }
 async function saveEntry(again) {
@@ -4637,7 +4641,9 @@ async function saveEntry(again) {
   writePref({cat, bank: (payMode === 'bank' || pay) && payAcct ? payAcct : pref.bank || '', card: card || pref.card || ''});
   const k = cycleKeyOf(date);
   impactToast(k === state.cur ? 'Saved' : 'Saved in ' + cycleLabel(k), oldT, t, X); buzz(12);
-  if (again) { $('#eAmt').value = ''; $('#eAmtCalc').textContent = ''; $('#eNote').value = ''; $('#eRefund').checked = false; err.hidden = true; renderPay(); focusBox($('#eAmt')); }
+  // Save & add another: the cursor goes back to Amount only if you were typing (keyboard up) or have a mouse. A phone whose
+  // keyboard you already put away stays quiet.
+  if (again) { $('#eAmt').value = ''; $('#eAmtCalc').textContent = ''; $('#eNote').value = ''; $('#eRefund').checked = false; err.hidden = true; renderPay(); if (keyboardUp() || !coarse.matches) focusBox($('#eAmt')); else dropKeyboard(); }
   else closeEntry();
 }
 
@@ -5809,12 +5815,23 @@ document.addEventListener('click', ev => {
 const KB = {max: {}};
 const kbOrient = () => { const t = (screen.orientation && screen.orientation.type) || ''; return t ? (t.indexOf('landscape') === 0 ? 'l' : 'p') : (screen.width > screen.height ? 'l' : 'p'); };
 function editingNow() { const a = document.activeElement; return !!(a && a !== document.body && a.matches && a.matches(EDITING) && !a.matches('select,input[type=date],input[type=file]')); }
+/* THE KEYBOARD RULES (phones). The keyboard is for typing, and only for typing:
+   1. It opens only when YOU touch a text box. Opening a sheet, picking a chip, Cash/Bank/Card or a date never raises it.
+   2. Picking something (a chip, a Cash/Bank/Card or date button, "More") puts the keyboard away.
+   3. If you put it away yourself (back gesture, its own hide key), the box lets go of the focus too. A phone otherwise keeps
+      that focus and brings the keyboard straight back on the next tap, wherever that tap lands.
+   4. A sheet that closes takes its keyboard with it. */
+function dropKeyboard() { const a = document.activeElement; if (editingNow() && !a.closest('#noteBox')) a.blur(); } // the note editor looks after its own keyboard
+const keyboardUp = () => document.documentElement.classList.contains('kb');
 function kbCheck() {
   if (!coarse.matches) return;
   const vv = window.visualViewport, h = vv ? vv.height * (vv.scale || 1) : window.innerHeight, o = kbOrient(), typing = editingNow();
   if (!typing) KB.max[o] = Math.max(KB.max[o] || 0, h);
   const full = KB.max[o] || h, open = typing && h < full * 0.8, html = document.documentElement, was = html.classList.contains('kb');
-  if (open !== was) html.classList.toggle('kb', open);
+  if (open !== was) {
+    html.classList.toggle('kb', open);
+    if (was && !open && typing) dropKeyboard(); // rule 3: the keyboard went away but the box still holds the focus
+  }
   if (open) keepInView(was ? 40 : 260);
 }
 /* Keep the box you are typing in on screen. It moves only the box's own sheet (or the page when there is no
@@ -5868,6 +5885,11 @@ function keepKb(ev) {
   ev.preventDefault();
 }
 document.addEventListener('pointerdown', keepKb); document.addEventListener('mousedown', keepKb);
+// Rule 2: the tap itself lands first (above), then the pick is made, then the keyboard goes. Capture phase, so the keyboard
+// is already down before any of the pick's own code (such as the date picker) runs.
+document.addEventListener('click', ev => { if (ev.target.closest && ev.target.closest('.sheet .chipb, .sheet .segb, .sheet .emore summary')) dropKeyboard(); }, true);
+// Rule 4: whichever way a pop-up goes (Save, Cancel, tap outside, pull down, Esc), its keyboard goes with it.
+document.querySelectorAll('.scrim').forEach(sc => new MutationObserver(() => { if (sc.hidden && sc.contains(document.activeElement)) dropKeyboard(); }).observe(sc, {attributes: true, attributeFilter: ['hidden']}));
 // A form's error line goes into its button bar, and clears as soon as you change something.
 function errToFoot(root) { (root || document).querySelectorAll('.sheet .err').forEach(e => { const f = e.nextElementSibling; if (f && f.classList.contains('sheet-actions')) f.prepend(e); }); }
 function clearSheetErr(t) { const sh = t && t.closest && t.closest('.sheet'); if (sh && sh.id !== 'noteBox') sh.querySelectorAll('.err:not([hidden])').forEach(e => { e.hidden = true; }); }
