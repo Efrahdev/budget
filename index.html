@@ -1431,6 +1431,19 @@ html.tb-hide:not(.kb) .topbar{transform:translateY(-100%)}
 .ovx-st{flex:0 0 auto;display:inline-flex;align-items:center;gap:5px;font-weight:650;color:color-mix(in srgb,var(--kc) 86%,var(--ink));--kc:var(--ink-3)}
 .ovx-st i{width:6px;height:6px;border-radius:50%;background:currentColor}
 .ovx-st.bad{--kc:var(--bad)}.ovx-st.warn{--kc:var(--warn)}.ovx-st.due{--kc:#3b82f6}.ovx-st.next{--kc:#8b5cf6}.ovx-st.good{--kc:var(--good)}
+/* STMT date: plain and large enough to read at a glance. Due capsule: calm when far, louder the closer it gets
+   (slate → soft amber → amber → solid orange → solid red), tints of one colour so it reads in light and dark. */
+.ovx-dt{display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px;min-width:0}
+.ovx-sm{display:inline-flex;align-items:baseline;gap:6px;font-size:calc(14px*var(--fs,1));font-weight:650;color:var(--ink-2);white-space:nowrap;font-variant-numeric:tabular-nums}
+.ovx-sm i{font-style:normal;font-size:calc(11px*var(--fs,1));font-weight:800;letter-spacing:.09em;color:var(--ink-3)}
+.ovx-cap{display:inline-flex;align-items:center;padding:3px 11px;border-radius:99px;font-size:calc(13.5px*var(--fs,1));font-weight:700;line-height:1.35;white-space:nowrap;font-variant-numeric:tabular-nums;
+  --pc:#64748b;--pa:12;--pt:78;color:color-mix(in srgb,var(--pc) calc(var(--pt) * 1%),var(--ink));background:color-mix(in srgb,var(--pc) calc(var(--pa) * 1%),transparent);box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--pc) 22%,transparent)}
+.ovx-cap.u0{--pc:var(--good);--pa:13;--pt:70}
+.ovx-cap.u1{--pc:#64748b;--pa:13;--pt:75}
+.ovx-cap.u2{--pc:#f59e0b;--pa:16;--pt:55}
+.ovx-cap.u3{--pc:#f59e0b;--pa:34;--pt:45;box-shadow:inset 0 0 0 1px color-mix(in srgb,#f59e0b 55%,transparent)}
+.ovx-cap.u4{background:#f97316;color:#fff;box-shadow:0 4px 12px -4px rgba(249,115,22,.65)}
+.ovx-cap.u5{background:#dc2626;color:#fff;box-shadow:0 4px 14px -4px rgba(220,38,38,.7)}
 .ovx-lim{display:block;height:3px;width:min(140px,100%);border-radius:99px;background:var(--fill);overflow:hidden;margin-top:2px}
 .ovx-lim i{display:block;height:100%;border-radius:99px;background:var(--good)}.ovx-lim i.warn{background:var(--warn)}.ovx-lim i.bad{background:var(--bad)}
 .ovx-v{display:flex;flex-direction:column;align-items:flex-end;gap:2px;text-align:right}
@@ -4018,13 +4031,18 @@ function cardStripHtml(X) {
   const rows = tiles.map(({L, first, st, n}, i) => {
     const c = L.card, vr = (V.rows || []).find(r => r.id === c.id), num = vr ? vr.c[2] : '';
     const l4 = last4(num) || (String(c.name).match(/··(\d{4})$/) || [])[1] || '', lim = +c.limit > 0 ? +c.limit : 0, used = Math.max(0, L.owed);
-    let lbl, amt, chip, date, tn;
-    if (first) { lbl = 'to pay' + (L.unpaid.length > 1 ? ' · ' + L.unpaid.length + ' bills' : ''); amt = L.dueNow; tn = st.c === 'bad' ? 'bad' : st.c === 'warn' ? 'warn' : 'due'; chip = st.t; date = tn === 'bad' || /today/i.test(st.t) ? '' : fmtDM(first.due); }
-    else if (n) { lbl = 'next bill'; amt = n.left; tn = 'next'; chip = 'Bill on ' + fmtDM(n.sd); date = 'due ' + fmtDM(n.due); }
-    else { lbl = 'owed'; amt = Math.max(0, L.owed); tn = 'good'; chip = 'All clear'; date = ''; }
+    // STMT = the statement date; the capsule says when payment is due. Urgency tiers (u1 calm … u5 alarm) by days left.
+    let lbl, amt, sd = '', cap = '', tier = 'u0';
+    const tierOf = d => d < 0 || d === 0 ? 'u5' : d <= 3 ? 'u4' : d <= 7 ? 'u3' : d <= 14 ? 'u2' : 'u1';
+    const inTxt = d => d === 1 ? 'tomorrow' : 'in ' + d + ' days';
+    const capFor = due => { const d = dayDiff(parseYmd(todayStr()), parseYmd(due)); tier = tierOf(d);
+      return d < 0 ? 'Overdue ' + (-d) + (d === -1 ? ' day' : ' days') + ' · was ' + fmtDM(due) : d === 0 ? 'Due today' : 'Due ' + fmtDM(due) + ' · ' + inTxt(d); };
+    if (first) { lbl = 'to pay' + (L.unpaid.length > 1 ? ' · ' + L.unpaid.length + ' bills' : ''); amt = L.dueNow; sd = first.sd; cap = capFor(first.due); }
+    else if (n) { lbl = 'next bill'; amt = n.left; sd = n.sd; cap = capFor(n.due); }
+    else { lbl = 'owed'; amt = Math.max(0, L.owed); sd = L.nextSt ? L.nextSt.sd : ''; cap = 'All clear'; tier = 'u0'; }
     const lf = lim ? Math.min(1, used / lim) : 0;
     return `<div class="ovx-row" style="--i:${i}"${whyAttr('card:' + c.id)}>${ovBadge(c.name)}
-      <span class="ovx-m"><b>${esc(String(c.name).replace(/\s*··\d{4}$/, ''))}${l4 ? ` <em>•• ${esc(l4)}</em>` : ''}</b><small><span class="ovx-st ${tn}"><i></i>${esc(chip)}</span>${date ? `<span class="ovx-d">${esc(date)}</span>` : ''}</small>
+      <span class="ovx-m"><b>${esc(String(c.name).replace(/\s*··\d{4}$/, ''))}${l4 ? ` <em>•• ${esc(l4)}</em>` : ''}</b><span class="ovx-dt">${sd ? `<span class="ovx-sm"><i>STMT</i>${esc(fmtDM(sd))}</span>` : ''}<span class="ovx-cap ${tier}">${esc(cap)}</span></span>
         ${lim ? `<span class="ovx-lim" title="${Math.round(lf * 100)}% of the limit used"><i class="${lf > 0.8 ? 'bad' : lf > 0.5 ? 'warn' : ''}" style="width:${Math.max(2, lf * 100).toFixed(1)}%"></i></span>` : ''}</span>
       <span class="ovx-v"><b class="num">${rs(amt)}</b><small>${lbl}</small></span></div>`;
   });
