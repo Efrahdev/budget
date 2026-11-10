@@ -1378,7 +1378,6 @@ html.tb-hide:not(.kb) .topbar{transform:translateY(-100%)}
 .ovx-link .ic{width:15px;height:15px;stroke-width:2.4}
 .ovx-total{font-family:var(--f-display);font-weight:750;font-size:calc(30px*var(--fs,1));letter-spacing:-.032em;line-height:1.1;margin-top:4px;font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;align-self:flex-start;border-radius:10px}
 .ovx-total[data-act]{cursor:pointer}
-.ovx-cards.tone-bad .ovx-total{color:var(--bad-ink)}
 .ovx-chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
 .ovx-chip{display:inline-flex;align-items:center;gap:6px;padding:5px 11px;border-radius:99px;background:var(--fill-2);color:var(--ink-2);font-size:calc(12.5px*var(--fs,1));font-weight:600;white-space:nowrap;font-variant-numeric:tabular-nums}
 .ovx-chip b{color:var(--ink);font-weight:700}
@@ -1437,11 +1436,40 @@ html.tb-hide:not(.kb) .topbar{transform:translateY(-100%)}
 .ovx-cap{display:inline-flex;align-items:center;padding:3px 11px;border-radius:99px;font-size:calc(13.5px*var(--fs,1));font-weight:700;line-height:1.35;white-space:nowrap;font-variant-numeric:tabular-nums;
   --pc:#64748b;--pa:12;--pt:78;color:color-mix(in srgb,var(--pc) calc(var(--pt) * 1%),var(--ink));background:color-mix(in srgb,var(--pc) calc(var(--pa) * 1%),transparent);box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--pc) 22%,transparent)}
 .ovx-cap.u0{--pc:var(--good);--pa:13;--pt:70}
-.ovx-cap.u1{--pc:#64748b;--pa:13;--pt:75}
+.ovx-cap.u1{--pc:#3b82f6;--pa:13;--pt:68}
 .ovx-cap.u2{--pc:#f59e0b;--pa:16;--pt:55}
 .ovx-cap.u3{--pc:#f59e0b;--pa:34;--pt:45;box-shadow:inset 0 0 0 1px color-mix(in srgb,#f59e0b 55%,transparent)}
 .ovx-cap.u4{background:#f97316;color:#fff;box-shadow:0 4px 12px -4px rgba(249,115,22,.65)}
 .ovx-cap.u5{background:#dc2626;color:#fff;box-shadow:0 4px 14px -4px rgba(220,38,38,.7)}
+.ovx-cap.un{--pc:#8b5cf6;--pa:14;--pt:66}
+/* Credit cards, Overview: the CURRENT bill and the UPCOMING bill are the same size, the same type and the same layout (at the
+   top and on every card), and differ only in design: current is a solid tinted tile whose colour follows urgency, upcoming is a
+   dashed violet tile. Both draw the eye about equally; neither is the "small print". */
+.ovx-cap.two{flex-direction:column;align-items:flex-start;gap:1px;padding:5px 10px 6px;border-radius:12px;line-height:1.25;white-space:normal}
+.ovx-cap.two b{font-size:calc(12.5px*var(--fs,1));font-weight:750}
+.ovx-cap.two em{font-style:normal;font-size:calc(11.5px*var(--fs,1));font-weight:600;opacity:.88}
+.ovx-pair,.ovx-bills{display:grid;gap:8px}
+.ovx-pair{grid-template-columns:repeat(auto-fit,minmax(min(100%,calc(140px*var(--fs,1))),1fr));margin-top:12px} /* 140px: wide enough for "UPCOMING BILLS" */
+.ovx-bills{grid-template-columns:repeat(auto-fit,minmax(min(100%,calc(134px*var(--fs,1))),1fr))} /* side by side; stacks only on a very narrow or very large-text screen */
+.ovx-bill{--bc:#3b82f6;position:relative;display:flex;flex-direction:column;align-items:flex-start;gap:6px;min-width:0;padding:11px;border-radius:16px;text-align:left;container-type:inline-size}
+.ovx-bill.cur{background:color-mix(in srgb,var(--bc) 10%,transparent);box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--bc) 28%,transparent)}
+.ovx-bill.nxt{--bc:#8b5cf6;outline:1.5px dashed color-mix(in srgb,var(--bc) 52%,transparent);outline-offset:-1.5px;background:color-mix(in srgb,var(--bc) 5%,transparent)} /* an outline, not a border: it takes no room, so both tiles are exactly the same size on every screen */
+.ovx-bill.u0,.ovx-bill.t-good{--bc:var(--good)}.ovx-bill.u2,.ovx-bill.u3,.ovx-bill.t-warn{--bc:#f59e0b}.ovx-bill.u4{--bc:#f97316}.ovx-bill.u5,.ovx-bill.t-bad{--bc:#dc2626}
+.ovx-bl{display:flex;align-items:center;gap:6px;max-width:100%;font-size:calc(11px*var(--fs,1));font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:color-mix(in srgb,var(--bc) 55%,var(--ink));white-space:nowrap}
+.ovx-bl i{flex:0 0 auto;width:8px;height:8px;border-radius:3px;background:var(--bc)}
+.ovx-bill.nxt .ovx-bl i{border-radius:50%;background:transparent;box-shadow:inset 0 0 0 1.75px var(--bc)}
+.ovx-ba{font-family:var(--f-display);font-weight:750;font-size:calc(20px*var(--fs,1));font-size:clamp(calc(18px*var(--fs,1)),15.5cqi,calc(22px*var(--fs,1)));letter-spacing:-.025em;line-height:1.1;max-width:100%;white-space:nowrap;font-variant-numeric:tabular-nums} /* sized from the tile's own width (cqi), so even ₹14,63,290 fits on any screen */
+.ovx-bill .ovx-sm{font-size:calc(13.5px*var(--fs,1))}
+.ovx-bill .ovx-cap{align-self:stretch;margin-top:auto}
+.ovx-plus{margin-left:3px;padding:1px 6px;border-radius:99px;font-size:calc(11px*var(--fs,1));font-weight:750;background:color-mix(in srgb,var(--bc) 16%,transparent);color:color-mix(in srgb,var(--bc) 55%,var(--ink))}
+.ovx-hb[data-act]{cursor:pointer;transition:transform .25s var(--spring)}.ovx-hb[data-act]:active{transform:scale(.98)}
+.ovx-hb .ovx-ba{font-size:calc(24px*var(--fs,1));font-size:clamp(calc(20px*var(--fs,1)),17.5cqi,calc(26px*var(--fs,1)))}
+.ovx-hs{font-size:calc(12.5px*var(--fs,1));font-weight:600;line-height:1.35;color:var(--ink-3);font-variant-numeric:tabular-nums}
+.ovx-hb.t-bad .ovx-hs{color:var(--bad-ink)}.ovx-hb.t-warn .ovx-hs{color:var(--warn-ink)}.ovx-hb.t-good .ovx-hs{color:var(--good-ink)}
+.ovx-row.ovx-cu{display:flex;flex-direction:column;align-items:stretch;gap:11px;padding:14px 8px}
+.ovx-row.ovx-cu::before,.ovx-cards .ovx-more>summary::before{left:8px}
+.ovx-ch{display:flex;align-items:center;gap:12px;min-width:0}
+.ovx-ch .ovx-m{flex:1 1 auto}
 .ovx-lim{display:block;height:3px;width:min(140px,100%);border-radius:99px;background:var(--fill);overflow:hidden;margin-top:2px}
 .ovx-lim i{display:block;height:100%;border-radius:99px;background:var(--good)}.ovx-lim i.warn{background:var(--warn)}.ovx-lim i.bad{background:var(--bad)}
 .ovx-v{display:flex;flex-direction:column;align-items:flex-end;gap:2px;text-align:right}
@@ -4023,32 +4051,48 @@ function cardStripHtml(X) {
     const rank = st ? (st.c === 'bad' ? 0 : st.c === 'warn' ? 1 : 2) : n ? 3 : 4;
     return {L, first, st, n, rank, when: first ? first.due : n ? n.sd : '9999'};
   }).sort((x, y) => x.rank - y.rank || (x.when < y.when ? -1 : x.when > y.when ? 1 : 0));
-  /* Overview, Nov 2026 (second pass): the treatment of the best finance apps. What you have to pay leads, in large type;
-     the other figures are quiet chips; every card is visible as one clean row (bank wordmark in its own soft hue, status,
-     limit used, amount). One surface, hairline rows, no nested boxes. Same data and taps as before. */
-  const rows = tiles.map(({L, first, st, n}, i) => {
+  /* Overview credit cards (Nov 2026, owner: "the due for the current statement and the upcoming statement are both important,
+     they should draw almost equal attention"). The CURRENT bill (billed, waiting to be paid) and the UPCOMING bill (spends still
+     building up for the statements to come) get the same size, the same type and the same layout, at the top and on every card.
+     They differ only in design: current is a solid tinted tile whose colour follows urgency (blue → amber → orange → red);
+     upcoming is a dashed violet tile ("not billed yet"). Same data and taps as before. */
+  const tierOf = d => d <= 0 ? 'u5' : d <= 3 ? 'u4' : d <= 7 ? 'u3' : d <= 14 ? 'u2' : 'u1';
+  const dueCap = due => { const d = dayDiff(parseYmd(todayStr()), parseYmd(due));
+    return {tier: tierOf(d), a: d < 0 ? 'Overdue ' + (-d) + (d === -1 ? ' day' : ' days') : d === 0 ? 'Due today' : 'Due ' + fmtDM(due),
+      b: d < 0 ? 'was ' + fmtDM(due) : d === 0 ? 'pay now' : d === 1 ? 'tomorrow' : 'in ' + d + ' days'}; };
+  // One bill tile: label, amount, STMT date, and a capsule saying when it is due. Used for both bills, so they match.
+  const tile = (kind, label, o) => `<div class="ovx-bill ${kind} ${kind === 'cur' ? o.tier : ''}">
+      <span class="ovx-bl"><i></i>${label}</span><b class="ovx-ba num">${rs(o.amt)}</b>
+      <span class="ovx-sm"><i>STMT</i>${o.sd ? esc(fmtDM(o.sd)) : '—'}${o.more ? `<span class="ovx-plus" title="${o.more} more">+${o.more}</span>` : ''}</span>
+      <span class="ovx-cap two ${kind === 'nxt' ? 'un' : o.tier}"><b>${esc(o.a)}</b>${o.b ? `<em>${esc(o.b)}</em>` : ''}</span></div>`;
+  const rows = tiles.map(({L, first}, i) => {
     const c = L.card, vr = (V.rows || []).find(r => r.id === c.id), num = vr ? vr.c[2] : '';
     const l4 = last4(num) || (String(c.name).match(/··(\d{4})$/) || [])[1] || '', lim = +c.limit > 0 ? +c.limit : 0, used = Math.max(0, L.owed);
-    // STMT = the statement date; the capsule says when payment is due. Urgency tiers (u1 calm … u5 alarm) by days left.
-    let lbl, amt, sd = '', cap = '', tier = 'u0';
-    const tierOf = d => d < 0 || d === 0 ? 'u5' : d <= 3 ? 'u4' : d <= 7 ? 'u3' : d <= 14 ? 'u2' : 'u1';
-    const inTxt = d => d === 1 ? 'tomorrow' : 'in ' + d + ' days';
-    const capFor = due => { const d = dayDiff(parseYmd(todayStr()), parseYmd(due)); tier = tierOf(d);
-      return d < 0 ? 'Overdue ' + (-d) + (d === -1 ? ' day' : ' days') + ' · was ' + fmtDM(due) : d === 0 ? 'Due today' : 'Due ' + fmtDM(due) + ' · ' + inTxt(d); };
-    if (first) { lbl = 'to pay' + (L.unpaid.length > 1 ? ' · ' + L.unpaid.length + ' bills' : ''); amt = L.dueNow; sd = first.sd; cap = capFor(first.due); }
-    else if (n) { lbl = 'next bill'; amt = n.left; sd = n.sd; cap = capFor(n.due); }
-    else { lbl = 'owed'; amt = Math.max(0, L.owed); sd = L.nextSt ? L.nextSt.sd : ''; cap = 'All clear'; tier = 'u0'; }
-    const lf = lim ? Math.min(1, used / lim) : 0;
-    return `<div class="ovx-row" style="--i:${i}"${whyAttr('card:' + c.id)}>${ovBadge(c.name)}
-      <span class="ovx-m"><b>${esc(String(c.name).replace(/\s*··\d{4}$/, ''))}${l4 ? ` <em>•• ${esc(l4)}</em>` : ''}</b><span class="ovx-dt">${sd ? `<span class="ovx-sm"><i>STMT</i>${esc(fmtDM(sd))}</span>` : ''}<span class="ovx-cap ${tier}">${esc(cap)}</span></span>
-        ${lim ? `<span class="ovx-lim" title="${Math.round(lf * 100)}% of the limit used"><i class="${lf > 0.8 ? 'bad' : lf > 0.5 ? 'warn' : ''}" style="width:${Math.max(2, lf * 100).toFixed(1)}%"></i></span>` : ''}</span>
-      <span class="ovx-v"><b class="num">${rs(amt)}</b><small>${lbl}</small></span></div>`;
+    const ns = L.nextSt, lastClosed = L.closed[L.closed.length - 1], upAmt = r2((ns ? ns.left : 0) + L.laterAmt), lf = lim ? Math.min(1, used / lim) : 0;
+    const nm = `<b>${esc(String(c.name).replace(/\s*··\d{4}$/, ''))}${l4 ? ` <em>•• ${esc(l4)}</em>` : ''}</b>`;
+    const limbar = lim ? `<span class="ovx-lim" title="${Math.round(lf * 100)}% of the limit used"><i class="${lf > 0.8 ? 'bad' : lf > 0.5 ? 'warn' : ''}" style="width:${Math.max(2, lf * 100).toFixed(1)}%"></i></span>` : '';
+    if (L.dueNow <= 0.5 && upAmt <= 0.5) // nothing owed on this card: one quiet line
+      return `<div class="ovx-row" style="--i:${i}"${whyAttr('card:' + c.id)}>${ovBadge(c.name)}
+        <span class="ovx-m">${nm}<span class="ovx-dt">${ns ? `<span class="ovx-sm"><i>STMT</i>${esc(fmtDM(ns.sd))}</span>` : ''}<span class="ovx-cap u0">All clear</span></span>${limbar}</span>
+        <span class="ovx-v"><b class="num">${rs(Math.max(0, L.owed))}</b><small>owed</small></span></div>`;
+    let cur, up;
+    if (first) { const cp = dueCap(first.due); cur = {amt: L.dueNow, sd: first.sd, a: cp.a, b: cp.b, tier: cp.tier, more: L.unpaid.length - 1}; }
+    else { const s = lastClosed ? stStatus(lastClosed) : null; cur = {amt: 0, sd: lastClosed ? lastClosed.sd : '', a: s ? s.t : 'No bill yet', b: '', tier: s && s.c === 'warn' ? 'u2' : 'u0', more: 0}; }
+    if (ns) { const cp = dueCap(ns.due), has = upAmt > 0.5; up = {amt: upAmt, sd: ns.sd, a: has ? cp.a : 'No spends yet', b: has ? cp.b : '', more: L.later.filter(s => s.left > 0.5).length}; }
+    else up = {amt: upAmt, sd: '', a: 'No bill yet', b: '', more: 0};
+    return `<div class="ovx-row ovx-cu" style="--i:${i}"${whyAttr('card:' + c.id)}>
+      <span class="ovx-ch">${ovBadge(c.name)}<span class="ovx-m">${nm}${limbar}</span></span>
+      <span class="ovx-bills">${tile('cur', 'Current bill', cur)}${tile('nxt', 'Upcoming bill', up)}</span></div>`;
   });
+  const upCards = Ls.filter(L => (L.nextSt ? L.nextSt.left : 0) + L.laterAmt > 0.5), firstStmt = upCards.map(L => L.nextSt && L.nextSt.sd).filter(Boolean).sort()[0];
+  const nextSub = !upCards.length ? 'nothing building up' : firstStmt ? 'next Stmt ' + fmtDM(firstStmt) : upCards.length + ' card' + (upCards.length === 1 ? '' : 's');
   return `<section class="ovx ovx-cards tone-${tone || 'none'}">
-    <div class="ovx-top"><span class="ovx-lbl">Credit cards · to pay now</span><a class="ovx-link" href="#cards">All cards<svg class="ic" aria-hidden="true"><use href="#i-right"/></svg></a></div>
-    <div class="ovx-total"${whyAttr('c-due')} data-count="${r2(dueNow)}">${rs(dueNow)}</div>
-    <div class="ovx-chips"><span class="ovx-chip ${tone || 'good'}">${sdot(tone || 'good')}${esc(dueSub[0].toUpperCase() + dueSub.slice(1))}</span>
-      <span class="ovx-meta"><span${whyAttr('c-next')}>Next bills <b>${rs(nextAmt)}</b></span><span class="ovx-sep" aria-hidden="true"></span><span${whyAttr('c-owed')}>Owed <b>${rs(owed)}</b></span></span></div>
+    <div class="ovx-top"><span class="ovx-lbl">Credit cards</span><a class="ovx-link" href="#cards">All cards<svg class="ic" aria-hidden="true"><use href="#i-right"/></svg></a></div>
+    <div class="ovx-pair">
+      <div class="ovx-bill ovx-hb cur t-${tone || 'calm'}"${whyAttr('c-due')}><span class="ovx-bl"><i></i>Current bills</span><b class="ovx-ba num" data-count="${r2(dueNow)}">${rs(dueNow)}</b><span class="ovx-hs">${esc(dueSub[0].toUpperCase() + dueSub.slice(1))}</span></div>
+      <div class="ovx-bill ovx-hb nxt"${whyAttr('c-next')}><span class="ovx-bl"><i></i>Upcoming bills</span><b class="ovx-ba num" data-count="${r2(nextAmt)}">${rs(nextAmt)}</b><span class="ovx-hs">${esc(nextSub[0].toUpperCase() + nextSub.slice(1))}</span></div>
+    </div>
+    <div class="ovx-chips"><span class="ovx-meta"><span${whyAttr('c-owed')}>Owed in total <b>${rs(owed)}</b></span></span></div>
     <div class="ovx-list">${ovxRows(rows, 'ov:cards-more', 'card')}</div>
   </section>`;
 }
