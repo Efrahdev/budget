@@ -742,7 +742,18 @@ details.ct-hist[open] summary::after{transform:rotate(-135deg) translateY(-1px)}
 .adjgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px;align-items:end}
 .adjgrid .f{display:block;min-width:0}.adjgrid .fl2{display:block;font-size:calc(13px*var(--fs,1));color:var(--ink-3);font-weight:600;margin-bottom:4px}
 .adjgrid select,.adjgrid input[type=date]{width:100%}
-.adjgrid .tin{min-height:44px}.adjgrid .adjnote{grid-column:1/-1}
+.adjgrid .tin{min-height:44px}.adjgrid .adjnote,.adjgrid .adjcardf{grid-column:1/-1}
+.adjgrid .req{font-weight:600;color:var(--ink-3);font-size:.92em;margin-left:4px}
+.adjcardf.bad select{border-color:var(--bad-ink);box-shadow:0 0 0 3px var(--bad-soft)}.adjerr{display:block;margin-top:4px;font-size:calc(13px*var(--fs,1));font-weight:600;color:var(--bad-ink)}
+.adjform .btn[aria-disabled="true"]{opacity:.55}
+.adjhist,.adjgrp{border-top:1px solid var(--rule)}.adjhist>summary,.adjgrp>summary{list-style:none;cursor:pointer;display:flex;align-items:center;gap:10px;min-height:48px;padding:8px 18px}
+.adjhist>summary::-webkit-details-marker,.adjgrp>summary::-webkit-details-marker{display:none}
+.adjgrp{margin:0 8px;border-radius:14px;border-top:0}.adjgrp>summary{padding:8px 10px}.adjgrp[open]{background:var(--fill)}
+.ah-t{font-weight:700;color:var(--ink)}.ah-c,.ag-c{margin-left:auto;font-size:calc(13.5px*var(--fs,1));color:var(--ink-3)}.adjgrp .ag-c{margin-left:0}
+.ag-n{font-weight:600;color:var(--ink);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.ag-t{font-weight:600;color:var(--ink-2)}
+.ag-cv{display:grid;place-items:center;color:var(--ink-3);transition:transform .25s var(--ease)}details[open]>summary>.ag-cv{transform:rotate(180deg)}
+.adjrange{display:flex;flex-wrap:wrap;align-items:end;gap:10px;padding:2px 18px 12px}.adjrange .f{display:block;flex:1 1 140px;min-width:0}.adjrange .fl2{display:block;font-size:calc(13px*var(--fs,1));color:var(--ink-3);font-weight:600;margin-bottom:4px}.adjrange input{width:100%}
+.adjhist summary:focus-visible,.adjgrp summary:focus-visible{outline:2px solid var(--accent-line);outline-offset:-2px;border-radius:12px}
 .adjsign{grid-column:1/-1;justify-self:start;align-self:end}
 .adjrow .amt.neg{color:var(--bad-ink)}
 /* ---------- Setup (stpBuild): neutral surfaces, one accent, one signature moment ----------
@@ -752,29 +763,6 @@ details.ct-hist[open] summary::after{transform:rotate(-135deg) translateY(-1px)}
 #v-setup{--s-surface:var(--sheet);--s-surface-up:var(--raise);--s-line:var(--rule);--s-edge:var(--glass-line);
   --s-tile:var(--fill-2);--s-tile-ink:var(--ink-2);--s-acc:var(--accent);--s-acc-soft:var(--accent-soft);--s-acc-on:var(--accent-ink);--s-focus:var(--accent-line);
   --s-r:20px;--s-pad:20px;--s-gap:10px;--s-gap-group:36px;gap:var(--s-gap)}
-body[data-view="setup"] #pagehead{display:none}
-/* signature: the plan at a glance */
-.stp-hero{--sh-end:color-mix(in srgb,var(--hero-b) 45%,var(--hero-c));--sh-2:rgba(255,255,255,.88);position:relative;isolation:isolate;overflow:hidden;display:flex;flex-direction:column;gap:18px;padding:22px var(--s-pad) var(--s-pad);border-radius:28px;color:#fff;margin-bottom:6px;
-  background:radial-gradient(110% 90% at 100% 0%,var(--hero-glow-1),transparent 55%),linear-gradient(150deg,var(--hero-a) 0%,var(--hero-b) 62%,var(--sh-end) 100%);
-  box-shadow:0 30px 60px -30px color-mix(in srgb,var(--hero-b) 85%,transparent),inset 0 1px 0 rgba(255,255,255,.18),inset 0 0 0 1px rgba(255,255,255,.06)}
-.stp-hero::before{content:"";position:absolute;inset:0;z-index:-1;pointer-events:none;background:radial-gradient(55% 65% at 12% -15%,rgba(255,255,255,.16),transparent 70%)}
-.stp-hero::after{content:"";position:absolute;z-index:-1;pointer-events:none;width:520px;height:520px;right:-260px;top:-260px;border-radius:50%;
-  background:repeating-radial-gradient(circle,rgba(255,255,255,.075) 0 1px,transparent 1px 26px);-webkit-mask-image:radial-gradient(circle,#000 25%,transparent 68%);mask-image:radial-gradient(circle,#000 25%,transparent 68%)}
-.view.enter .stp-hero::after{animation:shRings 1.6s var(--ease-out) both}
-@keyframes shRings{from{opacity:0;transform:scale(.7)}to{opacity:1;transform:none}}
-.sh-t{margin:0;font-family:var(--f-display);font-size:calc(30px*var(--fs,1));font-weight:800;letter-spacing:-.03em;line-height:1.1;color:#fff}
-.sh-fig{display:flex;flex-direction:column;gap:2px;min-width:0}
-.sh-l{font-size:calc(13.5px*var(--fs,1));font-weight:600;color:var(--sh-2);letter-spacing:.005em}
-.sh-v{font-family:var(--f-display);font-size:calc(42px*var(--fs,1));font-weight:800;letter-spacing:-.035em;line-height:1.08;color:#fff;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
-.sh-s{font-size:calc(14px*var(--fs,1));color:var(--sh-2)}
-.sh-ks{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(0,1fr);gap:8px}
-.sh-k{display:flex;flex-direction:column;align-items:flex-start;gap:2px;min-width:0;padding:10px 11px;border:0;border-radius:16px;font:inherit;text-align:left;color:#fff;cursor:pointer;
-  background:rgba(8,16,48,.16);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);box-shadow:inset 0 1px 0 rgba(255,255,255,.14),inset 0 0 0 1px rgba(255,255,255,.08);transition:background .2s,transform .16s var(--spring)}
-.sh-kl{font-size:calc(13px*var(--fs,1));font-weight:600;color:var(--sh-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
-.sh-kv{font-size:calc(18px*var(--fs,1));font-weight:700;letter-spacing:-.015em;font-variant-numeric:tabular-nums}
-@media (hover:hover){.sh-k:hover{background:rgba(255,255,255,.1)}}
-.sh-k:active{transform:scale(.96);background:rgba(255,255,255,.14)}
-.sh-k:focus-visible{outline:2px solid #fff;outline-offset:2px}
 /* the jump rail: floating glass, neutral until something is current */
 .stp-rail{position:sticky;top:calc(var(--tbh) + env(safe-area-inset-top,0px) + 8px);z-index:6;display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:6px;padding:5px;border-radius:999px;
   background:var(--glass-2);-webkit-backdrop-filter:blur(24px) saturate(160%);backdrop-filter:blur(24px) saturate(160%);border:1px solid var(--glass-edge);box-shadow:var(--shade-float),inset 0 1px 0 var(--s-edge);transition:top .38s var(--ease)}
@@ -830,9 +818,7 @@ details.stp[open] .stp-cv{transform:rotate(180deg);color:var(--s-acc)}
 .stp-intro{margin:16px var(--s-pad) 2px;padding:11px 14px;border-radius:12px;background:var(--fill-2);color:var(--ink-2);font-size:calc(14px*var(--fs,1));line-height:1.5}
 details.stp.flash{animation:stpFlash 1.1s var(--ease-out)}
 @keyframes stpFlash{0%{box-shadow:0 0 0 0 var(--s-focus),var(--shade-2)}100%{box-shadow:0 0 0 12px transparent,var(--shade-2)}}
-@media (max-width:420px){.stp-h{gap:12px;padding-left:14px}.sh-v{font-size:calc(38px*var(--fs,1))}}
-@media (max-width:479.98px){.sh-ks{grid-auto-flow:row;grid-template-columns:repeat(2,minmax(0,1fr))}.sh-k{flex-direction:row;align-items:center;justify-content:space-between;gap:8px;padding:11px 14px}.sh-kv{font-size:calc(17px*var(--fs,1))}}
-@media (min-width:760px){.stp-hero{padding:28px 28px 24px;gap:22px}.sh-v{font-size:calc(48px*var(--fs,1))}}
+@media (max-width:420px){.stp-h{gap:12px;padding-left:14px}}
 @media (min-width:1024px){.stp-rail,html.tb-hide:not(.kb) .stp-rail{top:14px}details.stp{scroll-margin-top:84px}}
 /* richer surfaces: one hue (the hero blues) in tonal steps */
 .stp-ic{background:linear-gradient(150deg,var(--hero-c),var(--hero-b));color:#fff;box-shadow:0 8px 18px -10px var(--hero-b),inset 0 1px 0 rgba(255,255,255,.28),inset 0 0 0 1px rgba(255,255,255,.06)}
@@ -933,7 +919,7 @@ details.srw[open]>.sr-h .sr-cv{transform:rotate(180deg);color:var(--s-acc)}
 #v-setup .ed.sid{display:flex;align-items:center;gap:14px;padding:18px var(--s-pad) 4px}
 #v-setup .ed.sid p{margin:0;font-size:calc(14.5px*var(--fs,1));overflow-wrap:anywhere;color:var(--ink-2)}
 .sav-l{display:flex;align-items:center;gap:12px}.sav-l .sav{width:38px;height:38px;font-size:calc(15px*var(--fs,1))}
-@media (prefers-reduced-motion:reduce){details.stp::details-content,.stp-cv,.stp-rail,.stp-ic,details.srw::details-content,.sr-cv,.stg input,.stg input::before{transition:none!important}details.stp.flash,.view.enter .stp-hero::after{animation:none}}
+@media (prefers-reduced-motion:reduce){details.stp::details-content,.stp-cv,.stp-rail,.stp-ic,details.srw::details-content,.sr-cv,.stg input,.stg input::before{transition:none!important}details.stp.flash}
 
 /* ---------- sheets (entry, balances, breakdowns, More…) ---------- */
 .scrim{position:fixed;inset:0;z-index:60;display:flex;align-items:flex-end;justify-content:center;background:var(--scrim);-webkit-backdrop-filter:blur(10px) saturate(130%);backdrop-filter:blur(10px) saturate(130%);opacity:1;
@@ -4071,7 +4057,7 @@ const STP = [
   {k: 'cats', t: 'Categories and monthly budgets', chip: 'Budgets', ic: 'i-sliders', g: 0},
   {k: 'accts', t: 'Accounts', chip: 'Accounts', ic: 'i-bank', g: 0},
   {k: 'cards', t: 'Credit cards', chip: 'Cards', ic: 'i-card', g: 0},
-  {k: 'adjust', t: 'Adjustments', chip: 'Adjustments', ic: 'i-adjust', g: 0},
+  {k: 'adjust', t: 'Credit card adjustments', chip: 'Card adjustments', ic: 'i-adjust', g: 0},
   {k: 'sync', t: 'Account and sync', chip: 'Sync', ic: 'i-sync', g: 1},
   {k: 'family', t: 'Family access', chip: 'Family', ic: 'i-users', g: 1},
   {k: 'links', t: 'Entry-only links', chip: 'Entry links', ic: 'i-link', g: 1},
@@ -4084,17 +4070,7 @@ state.stpDirty = state.stpDirty || {};
 if (!state.stpOpen) { state.stpOpen = {}; try { Object.assign(state.stpOpen, JSON.parse(localStorage.getItem(LS_STP) || '{}') || {}); } catch (e) {} }
 function stpSave() { try { localStorage.setItem(LS_STP, JSON.stringify(state.stpOpen)); } catch (e) {} }
 const stpBudget = d => (d.categories || []).reduce((a, c) => a + (c.type === 'Expense' && !c.unplanned ? Math.max(0, parseAmount(String(c.budget ?? '')) || 0) : 0), 0);
-// The one signature moment: the plan at a glance, on the blue hero. Its tiles jump to their sections.
-function stpHeroHtml() {
-  const d = state.draft || state.config || {}, tot = Math.round(stpBudget(d)), cats = (d.categories || []).filter(c => !c.unplanned && c.type === 'Expense').length;
-  const users = Array.isArray(Sync.users) ? Sync.users.length : null;
-  const tile = (k, l, v) => `<button type="button" class="sh-k" data-act="stp-go" data-k="${k}"><span class="sh-kl">${l}</span><span class="sh-kv" data-hv="${k}">${v}</span></button>`;
-  return `<section class="stp-hero" aria-label="Setup at a glance">
-    <h1 class="sh-t">Setup</h1>
-    <div class="sh-fig"><span class="sh-l">Monthly budget</span><b class="sh-v num" data-hv="total"${tot ? ` data-count="${tot}"` : ''}>${rs(tot)}</b><span class="sh-s" data-hv="cats">Across ${cats} spending ${cats === 1 ? 'category' : 'categories'}</span></div>
-    <div class="sh-ks">${tile('cycle', 'Cycle', ordinal(+d.cycleStartDay || 1))}${tile('accts', 'Accounts', (d.accounts || []).filter(a => !a.pay).length)}${tile('cards', 'Cards', (d.cards || []).length)}${users != null ? tile('family', 'People', users) : ''}</div></section>`;
-}
-// Keep the hero and the one-line summaries true while you type (no redraw, so the box keeps focus).
+// Keep the one-line summaries true while you type (no redraw, so the box keeps focus).
 let stpRefRaf = 0;
 function stpRefresh() {
   stpRefRaf = 0; const root = $('#v-setup'); if (!root || state.view !== 'setup') return; const X = ctx();
@@ -4104,8 +4080,6 @@ function stpRefresh() {
     const list = r.classList.contains('cat-row') ? d.categories : r.classList.contains('card-row') ? d.cards || [] : d.accounts, it = list[+r.dataset.i]; if (!it) return;
     const nm = r.querySelector('.sr-nm'), sb = r.querySelector('.sr-sub'), sub = r.classList.contains('cat-row') ? srCatSub(it) : r.classList.contains('card-row') ? srCardSub(it) : srAccSub(it);
     const name = it.name || (r.classList.contains('card-row') ? 'New card' : 'Untitled'); if (nm && nm.textContent !== name) nm.textContent = name; if (sb && sb.textContent !== sub) sb.textContent = sub; });
-  const tmp = document.createElement('div'); tmp.innerHTML = stpHeroHtml();
-  tmp.querySelectorAll('[data-hv]').forEach(n => { const o = root.querySelector(`.stp-hero [data-hv="${n.dataset.hv}"]`); if (o && o.textContent !== n.textContent) o.textContent = n.textContent; });
 }
 document.addEventListener('input', ev => { if (ev.target && ev.target.closest && ev.target.closest('#v-setup details.stp') && !stpRefRaf) stpRefRaf = requestAnimationFrame(stpRefresh); });
 document.addEventListener('change', ev => { if (ev.target && ev.target.closest && ev.target.closest('#v-setup details.stp') && !stpRefRaf) stpRefRaf = requestAnimationFrame(stpRefresh); });
@@ -4161,7 +4135,6 @@ function stpBuild(X) {
   const rail = document.createElement('nav'); rail.className = 'stp-rail'; rail.setAttribute('aria-label', 'Setup sections');
   rail.innerHTML = `<div class="stp-chips">${list.map(m => `<button type="button" class="stp-chip${state.stpOpen[m.k] ? ' open' : ''}${state.stpDirty[m.k] ? ' edited' : ''}" data-act="stp-go" data-k="${m.k}"><i></i>${esc(m.chip)}</button>`).join('')}</div>
     <button type="button" class="stp-all" data-act="stp-all" aria-label="${allOpen ? 'Collapse all sections' : 'Expand all sections'}" title="${allOpen ? 'Collapse all' : 'Expand all'}"><svg class="ic"><use href="#${allOpen ? 'i-fold' : 'i-unfold'}"/></svg></button>`;
-  const hero = document.createElement('div'); hero.innerHTML = stpHeroHtml(); frag.appendChild(hero.firstElementChild);
   frag.appendChild(rail);
   STP_GROUPS.forEach((g, gi) => {
     const ms = list.filter(m => m.g === gi); if (!ms.length) return;
@@ -4294,7 +4267,8 @@ function cardOpenPreview(k) {
    2. Card bill only: + or − on one card's bill (e.g. a no-cost EMI instalment already counted months ago).
       Changes what you owe on the card, never the month's spending. Uses the Transfer category "Card bill adjustment". */
 const ADJ_TAG = 'Adjustment';
-state.adj = state.adj || {kind: 'month', sign: 1, amt: '', date: '', cat: '', card1: '', card2: '', bill: '', note: ''};
+state.adj = state.adj || {kind: 'card', sign: 1, amt: '', date: '', cat: '', card: '', bill: '', note: '', miss: false};
+state.adjF = state.adjF || {from: '', to: ''}; state.adjOpen = state.adjOpen || {};
 const billLabel = sd => { const d = parseYmd(sd); return d.getDate() + ' ' + MON[d.getMonth()] + ' ' + String(d.getFullYear()).slice(2) + (sd >= todayStr() ? ' · coming' : ''); };
 const isCardAdj = (catId, cm) => !!(cm[catId] && cm[catId].role === 'cardadj');
 function adjBills(cardId, X) {
@@ -4303,71 +4277,95 @@ function adjBills(cardId, X) {
   let n = (L.nextSt || L.stmts[L.stmts.length - 1] || {sd: stmtFor(todayStr(), S)}).sd; for (let i = 0; i < 2; i++) { n = stepStmt(n, S, 1); if (!have.has(n)) list.push(n); }
   return [...new Set(list)].sort().reverse();
 }
+const adjDefaultBill = (cardId, X) => { const k = cardList().find(x => x.id === cardId); if (!k) return ''; const L = cardLedger(k, X); return L.nextSt ? L.nextSt.sd : adjBills(cardId, X)[0] || ''; };
+const adjRow = (t, X) => { const cardOnly = isCardAdj(t.cat, X.cm), c = X.cm[t.cat];
+  return `<div class="li adjrow"><div class="l"><div class="t1">${cardOnly ? 'Card bill only' : esc(c ? c.name : 'Unlisted')}</div>
+    <div class="t2">${cardOnly ? 'Stmt Date ' + fmtDate(t.date) : 'counts in ' + cycleLabel(cycleKeyOf(t.date)) + ' · ' + fmtDM(t.date)}${t.note && t.note !== ADJ_TAG ? ' · ' + esc(t.note) : ''}</div></div>
+    <div style="display:flex;gap:10px;align-items:center"><span class="amt num${t.refund ? ' neg' : ''}">${t.refund ? '− ' : '+ '}${rs(t.amount)}</span><button class="icon-btn" type="button" data-act="adj-del" data-id="${esc(t.id)}" data-doc="${esc(t._doc)}" aria-label="Delete adjustment">×</button></div></div>`; };
+// History: every adjustment, newest first, filtered by the date range, grouped by card. Each card's group folds away.
+function adjHistory(X) {
+  const F = state.adjF, all = X.txns.filter(t => t.tag === ADJ_TAG).sort((a, b) => a.date < b.date ? 1 : a.date > b.date ? -1 : (b.at || 0) - (a.at || 0));
+  const list = all.filter(t => (!F.from || t.date >= F.from) && (!F.to || t.date <= F.to)), groups = {};
+  list.forEach(t => (groups[t.card || ''] = groups[t.card || ''] || []).push(t));
+  const keys = Object.keys(groups).sort((a, b) => groups[b][0].date < groups[a][0].date ? -1 : 1);
+  const net = g => rs(Math.abs(g.reduce((a, t) => a + (t.refund ? -t.amount : t.amount), 0))), sign = g => g.reduce((a, t) => a + (t.refund ? -t.amount : t.amount), 0) < 0 ? '− ' : '';
+  const body = !all.length ? '<div class="empty">No adjustments yet.</div>' : !list.length ? '<div class="empty">Nothing in these dates.</div>'
+    : keys.map(k => `<details class="adjgrp" data-g="${esc(k)}"${state.adjOpen['g' + k] ? ' open' : ''}><summary><span class="ag-n">${esc(k ? cardName(k) : 'No card')}</span><span class="ag-c">${n2(groups[k].length, 'adjustment')}</span><span class="ag-t num">${sign(groups[k])}${net(groups[k])}</span><span class="ag-cv" aria-hidden="true"><svg class="ic"><use href="#i-down"/></svg></span></summary><div class="list adjlist">${groups[k].map(t => adjRow(t, X)).join('')}</div></details>`).join('');
+  return {count: list.length, total: all.length, html: body};
+}
+const n2 = (c, w) => c + ' ' + w + (c === 1 ? '' : 's');
 function adjustHtml(X) {
-  const A = state.adj, cats = state.config.categories.filter(c => c.type === 'Expense'), cards = cardList();
+  const A = state.adj, cats = state.config.categories.filter(c => c.type === 'Expense'), cards = cardList(), F = state.adjF;
   if (!A.date) A.date = todayStr();
   if (!A.cat || !cats.some(c => c.id === A.cat)) A.cat = (cats.find(c => c.id === 'misc') || cats[0] || {}).id || '';
-  if (!cards.some(k => k.id === A.card2)) A.card2 = (cards[0] || {}).id || '';
-  const bills = adjBills(A.card2, X); if (!bills.includes(A.bill)) { const L = cards.find(k => k.id === A.card2) ? cardLedger(cards.find(k => k.id === A.card2), X) : null; A.bill = L && L.nextSt ? L.nextSt.sd : bills[0] || ''; }
+  if (!cards.some(k => k.id === A.card)) A.card = '';
+  const bills = adjBills(A.card, X); if (A.card && !bills.includes(A.bill)) A.bill = adjDefaultBill(A.card, X);
   const seg = (act, v, cur, label) => `<button type="button" class="segb" data-act="${act}" data-v="${v}" aria-pressed="${String(v) === String(cur)}">${label}</button>`;
-  const list = X.txns.filter(t => t.tag === ADJ_TAG).sort((a, b) => a.date < b.date ? 1 : a.date > b.date ? -1 : (b.at || 0) - (a.at || 0)).slice(0, 40);
-  const row = t => { const cardOnly = isCardAdj(t.cat, X.cm), c = X.cm[t.cat];
-    return `<div class="li adjrow"><div class="l"><div class="t1">${cardOnly ? 'Card bill only' : esc(c ? c.name : 'Unlisted')}${t.card ? ' · ' + esc(cardName(t.card)) : ''}</div>
-      <div class="t2">${cardOnly ? 'Stmt Date ' + fmtDate(t.date) : 'counts in ' + cycleLabel(cycleKeyOf(t.date)) + ' · ' + fmtDM(t.date)}${t.note && t.note !== ADJ_TAG ? ' · ' + esc(t.note) : ''}</div></div>
-      <div style="display:flex;gap:10px;align-items:center"><span class="amt num${t.refund ? ' neg' : ''}">${t.refund ? '− ' : '+ '}${rs(t.amount)}</span><button class="icon-btn" type="button" data-act="adj-del" data-id="${esc(t.id)}" data-doc="${esc(t._doc)}" aria-label="Delete adjustment">×</button></div></div>`; };
-  return `<section class="card adjcard"><div class="sec-h"><h2>Adjustments</h2><span class="hint">One-off corrections. Saved as entries tagged “Adjustment”.</span></div>
+  const H = adjHistory(X), bad = A.miss && !A.card;
+  return `<section class="card adjcard"><div class="sec-h"><h2>Credit card adjustments</h2></div>
     <div class="adjform">
-      <div class="seg adjkind" role="group" aria-label="Kind">${seg('adj-kind', 'month', A.kind, 'Counts in the month')}${seg('adj-kind', 'card', A.kind, 'Card bill only')}</div>
-      <p class="hint adjexp">${A.kind === 'month' ? 'Adds to (or takes off) that month\'s spending, in the category you pick. Pick a card too if it is on a card bill.' : 'Changes one card\'s bill and what you owe on it. The month\'s spending and budget don\'t change (for example a no-cost EMI instalment for something already counted).'}</p>
+      <div class="seg adjkind" role="group" aria-label="Kind">${seg('adj-kind', 'card', A.kind, 'Card bill only')}${seg('adj-kind', 'month', A.kind, 'Counts in the month')}</div>
+      <p class="hint adjexp">${A.kind === 'month' ? 'Adds to (or takes off) that month\'s spending, in the category you pick, on the card you choose.' : 'Changes one card\'s bill and what you owe on it. The month\'s spending and budget don\'t change (for example a no-cost EMI instalment for something already counted).'}</p>
       <div class="adjgrid">
+        ${cards.length ? `<label class="f adjcardf${bad ? ' bad' : ''}"><span class="fl2">Card <b class="req">required</b></span><select id="adjCard" required aria-invalid="${bad}"><option value=""${A.card ? '' : ' selected'}>Select a card…</option>${cards.map(k => `<option value="${esc(k.id)}"${k.id === A.card ? ' selected' : ''}>${esc(k.name)}</option>`).join('')}</select>${bad ? '<span class="adjerr" role="alert">Select a card to post an adjustment.</span>' : ''}</label>` : '<p class="hint adjcardf">Add a credit card above before posting an adjustment.</p>'}
         <div class="seg adjsign" role="group" aria-label="Add or take off">${seg('adj-sign', 1, A.sign, '+ Add')}${seg('adj-sign', -1, A.sign, '− Take off')}</div>
         <label class="f"><span class="fl2">Amount ₹</span><input id="adjAmt" type="text" inputmode="decimal" value="${esc(A.amt)}" placeholder="0"></label>
         ${A.kind === 'month' ? `
         <label class="f"><span class="fl2">Date (counts in ${cycleLabel(cycleKeyOf(/^\d{4}-\d{2}-\d{2}$/.test(A.date) ? A.date : todayStr()))})</span><input id="adjDate" type="date" value="${esc(A.date)}"></label>
-        <label class="f"><span class="fl2">Category</span><select id="adjCat">${cats.map(c => `<option value="${esc(c.id)}"${c.id === A.cat ? ' selected' : ''}>${esc(c.name)}</option>`).join('')}</select></label>
-        <label class="f"><span class="fl2">On a card?</span><select id="adjCard1"><option value="">No card</option>${cards.map(k => `<option value="${esc(k.id)}"${k.id === A.card1 ? ' selected' : ''}>${esc(k.name)}</option>`).join('')}</select></label>`
-        : cards.length ? `
-        <label class="f"><span class="fl2">Card</span><select id="adjCard2">${cards.map(k => `<option value="${esc(k.id)}"${k.id === A.card2 ? ' selected' : ''}>${esc(k.name)}</option>`).join('')}</select></label>
-        <label class="f"><span class="fl2">Stmt Date</span><select id="adjBill">${bills.map(sd => `<option value="${sd}"${sd === A.bill ? ' selected' : ''}>${billLabel(sd)}</option>`).join('')}</select></label>` : '<p class="hint">No cards yet.</p>'}
+        <label class="f"><span class="fl2">Category</span><select id="adjCat">${cats.map(c => `<option value="${esc(c.id)}"${c.id === A.cat ? ' selected' : ''}>${esc(c.name)}</option>`).join('')}</select></label>`
+        : `<label class="f"><span class="fl2">Stmt Date</span><select id="adjBill"${A.card ? '' : ' disabled'}>${A.card ? bills.map(sd => `<option value="${sd}"${sd === A.bill ? ' selected' : ''}>${billLabel(sd)}</option>`).join('') : '<option>Select a card first</option>'}</select></label>`}
         <label class="f adjnote"><span class="fl2">Note</span><input id="adjNote" type="text" value="${esc(A.note)}" placeholder="${A.kind === 'month' ? 'e.g. one-off from June' : 'e.g. EMI 3 of 6, phone'}"></label>
       </div>
-      <div class="row-actions" style="padding:0"><button class="btn primary" type="button" data-act="adj-add">Add adjustment</button></div>
+      <div class="row-actions" style="padding:0"><button class="btn primary" type="button" data-act="adj-add"${A.card ? '' : ' aria-disabled="true"'}>Add adjustment</button></div>
     </div>
-    ${list.length ? `<div class="list adjlist">${list.map(row).join('')}</div>` : '<div class="empty">No adjustments yet.</div>'}</section>`;
+    <details class="adjhist" id="adjHist"${state.adjOpen.hist ? ' open' : ''}><summary><span class="ah-t">History</span><span class="ah-c" id="adjHistCnt">${H.total ? (H.count === H.total ? n2(H.total, 'adjustment') : H.count + ' of ' + H.total) : 'None yet'}</span><span class="ag-cv" aria-hidden="true"><svg class="ic"><use href="#i-down"/></svg></span></summary>
+      <div class="adjrange" role="group" aria-label="Date range"><label class="f"><span class="fl2">From</span><input id="adjFrom" type="date" value="${esc(F.from)}"></label><label class="f"><span class="fl2">To</span><input id="adjTo" type="date" value="${esc(F.to)}"></label><button class="btn ghost sm" type="button" data-act="adj-range-clear"${F.from || F.to ? '' : ' hidden'}>All dates</button></div>
+      <div id="adjHistList">${H.html}</div></details></section>`;
+}
+function adjHistRepaint() {
+  const X = ctx(), H = adjHistory(X), l = $('#adjHistList'), c = $('#adjHistCnt'), clr = document.querySelector('[data-act="adj-range-clear"]');
+  if (l) paint(l, H.html); if (c) c.textContent = H.total ? (H.count === H.total ? n2(H.total, 'adjustment') : H.count + ' of ' + H.total) : 'None yet';
+  if (clr) clr.hidden = !(state.adjF.from || state.adjF.to);
 }
 document.addEventListener('input', ev => {
-  const id = ev.target && ev.target.id, A = state.adj, map = {adjAmt: 'amt', adjDate: 'date', adjCat: 'cat', adjCard1: 'card1', adjCard2: 'card2', adjBill: 'bill', adjNote: 'note'};
+  const id = ev.target && ev.target.id, A = state.adj, map = {adjAmt: 'amt', adjDate: 'date', adjCat: 'cat', adjCard: 'card', adjBill: 'bill', adjNote: 'note'};
+  if (id === 'adjFrom' || id === 'adjTo') { state.adjF[id === 'adjFrom' ? 'from' : 'to'] = ev.target.value; adjHistRepaint(); return; }
   if (!map[id]) return; A[map[id]] = ev.target.value;
-  if (id === 'adjCard2') { const bills = adjBills(A.card2, ctx()), sel = $('#adjBill'); A.bill = ''; const L = cardLedger(cardList().find(k => k.id === A.card2), ctx()); A.bill = L.nextSt ? L.nextSt.sd : bills[0] || '';
-    if (sel) paint(sel, bills.map(sd => `<option value="${sd}"${sd === A.bill ? ' selected' : ''}>${billLabel(sd)}</option>`).join('')); }
+  if (id === 'adjCard') { A.miss = false; A.bill = adjDefaultBill(A.card, ctx()); renderSetup(ctx()); return; }
   if (id === 'adjDate') { const l = ev.target.closest('label').querySelector('.fl2'); if (l && /^\d{4}-\d{2}-\d{2}$/.test(A.date)) l.textContent = 'Date (counts in ' + cycleLabel(cycleKeyOf(A.date)) + ')'; }
 });
-document.addEventListener('change', ev => { const id = ev.target && ev.target.id; if (/^adj(Cat|Card1|Card2|Bill|Date)$/.test(id || '')) ev.target.dispatchEvent(new Event('input', {bubbles: true})); });
+document.addEventListener('change', ev => { const id = ev.target && ev.target.id; if (/^adj(Cat|Card|Bill|Date|From|To)$/.test(id || '')) ev.target.dispatchEvent(new Event('input', {bubbles: true})); });
+document.addEventListener('toggle', ev => {
+  const d = ev.target; if (!d || !d.matches) return;
+  if (d.matches('details.adjhist')) state.adjOpen.hist = d.open; else if (d.matches('details.adjgrp')) state.adjOpen['g' + d.dataset.g] = d.open;
+}, true);
 document.addEventListener('click', async ev => {
   const b = ev.target.closest('[data-act^="adj-"]'); if (!b) return;
   const A = state.adj, a = b.dataset.act;
   if (a === 'adj-kind') { A.kind = b.dataset.v; renderSetup(ctx()); return; }
   if (a === 'adj-sign') { A.sign = +b.dataset.v; document.querySelectorAll('.adjsign .segb').forEach(x => x.setAttribute('aria-pressed', String(x.dataset.v === b.dataset.v))); return; }
+  if (a === 'adj-range-clear') { state.adjF = {from: '', to: ''}; $('#adjFrom').value = ''; $('#adjTo').value = ''; adjHistRepaint(); return; }
   if (a === 'adj-del') { if (!arm(b, 'adj' + b.dataset.id, '✓')) return; try { await API.delTxn(b.dataset.id, b.dataset.doc); toast('Adjustment deleted'); } catch (e) { toast(writeErr(e), 'bad'); } return; }
   if (a !== 'adj-add') return;
+  if (!A.card) { A.miss = true; toast('Select a card first', 'bad'); renderSetup(ctx()); const sel = $('#adjCard'); if (sel) { sel.focus(); sel.scrollIntoView({block: 'center', behavior: reduceMotion() ? 'auto' : 'smooth'}); } return; }
   const amt = Math.abs(parseAmount(A.amt));
   if (!(amt > 0)) { toast('Type the amount, like 2500', 'bad'); focusBox($('#adjAmt')); return; }
   const base = {id: newId(), amount: amt, acct: '', member: '', tag: ADJ_TAG, at: Date.now(), refund: A.sign < 0, note: (A.note || '').trim() || ADJ_TAG};
   if (A.kind === 'month') {
     if (!/^\d{4}-\d{2}-\d{2}$/.test(A.date)) { toast('Choose a date', 'bad'); return; }
     if (!state.config.categories.some(c => c.id === A.cat)) { toast('Choose a category', 'bad'); return; }
-    await API.putTxn(Object.assign(base, {date: A.date, cat: A.cat, card: A.card1 || ''}));
+    await API.putTxn(Object.assign(base, {date: A.date, cat: A.cat, card: A.card}));
     toast((A.sign < 0 ? 'Taken off ' : 'Added to ') + cycleLabel(cycleKeyOf(A.date)));
   } else {
-    if (!A.card2 || !A.bill) { toast('Choose the card and the bill', 'bad'); return; }
+    if (!A.bill) { toast('Choose the bill', 'bad'); return; }
     let cat = state.config.categories.find(c => c.role === 'cardadj');
     if (!cat) {
       if (state.dirty) { toast('Save or discard your Setup changes first', 'bad'); return; }
       const cfg = clone(state.config); cat = {id: 'cardadj', name: 'Card bill adjustment', type: 'Transfer', role: 'cardadj', group: '', budget: 0};
       cfg.categories.push(cat); await API.saveConfig(cfg);
     }
-    await API.putTxn(Object.assign(base, {date: A.bill, cat: cat.id, card: A.card2}));
-    toast((A.sign < 0 ? 'Taken off ' : 'Added to ') + cardName(A.card2) + ' bill, Stmt Date ' + fmtDM(A.bill));
+    await API.putTxn(Object.assign(base, {date: A.bill, cat: cat.id, card: A.card}));
+    toast((A.sign < 0 ? 'Taken off ' : 'Added to ') + cardName(A.card) + ' bill, Stmt Date ' + fmtDM(A.bill));
   }
   A.amt = ''; A.note = ''; A.sign = 1; renderSetup(ctx());
 });
@@ -6210,7 +6208,6 @@ function viewEntered(v, first) {
   const el = $('#v-' + v); if (!el) return;
   el.classList.remove('enter'); void el.offsetWidth; el.classList.add('enter');
   if (v === 'overview') wcCount(el);
-  if (v === 'setup') wcCount(el.querySelector('.stp-hero'));
   clearTimeout(viewEntered.t); viewEntered.t = setTimeout(() => el.classList.remove('enter'), 1200);
   if (!first && scrollY > 0) window.scrollTo(0, 0);
   setBarsHidden(false);
