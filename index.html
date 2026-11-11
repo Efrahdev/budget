@@ -1608,6 +1608,7 @@ html.tb-hide:not(.kb) .topbar{transform:translateY(-100%)}
 .ovx{position:relative;isolation:isolate;overflow:hidden;border-radius:26px;padding:18px 18px 8px;border:1px solid var(--rule);box-shadow:var(--shade);
   background:radial-gradient(130% 90% at 100% 0%,color-mix(in srgb,var(--wash) 10%,transparent),transparent 62%),radial-gradient(90% 70% at 0% 100%,color-mix(in srgb,var(--wash2) 6%,transparent),transparent 60%),var(--sheet)}
 .ovx-banks{--wash:#3b82f6;--wash2:#14b8a6}
+.ovx-left{--wash:#f59e0b;--wash2:#f97316}.ovx-left .ovx-row .eav{justify-self:center}.ovx-left .ovx-bar{margin:14px 0 4px}
 .ovx-cards{--wash:#8b5cf6;--wash2:#ec4899}.ovx-cards.tone-bad{--wash:#ef4444;--wash2:#f97316}.ovx-cards.tone-warn{--wash:#f59e0b;--wash2:#f97316}
 .ovx-top{display:flex;align-items:center;justify-content:space-between;gap:10px;min-height:26px}
 .ovx-lbl{font-size:calc(12px*var(--fs,1));font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:var(--ink-3)}
@@ -1631,7 +1632,7 @@ html.tb-hide:not(.kb) .topbar{transform:translateY(-100%)}
 .ovx-meta>[data-act]{cursor:pointer;border-radius:8px;transition:color .2s}.ovx-meta>[data-act]:hover b{color:var(--ink)}
 .ovx-sep{width:3px;height:3px;border-radius:50%;background:var(--ink-3);opacity:.6}
 .ov-wx{margin-top:4px}
-@media (min-width:1024px){.ov-wx{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:22px 24px;align-items:start}.ov-wx>.ovx-net{grid-column:1/-1}}
+@media (min-width:1024px){.ov-wx{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:22px 24px;align-items:start}}
 /* the net card: the answer large, the bar that shows where the bank money goes, the sum as three quiet cells */
 .ovx-net{--wash:#10b981;--wash2:#14b8a6;padding-bottom:0}
 .ovx-net.neg{--wash:#ef4444;--wash2:#f97316}.ovx-net.neg .ovx-total{color:var(--bad-ink)}
@@ -2597,7 +2598,7 @@ function renderOverview(X) {
 
   const inst = coarse.matches && !isInstalled() && !readPref().instHide ? `<div class="inst"><span class="mt-ic"><svg class="ic" aria-hidden="true"><use href="#i-install"/></svg></span><span class="it"><b>Install the app</b><span>Full screen, with a clean keyboard and no web address above it.</span></span><button class="btn sm primary" type="button" data-act="install-go">Install</button><button class="ix" type="button" data-act="inst-x" aria-label="Not now"><svg class="ic" aria-hidden="true"><use href="#i-x"/></svg></button></div>` : '';
   paint($('#v-overview'), `${inst}${kpis}${tiles ? `<div class="hgrid">${tiles}</div>` : '<div class="card empty">No entries in ' + cycleLabel(key) + ' yet.</div>'}
-    ${(() => { const nt = netStripHtml(X), cs = cardStripHtml(X), bs = bankStripHtml(X); return nt || cs || bs ? `<div class="wx ov-wx">${nt}${cs}${bs}</div>` : ''; })()}`);
+    ${(() => { const nt = netStripHtml(X), ls = leftStripHtml(X), cs = cardStripHtml(X), bs = bankStripHtml(X); return nt || ls || cs || bs ? `<div class="wx ov-wx">${nt}${ls}${cs}${bs}</div>` : ''; })()}`);
   if ($('#v-overview').classList.contains('enter')) wcCount($('#v-overview'));
 }
 
@@ -4584,7 +4585,7 @@ const ovBadge = name => { const {col, mark} = brandOf(name); return `<span class
 function ovxRows(rows, key, noun) {
   if (rows.length <= 4) return rows.join('');
   const rest = rows.length - 4, open = state.openTree && state.openTree[key];
-  return rows.slice(0, 4).join('') + `<details class="ovx-more wtree" data-tree="${key}"${open ? ' open' : ''}><summary><span class="o">${rest} more ${noun}${rest === 1 ? '' : 's'}</span><span class="c">Show fewer</span><svg class="ic" aria-hidden="true"><use href="#i-down"/></svg></summary>${rows.slice(4).join('')}</details>`;
+  return rows.slice(0, 4).join('') + `<details class="ovx-more wtree" data-tree="${key}"${open ? ' open' : ''}><summary><span class="o">${rest} more ${rest === 1 ? noun : (noun === 'category' ? 'categories' : noun + 's')}</span><span class="c">Show fewer</span><svg class="ic" aria-hidden="true"><use href="#i-down"/></svg></summary>${rows.slice(4).join('')}</details>`;
 }
 // Overview bank accounts: the Bank buttons from Add entry (Setup order), each with its live balance.
 // The Overview's bank accounts: the Bank buttons from Add entry (Setup order), each resolved to its live account.
@@ -4616,6 +4617,28 @@ function netStripHtml(X) {
       <div class="ovx-cell"${whyAttr(hasCards ? 'c-owed' : '')}><span><i style="--kc:#f43f5e"></i>Card bills</span><b class="num">${sign(N.cards)}</b></div>
       <div class="ovx-cell"${whyAttr('w-left')}><span><i style="--kc:#f59e0b"></i>Budget left</span><b class="num">${sign(N.left)}</b></div>
     </div>
+  </section>`;
+}
+// Overview "Still to spend": what each budgeted category has left this month. Same surface, type and rows as the
+// neighbouring cards; the total and every row open the usual breakdown (w-left, then each category).
+function leftStripHtml(X) {
+  const bl = budgetLeft(X); if (!bl.rows.length) return '';
+  const rows0 = bl.rows.slice().sort((a, b) => b.left - a.left || b.b - a.b), over = rows0.filter(r => r.sp > r.b + 0.5).length;
+  const cols = ['var(--s1)', 'var(--s2)', 'var(--s3)', 'var(--s4)', '#8b5cf6', '#14b8a6'];
+  const segs = rows0.filter(r => r.left > 0.5), tone = bl.left > 0.5 ? '' : ' none';
+  const rows = rows0.map((r, i) => {
+    const k = 'ov-cat:' + r.c.id + '@' + bl.key, st = r.sp > r.b + 0.5 ? 'over, so nothing left' : r.sp > r.b * 0.85 ? 'nearly used' : '';
+    return `<div class="ovx-row" style="--i:${i}"${whyAttr(k)}>${catIco(r.c)}
+      <span class="ovx-m"><b>${esc(r.c.name)}</b><small><span class="ovx-d">${esc('of ' + rs(r.b) + ' · spent ' + rs(r.sp))}</span></small></span>
+      <span class="ovx-v"><b class="num">${rs(r.left)}</b><small>${esc(st || (bl.left > 0 ? wxPctTxt(r.left, bl.left) : ''))}</small></span></div>`;
+  });
+  const bar = segs.length ? `<div class="ovx-bar" role="img" aria-label="${esc(segs.map(r => r.c.name + ' ' + rs(r.left)).join(', '))}">${segs.map((r, i) => `<i style="--kc:${cols[i % cols.length]};flex:${r.left};--i:${i}"></i>`).join('')}</div>` : '';
+  return `<section class="ovx ovx-left${tone}">
+    <div class="ovx-top"><span class="ovx-lbl">Still to spend</span><span class="ovx-tag">${esc(cycleLabel(bl.key))}</span></div>
+    <div class="ovx-total"${whyAttr('w-left')} data-count="${r2(bl.left)}">${rs(bl.left)}</div>
+    <div class="ovx-chips"><span class="ovx-meta">of ${rs(bl.budget)} budgeted · ${rs(bl.budget - bl.left)} used${over ? ' · ' + over + ' over' : ''}</span></div>
+    ${bar}
+    <div class="ovx-list">${ovxRows(rows, 'ov:left-more', 'category')}</div>
   </section>`;
 }
 function bankStripHtml(X) {
