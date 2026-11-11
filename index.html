@@ -45,6 +45,7 @@
   --viz-inc:#d9e1ec; --viz-wash:rgba(37,99,235,.10);
   --s1:#2a78d6; --s2:#eb6834; --s3:#1baf7a; --s4:#eda100;
   --glass:rgba(248,249,252,.72); --glass-2:rgba(255,255,255,.80); --glass-line:rgba(255,255,255,.7); --glass-edge:rgba(16,24,40,.08);
+  --ovb-a:#1a1c21; --ovb-b:#2b2e35; --ovb-ink:#f5f6f8; --ovb-ink-2:#b5b9c2; --ovb-rule:rgba(255,255,255,.09); --ovb-edge:rgba(16,24,40,.10); --ovb-shadow:0 1px 2px rgba(16,24,40,.08),0 24px 44px -24px rgba(16,24,40,.45); --ovb-good:#5ad08a; --ovb-warn:#f5bd4f; --ovb-bad:#ff7a80;
   --hero-a:#0a1a4a; --hero-b:#1c3da8; --hero-c:#2563eb; --hero-glow-1:rgba(56,189,248,.38); --hero-glow-2:rgba(45,212,191,.22);
   --shade:0 1px 2px rgba(16,24,40,.04),0 8px 24px -14px rgba(16,24,40,.16);
   --shade-2:0 2px 6px rgba(16,24,40,.06),0 24px 48px -20px rgba(16,24,40,.28);
@@ -78,6 +79,7 @@
   --viz-inc:#283041; --viz-wash:rgba(122,162,255,.16);
   --s1:#3987e5; --s2:#d95926; --s3:#199e70; --s4:#c98500;
   --glass:rgba(16,18,24,.70); --glass-2:rgba(24,27,34,.82); --glass-line:rgba(255,255,255,.07); --glass-edge:rgba(255,255,255,.08);
+  --ovb-a:#15171b; --ovb-b:#1d2026; --ovb-ink:#f3f4f6; --ovb-ink-2:#a3a8b2; --ovb-rule:rgba(255,255,255,.08); --ovb-edge:rgba(255,255,255,.08); --ovb-shadow:0 26px 50px -24px rgba(0,0,0,.95); --ovb-good:#4fc883; --ovb-warn:#f2b445; --ovb-bad:#ff7378;
   --hero-a:#081233; --hero-b:#16348f; --hero-c:#2a5ff0; --hero-glow-1:rgba(56,189,248,.28); --hero-glow-2:rgba(45,212,191,.16);
   --shade:0 0 0 1px rgba(255,255,255,.02),0 10px 28px -16px rgba(0,0,0,.9);
   --shade-2:0 0 0 1px rgba(255,255,255,.03),0 26px 50px -20px rgba(0,0,0,.95);
@@ -101,6 +103,7 @@
   --viz-inc:#283041; --viz-wash:rgba(122,162,255,.16);
   --s1:#3987e5; --s2:#d95926; --s3:#199e70; --s4:#c98500;
   --glass:rgba(16,18,24,.70); --glass-2:rgba(24,27,34,.82); --glass-line:rgba(255,255,255,.07); --glass-edge:rgba(255,255,255,.08);
+  --ovb-a:#15171b; --ovb-b:#1d2026; --ovb-ink:#f3f4f6; --ovb-ink-2:#a3a8b2; --ovb-rule:rgba(255,255,255,.08); --ovb-edge:rgba(255,255,255,.08); --ovb-shadow:0 26px 50px -24px rgba(0,0,0,.95); --ovb-good:#4fc883; --ovb-warn:#f2b445; --ovb-bad:#ff7378;
   --hero-a:#081233; --hero-b:#16348f; --hero-c:#2a5ff0; --hero-glow-1:rgba(56,189,248,.28); --hero-glow-2:rgba(45,212,191,.16);
   --shade:0 0 0 1px rgba(255,255,255,.02),0 10px 28px -16px rgba(0,0,0,.9);
   --shade-2:0 0 0 1px rgba(255,255,255,.03),0 26px 50px -20px rgba(0,0,0,.95);
@@ -199,6 +202,7 @@ body[data-view="vault"] .fab,body[data-view="vault"] #addTop,body[data-view="not
 #saveSlot{display:contents} /* the unsaved-changes bar floats over Setup while you edit, not only at its very end */
 body[data-view="vault"] #cycBar{display:none!important}
 body[data-view="add"] .fab{display:none!important}
+@media (max-width:1023.98px){main .view{touch-action:pan-y}} /* sideways drags belong to the tab swipe */
 @media (max-width:1023.98px){html.role-entry .navbar{grid-template-columns:repeat(4,minmax(0,1fr));max-width:480px}}
 html.role-entry body:not([data-view="entries"]) #cycBar{display:none!important}
 .addhome{display:flex;flex-direction:column;gap:14px}
@@ -224,7 +228,7 @@ html.role-entry body:not([data-view="entries"]) #cycBar{display:none!important}
 
 /* ---------- page ---------- */
 .wrap{width:100%;max-width:1180px;margin:0 auto;padding-left:max(var(--gut),env(safe-area-inset-left,0px));padding-right:max(var(--gut),env(safe-area-inset-right,0px))}
-main{padding-top:calc(var(--tbh) + env(safe-area-inset-top,0px) + 14px);padding-bottom:calc(var(--nbh) + 110px + env(safe-area-inset-bottom,0px));transition:padding .3s var(--ease)}
+main{overflow-x:clip;padding-top:calc(var(--tbh) + env(safe-area-inset-top,0px) + 14px);padding-bottom:calc(var(--nbh) + 110px + env(safe-area-inset-bottom,0px));transition:padding .3s var(--ease)}
 .pagehead{display:none}
 .view{display:flex;flex-direction:column;gap:16px}
 #banner:not([hidden]){margin-bottom:14px}
@@ -338,6 +342,51 @@ textarea{resize:vertical}
 .kpi.head .lbl{font-size:calc(14px*var(--fs,1))}
 .kpi.head .val{font-size:calc(30px*var(--fs,1));font-weight:700;letter-spacing:-.028em;line-height:1.1}
 .kpi.head .sub{font-size:calc(13.5px*var(--fs,1))}
+/* Overview banner (.ovb): neutral graphite, hairline structure, status colour only on the meter and its word. */
+.ovb{position:relative;isolation:isolate;overflow:hidden;display:flex;flex-direction:column;gap:0;padding:18px 18px 4px;border-radius:24px;color:var(--ovb-ink);
+  background:radial-gradient(90% 70% at 100% 0%,rgba(255,255,255,.07),transparent 60%),linear-gradient(165deg,var(--ovb-a),var(--ovb-b));
+  border:1px solid var(--ovb-edge);box-shadow:var(--ovb-shadow),inset 0 1px 0 rgba(255,255,255,.07)}
+.ovb::before{content:"";position:absolute;inset:0;z-index:-1;pointer-events:none;opacity:.55;
+  background-image:linear-gradient(rgba(255,255,255,.035) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.035) 1px,transparent 1px);background-size:22px 22px;
+  -webkit-mask-image:radial-gradient(120% 90% at 100% 0%,#000,transparent 70%);mask-image:radial-gradient(120% 90% at 100% 0%,#000,transparent 70%)}
+.ovb-top{display:flex;align-items:center;justify-content:space-between;gap:10px;min-width:0}
+.ovb-eye{display:inline-flex;align-items:center;gap:8px;min-width:0;font-size:calc(13px*var(--fs,1));font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:var(--ovb-ink-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ovb-eye .ic{flex:0 0 auto;width:16px;height:16px;opacity:.8}
+.ovb-day{flex:0 0 auto;padding:4px 10px;border-radius:99px;font-size:calc(13px*var(--fs,1));font-weight:600;color:var(--ovb-ink-2);background:rgba(255,255,255,.06);box-shadow:inset 0 0 0 1px rgba(255,255,255,.09);font-variant-numeric:tabular-nums;white-space:nowrap}
+.ovb-main{display:flex;align-items:flex-end;justify-content:space-between;gap:14px;margin:16px -8px 0;padding:6px 8px;border-radius:16px;min-width:0;transition:background .2s,transform .18s var(--spring)}
+.ovb-hl{display:flex;flex-direction:column;gap:2px;min-width:0;flex:1 1 auto}
+.ovb-side{display:flex;flex-direction:column;align-items:flex-end;gap:3px;flex:0 0 auto;text-align:right;padding-left:14px;border-left:1px solid var(--ovb-rule)}
+.ovb-lbl{font-size:calc(13.5px*var(--fs,1));font-weight:600;color:var(--ovb-ink-2)}
+.ovb-big{display:block;max-width:100%;font-family:var(--f-display);font-weight:700;font-size:calc(34px*var(--fs,1));line-height:1.08;letter-spacing:-.03em;white-space:nowrap;overflow:hidden}
+.ovb-of{font-size:calc(14px*var(--fs,1));color:var(--ovb-ink-2);font-variant-numeric:tabular-nums}
+.ovb-mid{font-family:var(--f-display);font-weight:700;font-size:calc(20px*var(--fs,1));line-height:1.15;letter-spacing:-.02em;white-space:nowrap}
+.ovb-mid.neg,.ovb-cv.neg{color:var(--ovb-bad)}
+.ovb-st{display:inline-flex;align-items:center;gap:0;margin-top:2px;padding:3px 9px 3px 8px;border-radius:99px;font-size:calc(13px*var(--fs,1));font-weight:600;white-space:nowrap;background:rgba(255,255,255,.07);color:var(--ovb-ink)}
+.ovb-st .sd{width:8px;height:8px;margin-right:6px;vertical-align:0}
+.ovb-st.good .sd{background:var(--ovb-good)}.ovb-st.warn .sd{background:var(--ovb-warn)}.ovb-st.bad .sd{background:var(--ovb-bad)}
+.ovb-meter{position:relative;display:block;height:6px;margin:16px 0 0;border-radius:99px;background:rgba(255,255,255,.10)}
+.ovb-meter i{position:absolute;left:0;top:0;bottom:0;border-radius:99px;background:var(--ovb-ink);transition:width .9s var(--ease)}
+.ovb-meter i.good{background:var(--ovb-good)}.ovb-meter i.warn{background:var(--ovb-warn)}.ovb-meter i.bad{background:var(--ovb-bad)}
+.ovb-meter .pace{position:absolute;top:-5px;bottom:-5px;width:2px;margin-left:-1px;border-radius:2px;background:var(--ovb-ink);box-shadow:0 0 0 2px var(--ovb-a)}
+.ovb-scale{display:flex;justify-content:space-between;gap:10px;margin-top:8px;font-size:calc(13px*var(--fs,1));color:var(--ovb-ink-2);font-variant-numeric:tabular-nums}
+.ovb-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));margin:16px -18px 0;border-top:1px solid var(--ovb-rule)}
+.ovb-c{display:flex;flex-direction:column;gap:2px;min-width:0;padding:13px 18px 14px;transition:background .2s}
+.ovb-c:nth-child(odd){border-right:1px solid var(--ovb-rule)}
+.ovb-c:nth-child(-n+2){border-bottom:1px solid var(--ovb-rule)}
+.ovb-cl{font-size:calc(13px*var(--fs,1));font-weight:600;color:var(--ovb-ink-2)}
+.ovb-cv{display:block;font-family:var(--f-display);font-weight:700;font-size:calc(19px*var(--fs,1));line-height:1.2;letter-spacing:-.02em;white-space:nowrap;overflow:hidden}
+.ovb-cs{font-size:calc(13px*var(--fs,1));color:var(--ovb-ink-2)}
+@media (hover:hover){.ovb [data-act="why"]{cursor:pointer}.ovb-main[data-act="why"]:hover,.ovb-c[data-act="why"]:hover{background:rgba(255,255,255,.05)}}
+.ovb-main[data-act="why"]:active{transform:scale(.99)}.ovb-c[data-act="why"]:active{background:rgba(255,255,255,.07)}
+@media (max-width:380px){.ovb{padding:16px 14px 4px}.ovb-grid{margin:14px -14px 0}.ovb-c{padding:12px 14px 13px}.ovb-big{font-size:calc(29px*var(--fs,1))}.ovb-mid{font-size:calc(18px*var(--fs,1))}.ovb-cv{font-size:calc(17.5px*var(--fs,1))}}
+@media (min-width:760px){
+  .ovb{padding:22px 24px 4px}
+  .ovb-big{font-size:calc(38px*var(--fs,1))}.ovb-mid{font-size:calc(22px*var(--fs,1))}
+  .ovb-grid{grid-template-columns:repeat(4,minmax(0,1fr));margin:20px -24px 0}
+  .ovb-c{padding:15px 24px 16px;border-bottom:0!important}
+  .ovb-c:nth-child(odd){border-right:0}.ovb-c+.ovb-c{border-left:1px solid var(--ovb-rule)}
+  .ovb-cv{font-size:calc(21px*var(--fs,1))}
+}
 .hbar{position:relative;display:block;height:8px;border-radius:99px;background:rgba(255,255,255,.18);margin:8px 0 4px}
 .hbar i{position:absolute;left:0;top:0;bottom:0;border-radius:99px;background:#fff;transition:width .9s var(--ease)}
 .hbar i.good{background:linear-gradient(90deg,#86efac,#4ade80)}.hbar i.warn{background:linear-gradient(90deg,#fde68a,#fbbf24)}.hbar i.bad{background:linear-gradient(90deg,#fda4af,#fb7185)}
@@ -1155,7 +1204,7 @@ html.kb .sheet.note.writing:not(.showmeta) .nact,.sheet.note.writing.tight:not(.
   .view.enter .hgrid>*:nth-child(2){animation-delay:.1s}.view.enter .hgrid>*:nth-child(3){animation-delay:.13s}.view.enter .hgrid>*:nth-child(4){animation-delay:.16s}
   .view.enter .hgrid>*:nth-child(5){animation-delay:.19s}.view.enter .hgrid>*:nth-child(6){animation-delay:.22s}.view.enter .hgrid>*:nth-child(7){animation-delay:.25s}
   .view.enter .hgrid>*:nth-child(8){animation-delay:.28s}.view.enter .hgrid>*:nth-child(n+9){animation-delay:.31s}
-  .view.enter .htile .hb i,.view.enter .hbar i,.view.enter .ccbar,.view.enter .bar .fill{transform-origin:left center;animation:grow 1s var(--ease-out) both .2s}
+  .view.enter .htile .hb i,.view.enter .hbar i,.view.enter .ovb-meter i,.view.enter .ccbar,.view.enter .bar .fill{transform-origin:left center;animation:grow 1s var(--ease-out) both .2s}
   .nv[aria-current="page"] .nvi{animation:pop .45s var(--spring)}
 }
 @keyframes vt-out{to{opacity:0;transform:translateY(-6px)}}
@@ -2369,14 +2418,27 @@ function renderOverview(X) {
   const saved = T.inc - T.exp, rate = T.inc > 0 ? saved / T.inc : null, OL = cycleOutlook(T, key);
   const unknown = Object.keys(T.byCat).filter(id => !X.cm[id]).reduce((a, id) => a + T.byCat[id], 0);
 
-  const kpis = `<div class="card kpis">
-    <div class="kpi"${whyAttr('ov-inc')}><span class="lbl">Income</span><span class="val fit">${rs(T.inc)}</span></div>
-    <div class="kpi head"${whyAttr('ov-exp')}><span class="lbl">Spent</span><span class="val fit">${rs(T.exp)}</span>
-      <span class="hbar" role="img" aria-label="${rs(T.exp)} spent of ${rs(budgetTotal)}, ${STATUS_WORD[OL.st] || ''}"><i class="${OL.st}" style="width:${budgetTotal > 0 ? Math.min(T.exp / budgetTotal, 1) * 100 : (T.exp > 0 ? 100 : 0)}%"></i>${e.f > 0 && e.f < 1 ? `<b class="pace" style="left:${(e.f * 100).toFixed(1)}%" title="Where you would be at an even pace"></b>` : ''}</span>
-      <span class="sub">${sdot(OL.st)}${OL.st === 'good' ? 'of' : STATUS_WORD[OL.st].toLowerCase() + ' · of'} ${rs(budgetTotal)}</span></div>
-    <div class="kpi"${whyAttr('ov-saved')}><span class="lbl">Saved</span><span class="val fit">${T.inc > 0 ? rs(saved) : '—'}</span></div>
-    <div class="kpi"${whyAttr('ov-rate')}><span class="lbl">Savings rate</span><span class="val fit">${pct(rate)}</span></div>
-  </div>`;
+  // The banner: one neutral graphite panel. Spent against the budget is the headline, with what is left, the
+  // month's pace and four supporting figures underneath. Status colour only on the meter and its word.
+  const st = OL.st, left = budgetTotal - T.exp, daysLeft = e.f > 0 && e.f < 1 ? e.days - e.day + 1 : 0;
+  const used = budgetTotal > 0 ? T.exp / budgetTotal : null, w = budgetTotal > 0 ? Math.min(T.exp / budgetTotal, 1) * 100 : (T.exp > 0 ? 100 : 0);
+  const dayTxt = e.f <= 0 ? 'Not started' : e.f >= 1 ? 'Cycle closed' : `Day ${e.day} of ${e.days}`;
+  const cell = (k, lbl, val, sub, tone) => `<div class="ovb-c"${whyAttr(k)}><span class="ovb-cl">${lbl}</span><span class="ovb-cv num fit${tone ? ' ' + tone : ''}">${val}</span>${sub ? `<span class="ovb-cs">${sub}</span>` : ''}</div>`;
+  const kpis = `<section class="card ovb" aria-label="Budget summary for ${esc(cycleLabel(key))}">
+    <div class="ovb-top"><span class="ovb-eye"><svg class="ic" aria-hidden="true"><use href="#i-cal"/></svg>Budget · ${esc(cycleLabel(key))}</span><span class="ovb-day">${dayTxt}</span></div>
+    <div class="ovb-main"${whyAttr('ov-exp')}>
+      <div class="ovb-hl"><span class="ovb-lbl">Spent</span><span class="ovb-big num fit">${rs(T.exp)}</span><span class="ovb-of">of ${rs(budgetTotal)} budget</span></div>
+      <div class="ovb-side"><span class="ovb-lbl">${left < -0.5 ? 'Over by' : 'Left'}</span><span class="ovb-mid num${left < -0.5 ? ' neg' : ''}">${rs(Math.abs(left))}</span><span class="ovb-st ${st}">${sdot(st)}${STATUS_WORD[st]}</span></div>
+    </div>
+    <div class="ovb-meter" role="img" aria-label="${rs(T.exp)} spent of ${rs(budgetTotal)}, ${STATUS_WORD[st]}"><i class="${st}" style="width:${w}%"></i>${e.f > 0 && e.f < 1 ? `<b class="pace" style="left:${(e.f * 100).toFixed(1)}%" title="Where you would be at an even pace"></b>` : ''}</div>
+    <div class="ovb-scale"><span>${used == null ? 'No budget set' : pct(used) + ' used'}</span>${e.f > 0 && e.f < 1 ? `<span>Even pace ${pct(e.f)}</span>` : ''}</div>
+    <div class="ovb-grid">
+      ${cell('ov-inc', 'Income', rs(T.inc), '', '')}
+      ${cell('ov-saved', 'Saved', T.inc > 0 ? rs(saved) : '—', '', T.inc > 0 && saved < -0.5 ? 'neg' : '')}
+      ${cell('ov-rate', 'Savings rate', pct(rate), '', rate != null && rate < 0 ? 'neg' : '')}
+      ${cell('ov-exp', 'Per day left', daysLeft && left > 0.5 ? rs(left / daysLeft) : '—', daysLeft ? daysLeft + (daysLeft === 1 ? ' day' : ' days') + ' to go' : '', '')}
+    </div>
+  </section>`;
 
   // One tile per category, named exactly as in Setup, in Setup order.
   const f = e.f;
@@ -5949,6 +6011,67 @@ function setBarsHidden(h) { document.documentElement.classList.toggle('tb-hide',
     acc = (d > 0) === (acc > 0) ? acc + d : d;
     if (acc > 28) setBarsHidden(true); else if (acc < -18) setBarsHidden(false);
   }, {passive: true});
+}
+/* Swipe between the bottom-bar tabs (phones and tablets). Drag the screen sideways and it follows the finger;
+   let go past a third of the width (or with a quick flick) and the next tab slides in from that side, in the same
+   order as the bottom bar. A drag that starts vertical stays a normal scroll. Nothing happens while a pop-up is open,
+   the keyboard is up, or the drag starts on something that scrolls sideways, a text box, a slider or a note's grip. */
+const navTabs = () => [...document.querySelectorAll('#navbar .nv[data-v]')].filter(a => !a.hidden && getComputedStyle(a).display !== 'none').map(a => a.dataset.v);
+function swipeNeighbour(dir) { const t = navTabs(), i = t.indexOf(state.view); return i < 0 ? null : t[i + dir] || null; }
+function swipeBlocked(el) {
+  if (el.closest('input,textarea,select,[contenteditable="true"],.tin,.ngrip,[data-noswipe],.scrim,iframe')) return true;
+  for (let n = el; n && n.id !== 'main'; n = n.parentElement) {
+    if (n.scrollWidth > n.clientWidth + 2) { const ox = getComputedStyle(n).overflowX; if (ox === 'auto' || ox === 'scroll') return true; }
+  }
+  return false;
+}
+{
+  const main = document.getElementById('main'), wide = matchMedia('(min-width:1024px)');
+  let sw = null;
+  const viewEl = () => $('#v-' + state.view);
+  const reset = el => { if (!el) return; el.style.transition = ''; el.style.transform = ''; el.style.opacity = ''; el.style.willChange = ''; };
+  main.addEventListener('touchstart', ev => {
+    sw = null;
+    if (ev.touches.length !== 1 || wide.matches || !state.config || !PRIMARY_VIEWS.concat(ENTRY_VIEWS).includes(state.view)) return;
+    const html = document.documentElement, t = ev.touches[0];
+    if (html.classList.contains('kb') || html.matches(':has(.scrim:not([hidden]))') || !navTabs().includes(state.view)) return;
+    if (t.clientX < 18 || t.clientX > innerWidth - 18) return; // leave the screen edges to Android's back gesture
+    if (swipeBlocked(ev.target)) return;
+    sw = {x: t.clientX, y: t.clientY, t: performance.now(), lock: '', dx: 0, el: viewEl(), vx: 0, lt: performance.now(), lx: t.clientX};
+  }, {passive: true});
+  main.addEventListener('touchmove', ev => {
+    if (!sw) return;
+    const t = ev.touches[0], dx = t.clientX - sw.x, dy = t.clientY - sw.y;
+    if (!sw.lock) {
+      if (Math.abs(dx) < 10 && Math.abs(dy) < 10) return;
+      sw.lock = Math.abs(dx) > Math.abs(dy) * 1.3 ? 'x' : 'y';
+      if (sw.lock === 'y') { sw = null; return; }
+      sw.x = t.clientX; // start following from here, so the screen doesn't jump by the dead zone
+      if (sw.el) { sw.el.style.willChange = 'transform'; sw.el.style.transition = 'none'; }
+    }
+    if (ev.cancelable) ev.preventDefault();
+    const now = performance.now(); sw.vx = (t.clientX - sw.lx) / Math.max(1, now - sw.lt); sw.lx = t.clientX; sw.lt = now;
+    let d = t.clientX - sw.x; sw.dx = d;
+    if (!swipeNeighbour(d < 0 ? 1 : -1)) d = d / 3.2; // rubber band at the first and last tab
+    if (sw.el && !reduceMotion()) { sw.el.style.transform = `translate3d(${d}px,0,0)`; sw.el.style.opacity = String(Math.max(.55, 1 - Math.abs(d) / innerWidth * .6)); }
+  }, {passive: false});
+  const end = () => {
+    if (!sw || sw.lock !== 'x') { sw = null; return; }
+    const {dx, vx, el} = sw; sw = null;
+    const dir = dx < 0 ? 1 : -1, next = swipeNeighbour(dir), W = main.clientWidth || innerWidth;
+    const go = next && (Math.abs(dx) > W * 0.33 || (Math.abs(vx) > 0.45 && Math.abs(dx) > 40 && Math.sign(vx) === Math.sign(dx)));
+    if (!go) { if (el) { el.style.transition = 'transform .32s var(--spring),opacity .25s ease'; el.style.transform = ''; el.style.opacity = ''; setTimeout(() => reset(el), 340); } return; }
+    if (reduceMotion() || !el) { reset(el); skipTransition = true; history.pushState(null, '', '#' + next); navTo(next); return; }
+    el.style.transition = 'transform .16s cubic-bezier(.4,0,1,1),opacity .16s ease';
+    el.style.transform = `translate3d(${-dir * W * 0.6}px,0,0)`; el.style.opacity = '0';
+    setTimeout(() => {
+      reset(el); skipTransition = true; history.pushState(null, '', '#' + next); navTo(next);
+      const nv = viewEl(); if (!nv || !nv.animate) return;
+      nv.animate([{transform: `translate3d(${dir * W * 0.35}px,0,0)`, opacity: 0}, {transform: 'none', opacity: 1}], {duration: 320, easing: 'cubic-bezier(.16,1,.3,1)'});
+    }, 160);
+  };
+  main.addEventListener('touchend', end);
+  main.addEventListener('touchcancel', () => { if (sw && sw.el) { reset(sw.el); } sw = null; });
 }
 // More (phones): the other screens and the settings, one tap away.
 function moreHtml() {
