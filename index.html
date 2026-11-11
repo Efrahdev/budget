@@ -2279,11 +2279,71 @@ const API_URL = 'https://script.google.com/macros/s/AKfycbzMb_87-nOMCRF10ieNSvUP
 const GOOGLE_CLIENT_ID = '';
 const Sync = { url: '', key: '', session: '', me: null, users: null, outbox: [], busy: false, again: false, last: 0, err: '', timer: null, rev: '', full: 0 };
 const isEntry = () => !!(Sync.me && Sync.me.role === 'Entry');
-function saveConn() { try { localStorage.setItem(LS_CONN, JSON.stringify({url: Sync.url, key: Sync.key, session: Sync.session, me: Sync.me})); } catch (e) {} }
-function readConn() { try { return JSON.parse(localStorage.getItem(LS_CONN) || 'null'); } catch (e) { return null; } }
+/* ---------- device storage ----------
+   localStorage holds only ~5 MB, shared by the sheet copy, unsent changes and (until Nov 2026) every note, and a full
+   localStorage fails without a word. That once lost the owner's sign-in on every restart: it lived only in memory.
+   So the sign-in and the notes live in IndexedDB (far larger), and the app asks Chrome to keep its storage for good.
+   The sign-in is written to both; each copy carries a time (t) and the newer one wins at start. */
+const IDB = {db: null, conn: null, notesOk: false};
+function idbOpen() {
+  return new Promise((res, rej) => {
+    const r = indexedDB.open('budget-app', 1);
+    r.onupgradeneeded = () => { if (!r.result.objectStoreNames.contains('kv')) r.result.createObjectStore('kv'); };
+    r.onsuccess = () => { const d = r.result; d.onversionchange = () => { d.close(); IDB.db = null; }; d.onclose = () => { IDB.db = null; }; res(d); };
+    r.onerror = () => rej(r.error); r.onblocked = () => rej(new Error('blocked'));
+  });
+}
+function idbDo(mode, fn) {
+  return new Promise((res, rej) => {
+    if (!IDB.db) return rej(new Error('no database'));
+    let out, t;
+    try { t = IDB.db.transaction('kv', mode); } catch (e) { return rej(e); }
+    const r = fn(t.objectStore('kv')); if (r) r.onsuccess = () => { out = r.result; };
+    t.oncomplete = () => res(out); t.onerror = () => rej(t.error); t.onabort = () => rej(t.error || new Error('aborted'));
+  });
+}
+const idbGet = k => idbDo('readonly', s => s.get(k));
+const idbPut = (k, v) => idbDo('readwrite', s => s.put(v, k));
+const idbDel = k => idbDo('readwrite', s => s.delete(k));
+// Says once per opening that the phone's storage is full (it used to fail silently).
+function storageFull() { if (storageFull.said) return; storageFull.said = true; setTimeout(() => toast("This phone's storage for the app is full. Entries still go to the sheet while you're online; free up some space on the phone.", 'bad', 8000), 0); }
+// Ask Chrome not to clear this app's storage when space runs low. Chrome decides by itself (no question to the
+// person) and normally says yes for an installed app.
+function keepStorage() { try { const s = navigator.storage; if (s && s.persist) s.persisted().then(p => p || s.persist()).catch(() => {}); } catch (e) {} }
+function writeConn(c) {
+  c = Object.assign({}, c, {t: Date.now()}); IDB.conn = c;
+  let ok = false;
+  try { localStorage.setItem(LS_CONN, JSON.stringify(c)); ok = true; } catch (e) {}
+  if (IDB.db) idbPut('conn', c).catch(() => { if (!ok) storageFull(); }); else if (!ok) storageFull();
+}
+function saveConn() { writeConn({url: Sync.url, key: Sync.key, session: Sync.session, me: Sync.me}); }
+function readConn() { return IDB.conn; }
+function readLsJson(k) { try { return JSON.parse(localStorage.getItem(k) || 'null'); } catch (e) { return null; } }
+// Runs once before start(): loads the sign-in and the notes, and moves notes out of localStorage.
+async function bootStore() {
+  const lsConn = readLsJson(LS_CONN), lsNotes = readLsJson(LS_NOTES);
+  IDB.conn = lsConn;
+  try {
+    if (!window.indexedDB) throw new Error('no IndexedDB');
+    // Never wait long: a slow database opens the app on localStorage alone (notes then stay there this time).
+    const d = await Promise.race([idbOpen(), new Promise((_, rej) => setTimeout(() => rej(new Error('slow')), 4000))]);
+    IDB.db = d;
+    const c = await idbGet('conn'), raw = await idbGet('notes');
+    if (c && (!lsConn || (c.t || 0) > (lsConn.t || 0))) IDB.conn = c;
+    else if (lsConn && (!c || (lsConn.t || 0) > (c.t || 0))) await idbPut('conn', Object.assign({t: Date.now()}, lsConn));
+    let saved = null; try { saved = raw ? JSON.parse(raw) : null; } catch (e) {}
+    setNotes(mergeNotes(saved, lsNotes));
+    if (lsNotes) { const snap = notesJson(); await idbPut('notes', snap); N.written = snap; localStorage.removeItem(LS_NOTES); }
+    IDB.notesOk = true;
+  } catch (e) {
+    IDB.notesOk = false;
+    if (!N.loaded) setNotes(lsNotes);
+  }
+  keepStorage();
+}
 function saveCache() {
-  try { localStorage.setItem(LS_CACHE, JSON.stringify({mine: Object.keys(state.mine || {}), config: state.config, cycles: state.cycles, balances: state.balances, cardfix: state.cardfix, last: Sync.last})); } catch (e) {}
-  try { localStorage.setItem(LS_OUT, JSON.stringify(Sync.outbox)); } catch (e) { toast("This phone's storage is full. Changes still go to the sheet while online.", 'bad'); }
+  try { localStorage.setItem(LS_CACHE, JSON.stringify({mine: Object.keys(state.mine || {}), config: state.config, cycles: state.cycles, balances: state.balances, cardfix: state.cardfix, last: Sync.last})); } catch (e) { storageFull(); }
+  try { localStorage.setItem(LS_OUT, JSON.stringify(Sync.outbox)); } catch (e) { storageFull(); }
 }
 function loadCache() {
   try { const d = JSON.parse(localStorage.getItem(LS_CACHE) || 'null');
@@ -2895,8 +2955,32 @@ const okLabel = v => NOTE_LABELS[v] || (/^[^\u0000-\u001f<>"]{1,24}$/.test(v || 
 function extraLabels() { const set = new Set((readPref().noteLabels || []).filter(okLabel)); noteList().forEach(n => { if (!NOTE_LABELS[n.cat] && okLabel(n.cat)) set.add(n.cat); }); return [...set].sort((a, b) => a.localeCompare(b)); }
 const allLabels = () => ['arhaan', 'efrah', 'other'].concat(extraLabels().filter(x => !NOTE_LABELS[x]));
 const N = {local: {}, meta: {}, del: {}, bodies: {}, err: '', q: '', cat: '', open: null, mode: 'edit', timer: 0, kinds: false, hist: null};
-try { const s = JSON.parse(localStorage.getItem(LS_NOTES) || '{}') || {}; N.local = s.local || {}; N.meta = s.meta || {}; N.del = s.del || {}; N.bodies = s.bodies || {}; } catch (e) {}
-function saveNotes() { try { localStorage.setItem(LS_NOTES, JSON.stringify({local: N.local, meta: N.meta, del: N.del, bodies: N.bodies})); } catch (e) {} }
+// Notes on this phone live in IndexedDB (see bootStore); localStorage only if IndexedDB can't be used.
+function setNotes(s) { s = s || {}; N.local = s.local || {}; N.meta = s.meta || {}; N.del = s.del || {}; N.bodies = s.bodies || {}; N.loaded = true; }
+const notesJson = () => JSON.stringify({local: N.local, meta: N.meta, del: N.del, bodies: N.bodies});
+// Two saved copies (IndexedDB and an older localStorage one): keep the newer of each note.
+function mergeNotes(a, b) {
+  if (!a || !b) return a || b;
+  const m = {local: Object.assign({}, a.local), meta: Object.assign({}, a.meta, b.meta), del: Object.assign({}, a.del, b.del), bodies: Object.assign({}, a.bodies)};
+  Object.entries(b.local || {}).forEach(([id, l]) => { if (!m.local[id] || (l.updatedAt || 0) > (m.local[id].updatedAt || 0)) m.local[id] = l; });
+  Object.entries(b.bodies || {}).forEach(([id, x]) => { if (!m.bodies[id] || (x.u || 0) > (m.bodies[id].u || 0)) m.bodies[id] = x; });
+  return m;
+}
+// Saves are gathered for 200 ms (the editor autosaves while typing), and written at once when the app is hidden.
+function saveNotes() {
+  if (IDB.notesOk && IDB.db) { N.dirty = true; clearTimeout(N.saveT); N.saveT = setTimeout(writeNotes, 200); return; }
+  try { localStorage.setItem(LS_NOTES, notesJson()); } catch (e) { storageFull(); }
+}
+function writeNotes() {
+  clearTimeout(N.saveT); if (!N.dirty) return; N.dirty = false;
+  const snap = notesJson(); if (snap === N.written) return;
+  idbPut('notes', snap).then(() => { N.written = snap; }, () => {
+    // IndexedDB refused: keep the notes in localStorage rather than lose them (merged back at the next start).
+    IDB.notesOk = false; try { localStorage.setItem(LS_NOTES, snap); } catch (e) { storageFull(); }
+  });
+}
+document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') writeNotes(); });
+window.addEventListener('pagehide', writeNotes);
 const defaultLabel = () => { const p = readPref().noteCat; if (okLabel(p)) return p; const e = ((Sync.me || {}).email || '').toLowerCase(); return /aarhaan|arhaan/.test(e) ? 'arhaan' : /efrah|ifra/.test(e) ? 'efrah' : 'other'; };
 // Preview: the words only, without Markdown marks or HTML tags.
 const notePreview = c => String(c || '').replace(/<[^>]*>/g, ' ').replace(/```[^\n]*/g, ' ').replace(/^\s*\|?\s*:?-{3,}[\s|:-]*$/gm, ' ')
@@ -6267,10 +6351,11 @@ document.addEventListener('click', ev => {
     if (Sync.outbox.length && !arm(b, 'disc', Sync.outbox.length + ' unsynced, tap again')) return;
     if (Sync.session) call([{t: 'signout'}]).catch(() => {});
     try { if (window.google && google.accounts) google.accounts.id.disableAutoSelect(); } catch (e) {}
-    try { localStorage.removeItem(LS_CONN); localStorage.removeItem(LS_CACHE); localStorage.removeItem(LS_OUT); localStorage.removeItem(LS_VAULT); } catch (e) {}
+    try { localStorage.removeItem(LS_CACHE); localStorage.removeItem(LS_OUT); localStorage.removeItem(LS_VAULT); } catch (e) {}
     V.pending = [];
     lockVault('', true); V.loaded = false; V.meta = null; V.enc = {};
     Sync.key = ''; Sync.session = ''; Sync.me = null; Sync.users = null; Sync.outbox = []; Sync.last = 0; Sync.rev = ''; Sync.full = 0;
+    saveConn(); // an empty sign-in, newer than any saved copy, in both stores
     state.config = null; state.cycles = {}; state.balances = {}; state.cardfix = {}; state.got.config = false; state.dirty = false; state.draft = null;
     render();
   }
@@ -6635,6 +6720,7 @@ function wipeForKill() {
   Sync.outbox = []; Sync.users = null; Sync.entryLinks = null;
   closeMore(); try { closeEntry(); } catch (e) {}
   try { [LS_CACHE, LS_OUT, LS_VAULT, LS_NOTES].forEach(k => localStorage.removeItem(k)); } catch (e) {}
+  clearTimeout(N.saveT); N.dirty = false; N.written = ''; idbDel('notes').catch(() => {});
 }
 function killFormHtml(mode) {
   return `<form class="killform" id="killForm" data-mode="${mode}" novalidate>
@@ -6781,7 +6867,7 @@ function start() {
   const m = location.hash.match(/^#connect=([A-Za-z0-9_\-+/=]+)$/);
   if (m) {
     try { const j = JSON.parse(atob(m[1].replace(/-/g, '+').replace(/_/g, '/')));
-      if (j && /^https:\/\/script\.google\.com\//.test(j.url) && j.key && !(readConn() || {}).session) localStorage.setItem(LS_CONN, JSON.stringify({url: j.url, key: j.key})); } catch (e) {}
+      if (j && /^https:\/\/script\.google\.com\//.test(j.url) && j.key && !(readConn() || {}).session) writeConn({url: j.url, key: j.key}); } catch (e) {}
     history.replaceState(null, '', location.pathname + '#overview');
   }
   // Emailed sign-in link: #login=<one-time code>.
@@ -6806,7 +6892,7 @@ function start() {
   setInterval(() => { if (signedIn()) renderChrome(state.config ? ctx() : null); renderBanner(); }, 60000);
   if ('serviceWorker' in navigator && location.protocol === 'https:') navigator.serviceWorker.register('sw.js').catch(() => {});
 }
-start();
+bootStore().then(start, start);
 })();
 </script>
 
