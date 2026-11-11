@@ -696,6 +696,58 @@ details.ct-hist[open] summary::after{transform:rotate(-135deg) translateY(-1px)}
 .adjgrid .tin{min-height:44px}.adjgrid .adjnote{grid-column:1/-1}
 .adjsign{grid-column:1/-1;justify-self:start;align-self:end}
 .adjrow .amt.neg{color:var(--bad-ink)}
+/* ---------- Setup: distinct collapsible sections (stpBuild) ---------- */
+.stp-rail{position:sticky;top:calc(var(--tbh) + env(safe-area-inset-top,0px) + 8px);z-index:6;display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:6px;padding:6px;border-radius:999px;background:var(--glass-2);-webkit-backdrop-filter:blur(22px) saturate(170%);backdrop-filter:blur(22px) saturate(170%);border:1px solid var(--glass-edge,var(--rule));box-shadow:var(--shade-float),inset 0 1px 0 var(--glass-line,transparent);transition:top .38s var(--ease)}
+html.tb-hide:not(.kb) .stp-rail{top:calc(env(safe-area-inset-top,0px) + 8px)}
+.stp-chips{display:flex;gap:4px;overflow-x:auto;scrollbar-width:none;overscroll-behavior-x:contain;scroll-padding:0 24px;-webkit-mask-image:linear-gradient(90deg,transparent,#000 14px,#000 calc(100% - 22px),transparent);mask-image:linear-gradient(90deg,transparent,#000 14px,#000 calc(100% - 22px),transparent);padding:0 10px}
+.stp-chips::-webkit-scrollbar{display:none}
+.stp-chip{position:relative;flex:0 0 auto;display:inline-flex;align-items:center;gap:8px;height:38px;padding:0 14px 0 11px;border:0;border-radius:999px;background:transparent;color:var(--ink-2);font:inherit;font-weight:600;font-size:calc(14.5px*var(--fs,1));letter-spacing:-.005em;white-space:nowrap;cursor:pointer;transition:background .25s,color .25s,box-shadow .25s,transform .15s var(--spring)}
+.stp-chip i{width:9px;height:9px;border-radius:50%;background:var(--sc);box-shadow:0 0 0 3px color-mix(in srgb,var(--sc) 20%,transparent);transition:background .25s,box-shadow .25s}
+.stp-chip.open{background:color-mix(in srgb,var(--sc) 13%,transparent);color:color-mix(in oklab,var(--sc) 62%,var(--ink))}
+.stp-chip.here{background:linear-gradient(135deg,color-mix(in srgb,var(--sc) 88%,#fff),color-mix(in srgb,var(--sc) 92%,#000));color:#fff;box-shadow:0 6px 16px -6px color-mix(in srgb,var(--sc) 75%,transparent)}
+.stp-chip.here i{background:#fff;box-shadow:0 0 0 3px rgba(255,255,255,.3)}
+.stp-chip.edited::after{content:"";position:absolute;top:5px;right:6px;width:7px;height:7px;border-radius:50%;background:var(--warn);box-shadow:0 0 0 2px var(--sheet)}
+.stp-chip:active{transform:scale(.95)}
+@media (hover:hover){.stp-chip:not(.here):hover{background:color-mix(in srgb,var(--sc) 10%,var(--fill-2));color:var(--ink)}}
+.stp-all{width:38px;height:38px;border-radius:50%;border:0;background:var(--fill);color:var(--ink-2);display:grid;place-items:center;cursor:pointer;padding:0;transition:background .2s,transform .15s var(--spring)}
+.stp-all .ic{width:19px;height:19px;stroke-width:2.2}.stp-all:active{transform:scale(.92)}
+@media (hover:hover){.stp-all:hover{background:var(--fill-3);color:var(--ink)}}
+.stp-group{display:flex;flex-direction:column;gap:12px}
+.stp-group+.stp-group{margin-top:10px}
+.stp-gh{display:flex;align-items:center;gap:10px;padding:4px 6px 0;font-family:var(--f-display);font-size:calc(14px*var(--fs,1));font-weight:700;letter-spacing:-.005em;color:var(--ink-3)}
+.stp-gh i{flex:1 1 auto;height:1px;background:linear-gradient(90deg,var(--rule-2),transparent)}
+.stp-gh b{font-size:calc(12.5px*var(--fs,1));font-weight:700;min-width:24px;height:22px;padding:0 8px;border-radius:999px;display:inline-grid;place-items:center;background:var(--fill-2);color:var(--ink-3)}
+details.stp{position:relative;padding:0;border-radius:22px;border:1px solid var(--rule);background:radial-gradient(140% 120% at 0% 0%,color-mix(in srgb,var(--sc) 9%,transparent),transparent 50%),var(--sheet);box-shadow:var(--shade);overflow:clip;interpolate-size:allow-keywords;scroll-margin-top:calc(var(--tbh) + env(safe-area-inset-top,0px) + 76px);transition:box-shadow .35s var(--ease),border-color .35s}
+details.stp::before{content:"";position:absolute;left:0;top:18px;bottom:18px;width:3px;border-radius:0 3px 3px 0;background:var(--sc);opacity:0;transform:scaleY(.4);transition:opacity .35s,transform .45s var(--spring)}
+details.stp[open]{border-color:color-mix(in srgb,var(--sc) 30%,var(--rule));box-shadow:var(--shade-2)}
+details.stp[open]::before{opacity:1;transform:none}
+details.stp::details-content{block-size:0;overflow:clip;transition:block-size .5s var(--spring),content-visibility .5s allow-discrete}
+details.stp[open]::details-content{block-size:auto}
+.stp-instant details.stp::details-content{transition:none}
+.stp-h{list-style:none;display:grid;grid-template-columns:auto minmax(0,1fr) auto auto;align-items:center;gap:14px;min-height:74px;padding:13px 14px 13px 16px;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:background .2s}
+.stp-h::-webkit-details-marker{display:none}
+.stp-h:active{background:var(--fill-2)}
+@media (hover:hover){.stp-h:hover{background:color-mix(in srgb,var(--sc) 5%,transparent)}.stp-h:hover .stp-cv{background:color-mix(in srgb,var(--sc) 16%,transparent);color:color-mix(in oklab,var(--sc) 65%,var(--ink))}}
+.stp-h:focus-visible{outline:none;box-shadow:inset 0 0 0 2px var(--accent-line)}
+details.stp[open]>.stp-h{border-bottom:1px solid var(--rule)}
+.stp-ic{width:46px;height:46px;border-radius:15px;display:grid;place-items:center;color:#fff;background:linear-gradient(145deg,color-mix(in srgb,var(--sc) 80%,#fff),var(--sc) 55%,color-mix(in srgb,var(--sc) 82%,#000));box-shadow:0 10px 20px -10px color-mix(in srgb,var(--sc) 85%,transparent),inset 0 1px 0 rgba(255,255,255,.35),inset 0 -1px 0 rgba(0,0,0,.08);transition:transform .45s var(--spring)}
+.stp-ic .ic{width:23px;height:23px;stroke-width:2}
+details.stp[open] .stp-ic{transform:rotate(-6deg) scale(1.04)}
+.stp-tx{display:flex;flex-direction:column;gap:2px;min-width:0}
+.stp-t{font-family:var(--f-display);font-weight:700;font-size:calc(17px*var(--fs,1));letter-spacing:-.014em;line-height:1.25;color:var(--ink);overflow-wrap:anywhere}
+.stp-s{font-size:calc(14px*var(--fs,1));color:var(--ink-3);line-height:1.35;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;line-clamp:2;overflow:hidden;overflow-wrap:anywhere}
+.stp-ed{display:none;align-items:center;height:24px;padding:0 9px;border-radius:999px;background:var(--warn-soft);color:var(--warn-ink);font-size:calc(12.5px*var(--fs,1));font-weight:700;white-space:nowrap}
+details.stp.edited .stp-ed{display:inline-flex}
+.stp-cv{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;background:var(--fill-2);color:var(--ink-3);transition:transform .45s var(--spring),background .25s,color .25s}
+.stp-cv .ic{width:18px;height:18px;stroke-width:2.4}
+details.stp[open] .stp-cv{transform:rotate(180deg);background:color-mix(in srgb,var(--sc) 15%,transparent);color:color-mix(in oklab,var(--sc) 65%,var(--ink))}
+.stp-b{padding-bottom:4px}
+.stp-intro{margin:14px 18px 2px;padding:10px 14px;border-radius:12px;background:color-mix(in srgb,var(--sc) 7%,transparent);color:var(--ink-2);font-size:calc(14px*var(--fs,1));line-height:1.45}
+details.stp.flash{animation:stpFlash 1.1s var(--ease-out)}
+@keyframes stpFlash{0%{box-shadow:0 0 0 0 color-mix(in srgb,var(--sc) 55%,transparent),var(--shade-2)}100%{box-shadow:0 0 0 14px color-mix(in srgb,var(--sc) 0%,transparent),var(--shade-2)}}
+@media (max-width:420px){.stp-h{gap:12px;padding-left:14px}.stp-ic{width:42px;height:42px;border-radius:14px}}
+@media (min-width:1024px){.stp-rail{top:14px}html.tb-hide:not(.kb) .stp-rail{top:14px}details.stp{scroll-margin-top:84px}}
+@media (prefers-reduced-motion:reduce){details.stp::details-content,.stp-ic,.stp-cv,details.stp::before,.stp-rail{transition:none!important}details.stp.flash{animation:none}}
 
 /* ---------- sheets (entry, balances, breakdowns, More…) ---------- */
 .scrim{position:fixed;inset:0;z-index:60;display:flex;align-items:flex-end;justify-content:center;background:var(--scrim);-webkit-backdrop-filter:blur(10px) saturate(130%);backdrop-filter:blur(10px) saturate(130%);opacity:1;
@@ -1561,6 +1613,13 @@ body[data-view="read"] main{padding:0}
   <symbol id="i-lock" viewBox="0 0 24 24"><rect x="5" y="10.5" width="14" height="10" rx="2.5"/><path d="M8 10.5V7.5a4 4 0 0 1 8 0v3"/></symbol>
   <symbol id="i-id" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2.8"/><circle cx="9" cy="11" r="2.2"/><path d="M5.8 16.2c.6-1.6 1.8-2.4 3.2-2.4s2.6.8 3.2 2.4M14.5 10h4M14.5 13.5h3"/></symbol>
   <symbol id="i-read" viewBox="0 0 24 24"><path d="M12 6.6c-1.9-1.6-4.7-2.3-8.5-2.1v13.2c3.8-.2 6.6.5 8.5 2.1 1.9-1.6 4.7-2.3 8.5-2.1V4.5c-3.8-.2-6.6.5-8.5 2.1z"/><path d="M12 6.6v13.2"/></symbol>
+  <symbol id="i-adjust" viewBox="0 0 24 24"><path d="M7 4.5v6M4 7.5h6M14 7.5h6M4.5 19.5l15-15M14 16.5h6"/></symbol>
+  <symbol id="i-users" viewBox="0 0 24 24"><circle cx="9" cy="8.5" r="3.5"/><path d="M2.5 19.5c.8-3.4 3.4-5.5 6.5-5.5s5.7 2.1 6.5 5.5"/><path d="M15.5 5.3a3.5 3.5 0 0 1 0 6.4M18 14.6c1.8.8 3 2.5 3.5 4.9"/></symbol>
+  <symbol id="i-link" viewBox="0 0 24 24"><path d="M10 14a4.5 4.5 0 0 0 6.4 0l3-3a4.5 4.5 0 0 0-6.4-6.4l-1.2 1.2"/><path d="M14 10a4.5 4.5 0 0 0-6.4 0l-3 3a4.5 4.5 0 0 0 6.4 6.4l1.2-1.2"/></symbol>
+  <symbol id="i-power" viewBox="0 0 24 24"><path d="M12 3.5v8"/><path d="M7 6.3a7.5 7.5 0 1 0 10 0"/></symbol>
+  <symbol id="i-archive" viewBox="0 0 24 24"><rect x="3.5" y="4" width="17" height="4.5" rx="1.5"/><path d="M5 8.5v9.5a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8.5M10 12.5h4"/></symbol>
+  <symbol id="i-unfold" viewBox="0 0 24 24"><path d="M7.5 9 12 4.5 16.5 9M7.5 15l4.5 4.5 4.5-4.5"/></symbol>
+  <symbol id="i-fold" viewBox="0 0 24 24"><path d="M7.5 4.5 12 9l4.5-4.5M7.5 19.5 12 15l4.5 4.5"/></symbol>
   <symbol id="i-bank" viewBox="0 0 24 24"><path d="M3 9.5 12 4l9 5.5"/><path d="M5 10v8M9.5 10v8M14.5 10v8M19 10v8"/><path d="M3.5 20.5h17"/></symbol>
   <symbol id="c-cart" viewBox="0 0 24 24"><circle cx="9.5" cy="19.5" r="1.4"/><circle cx="17" cy="19.5" r="1.4"/><path d="M2.5 3.5h2.4l2.4 11.2h10.4l2.1-7.7H6"/></symbol>
   <symbol id="c-car" viewBox="0 0 24 24"><path d="M4.5 16.5v-4l2.2-5.5h10.6l2.2 5.5v4z"/><path d="M4.5 12.5h15"/><path d="M6.5 16.5v2.5M17.5 16.5v2.5"/><path d="M7.8 14.5h.01M16.2 14.5h.01"/></symbol>
@@ -3782,9 +3841,148 @@ function renderSetup(X) {
         <button class="btn danger" type="button" data-act="import">Restore a backup</button>
       </div></section>
     <div id="saveSlot"></div>`);
+  stpBuild(X);
   renderSaveBar();
   if (focusId) { const el = document.getElementById(focusId); if (el) { if (el.classList.contains('tin')) focusBox(el); else { el.focus(); try { if (sel != null && el.setSelectionRange) el.setSelectionRange(sel, sel); } catch (e) {} } } }
 }
+/* ---------- Setup: distinct, collapsible sections ----------
+   renderSetup and its helpers still draw plain <section class="card"> blocks. stpBuild() then turns each one into a
+   <details class="stp"> with a coloured icon, its title and a one-line live summary, puts them in three groups, and
+   adds a sticky "jump to" rail on top. Open sections are remembered (state.stpOpen + localStorage). Tapping a chip
+   opens that section on its own and scrolls to it; tapping a header just opens or closes it. A section with unsaved
+   edits shows an "Edited" pill until you save or discard. */
+const LS_STP = 'budgetTracker.setupOpen';
+const STP = [
+  {k: 'cycle', t: 'Cycle', chip: 'Cycle', ic: 'i-cal', c: '#0ea5e9', g: 0},
+  {k: 'cats', t: 'Categories and monthly budgets', chip: 'Budgets', ic: 'i-sliders', c: '#6366f1', g: 0},
+  {k: 'accts', t: 'Accounts', chip: 'Accounts', ic: 'i-bank', c: '#14b8a6', g: 0},
+  {k: 'cards', t: 'Credit cards', chip: 'Cards', ic: 'i-card', c: '#ec4899', g: 0},
+  {k: 'adjust', t: 'Adjustments', chip: 'Adjustments', ic: 'i-adjust', c: '#f97316', g: 0},
+  {k: 'sync', t: 'Account and sync', chip: 'Sync', ic: 'i-sync', c: '#3b82f6', g: 1},
+  {k: 'family', t: 'Family access', chip: 'Family', ic: 'i-users', c: '#06b6d4', g: 1},
+  {k: 'links', t: 'Entry-only links', chip: 'Entry links', ic: 'i-link', c: '#a855f7', g: 1},
+  {k: 'kill', t: 'Kill switch', chip: 'Kill switch', ic: 'i-power', c: '#e11d48', g: 1},
+  {k: 'app', t: 'Use it as an app', chip: 'App', ic: 'i-install', c: '#84cc16', g: 1},
+  {k: 'backup', t: 'Backup', chip: 'Backup', ic: 'i-archive', c: '#64748b', g: 2}];
+const STP_GROUPS = ['Money plan', 'People and access', 'Your data'];
+const STP_DRAFT = {cycle: 1, cats: 1, accts: 1, cards: 1};
+state.stpDirty = state.stpDirty || {};
+if (!state.stpOpen) { state.stpOpen = {}; try { Object.assign(state.stpOpen, JSON.parse(localStorage.getItem(LS_STP) || '{}') || {}); } catch (e) {} }
+function stpSave() { try { localStorage.setItem(LS_STP, JSON.stringify(state.stpOpen)); } catch (e) {} }
+function stpSummary(k, X) {
+  const d = state.draft || state.config || {}, n = (v, one, many) => v + ' ' + (v === 1 ? one : many || one + 's');
+  if (k === 'cycle') return 'Starts on the ' + ordinal(+d.cycleStartDay || 1) + ' of each month';
+  if (k === 'cats') { const cs = (d.categories || []).filter(c => !c.unplanned), tot = cs.reduce((a, c) => a + (c.type === 'Expense' ? +c.budget || 0 : 0), 0); return n(cs.length, 'category', 'categories') + ' · ' + rs(tot) + ' a month'; }
+  if (k === 'accts') return n((d.accounts || []).filter(a => !a.pay).length, 'account');
+  if (k === 'cards') { const ks = d.cards || []; return ks.length ? n(ks.length, 'card') + ' · ' + ks.map(c => c.name).join(', ') : 'No cards yet'; }
+  if (k === 'adjust') { const a = X.txns.filter(t => t.tag === ADJ_TAG).length; return a ? n(a, 'adjustment') : 'None yet'; }
+  if (k === 'sync') return syncLabel();
+  if (k === 'family') { const u = Array.isArray(Sync.users) ? Sync.users.length : 0; return n(u, 'person', 'people') + ' can sign in'; }
+  if (k === 'links') { const l = (Sync.entryLinks || []).length; return l ? n(l, 'link') + ' on' : 'No links'; }
+  if (k === 'kill') return Sync.killCode ? 'Ready' : 'Not set up';
+  if (k === 'app') return 'Not installed on this phone';
+  if (k === 'backup') return 'Export, copy or restore';
+  return '';
+}
+function stpBuild(X) {
+  const root = $('#v-setup'); if (!root) return;
+  if (!state.dirty) state.stpDirty = {};
+  const byTitle = {}; STP.forEach(m => byTitle[m.t] = m);
+  const found = {};
+  [...root.querySelectorAll(':scope > section.card')].forEach(sec => {
+    const h = sec.querySelector(':scope > .sec-h'), title = h && h.querySelector('h2') ? h.querySelector('h2').textContent.trim() : '', m = byTitle[title];
+    if (!m) return;
+    const sum = stpSummary(m.k, X), hintEl = h.querySelector('.hint'), hint = hintEl ? hintEl.textContent.trim() : '';
+    const det = document.createElement('details');
+    det.className = 'stp ' + [...sec.classList].join(' '); det.dataset.stp = m.k; det.id = 'stp-' + m.k; det.style.setProperty('--sc', m.c);
+    if (state.stpOpen[m.k]) det.open = true;
+    if (state.stpDirty[m.k]) det.classList.add('edited');
+    det.innerHTML = `<summary class="stp-h"><span class="stp-ic" aria-hidden="true"><svg class="ic"><use href="#${m.ic}"/></svg></span>
+      <span class="stp-tx"><span class="stp-t">${esc(m.t)}</span><span class="stp-s">${esc(sum)}</span></span>
+      <span class="stp-ed">Edited</span><span class="stp-cv" aria-hidden="true"><svg class="ic"><use href="#i-down"/></svg></span></summary>`;
+    const body = document.createElement('div'); body.className = 'stp-b';
+    if (hint && hint !== sum) { const p = document.createElement('p'); p.className = 'stp-intro'; p.textContent = hint; body.appendChild(p); }
+    [...sec.childNodes].forEach(ch => { if (ch !== h) body.appendChild(ch); });
+    det.appendChild(body);
+    found[m.k] = det; sec.remove();
+  });
+  const slot = $('#saveSlot'), frag = document.createDocumentFragment(), list = STP.filter(m => found[m.k]);
+  const allOpen = list.length && list.every(m => state.stpOpen[m.k]);
+  const rail = document.createElement('nav'); rail.className = 'stp-rail'; rail.setAttribute('aria-label', 'Setup sections');
+  rail.innerHTML = `<div class="stp-chips">${list.map(m => `<button type="button" class="stp-chip${state.stpOpen[m.k] ? ' open' : ''}${state.stpDirty[m.k] ? ' edited' : ''}" data-act="stp-go" data-k="${m.k}" style="--sc:${m.c}"><i></i>${esc(m.chip)}</button>`).join('')}</div>
+    <button type="button" class="stp-all" data-act="stp-all" aria-label="${allOpen ? 'Collapse all sections' : 'Expand all sections'}" title="${allOpen ? 'Collapse all' : 'Expand all'}"><svg class="ic"><use href="#${allOpen ? 'i-fold' : 'i-unfold'}"/></svg></button>`;
+  frag.appendChild(rail);
+  STP_GROUPS.forEach((g, gi) => {
+    const ms = list.filter(m => m.g === gi); if (!ms.length) return;
+    const wrap = document.createElement('div'); wrap.className = 'stp-group';
+    wrap.innerHTML = `<div class="stp-gh"><span>${esc(g)}</span><i></i><b>${ms.length}</b></div>`;
+    ms.forEach(m => wrap.appendChild(found[m.k]));
+    frag.appendChild(wrap);
+  });
+  root.insertBefore(frag, slot);
+  stpSpy();
+}
+function stpSync() {
+  const root = $('#v-setup'); if (!root) return;
+  const dets = [...root.querySelectorAll('details.stp')], allOpen = dets.length && dets.every(d => d.open);
+  root.querySelectorAll('.stp-chip').forEach(c => { const d = $('#stp-' + c.dataset.k); c.classList.toggle('open', !!(d && d.open)); });
+  const b = root.querySelector('.stp-all');
+  if (b) { b.setAttribute('aria-label', allOpen ? 'Collapse all sections' : 'Expand all sections'); b.title = allOpen ? 'Collapse all' : 'Expand all'; paint(b, `<svg class="ic"><use href="#${allOpen ? 'i-fold' : 'i-unfold'}"/></svg>`); }
+}
+// Which section is under the rail right now: that chip lights up and slides into view.
+let stpSpyRaf = 0;
+function stpSpy() {
+  if (state.view !== 'setup') return;
+  const root = $('#v-setup'), rail = root && root.querySelector('.stp-rail'); if (!rail) return;
+  const line = rail.getBoundingClientRect().bottom + 24, dets = [...root.querySelectorAll('details.stp')];
+  let cur = null; dets.forEach(d => { if (d.getBoundingClientRect().top <= line) cur = d; });
+  if (!cur && dets.length && window.scrollY < 40) cur = null;
+  rail.querySelectorAll('.stp-chip').forEach(c => {
+    const on = !!cur && c.dataset.k === cur.dataset.stp;
+    if (on !== c.classList.contains('here')) {
+      c.classList.toggle('here', on); if (on) c.setAttribute('aria-current', 'true'); else c.removeAttribute('aria-current');
+      if (on) { const box = rail.querySelector('.stp-chips'), x = c.offsetLeft - (box.clientWidth - c.offsetWidth) / 2; box.scrollTo({left: Math.max(0, x), behavior: reduceMotion() ? 'auto' : 'smooth'}); }
+    }
+  });
+}
+window.addEventListener('scroll', () => { if (stpSpyRaf || state.view !== 'setup') return; stpSpyRaf = requestAnimationFrame(() => { stpSpyRaf = 0; stpSpy(); }); }, {passive: true});
+document.addEventListener('toggle', ev => {
+  const d = ev.target; if (!d || !d.matches || !d.matches('details.stp')) return;
+  if (!!state.stpOpen[d.dataset.stp] !== d.open) { if (d.open) state.stpOpen[d.dataset.stp] = 1; else delete state.stpOpen[d.dataset.stp]; stpSave(); }
+  stpSync();
+}, true);
+document.addEventListener('click', ev => {
+  const b = ev.target.closest('[data-act="stp-go"],[data-act="stp-all"]'); if (!b) return;
+  const root = $('#v-setup'), dets = [...root.querySelectorAll('details.stp')];
+  if (b.dataset.act === 'stp-all') {
+    const open = !dets.every(d => d.open);
+    dets.forEach(d => { d.open = open; if (open) state.stpOpen[d.dataset.stp] = 1; else delete state.stpOpen[d.dataset.stp]; });
+    stpSave(); stpSync(); return;
+  }
+  // Hop: this section alone is open. Others fold at once (no animation) so the target does not move while we scroll.
+  const t = $('#stp-' + b.dataset.k); if (!t) return;
+  root.classList.add('stp-instant');
+  dets.forEach(d => { if (d !== t && d.open) { d.open = false; delete state.stpOpen[d.dataset.stp]; } });
+  void root.offsetHeight; root.classList.remove('stp-instant');
+  t.open = true; state.stpOpen[t.dataset.stp] = 1; stpSave(); stpSync();
+  // Land the header just under the rail. Going down, the phone's top bar slides away, so the rail sits higher.
+  const rail = root.querySelector('.stp-rail'), rh = rail ? rail.offsetHeight : 0, top = t.getBoundingClientRect().top + window.scrollY;
+  const down = top > window.scrollY, wide = matchMedia('(min-width:1024px)').matches;
+  const safe = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--tbh')) || 0;
+  const railTop = wide ? 14 : (down ? 8 : safe + 8);
+  window.scrollTo({top: Math.max(0, top - railTop - rh - 12), behavior: reduceMotion() ? 'auto' : 'smooth'});
+  root.querySelectorAll('.stp-chip').forEach(c => { const on = c === b; c.classList.toggle('here', on); if (on) c.setAttribute('aria-current', 'true'); else c.removeAttribute('aria-current'); });
+  t.classList.remove('flash'); void t.offsetWidth; t.classList.add('flash');
+});
+// Mark the section you are changing (before renderSetup redraws, hence capture).
+function stpMark(ev) {
+  const s = ev.target && ev.target.closest && ev.target.closest('#v-setup details.stp'); if (!s || !STP_DRAFT[s.dataset.stp]) return;
+  if (ev.type === 'click') { const a = ev.target.closest('[data-act]'); if (!a || !/^(add-cat|del-cat|add-acct|del-acct|del-cardrow)$/.test(a.dataset.act)) return; }
+  if (ev.type === 'click' && ev.target.closest('summary')) return;
+  state.stpDirty[s.dataset.stp] = 1; s.classList.add('edited');
+  const c = document.querySelector(`.stp-chip[data-k="${s.dataset.stp}"]`); if (c) c.classList.add('edited');
+}
+['input', 'change', 'click'].forEach(t => document.addEventListener(t, stpMark, true));
 /* ---------- Setup: credit cards (one list for the Vault, Add entry and Card bills) ---------- */
 function cardRowHtml(k, i) {
   const id = esc(k.id), days = (v, blank) => (blank ? `<option value=""${+v ? '' : ' selected'}>${blank}</option>` : '') + Array.from({length: 31}, (_, n) => `<option value="${n + 1}"${+v === n + 1 ? ' selected' : ''}>${ordinal(n + 1)}</option>`).join('');
