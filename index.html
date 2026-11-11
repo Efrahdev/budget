@@ -746,14 +746,8 @@ details.ct-hist[open] summary::after{transform:rotate(-135deg) translateY(-1px)}
 .adjgrid .req{font-weight:600;color:var(--ink-3);font-size:.92em;margin-left:4px}
 .adjcardf.bad select{border-color:var(--bad-ink);box-shadow:0 0 0 3px var(--bad-soft)}.adjerr{display:block;margin-top:4px;font-size:calc(13px*var(--fs,1));font-weight:600;color:var(--bad-ink)}
 .adjform .btn[aria-disabled="true"]{opacity:.55}
-.adjhist,.adjgrp{border-top:1px solid var(--rule)}.adjhist>summary,.adjgrp>summary{list-style:none;cursor:pointer;display:flex;align-items:center;gap:10px;min-height:48px;padding:8px 18px}
-.adjhist>summary::-webkit-details-marker,.adjgrp>summary::-webkit-details-marker{display:none}
-.adjgrp{margin:0 8px;border-radius:14px;border-top:0}.adjgrp>summary{padding:8px 10px}.adjgrp[open]{background:var(--fill)}
-.ah-t{font-weight:700;color:var(--ink)}.ah-c,.ag-c{margin-left:auto;font-size:calc(13.5px*var(--fs,1));color:var(--ink-3)}.adjgrp .ag-c{margin-left:0}
-.ag-n{font-weight:600;color:var(--ink);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.ag-t{font-weight:600;color:var(--ink-2)}
-.ag-cv{display:grid;place-items:center;color:var(--ink-3);transition:transform .25s var(--ease)}details[open]>summary>.ag-cv{transform:rotate(180deg)}
+.ah-c{font-weight:500;color:var(--ink-3)}
 .adjrange{display:flex;flex-wrap:wrap;align-items:end;gap:10px;padding:2px 18px 12px}.adjrange .f{display:block;flex:1 1 140px;min-width:0}.adjrange .fl2{display:block;font-size:calc(13px*var(--fs,1));color:var(--ink-3);font-weight:600;margin-bottom:4px}.adjrange input{width:100%}
-.adjhist summary:focus-visible,.adjgrp summary:focus-visible{outline:2px solid var(--accent-line);outline-offset:-2px;border-radius:12px}
 .adjsign{grid-column:1/-1;justify-self:start;align-self:end}
 .adjrow .amt.neg{color:var(--bad-ink)}
 /* ---------- Setup (stpBuild): neutral surfaces, one accent, one signature moment ----------
@@ -4279,20 +4273,17 @@ function adjBills(cardId, X) {
 }
 const adjDefaultBill = (cardId, X) => { const k = cardList().find(x => x.id === cardId); if (!k) return ''; const L = cardLedger(k, X); return L.nextSt ? L.nextSt.sd : adjBills(cardId, X)[0] || ''; };
 const adjRow = (t, X) => { const cardOnly = isCardAdj(t.cat, X.cm), c = X.cm[t.cat];
-  return `<div class="li adjrow"><div class="l"><div class="t1">${cardOnly ? 'Card bill only' : esc(c ? c.name : 'Unlisted')}</div>
+  return `<div class="li adjrow"><div class="l"><div class="t1">${cardOnly ? 'Card bill only' : esc(c ? c.name : 'Unlisted')}${t.card ? ' · ' + esc(cardName(t.card)) : ''}</div>
     <div class="t2">${cardOnly ? 'Stmt Date ' + fmtDate(t.date) : 'counts in ' + cycleLabel(cycleKeyOf(t.date)) + ' · ' + fmtDM(t.date)}${t.note && t.note !== ADJ_TAG ? ' · ' + esc(t.note) : ''}</div></div>
     <div style="display:flex;gap:10px;align-items:center"><span class="amt num${t.refund ? ' neg' : ''}">${t.refund ? '− ' : '+ '}${rs(t.amount)}</span><button class="icon-btn" type="button" data-act="adj-del" data-id="${esc(t.id)}" data-doc="${esc(t._doc)}" aria-label="Delete adjustment">×</button></div></div>`; };
-// History: every adjustment, newest first, filtered by the date range, grouped by card. Each card's group folds away.
+// History: every adjustment in the date range, newest first, in the original flat list.
 function adjHistory(X) {
   const F = state.adjF, all = X.txns.filter(t => t.tag === ADJ_TAG).sort((a, b) => a.date < b.date ? 1 : a.date > b.date ? -1 : (b.at || 0) - (a.at || 0));
-  const list = all.filter(t => (!F.from || t.date >= F.from) && (!F.to || t.date <= F.to)), groups = {};
-  list.forEach(t => (groups[t.card || ''] = groups[t.card || ''] || []).push(t));
-  const keys = Object.keys(groups).sort((a, b) => groups[b][0].date < groups[a][0].date ? -1 : 1);
-  const net = g => rs(Math.abs(g.reduce((a, t) => a + (t.refund ? -t.amount : t.amount), 0))), sign = g => g.reduce((a, t) => a + (t.refund ? -t.amount : t.amount), 0) < 0 ? '− ' : '';
-  const body = !all.length ? '<div class="empty">No adjustments yet.</div>' : !list.length ? '<div class="empty">Nothing in these dates.</div>'
-    : keys.map(k => `<details class="adjgrp" data-g="${esc(k)}"${state.adjOpen['g' + k] ? ' open' : ''}><summary><span class="ag-n">${esc(k ? cardName(k) : 'No card')}</span><span class="ag-c">${n2(groups[k].length, 'adjustment')}</span><span class="ag-t num">${sign(groups[k])}${net(groups[k])}</span><span class="ag-cv" aria-hidden="true"><svg class="ic"><use href="#i-down"/></svg></span></summary><div class="list adjlist">${groups[k].map(t => adjRow(t, X)).join('')}</div></details>`).join('');
-  return {count: list.length, total: all.length, html: body};
+  const list = all.filter(t => (!F.from || t.date >= F.from) && (!F.to || t.date <= F.to));
+  const html = !all.length ? '<div class="empty">No adjustments yet.</div>' : !list.length ? '<div class="empty">No adjustments in these dates.</div>' : `<div class="list adjlist">${list.map(t => adjRow(t, X)).join('')}</div>`;
+  return {count: list.length, total: all.length, html};
 }
+const adjCount = H => H.total ? (H.count === H.total ? n2(H.total, 'adjustment') : H.count + ' of ' + H.total) : 'none yet';
 const n2 = (c, w) => c + ' ' + w + (c === 1 ? '' : 's');
 function adjustHtml(X) {
   const A = state.adj, cats = state.config.categories.filter(c => c.type === 'Expense'), cards = cardList(), F = state.adjF;
@@ -4318,18 +4309,27 @@ function adjustHtml(X) {
       </div>
       <div class="row-actions" style="padding:0"><button class="btn primary" type="button" data-act="adj-add"${A.card ? '' : ' aria-disabled="true"'}>Add adjustment</button></div>
     </div>
-    <details class="adjhist" id="adjHist"${state.adjOpen.hist ? ' open' : ''}><summary><span class="ah-t">History</span><span class="ah-c" id="adjHistCnt">${H.total ? (H.count === H.total ? n2(H.total, 'adjustment') : H.count + ' of ' + H.total) : 'None yet'}</span><span class="ag-cv" aria-hidden="true"><svg class="ic"><use href="#i-down"/></svg></span></summary>
-      <div class="adjrange" role="group" aria-label="Date range"><label class="f"><span class="fl2">From</span><input id="adjFrom" type="date" value="${esc(F.from)}"></label><label class="f"><span class="fl2">To</span><input id="adjTo" type="date" value="${esc(F.to)}"></label><button class="btn ghost sm" type="button" data-act="adj-range-clear"${F.from || F.to ? '' : ' hidden'}>All dates</button></div>
-      <div id="adjHistList">${H.html}</div></details></section>`;
+    <details class="ct-hist adjhist" id="adjHist"${state.adjOpen.hist ? ' open' : ''}><summary>History <span class="ah-c" id="adjHistCnt">· ${adjCount(H)}</span></summary>
+      <div class="adjrange" role="group" aria-label="Date range"><label class="f"><span class="fl2">From</span><input id="adjFrom" type="date" value="${esc(F.from)}" max="${esc(F.to)}"></label><label class="f"><span class="fl2">To</span><input id="adjTo" type="date" value="${esc(F.to)}" min="${esc(F.from)}"></label><button class="btn ghost sm" type="button" data-act="adj-range-clear"${F.from || F.to ? '' : ' hidden'}>All dates</button></div>
+      <div id="adjHistList">${H.html}</details></section>`;
+}
+// Picking From moves To to today (or to From, if From is later). From never ends up after To.
+function adjSetRange(which, v) {
+  const F = state.adjF, today = todayStr(); v = /^\d{4}-\d{2}-\d{2}$/.test(v) ? v : '';
+  if (which === 'from') { F.from = v; if (v) F.to = v > today ? v : today; }
+  else { F.to = v; if (v && F.from && F.from > v) F.from = v; }
+  adjHistRepaint();
 }
 function adjHistRepaint() {
   const X = ctx(), H = adjHistory(X), l = $('#adjHistList'), c = $('#adjHistCnt'), clr = document.querySelector('[data-act="adj-range-clear"]');
-  if (l) paint(l, H.html); if (c) c.textContent = H.total ? (H.count === H.total ? n2(H.total, 'adjustment') : H.count + ' of ' + H.total) : 'None yet';
+  if (l) paint(l, H.html); if (c) c.textContent = '· ' + adjCount(H);
   if (clr) clr.hidden = !(state.adjF.from || state.adjF.to);
+  const fi = $('#adjFrom'), ti = $('#adjTo'), F = state.adjF;
+  if (fi) { fi.value = F.from; fi.max = F.to; } if (ti) { ti.value = F.to; ti.min = F.from; }
 }
 document.addEventListener('input', ev => {
   const id = ev.target && ev.target.id, A = state.adj, map = {adjAmt: 'amt', adjDate: 'date', adjCat: 'cat', adjCard: 'card', adjBill: 'bill', adjNote: 'note'};
-  if (id === 'adjFrom' || id === 'adjTo') { state.adjF[id === 'adjFrom' ? 'from' : 'to'] = ev.target.value; adjHistRepaint(); return; }
+  if (id === 'adjFrom' || id === 'adjTo') { adjSetRange(id === 'adjFrom' ? 'from' : 'to', ev.target.value); return; }
   if (!map[id]) return; A[map[id]] = ev.target.value;
   if (id === 'adjCard') { A.miss = false; A.bill = adjDefaultBill(A.card, ctx()); renderSetup(ctx()); return; }
   if (id === 'adjDate') { const l = ev.target.closest('label').querySelector('.fl2'); if (l && /^\d{4}-\d{2}-\d{2}$/.test(A.date)) l.textContent = 'Date (counts in ' + cycleLabel(cycleKeyOf(A.date)) + ')'; }
@@ -4337,14 +4337,14 @@ document.addEventListener('input', ev => {
 document.addEventListener('change', ev => { const id = ev.target && ev.target.id; if (/^adj(Cat|Card|Bill|Date|From|To)$/.test(id || '')) ev.target.dispatchEvent(new Event('input', {bubbles: true})); });
 document.addEventListener('toggle', ev => {
   const d = ev.target; if (!d || !d.matches) return;
-  if (d.matches('details.adjhist')) state.adjOpen.hist = d.open; else if (d.matches('details.adjgrp')) state.adjOpen['g' + d.dataset.g] = d.open;
+  if (d.matches('details.adjhist')) state.adjOpen.hist = d.open;
 }, true);
 document.addEventListener('click', async ev => {
   const b = ev.target.closest('[data-act^="adj-"]'); if (!b) return;
   const A = state.adj, a = b.dataset.act;
   if (a === 'adj-kind') { A.kind = b.dataset.v; renderSetup(ctx()); return; }
   if (a === 'adj-sign') { A.sign = +b.dataset.v; document.querySelectorAll('.adjsign .segb').forEach(x => x.setAttribute('aria-pressed', String(x.dataset.v === b.dataset.v))); return; }
-  if (a === 'adj-range-clear') { state.adjF = {from: '', to: ''}; $('#adjFrom').value = ''; $('#adjTo').value = ''; adjHistRepaint(); return; }
+  if (a === 'adj-range-clear') { state.adjF = {from: '', to: ''}; adjHistRepaint(); return; }
   if (a === 'adj-del') { if (!arm(b, 'adj' + b.dataset.id, '✓')) return; try { await API.delTxn(b.dataset.id, b.dataset.doc); toast('Adjustment deleted'); } catch (e) { toast(writeErr(e), 'bad'); } return; }
   if (a !== 'adj-add') return;
   if (!A.card) { A.miss = true; toast('Select a card first', 'bad'); renderSetup(ctx()); const sel = $('#adjCard'); if (sel) { sel.focus(); sel.scrollIntoView({block: 'center', behavior: reduceMotion() ? 'auto' : 'smooth'}); } return; }
