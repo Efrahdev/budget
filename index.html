@@ -7,7 +7,7 @@
 <meta name="description" content="Household budget, credit cards and net worth, synced to Google Sheets.">
 <link rel="manifest" href="manifest.webmanifest">
 <meta name="theme-color" content="#f2f3f7" media="(prefers-color-scheme: light)">
-<meta name="theme-color" content="#07080c" media="(prefers-color-scheme: dark)">
+<meta name="theme-color" content="#101114" media="(prefers-color-scheme: dark)">
 <script>try{var x=JSON.parse(localStorage.getItem('budgetTracker.text')||'{}')||{},F={atkinson:['"Atkinson Hyperlegible Next"','Atkinson+Hyperlegible+Next:wght@400..800'],noto:['"Noto Sans"','Noto+Sans:wght@400..800'],roboto:['"Roboto"','Roboto:wght@400..800'],lexend:['"Lexend"','Lexend:wght@400..800'],system:['system-ui']},r=document.documentElement.style;if(x.size>0.5&&x.size<2){r.setProperty('--fsu',x.size);if(x.size>=1.1)document.documentElement.classList.add('bigtext');}var f=F[x.font];if(f){var st=f[0]+',system-ui,sans-serif';r.setProperty('--f-body',st);r.setProperty('--f-display',st);if(f[1])document.write('<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family='+f[1]+'&display=swap">');}}catch(e){}</script>
 <script>try{var t=localStorage.getItem('budgetTracker.theme');if(t==='light'||t==='dark'){document.documentElement.dataset.theme=t;document.querySelectorAll('meta[name=theme-color]').forEach(function(m){m.content=t==='dark'?'#07080c':'#f2f3f7';});}}catch(e){}</script>
 <meta name="mobile-web-app-capable" content="yes">
@@ -37,7 +37,7 @@
   --fill:rgba(118,118,128,.12); --fill-2:rgba(118,118,128,.07); --fill-3:rgba(118,118,128,.18);
   --ink:#0b0d12; --ink-2:#3c4352; --ink-3:#636b7d;
   --rule:rgba(16,24,40,.08); --rule-2:rgba(16,24,40,.15);
-  --accent:#2563eb; --accent-ink:#ffffff; --accent-soft:rgba(37,99,235,.10); --accent-line:rgba(37,99,235,.35); --margin:#2563eb;
+  --border-subtle:rgba(16,24,40,.12); --pos:var(--good-ink); --accent:#2563eb; --accent-ink:#ffffff; --accent-soft:rgba(37,99,235,.10); --accent-line:rgba(37,99,235,.35); --margin:#2563eb;
   --btn-a:#3b76ff; --btn-b:#1f54e0;
   --good:#16a34a; --warn:#f59e0b; --bad:#e5484d; --pur:#8b5cf6;
   --good-soft:#e6f6ec; --warn-soft:#fff3d6; --bad-soft:#fde8e8; --pur-soft:#f0eaff;
@@ -67,18 +67,18 @@
   --spring-soft:linear(0,.012,.048 2.5%,.188 5.4%,.708 15.9%,.88 21.4%,.973 27.5%,1.012 33.8%,1.022 38.9%,1.008 51%,1);}}
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
   color-scheme:dark;
-  --paper:#07080c; --sheet:#111318; --sheet-2:#171a21; --raise:#1b1e26;
+  --paper:#101114; --sheet:#181A1F; --sheet-2:#1d2026; --raise:#20232a; --border-subtle:#292C33; --pos:#34C759;
   --fill:rgba(118,118,128,.24); --fill-2:rgba(118,118,128,.14); --fill-3:rgba(118,118,128,.32);
-  --ink:#f3f5f9; --ink-2:#b9c0ce; --ink-3:#8d96a8;
+  --ink:#E8E9EC; --ink-2:#b8bcc5; --ink-3:#9297A2;
   --rule:rgba(255,255,255,.07); --rule-2:rgba(255,255,255,.14);
-  --accent:#7aa2ff; --accent-ink:#05112b; --accent-soft:rgba(122,162,255,.15); --accent-line:rgba(122,162,255,.45); --margin:#7aa2ff;
-  --btn-a:#4a7fff; --btn-b:#2a58e6;
+  --accent:#9aa3d4; --accent-ink:#11131c; --accent-soft:rgba(154,163,212,.13); --accent-line:rgba(154,163,212,.40); --margin:#9aa3d4;
+  --btn-a:#5c6593; --btn-b:#4a527b;
   --good:#2fbf6a; --warn:#f2a93b; --bad:#ff6369; --pur:#a78bfa;
   --good-soft:rgba(47,191,106,.14); --warn-soft:rgba(242,169,59,.16); --bad-soft:rgba(255,99,105,.15); --pur-soft:rgba(167,139,250,.16);
   --good-ink:#5fe39a; --warn-ink:#ffc46b; --bad-ink:#ff8f93; --pur-ink:#c4b2ff;
   --viz-inc:#283041; --viz-wash:rgba(122,162,255,.16);
   --s1:#3987e5; --s2:#d95926; --s3:#199e70; --s4:#c98500;
-  --glass:rgba(16,18,24,.70); --glass-2:rgba(24,27,34,.82); --glass-line:rgba(255,255,255,.07); --glass-edge:rgba(255,255,255,.08);
+  --glass:rgba(16,18,24,.70); --glass-2:rgba(24,26,31,.82); --glass-line:rgba(255,255,255,.07); --glass-edge:rgba(255,255,255,.08);
   --ovb-a:#15171b; --ovb-b:#1d2026; --ovb-ink:#f3f4f6; --ovb-ink-2:#a3a8b2; --ovb-rule:rgba(255,255,255,.08); --ovb-edge:rgba(255,255,255,.08); --ovb-shadow:0 26px 50px -24px rgba(0,0,0,.95); --ovb-good:#4fc883; --ovb-warn:#f2b445; --ovb-bad:#ff7378;
   --hero-a:#081233; --hero-b:#16348f; --hero-c:#2a5ff0; --hero-glow-1:rgba(56,189,248,.28); --hero-glow-2:rgba(45,212,191,.16);
   --shade:0 0 0 1px rgba(255,255,255,.02),0 10px 28px -16px rgba(0,0,0,.9);
@@ -86,23 +86,23 @@
   --shade-float:0 14px 34px -12px rgba(0,0,0,.85),0 0 0 1px rgba(255,255,255,.05);
   --scrim:rgba(0,0,0,.5);
   --toast-bg:rgba(236,239,246,.94); --toast-ink:#0b0d12;
-  --aura-1:rgba(42,95,240,.20); --aura-2:rgba(14,165,233,.12); --aura-3:rgba(20,184,166,.08);
+  --aura-1:rgba(120,130,170,.05); --aura-2:transparent; --aura-3:transparent;
   --chev:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%238d96a8' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
   --card-a:#122a6e; --card-b:#0b1a45; --card-ink:#eef3ff;}}
 :root[data-theme="dark"]{
   color-scheme:dark;
-  --paper:#07080c; --sheet:#111318; --sheet-2:#171a21; --raise:#1b1e26;
+  --paper:#101114; --sheet:#181A1F; --sheet-2:#1d2026; --raise:#20232a; --border-subtle:#292C33; --pos:#34C759;
   --fill:rgba(118,118,128,.24); --fill-2:rgba(118,118,128,.14); --fill-3:rgba(118,118,128,.32);
-  --ink:#f3f5f9; --ink-2:#b9c0ce; --ink-3:#8d96a8;
+  --ink:#E8E9EC; --ink-2:#b8bcc5; --ink-3:#9297A2;
   --rule:rgba(255,255,255,.07); --rule-2:rgba(255,255,255,.14);
-  --accent:#7aa2ff; --accent-ink:#05112b; --accent-soft:rgba(122,162,255,.15); --accent-line:rgba(122,162,255,.45); --margin:#7aa2ff;
-  --btn-a:#4a7fff; --btn-b:#2a58e6;
+  --accent:#9aa3d4; --accent-ink:#11131c; --accent-soft:rgba(154,163,212,.13); --accent-line:rgba(154,163,212,.40); --margin:#9aa3d4;
+  --btn-a:#5c6593; --btn-b:#4a527b;
   --good:#2fbf6a; --warn:#f2a93b; --bad:#ff6369; --pur:#a78bfa;
   --good-soft:rgba(47,191,106,.14); --warn-soft:rgba(242,169,59,.16); --bad-soft:rgba(255,99,105,.15); --pur-soft:rgba(167,139,250,.16);
   --good-ink:#5fe39a; --warn-ink:#ffc46b; --bad-ink:#ff8f93; --pur-ink:#c4b2ff;
   --viz-inc:#283041; --viz-wash:rgba(122,162,255,.16);
   --s1:#3987e5; --s2:#d95926; --s3:#199e70; --s4:#c98500;
-  --glass:rgba(16,18,24,.70); --glass-2:rgba(24,27,34,.82); --glass-line:rgba(255,255,255,.07); --glass-edge:rgba(255,255,255,.08);
+  --glass:rgba(16,18,24,.70); --glass-2:rgba(24,26,31,.82); --glass-line:rgba(255,255,255,.07); --glass-edge:rgba(255,255,255,.08);
   --ovb-a:#15171b; --ovb-b:#1d2026; --ovb-ink:#f3f4f6; --ovb-ink-2:#a3a8b2; --ovb-rule:rgba(255,255,255,.08); --ovb-edge:rgba(255,255,255,.08); --ovb-shadow:0 26px 50px -24px rgba(0,0,0,.95); --ovb-good:#4fc883; --ovb-warn:#f2b445; --ovb-bad:#ff7378;
   --hero-a:#081233; --hero-b:#16348f; --hero-c:#2a5ff0; --hero-glow-1:rgba(56,189,248,.28); --hero-glow-2:rgba(45,212,191,.16);
   --shade:0 0 0 1px rgba(255,255,255,.02),0 10px 28px -16px rgba(0,0,0,.9);
@@ -110,7 +110,7 @@
   --shade-float:0 14px 34px -12px rgba(0,0,0,.85),0 0 0 1px rgba(255,255,255,.05);
   --scrim:rgba(0,0,0,.5);
   --toast-bg:rgba(236,239,246,.94); --toast-ink:#0b0d12;
-  --aura-1:rgba(42,95,240,.20); --aura-2:rgba(14,165,233,.12); --aura-3:rgba(20,184,166,.08);
+  --aura-1:rgba(120,130,170,.05); --aura-2:transparent; --aura-3:transparent;
   --chev:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%238d96a8' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
   --card-a:#122a6e; --card-b:#0b1a45; --card-ink:#eef3ff;}
 /* Day/night flip: colours glide instead of jumping. */
@@ -1748,6 +1748,45 @@ body[data-view="read"] main{padding:0}
 @media (max-width:1023.98px){body[data-view="read"] .topbar{transform:translateY(-100%);visibility:hidden}
   html.rd-bars body[data-view="read"] .navbar,html.rd-imm body[data-view="read"] .navbar{transform:translateY(calc(100% + 24px));opacity:0;pointer-events:none}}
 @media (min-width:1024px){#v-read{left:var(--sbw)}html.rd-imm body[data-view="read"] #v-read{left:0;z-index:60}}
+
+/* ============================================================================================================
+   "Quiet premium" pass. Colour communicates meaning, not decoration: neutral surfaces, one muted slate-indigo
+   accent, and green only on money coming back to you. Tokens above change every tab in dark mode; the
+   rules below change the shared bottom bar and add button, and tighten the Entries list only.
+   ============================================================================================================ */
+/* Entries: controls. 1px subtle borders, one radius, shorter, no shadow; long option text ellipsises instead of clipping */
+#v-entries .filters{gap:8px;margin-bottom:16px}
+#v-entries .filters select,#v-entries .filters input,#v-entries .filters .tin{min-height:38px;border-radius:10px;box-shadow:none;border:1px solid var(--border-subtle);background-color:var(--sheet)}
+#v-entries .filters select{padding:6px 30px 6px 12px;background-position:right 10px center;font-size:calc(15px*var(--fs,1));white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#v-entries .filters input,#v-entries .filters .tin{padding:7px 12px 7px 36px;background-position:11px center;background-size:16px}
+#v-entries .filters input:focus,#v-entries .filters .tin:focus{border-color:var(--accent-line);box-shadow:0 0 0 3px var(--accent-soft)}
+/* Entries: list. Tighter rows, receding date headers, aligned figures, 8-point spacing */
+#v-entries .ledger{border:1px solid var(--border-subtle);box-shadow:none}
+#v-entries .eday-h{padding:8px 16px 6px;font-size:calc(12px*var(--fs,1));font-weight:600;letter-spacing:.02em;color:var(--ink-3);border-bottom-color:var(--border-subtle)}
+#v-entries .eday+.eday,#v-entries .erow{border-top-color:var(--border-subtle)}
+#v-entries .erow{padding:8px 16px;gap:16px}
+#v-entries .erow .l{gap:2px}
+#v-entries .erow .t1{gap:0 8px;color:var(--ink)}
+#v-entries .erow .t2{font-size:calc(13px*var(--fs,1));color:var(--ink-3)}
+#v-entries .amt,#v-entries .num{font-variant-numeric:tabular-nums;font-feature-settings:"tnum"}
+#v-entries .erow .amt{color:var(--ink);text-align:right}
+#v-entries .erow .amt.inc{color:var(--pos)}
+#v-entries .erow .amt.trf{color:var(--ink-3)}
+/* Entries: tags are one quiet line of muted text, no boxes */
+#v-entries .etags{font-weight:500;font-size:calc(12.5px*var(--fs,1));color:var(--ink-3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+#v-entries .erow .t1{flex-wrap:nowrap;min-width:0}
+/* Phones/tablets: a docked, shorter bottom bar (no floating panel), a smaller add button, and room so nothing hides under them */
+@media (max-width:1023.98px){
+  :root{--nbh:56px}
+  .navbar{left:0;right:0;bottom:0;max-width:none;height:calc(var(--nbh) + env(safe-area-inset-bottom,0px));padding:0 max(4px,env(safe-area-inset-right,0px)) env(safe-area-inset-bottom,0px) max(4px,env(safe-area-inset-left,0px));
+    border-radius:0;border:0;border-top:1px solid var(--border-subtle);box-shadow:none;background:color-mix(in srgb,var(--paper) 78%,transparent);-webkit-backdrop-filter:saturate(140%) blur(20px);backdrop-filter:saturate(140%) blur(20px)}
+  html.role-entry .navbar{max-width:none}
+  .nv .nvi{height:26px}
+  .fab{width:51px;height:51px;border-radius:16px;bottom:calc(var(--nbh) + 16px + env(safe-area-inset-bottom,0px));box-shadow:0 8px 20px -10px rgba(0,0,0,.6)}
+  .fab .ic{width:24px;height:24px}
+  /* nav + add button + 24px of breathing room */
+  main{padding-bottom:calc(var(--nbh) + 16px + 51px + 24px + env(safe-area-inset-bottom,0px))}
+}
 </style>
 </head>
 <body>
@@ -1867,7 +1906,7 @@ body[data-view="read"] main{padding:0}
         <option value="">All types</option><option>Expense</option><option>Income</option><option>Transfer</option>
       </select>
       <select id="fPay" aria-label="Filter by payment"></select>
-      <select id="fSort" aria-label="Sort entries"><option value="added">Latest added first</option><option value="date">Entry date (newest first)</option></select>
+      <select id="fSort" aria-label="Sort entries"><option value="added">Recently added</option><option value="date">By entry date</option></select>
       <input id="fQ" type="search" placeholder="Search notes, tags, people" aria-label="Search entries">
     </div>
     <div id="entriesBody"></div>
@@ -2620,7 +2659,7 @@ function renderEntries(X) {
       const ty = X.typeOf(t), c = X.cm[t.cat];
       const meta = [t.note, cardInfo(t, X), t.acct === 'cash' ? 'Cash' : X.am[t.acct] && X.am[t.acct].name, t.member].filter(Boolean).map(esc).join(' · ');
       return `<button class="erow" type="button" data-act="edit" data-id="${esc(t.id)}" data-doc="${esc(t._doc)}">${catIco(c)}
-        <span class="l"><span class="t1">${esc(c ? c.name : 'Unlisted')}${ty === 'Transfer' ? ' <span class="tag">Transfer</span>' : ''}${t.refund ? ' <span class="tag">Refund</span>' : ''}${t.tag ? ` <span class="tag">${esc(t.tag)}</span>` : ''}</span>
+        <span class="l"><span class="t1">${esc(c ? c.name : 'Unlisted')}${(tg => tg.length ? ` <span class="etags">${tg.map(esc).join(' · ')}</span>` : '')([ty === 'Transfer' && 'Transfer', t.refund && 'Refund', t.tag].filter(Boolean))}</span>
         <span class="t2">${meta || '&nbsp;'}</span></span>
         <span class="amt num ${ty === 'Income' || t.refund ? 'inc' : ty === 'Transfer' ? 'trf' : ''}">${ty === 'Income' ? '+' : t.refund ? '−' : ''}${rs(t.amount)}</span></button>`; }).join('')}</div>`; }).join('');
   paint($('#entriesBody'), `<div class="card ledger">${html || `<div class="empty">No entries match. ${(fc.value || ft || q || fp.value) ? 'Clear the filters to see everything in ' + cycleLabel(state.cur) + '.' : 'Tap Add entry to log one.'}</div>`}
