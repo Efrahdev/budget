@@ -3936,7 +3936,7 @@ function stpSpy() {
   const root = $('#v-setup'), rail = root && root.querySelector('.stp-rail'); if (!rail) return;
   const line = rail.getBoundingClientRect().bottom + 24, dets = [...root.querySelectorAll('details.stp')];
   let cur = null; dets.forEach(d => { if (d.getBoundingClientRect().top <= line) cur = d; });
-  if (!cur && dets.length && window.scrollY < 40) cur = null;
+  if (state.stpLock) cur = $('#stp-' + state.stpLock) || cur; // just jumped there: keep it lit until you scroll yourself
   rail.querySelectorAll('.stp-chip').forEach(c => {
     const on = !!cur && c.dataset.k === cur.dataset.stp;
     if (on !== c.classList.contains('here')) {
@@ -3945,6 +3945,7 @@ function stpSpy() {
     }
   });
 }
+['wheel', 'touchstart', 'keydown'].forEach(t => window.addEventListener(t, () => { state.stpLock = ''; }, {passive: true, capture: true}));
 window.addEventListener('scroll', () => { if (stpSpyRaf || state.view !== 'setup') return; stpSpyRaf = requestAnimationFrame(() => { stpSpyRaf = 0; stpSpy(); }); }, {passive: true});
 document.addEventListener('toggle', ev => {
   const d = ev.target; if (!d || !d.matches || !d.matches('details.stp')) return;
@@ -3964,7 +3965,7 @@ document.addEventListener('click', ev => {
   root.classList.add('stp-instant');
   dets.forEach(d => { if (d !== t && d.open) { d.open = false; delete state.stpOpen[d.dataset.stp]; } });
   void root.offsetHeight; root.classList.remove('stp-instant');
-  t.open = true; state.stpOpen[t.dataset.stp] = 1; stpSave(); stpSync();
+  t.open = true; state.stpOpen[t.dataset.stp] = 1; state.stpLock = t.dataset.stp; stpSave(); stpSync();
   // Land the header just under the rail. Going down, the phone's top bar slides away, so the rail sits higher.
   const rail = root.querySelector('.stp-rail'), rh = rail ? rail.offsetHeight : 0, top = t.getBoundingClientRect().top + window.scrollY;
   const down = top > window.scrollY, wide = matchMedia('(min-width:1024px)').matches;
