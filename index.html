@@ -1748,6 +1748,73 @@ body[data-view="read"] main{padding:0}
 @media (max-width:1023.98px){body[data-view="read"] .topbar{transform:translateY(-100%);visibility:hidden}
   html.rd-bars body[data-view="read"] .navbar,html.rd-imm body[data-view="read"] .navbar{transform:translateY(calc(100% + 24px));opacity:0;pointer-events:none}}
 @media (min-width:1024px){#v-read{left:var(--sbw)}html.rd-imm body[data-view="read"] #v-read{left:0;z-index:60}}
+/* ============================================================================================================
+   "Quiet premium" pass for Entries tab. Subtler controls, tighter ledger, one-line tags.
+   On phones: docked nav bar, smaller add button, proper bottom padding.
+   ============================================================================================================ */
+/* Entries: scoped colour tokens for dark mode */
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) #v-entries{
+  --entries-bg:#101114; --entries-surface:#181A1F; --entries-subtle:#292C33;
+  --entries-text:#E8E9EC; --entries-text-2:#b8bcc5; --entries-text-3:#9297A2;
+  --entries-accent:#9aa3d4; --entries-accent-soft:rgba(154,163,212,.13); --entries-pos:#34C759;
+}
+:root[data-theme="dark"] #v-entries{
+  --entries-bg:#101114; --entries-surface:#181A1F; --entries-subtle:#292C33;
+  --entries-text:#E8E9EC; --entries-text-2:#b8bcc5; --entries-text-3:#9297A2;
+  --entries-accent:#9aa3d4; --entries-accent-soft:rgba(154,163,212,.13); --entries-pos:#34C759;
+}}
+/* Entries: controls. 1px subtle borders, one radius, shorter, no shadow; long option text ellipsises instead of clipping */
+#v-entries .filters{gap:8px;margin-bottom:16px}
+#v-entries .filters select,#v-entries .filters input,#v-entries .filters .tin{min-height:38px;border-radius:10px;box-shadow:none;border:1px solid #292C33;background-color:var(--sheet)}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) #v-entries .filters select,:root:not([data-theme="light"]) #v-entries .filters input,:root:not([data-theme="light"]) #v-entries .filters .tin,
+:root[data-theme="dark"] #v-entries .filters select,:root[data-theme="dark"] #v-entries .filters input,:root[data-theme="dark"] #v-entries .filters .tin{border-color:var(--entries-subtle)}}
+#v-entries .filters select{padding:6px 30px 6px 12px;background-position:right 10px center;font-size:calc(15px*var(--fs,1));white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#v-entries .filters input,#v-entries .filters .tin{padding:7px 12px 7px 36px;background-position:11px center;background-size:16px}
+#v-entries .filters input:focus,#v-entries .filters .tin:focus{border-color:rgba(154,163,212,.40);box-shadow:0 0 0 3px rgba(154,163,212,.13)}
+/* Entries: list. Tighter rows, receding date headers, aligned figures, 8-point spacing */
+#v-entries .ledger{border:1px solid #292C33;box-shadow:none}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) #v-entries .ledger,
+:root[data-theme="dark"] #v-entries .ledger{border-color:var(--entries-subtle)}}
+#v-entries .eday-h{padding:8px 16px 6px;font-size:calc(12px*var(--fs,1));font-weight:600;letter-spacing:.02em;border-bottom-color:#292C33}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) #v-entries .eday-h{color:var(--entries-text-3);border-bottom-color:var(--entries-subtle)}
+:root[data-theme="dark"] #v-entries .eday-h{color:var(--entries-text-3);border-bottom-color:var(--entries-subtle)}}
+#v-entries .eday+.eday,#v-entries .erow{border-top-color:#292C33}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) #v-entries .eday+.eday,:root:not([data-theme="light"]) #v-entries .erow,
+:root[data-theme="dark"] #v-entries .eday+.eday,:root[data-theme="dark"] #v-entries .erow{border-top-color:var(--entries-subtle)}}
+#v-entries .erow{padding:8px 16px;gap:16px}
+#v-entries .erow .l{gap:2px}
+#v-entries .erow .t1{gap:0 8px}
+#v-entries .erow .t2{font-size:calc(13px*var(--fs,1))}
+#v-entries .amt,#v-entries .num{font-variant-numeric:tabular-nums;font-feature-settings:"tnum"}
+#v-entries .erow .amt{text-align:right}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) #v-entries .erow .t1{color:var(--entries-text)}
+:root[data-theme="dark"] #v-entries .erow .t1{color:var(--entries-text)}
+:root:not([data-theme="light"]) #v-entries .erow .t2{color:var(--entries-text-3)}
+:root[data-theme="dark"] #v-entries .erow .t2{color:var(--entries-text-3)}
+:root:not([data-theme="light"]) #v-entries .erow .amt{color:var(--entries-text)}
+:root[data-theme="dark"] #v-entries .erow .amt{color:var(--entries-text)}}
+#v-entries .erow .amt.inc{color:#34C759}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) #v-entries .erow .amt.inc{color:var(--entries-pos)}
+:root[data-theme="dark"] #v-entries .erow .amt.inc{color:var(--entries-pos)}}
+#v-entries .erow .amt.trf{color:#8d96a8}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) #v-entries .erow .amt.trf{color:var(--entries-text-3)}
+:root[data-theme="dark"] #v-entries .erow .amt.trf{color:var(--entries-text-3)}}
+/* Entries: tags are one quiet line of muted text, no boxes */
+#v-entries .etags{font-weight:500;font-size:calc(12.5px*var(--fs,1));color:#8d96a8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) #v-entries .etags{color:var(--entries-text-3)}
+:root[data-theme="dark"] #v-entries .etags{color:var(--entries-text-3)}}
+#v-entries .erow .t1{flex-wrap:nowrap;min-width:0}
+/* Phones/tablets: a docked, shorter bottom bar (no floating panel), a smaller add button, and room so nothing hides under them */
+@media (max-width:1023.98px){
+  :root{--nbh:56px}
+  .navbar{left:0;right:0;bottom:0;max-width:none;height:calc(var(--nbh) + env(safe-area-inset-bottom,0px));padding:0 max(4px,env(safe-area-inset-right,0px)) env(safe-area-inset-bottom,0px) max(4px,env(safe-area-inset-left,0px));
+    border-radius:0;border:0;border-top:1px solid #292C33;box-shadow:none;background:color-mix(in srgb,var(--paper) 78%,transparent);-webkit-backdrop-filter:saturate(140%) blur(20px);backdrop-filter:saturate(140%) blur(20px)}
+  .nv .nvi{height:26px}
+  .fab{width:51px;height:51px;border-radius:16px;bottom:calc(var(--nbh) + 16px + env(safe-area-inset-bottom,0px));box-shadow:0 8px 20px -10px rgba(0,0,0,.6)}
+  .fab .ic{width:24px;height:24px}
+  /* nav + add button + 24px of breathing room */
+  main{padding-bottom:calc(var(--nbh) + 16px + 51px + 24px + env(safe-area-inset-bottom,0px))}
+}
 </style>
 </head>
 <body>
@@ -2620,7 +2687,7 @@ function renderEntries(X) {
       const ty = X.typeOf(t), c = X.cm[t.cat];
       const meta = [t.note, cardInfo(t, X), t.acct === 'cash' ? 'Cash' : X.am[t.acct] && X.am[t.acct].name, t.member].filter(Boolean).map(esc).join(' · ');
       return `<button class="erow" type="button" data-act="edit" data-id="${esc(t.id)}" data-doc="${esc(t._doc)}">${catIco(c)}
-        <span class="l"><span class="t1">${esc(c ? c.name : 'Unlisted')}${ty === 'Transfer' ? ' <span class="tag">Transfer</span>' : ''}${t.refund ? ' <span class="tag">Refund</span>' : ''}${t.tag ? ` <span class="tag">${esc(t.tag)}</span>` : ''}</span>
+        <span class="l"><span class="t1">${esc(c ? c.name : 'Unlisted')}${(tg => tg.length ? ` <span class="etags">${tg.map(esc).join(' · ')}</span>` : '')([ty === 'Transfer' && 'Transfer', t.refund && 'Refund', t.tag].filter(Boolean))}</span>
         <span class="t2">${meta || '&nbsp;'}</span></span>
         <span class="amt num ${ty === 'Income' || t.refund ? 'inc' : ty === 'Transfer' ? 'trf' : ''}">${ty === 'Income' ? '+' : t.refund ? '−' : ''}${rs(t.amount)}</span></button>`; }).join('')}</div>`; }).join('');
   paint($('#entriesBody'), `<div class="card ledger">${html || `<div class="empty">No entries match. ${(fc.value || ft || q || fp.value) ? 'Clear the filters to see everything in ' + cycleLabel(state.cur) + '.' : 'Tap Add entry to log one.'}</div>`}
