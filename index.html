@@ -785,7 +785,106 @@ details.stp.flash{animation:stpFlash 1.1s var(--ease-out)}
 @media (max-width:479.98px){.sh-ks{grid-auto-flow:row;grid-template-columns:repeat(2,minmax(0,1fr))}.sh-k{flex-direction:row;align-items:center;justify-content:space-between;gap:8px;padding:11px 14px}.sh-kv{font-size:calc(17px*var(--fs,1))}}
 @media (min-width:760px){.stp-hero{padding:28px 28px 24px;gap:22px}.sh-v{font-size:calc(48px*var(--fs,1))}}
 @media (min-width:1024px){.stp-rail,html.tb-hide:not(.kb) .stp-rail{top:14px}details.stp{scroll-margin-top:84px}}
-@media (prefers-reduced-motion:reduce){details.stp::details-content,.stp-cv,.stp-rail,.stp-ic{transition:none!important}details.stp.flash,.view.enter .stp-hero::after{animation:none}}
+/* richer surfaces: one hue (the hero blues) in tonal steps */
+.stp-ic{background:linear-gradient(150deg,var(--hero-c),var(--hero-b));color:#fff;box-shadow:0 8px 18px -10px var(--hero-b),inset 0 1px 0 rgba(255,255,255,.28),inset 0 0 0 1px rgba(255,255,255,.06)}
+details.stp[open] .stp-ic{background:linear-gradient(150deg,var(--hero-c),var(--hero-b));color:#fff;box-shadow:0 0 0 4px var(--s-acc-soft),0 10px 22px -10px var(--hero-b),inset 0 1px 0 rgba(255,255,255,.28)}
+.stp-day{display:flex;flex-direction:column;align-items:center;line-height:1;font-weight:800;font-size:calc(17px*var(--fs,1));letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+.stp-day small{font-size:calc(10px*var(--fs,1));font-weight:600;opacity:.8;letter-spacing:.02em;margin-bottom:2px}
+details.stp[open]>.stp-h{background:linear-gradient(180deg,color-mix(in srgb,var(--s-acc) 7%,transparent),transparent)}
+.stp-gh{font-size:calc(18px*var(--fs,1));font-weight:750;letter-spacing:-.015em;color:var(--ink);padding:0 4px 6px}
+.stp-gh b{font-size:calc(14px*var(--fs,1));color:var(--ink-3);opacity:1}
+.stp-pv{display:flex;align-items:center;gap:5px;margin-top:7px;min-width:0}.stp-pv:empty{display:none}
+.pv-bar{display:flex;gap:2px;height:6px;width:100%;max-width:300px;border-radius:999px;overflow:hidden}
+.pv-bar i{display:block;min-width:3px;background:var(--s-acc);opacity:var(--o)}
+.pv-cf{width:28px;height:18px;border-radius:5px;background:linear-gradient(135deg,var(--c1),var(--c2));box-shadow:inset 0 1px 0 rgba(255,255,255,.25),0 2px 6px -3px rgba(0,0,0,.4)}
+.pv-avs{display:flex;padding-left:6px}
+.pv-avs span{width:26px;height:26px;margin-left:-6px;border-radius:50%;display:grid;place-items:center;background:var(--s-acc-soft);color:color-mix(in srgb,var(--s-acc) 78%,var(--ink));font-size:calc(12px*var(--fs,1));font-weight:700;box-shadow:0 0 0 2px var(--s-surface)}
+/* lists inside sections: a row reads like a list item, tap it to edit */
+#v-setup{--s-row:var(--sheet-2)}
+#v-setup .ed.srl{display:flex;flex-direction:column;gap:8px;padding:16px 16px 6px}
+#v-setup details.srw{display:block;padding:0;border:1px solid var(--s-line);border-radius:16px;background:var(--s-row);overflow:clip;interpolate-size:allow-keywords;transition:background .3s,box-shadow .3s,border-color .3s}
+#v-setup details.srw[open]{background:var(--s-surface-up);border-color:color-mix(in srgb,var(--s-acc) 22%,var(--s-line));box-shadow:var(--shade)}
+#v-setup details.srw::details-content{block-size:0;overflow:clip;transition:block-size .42s var(--spring),content-visibility .42s allow-discrete}
+#v-setup details.srw[open]::details-content{block-size:auto}
+.sr-h{list-style:none;display:grid;grid-template-columns:auto minmax(0,1fr) auto auto;align-items:center;gap:12px;min-height:66px;padding:10px 10px 10px 12px;cursor:pointer;-webkit-tap-highlight-color:transparent;border-radius:15px;transition:background .2s}
+.sr-h::-webkit-details-marker{display:none}
+@media (hover:hover){details.srw:not([open])>.sr-h:hover{background:var(--fill-2)}}
+.sr-h:focus-visible{outline:none;box-shadow:inset 0 0 0 2px var(--s-focus)}
+.sr-h .eav{width:40px;height:40px;border-radius:12px}
+.sr-tx{display:flex;flex-direction:column;gap:1px;min-width:0}
+.sr-nm{font-weight:600;font-size:calc(16px*var(--fs,1));letter-spacing:-.01em;line-height:1.3;color:var(--ink);display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;line-clamp:2;overflow:hidden;overflow-wrap:anywhere}
+.sr-sub{font-size:calc(13.5px*var(--fs,1));color:var(--ink-3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sr-amt{position:relative;width:clamp(104px,27vw,156px);cursor:default}
+@media (min-width:760px){.acc-row .sr-body{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media (max-width:420px){.sr-h{gap:10px;padding-left:10px}.sr-h .eav{width:36px;height:36px}.sr-cv{width:22px}}
+.sr-cur{position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--ink-3);font-weight:600;pointer-events:none;z-index:1}
+#v-setup .sr-amt .tbox,#v-setup .sr-amt input{width:100%;padding-left:28px;text-align:right;font-weight:700;font-variant-numeric:tabular-nums;background:var(--s-surface-up);box-shadow:inset 0 0 0 1px var(--rule-2)}
+#v-setup .sr-amt .tbox:focus{box-shadow:0 0 0 2px var(--s-acc),0 0 0 6px var(--s-acc-soft)}
+.sr-tag{font-size:calc(13px*var(--fs,1));font-weight:600;color:var(--ink-2);background:var(--fill-2);padding:4px 10px;border-radius:999px;white-space:nowrap}
+.sr-cv{width:28px;height:28px;display:grid;place-items:center;color:var(--ink-3);transition:transform .4s var(--spring),color .2s}
+.sr-cv .ic{width:17px;height:17px;stroke-width:2.3}
+details.srw[open]>.sr-h .sr-cv{transform:rotate(180deg);color:var(--s-acc)}
+.sr-body{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px 12px;padding:14px 14px 14px;border-top:1px solid var(--s-line)}
+.sr-wide,.sr-sws,.sr-act{grid-column:1/-1}
+.sr-f{display:block;min-width:0}
+.sr-l{display:block;font-size:calc(12.5px*var(--fs,1));font-weight:600;color:var(--ink-3);margin-bottom:6px;letter-spacing:.005em}
+#v-setup .sr-body .tbox,#v-setup .sr-body select,#v-setup .sr-body input[type=date]{width:100%;min-height:46px;border-radius:12px}
+.sr-act{display:flex;align-items:center;justify-content:flex-start;padding-top:2px}
+.sr-del{display:inline-flex;align-items:center;gap:8px;height:40px;padding:0 14px 0 10px;border:0;border-radius:12px;background:transparent;color:var(--bad-ink);font:inherit;font-weight:600;font-size:calc(14.5px*var(--fs,1));cursor:pointer;transition:background .2s,transform .15s var(--spring)}
+.sr-del .ic{width:18px;height:18px}
+@media (hover:hover){.sr-del:hover{background:var(--bad-soft)}}
+.sr-del:active{transform:scale(.96)}.sr-del.armed{background:var(--bad);color:#fff;padding:0 18px}
+.sr-del:focus-visible{outline:none;box-shadow:0 0 0 2px var(--s-focus)}
+.sr-note{font-size:calc(13.5px*var(--fs,1));color:var(--ink-3)}
+.sr-sws{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,200px),1fr));gap:8px}
+.stg{display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:14px;background:var(--fill-2);cursor:pointer;-webkit-tap-highlight-color:transparent}
+.stg input{appearance:none;-webkit-appearance:none;position:relative;flex:0 0 auto;width:46px;height:28px;margin:0;border-radius:999px;background:var(--fill-3);cursor:pointer;transition:background .25s}
+.stg input::before{content:"";position:absolute;top:3px;left:3px;width:22px;height:22px;border-radius:50%;background:#fff;box-shadow:0 2px 6px rgba(0,0,0,.25);transition:transform .35s var(--spring)}
+.stg input:checked{background:var(--s-acc)}.stg input:checked::before{transform:translateX(18px)}
+.stg input:focus-visible{outline:none;box-shadow:0 0 0 2px var(--s-surface-up),0 0 0 4px var(--s-focus)}
+.stg-t{display:none}
+.stg-x{display:flex;flex-direction:column;min-width:0}.stg-x b{font-weight:600;font-size:calc(15px*var(--fs,1));color:var(--ink)}.stg-x small{font-size:calc(12.5px*var(--fs,1));color:var(--ink-3)}
+.sr-cf{position:relative;width:46px;height:30px;border-radius:7px;background:linear-gradient(135deg,var(--c1),var(--c2));box-shadow:inset 0 1px 0 rgba(255,255,255,.25),0 4px 10px -5px rgba(0,0,0,.45)}
+.sr-cf i{position:absolute;left:6px;top:7px;width:9px;height:7px;border-radius:2px;background:rgba(255,255,255,.55)}
+.sr-cf b{position:absolute;right:5px;bottom:3px;font-size:calc(9.5px*var(--fs,1));font-weight:700;color:#fff;letter-spacing:.04em;font-variant-numeric:tabular-nums}
+#v-setup .card-row .k-more{grid-column:1/-1}
+#v-setup .card-row .k-more>summary{list-style:none;display:flex;align-items:center;justify-content:space-between;gap:10px;min-height:46px;padding:0 14px;border-radius:12px;background:var(--fill-2);color:var(--ink-2);font-weight:600;font-size:calc(14.5px*var(--fs,1));cursor:pointer}
+#v-setup .card-row .k-more>summary::-webkit-details-marker{display:none}
+#v-setup .card-row .k-more>summary .ic{width:17px;height:17px;transition:transform .35s var(--spring)}
+#v-setup .card-row .k-more[open]>summary .ic{transform:rotate(180deg)}
+#v-setup .card-row .k-more[open]>summary{border-radius:12px 12px 0 0}
+#v-setup .card-row .k-more .k-how{margin:12px 2px 0}
+.sr-add{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;min-height:52px;border:1.5px dashed var(--rule-2);border-radius:16px;background:transparent;color:var(--s-acc);font:inherit;font-weight:600;font-size:calc(15px*var(--fs,1));cursor:pointer;transition:background .2s,border-color .2s,transform .15s var(--spring)}
+.sr-add .ic{width:19px;height:19px;stroke-width:2.2}
+@media (hover:hover){.sr-add:hover{background:var(--s-acc-soft);border-color:var(--s-focus)}}
+.sr-add:active{transform:scale(.98)}.sr-add:focus-visible{outline:none;box-shadow:0 0 0 2px var(--s-focus)}
+#v-setup .stp .row-actions{padding:8px 16px 18px}
+/* cycle day picker */
+.sday{padding:18px var(--s-pad) 20px}
+.sday-q{margin:0 0 12px;font-weight:600;color:var(--ink)}
+.sday-grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:6px;max-width:440px}
+.sday-d{aspect-ratio:1;min-height:38px;border:0;border-radius:12px;background:var(--fill-2);color:var(--ink-2);font:inherit;font-weight:600;font-size:calc(15px*var(--fs,1));font-variant-numeric:tabular-nums;cursor:pointer;transition:background .2s,color .2s,transform .15s var(--spring),box-shadow .2s}
+@media (hover:hover){.sday-d:hover{background:var(--fill);color:var(--ink)}}
+.sday-d:active{transform:scale(.92)}
+.sday-d[aria-checked="true"]{background:linear-gradient(150deg,var(--hero-c),var(--hero-b));color:#fff;box-shadow:0 8px 18px -8px var(--hero-b),inset 0 1px 0 rgba(255,255,255,.25)}
+.sday-d:focus-visible{outline:none;box-shadow:0 0 0 2px var(--s-surface-up),0 0 0 4px var(--s-focus)}
+.sday-h{margin:14px 0 0}
+/* backup: action tiles */
+.bk{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,230px),1fr));gap:10px;padding:16px 16px 18px}
+.bk-t{display:grid;grid-template-columns:auto minmax(0,1fr);grid-template-areas:"i b" "i s";align-items:center;column-gap:12px;padding:14px;border:1px solid var(--s-line);border-radius:16px;background:var(--s-row);color:var(--ink);font:inherit;text-align:left;cursor:pointer;transition:background .2s,box-shadow .25s,transform .15s var(--spring)}
+.bk-t b{grid-area:b;font-weight:600;font-size:calc(15px*var(--fs,1))}.bk-t small{grid-area:s;font-size:calc(13px*var(--fs,1));color:var(--ink-3)}
+.bk-i{grid-area:i;width:40px;height:40px;border-radius:12px;display:grid;place-items:center;background:var(--s-acc-soft);color:var(--s-acc)}
+.bk-i .ic{width:20px;height:20px}
+.bk-t.bad .bk-i{background:var(--bad-soft);color:var(--bad-ink)}.bk-t.bad b{color:var(--bad-ink)}
+@media (hover:hover){.bk-t:hover{background:var(--s-surface-up);box-shadow:var(--shade)}}
+.bk-t:active{transform:scale(.98)}.bk-t:focus-visible{outline:none;box-shadow:0 0 0 2px var(--s-focus)}
+.bk-t.armed{background:var(--bad);border-color:var(--bad)}.bk-t.armed b,.bk-t.armed small{color:#fff}
+/* identity and people */
+.sav{flex:0 0 auto;width:44px;height:44px;border-radius:50%;display:grid;place-items:center;background:linear-gradient(150deg,var(--hero-c),var(--hero-b));color:#fff;font-weight:700;font-size:calc(17px*var(--fs,1));box-shadow:inset 0 1px 0 rgba(255,255,255,.25)}
+#v-setup .ed.sid{display:flex;align-items:center;gap:14px;padding:18px var(--s-pad) 4px}
+#v-setup .ed.sid p{margin:0;font-size:calc(14.5px*var(--fs,1));overflow-wrap:anywhere;color:var(--ink-2)}
+.sav-l{display:flex;align-items:center;gap:12px}.sav-l .sav{width:38px;height:38px;font-size:calc(15px*var(--fs,1))}
+@media (prefers-reduced-motion:reduce){details.stp::details-content,.stp-cv,.stp-rail,.stp-ic,details.srw::details-content,.sr-cv,.stg input,.stg input::before{transition:none!important}details.stp.flash,.view.enter .stp-hero::after{animation:none}}
 
 /* ---------- sheets (entry, balances, breakdowns, More…) ---------- */
 .scrim{position:fixed;inset:0;z-index:60;display:flex;align-items:flex-end;justify-content:center;background:var(--scrim);-webkit-backdrop-filter:blur(10px) saturate(130%);backdrop-filter:blur(10px) saturate(130%);opacity:1;
@@ -3839,47 +3938,62 @@ function renderSetup(X) {
   let sel = null; try { sel = ae && typeof ae.selectionStart === 'number' ? ae.selectionStart : null; } catch (e) {}
   const d = state.draft, used = usedCats(X);
   const opt = (arr, v) => arr.map(o => `<option${o === v ? ' selected' : ''}>${o}</option>`).join('');
-  const catRows = d.categories.map((c, i) => c.unplanned ? '' : `<div class="edrow cat-row" data-i="${i}">
-      <input class="c-name" id="c-name-${esc(c.id)}" type="text" value="${esc(c.name)}" data-k="name" aria-label="Category name">
-      <input class="c-short" id="c-short-${esc(c.id)}" type="text" value="${esc(c.short || '')}" data-k="short" aria-label="Button label" placeholder="${esc(c.name)}" maxlength="16">
-      <select class="c-type" id="c-type-${esc(c.id)}" data-k="type" aria-label="Type">${opt(TYPES, c.type)}</select>
-      <input class="c-budget num" id="c-budget-${esc(c.id)}" type="text" inputmode="numeric" value="${c.type === 'Expense' && !c.unplanned ? INR.format(+c.budget || 0) : ''}" data-k="budget" aria-label="Monthly budget" ${c.type !== 'Expense' ? 'disabled placeholder="—"' : c.unplanned ? 'disabled placeholder="= spend" title="Unplanned: the budget each month is what you spend"' : ''}>
-      <button class="icon-btn c-del" type="button" data-act="del-cat" data-i="${i}" ${used[c.id] ? `disabled title="Used by ${used[c.id]} entries"` : 'title="Remove"'} aria-label="Remove category">×</button>
-    </div>`).join('');
-  const accRows = d.accounts.map((a, i) => a.pay ? '' : `<div class="edrow acc-row" data-i="${i}">
-      <input class="a-name" id="a-name-${esc(a.id)}" type="text" value="${esc(a.name)}" data-k="name" aria-label="Account name">
-      <input class="a-owner" id="a-owner-${esc(a.id)}" type="text" value="${esc(a.owner)}" data-k="owner" aria-label="Owner" placeholder="Owner">
-      <select class="a-cls" id="a-cls-${esc(a.id)}" data-k="cls" aria-label="Kind">${opt(CLASSES, a.cls)}</select>
-      <label class="ck a-liq"><input id="a-liq-${esc(a.id)}" type="checkbox" data-k="liquid" ${a.liquid ? 'checked' : ''}> Liquid</label>
-      <label class="ck a-cnt"><input id="a-cnt-${esc(a.id)}" type="checkbox" data-k="counted" ${a.counted !== false ? 'checked' : ''}> Counted</label>
-      <input class="a-mat" id="a-mat-${esc(a.id)}" type="text" value="${esc(a.matures)}" data-k="matures" aria-label="Matures" placeholder="Matures">
-      <button class="icon-btn a-del" type="button" data-act="del-acct" data-i="${i}" aria-label="Remove account">×</button>
-    </div>`).join('');
+  // Rows read like a list (icon, name, what it is, budget); tap a row to edit the rest. The budget is editable in place.
+  state.srOpen = state.srOpen || {};
+  const lastOf = (arr, pred) => { for (let j = arr.length - 1; j >= 0; j--) if (pred(arr[j])) return arr[j]; return null; };
+  const autoCat = state.srOpenLast === 'cat' && lastOf(d.categories, c => !c.unplanned), autoAcc = state.srOpenLast === 'acct' && lastOf(d.accounts, a => !a.pay);
+  if (autoCat) state.srOpen[autoCat.id] = 1; if (autoAcc) state.srOpen[autoAcc.id] = 1;
+  const isOpen = id => state.srOpen[id] ? ' open' : '';
+  const chev = '<span class="sr-cv" aria-hidden="true"><svg class="ic"><use href="#i-down"/></svg></span>';
+  const catRows = d.categories.map((c, i) => c.unplanned ? '' : `<details class="edrow cat-row srw" data-i="${i}" data-sr="${esc(c.id)}"${isOpen(c.id)}>
+      <summary class="sr-h">${catIco(c)}<span class="sr-tx"><span class="sr-nm">${esc(c.name || 'Untitled')}</span><span class="sr-sub">${esc(srCatSub(c))}</span></span>
+        ${c.type === 'Expense' ? `<span class="sr-amt"><span class="sr-cur">₹</span><input class="c-budget num" id="c-budget-${esc(c.id)}" type="text" inputmode="numeric" value="${INR.format(+String(c.budget).replace(/[,₹\s]/g, '') || 0)}" data-k="budget" aria-label="Monthly budget for ${esc(c.name)}"></span>` : `<span class="sr-tag">${esc(c.type)}</span>`}${chev}</summary>
+      <div class="sr-body">
+        <div class="sr-f sr-wide"><span class="sr-l">Name</span><input class="c-name" id="c-name-${esc(c.id)}" type="text" value="${esc(c.name)}" data-k="name" aria-label="Category name"></div>
+        <div class="sr-f"><span class="sr-l">Button label</span><input class="c-short" id="c-short-${esc(c.id)}" type="text" value="${esc(c.short || '')}" data-k="short" aria-label="Button label" placeholder="${esc(c.name)}" maxlength="16"></div>
+        <label class="sr-f"><span class="sr-l">Type</span><select class="c-type" id="c-type-${esc(c.id)}" data-k="type" aria-label="Type">${opt(TYPES, c.type)}</select></label>
+        <div class="sr-act">${used[c.id] ? `<span class="sr-note">Used by ${used[c.id]} ${used[c.id] === 1 ? 'entry' : 'entries'}, so it can't be removed</span>` : `<button class="sr-del" type="button" data-act="del-cat" data-i="${i}" aria-label="Remove category ${esc(c.name)}"><svg class="ic"><use href="#i-trash"/></svg><span>Remove category</span></button>`}</div>
+      </div></details>`).join('');
+  const accIco = a => ({Bank: 'i-bank', Cash: 'c-cash', FD: 'c-save', Bond: 'c-save', Retirement: 'c-shield', Equity: 'i-trend', ETF: 'i-trend', Gold: 'c-spark', Property: 'c-home', Loan: 'c-card', Owed: 'c-user'})[a.cls] || 'c-wallet';
+  const accRows = d.accounts.map((a, i) => a.pay ? '' : `<details class="edrow acc-row srw" data-i="${i}" data-sr="${esc(a.id)}"${isOpen(a.id)}>
+      <summary class="sr-h"><span class="eav sr-kind" aria-hidden="true"><svg class="ic"><use href="#${accIco(a)}"/></svg></span><span class="sr-tx"><span class="sr-nm">${esc(a.name || 'Untitled')}</span><span class="sr-sub">${esc(srAccSub(a))}</span></span>${chev}</summary>
+      <div class="sr-body">
+        <div class="sr-f sr-wide"><span class="sr-l">Name</span><input class="a-name" id="a-name-${esc(a.id)}" type="text" value="${esc(a.name)}" data-k="name" aria-label="Account name"></div>
+        <div class="sr-f"><span class="sr-l">Owner</span><input class="a-owner" id="a-owner-${esc(a.id)}" type="text" value="${esc(a.owner)}" data-k="owner" aria-label="Owner" placeholder="Owner"></div>
+        <label class="sr-f"><span class="sr-l">Kind</span><select class="a-cls" id="a-cls-${esc(a.id)}" data-k="cls" aria-label="Kind">${opt(CLASSES, a.cls)}</select></label>
+        <div class="sr-f"><span class="sr-l">Matures</span><input class="a-mat" id="a-mat-${esc(a.id)}" type="text" value="${esc(a.matures)}" data-k="matures" aria-label="Matures" placeholder="—"></div>
+        <div class="sr-sws">
+          <label class="stg"><input id="a-liq-${esc(a.id)}" type="checkbox" data-k="liquid" ${a.liquid ? 'checked' : ''}><span class="stg-t"></span><span class="stg-x"><b>Liquid</b><small>Can be spent soon</small></span></label>
+          <label class="stg"><input id="a-cnt-${esc(a.id)}" type="checkbox" data-k="counted" ${a.counted !== false ? 'checked' : ''}><span class="stg-t"></span><span class="stg-x"><b>Counted</b><small>Part of net worth</small></span></label>
+        </div>
+        <div class="sr-act"><button class="sr-del" type="button" data-act="del-acct" data-i="${i}" aria-label="Remove account ${esc(a.name)}"><svg class="ic"><use href="#i-trash"/></svg><span>Remove account</span></button></div>
+      </div></details>`).join('');
   const days = Array.from({length: 28}, (_, i) => i + 1);
   paint($('#v-setup'), `
-    <section class="card"><div class="sec-h"><h2>Cycle</h2></div><div class="ed" style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;padding-top:12px">
-      <label for="sDay">Each cycle starts on day</label>
-      <select id="sDay" style="border:1px solid var(--rule-2);background:var(--sheet);border-radius:7px;padding:6px 8px">${days.map(n => `<option${n === +d.cycleStartDay ? ' selected' : ''}>${n}</option>`).join('')}</select>
-      <span class="hint">Set it to your salary day. A cycle is named after the month it ends in.</span></div></section>
+    <section class="card"><div class="sec-h"><h2>Cycle</h2></div><div class="sday">
+      <p class="sday-q">Each cycle starts on day</p>
+      <div class="sday-grid" role="radiogroup" aria-label="Cycle start day">${days.map(n => `<button type="button" role="radio" class="sday-d" data-act="stp-day" data-v="${n}" aria-checked="${n === +d.cycleStartDay}">${n}</button>`).join('')}</div>
+      <p class="hint sday-h">Set it to your salary day. A cycle is named after the month it ends in.</p></div></section>
     <section class="card"><div class="sec-h"><h2>Categories and monthly budgets</h2><span class="hint">Names show everywhere (tiles, entries, filters), in this order. The button label is the short name on the Add entry buttons; blank uses the full name.</span></div>
-      <div class="ed" id="catEd"><div class="edrow cat-row edhead"><span>Name</span><span>Button label</span><span>Type</span><span>Budget ₹</span><span></span></div>${catRows}</div>
-      <div class="row-actions"><button class="btn sm" type="button" data-act="add-cat">+ Add category</button></div></section>
+      <div class="ed srl" id="catEd">${catRows}</div>
+      <div class="row-actions"><button class="sr-add" type="button" data-act="add-cat"><svg class="ic"><use href="#i-plus"/></svg>Add category</button></div></section>
     <section class="card"><div class="sec-h"><h2>Accounts</h2><span class="hint">For net worth. Bank accounts and cards you pay with come from the Vault.</span></div>
-      <div class="ed" id="accEd"><div class="edrow acc-row edhead"><span>Name</span><span>Owner</span><span>Kind</span><span></span><span></span><span>Matures</span><span></span></div>${accRows}</div>
-      <div class="row-actions"><button class="btn sm" type="button" data-act="add-acct">+ Add account</button></div>${payLinkHtml(d)}</section>
+      <div class="ed srl" id="accEd">${accRows}</div>
+      <div class="row-actions"><button class="sr-add" type="button" data-act="add-acct"><svg class="ic"><use href="#i-plus"/></svg>Add account</button></div>${payLinkHtml(d)}</section>
     <section class="card"><div class="sec-h"><h2>Credit cards</h2><span class="hint">One list for the Vault, Add entry and Card bills. New Vault cards appear here; your edits here stay.</span></div>
-      <div class="ed" id="cardEd">${(d.cards || []).map((k, i) => cardRowHtml(k, i)).join('') || '<div class="empty">No cards yet. Add them in the Vault\'s Credit cards table.</div>'}</div></section>
+      <div class="ed srl" id="cardEd">${(d.cards || []).map((k, i) => cardRowHtml(k, i)).join('') || '<div class="empty">No cards yet. Add them in the Vault\'s Credit cards table.</div>'}</div></section>
     ${adjustHtml(X)}
     ${accountHtml()}
     <section class="card"><div class="sec-h"><h2>Backup</h2><span class="hint">Your data lives in Google Sheets. A backup file is a spare copy.</span></div>
-      <div class="row-actions">
-        <button class="btn" type="button" data-act="export-json">Export backup</button>
-        <button class="btn" type="button" data-act="copy-json">Copy backup text</button>
-        <button class="btn" type="button" data-act="export-csv">Export entries (CSV)</button>
-        <button class="btn danger" type="button" data-act="import">Restore a backup</button>
+      <div class="bk">
+        <button class="bk-t" type="button" data-act="export-json"><span class="bk-i"><svg class="ic"><use href="#i-down"/></svg></span><b>Export backup</b><small>Save a file of everything</small></button>
+        <button class="bk-t" type="button" data-act="copy-json"><span class="bk-i"><svg class="ic"><use href="#i-notes"/></svg></span><b>Copy backup text</b><small>Paste it somewhere safe</small></button>
+        <button class="bk-t" type="button" data-act="export-csv"><span class="bk-i"><svg class="ic"><use href="#i-entries"/></svg></span><b>Export entries</b><small>A CSV for spreadsheets</small></button>
+        <button class="bk-t bad" type="button" data-act="import"><span class="bk-i"><svg class="ic"><use href="#i-sync"/></svg></span><b>Restore a backup</b><small>Replaces what is here</small></button>
       </div></section>
     <div id="saveSlot"></div>`);
   stpBuild(X);
+  state.srOpenLast = '';
   renderSaveBar();
   if (focusId) { const el = document.getElementById(focusId); if (el) { if (el.classList.contains('tin')) focusBox(el); else { el.focus(); try { if (sel != null && el.setSelectionRange) el.setSelectionRange(sel, sel); } catch (e) {} } } }
 }
@@ -3922,12 +4036,26 @@ function stpHeroHtml() {
 let stpRefRaf = 0;
 function stpRefresh() {
   stpRefRaf = 0; const root = $('#v-setup'); if (!root || state.view !== 'setup') return; const X = ctx();
-  root.querySelectorAll('details.stp').forEach(dt => { const el = dt.querySelector('.stp-s'), v = stpSummary(dt.dataset.stp, X); if (el && el.textContent !== v) el.textContent = v; });
+  root.querySelectorAll('details.stp').forEach(dt => { const el = dt.querySelector('.stp-s'), v = stpSummary(dt.dataset.stp, X); if (el && el.textContent !== v) el.textContent = v;
+    const pv = dt.querySelector('.stp-pv'), ph = stpPreview(dt.dataset.stp); if (pv && pv.innerHTML !== ph) pv.innerHTML = ph; });
+  const d = state.draft; if (d) root.querySelectorAll('details.srw').forEach(r => {
+    const list = r.classList.contains('cat-row') ? d.categories : r.classList.contains('card-row') ? d.cards || [] : d.accounts, it = list[+r.dataset.i]; if (!it) return;
+    const nm = r.querySelector('.sr-nm'), sb = r.querySelector('.sr-sub'), sub = r.classList.contains('cat-row') ? srCatSub(it) : r.classList.contains('card-row') ? srCardSub(it) : srAccSub(it);
+    const name = it.name || (r.classList.contains('card-row') ? 'New card' : 'Untitled'); if (nm && nm.textContent !== name) nm.textContent = name; if (sb && sb.textContent !== sub) sb.textContent = sub; });
   const tmp = document.createElement('div'); tmp.innerHTML = stpHeroHtml();
   tmp.querySelectorAll('[data-hv]').forEach(n => { const o = root.querySelector(`.stp-hero [data-hv="${n.dataset.hv}"]`); if (o && o.textContent !== n.textContent) o.textContent = n.textContent; });
 }
 document.addEventListener('input', ev => { if (ev.target && ev.target.closest && ev.target.closest('#v-setup details.stp') && !stpRefRaf) stpRefRaf = requestAnimationFrame(stpRefresh); });
 document.addEventListener('change', ev => { if (ev.target && ev.target.closest && ev.target.closest('#v-setup details.stp') && !stpRefRaf) stpRefRaf = requestAnimationFrame(stpRefresh); });
+// A small picture of what is inside a closed section: budget split, the cards, the people.
+function stpPreview(k) {
+  const d = state.draft || state.config || {};
+  if (k === 'cats') { const cs = (d.categories || []).filter(c => c.type === 'Expense' && !c.unplanned).map(c => Math.max(0, parseAmount(String(c.budget ?? '')) || 0)).filter(Boolean).sort((a, b) => b - a), tot = cs.reduce((a, b) => a + b, 0);
+    return tot ? `<span class="pv-bar">${cs.map((v, i) => `<i style="flex:${v};--o:${Math.max(.28, 1 - i * .07).toFixed(2)}"></i>`).join('')}</span>` : ''; }
+  if (k === 'cards') return (d.cards || []).slice(0, 6).map(c => { const t = vTheme(c.name); return `<span class="pv-cf" style="--c1:${t[0]};--c2:${t[1]}"></span>`; }).join('');
+  if (k === 'family' && Array.isArray(Sync.users)) return `<span class="pv-avs">${Sync.users.slice(0, 5).map(u => `<span>${esc(String(u.name || u.email || '?').trim()[0] || '?').toUpperCase()}</span>`).join('')}</span>`;
+  return '';
+}
 function stpSummary(k, X) {
   const d = state.draft || state.config || {}, n = (v, one, many) => v + ' ' + (v === 1 ? one : many || one + 's');
   if (k === 'cycle') return 'Starts on the ' + ordinal(+d.cycleStartDay || 1) + ' of each month';
@@ -3956,8 +4084,9 @@ function stpBuild(X) {
     det.className = 'stp ' + [...sec.classList].join(' '); det.dataset.stp = m.k; det.id = 'stp-' + m.k;
     if (state.stpOpen[m.k]) det.open = true;
     if (state.stpDirty[m.k]) det.classList.add('edited');
-    det.innerHTML = `<summary class="stp-h"><span class="stp-ic" aria-hidden="true"><svg class="ic"><use href="#${m.ic}"/></svg></span>
-      <span class="stp-tx"><span class="stp-t">${esc(m.t)}</span><span class="stp-s">${esc(sum)}</span></span>
+    const tileIn = m.k === 'cycle' ? `<span class="stp-day"><small>Day</small>${+(state.draft || state.config || {}).cycleStartDay || 1}</span>` : `<svg class="ic"><use href="#${m.ic}"/></svg>`;
+    det.innerHTML = `<summary class="stp-h"><span class="stp-ic" aria-hidden="true">${tileIn}</span>
+      <span class="stp-tx"><span class="stp-t">${esc(m.t)}</span><span class="stp-s">${esc(sum)}</span><span class="stp-pv">${stpPreview(m.k)}</span></span>
       <span class="stp-ed">Edited</span><span class="stp-cv" aria-hidden="true"><svg class="ic"><use href="#i-down"/></svg></span></summary>`;
     const body = document.createElement('div'); body.className = 'stp-b';
     if (hint && hint !== sum) { const p = document.createElement('p'); p.className = 'stp-intro'; p.textContent = hint; body.appendChild(p); }
@@ -4032,9 +4161,24 @@ document.addEventListener('click', ev => {
   const down = top > window.scrollY, wide = matchMedia('(min-width:1024px)').matches;
   const safe = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--tbh')) || 0;
   const railTop = wide ? 14 : (down ? 8 : safe + 8);
-  window.scrollTo({top: Math.max(0, top - railTop - rh - 12), behavior: reduceMotion() ? 'auto' : 'smooth'});
+  const aim = () => Math.max(0, t.getBoundingClientRect().top + window.scrollY - railTop - rh - 12);
+  window.scrollTo({top: aim(), behavior: reduceMotion() ? 'auto' : 'smooth'});
+  // The section is still opening (the page may not be tall enough yet): aim again once it has, unless you scrolled.
+  clearTimeout(stpBuild.re); stpBuild.re = setTimeout(() => { if (state.stpLock === t.dataset.stp && Math.abs(aim() - window.scrollY) > 8) window.scrollTo({top: aim(), behavior: reduceMotion() ? 'auto' : 'smooth'}); }, 560);
   root.querySelectorAll('.stp-chip').forEach(c => { const on = c.dataset.k === b.dataset.k; c.classList.toggle('here', on); if (on) { c.setAttribute('aria-current', 'true'); stpCenter(c); } else c.removeAttribute('aria-current'); });
   t.classList.remove('flash'); void t.offsetWidth; t.classList.add('flash');
+});
+// Rows inside sections: remembered open/closed; a new category or account opens ready to type.
+document.addEventListener('toggle', ev => { const r = ev.target; if (!r || !r.matches || !r.matches('details.srw')) return; state.srOpen = state.srOpen || {}; if (r.open) state.srOpen[r.dataset.sr] = 1; else delete state.srOpen[r.dataset.sr]; }, true);
+document.addEventListener('click', ev => { const a = ev.target.closest && ev.target.closest('[data-act="add-cat"],[data-act="add-acct"]'); if (a) state.srOpenLast = a.dataset.act === 'add-cat' ? 'cat' : 'acct'; }, true);
+// The budget box sits on the row's header: typing or tapping in it must not open or close the row.
+document.addEventListener('click', ev => { if (ev.target.closest && ev.target.closest('.sr-h .sr-amt')) ev.preventDefault(); });
+document.addEventListener('keyup', ev => { if ((ev.key === ' ' || ev.key === 'Enter') && ev.target.closest && ev.target.closest('.sr-h .sr-amt')) ev.preventDefault(); }, true);
+// Cycle day picker.
+document.addEventListener('click', ev => {
+  const b = ev.target.closest && ev.target.closest('[data-act="stp-day"]'); if (!b || !state.draft) return;
+  state.draft.cycleStartDay = +b.dataset.v; state.dirty = true; state.stpDirty.cycle = 1; renderSetup(ctx());
+  const nb = document.querySelector(`.sday-d[data-v="${b.dataset.v}"]`); if (nb) nb.focus({preventScroll: true});
 });
 // Mark the section you are changing (before renderSetup redraws, hence capture).
 function stpMark(ev) {
@@ -4049,19 +4193,27 @@ function stpMark(ev) {
 function cardRowHtml(k, i) {
   const id = esc(k.id), days = (v, blank) => (blank ? `<option value=""${+v ? '' : ' selected'}>${blank}</option>` : '') + Array.from({length: 31}, (_, n) => `<option value="${n + 1}"${+v === n + 1 ? ' selected' : ''}>${ordinal(n + 1)}</option>`).join('');
   const amt = v => (v === '' || v == null || !isFinite(+String(v).replace(/[,₹\s]/g, ''))) ? esc(v || '') : (+String(v).replace(/[,₹\s]/g, '') ? INR.format(Math.round(+String(v).replace(/[,₹\s]/g, ''))) : '');
-  return `<div class="edrow card-row" data-i="${i}">
-      <label class="f k-name"><span class="fl2">Name</span><input id="k-name-${id}" type="text" value="${esc(k.name)}" data-k="name" aria-label="Card name"></label>
-      <label class="f k-sd"><span class="fl2">Stmt Date</span><select id="k-sd-${id}" data-k="stmtDay" aria-label="Stmt Date">${days(k.stmtDay)}</select></label>
-      <label class="f k-dd"><span class="fl2">Pay By</span><select id="k-dd-${id}" data-k="dueDay" aria-label="Pay By">${days(k.dueDay, 'About 20 days later')}</select></label>
-      <button class="icon-btn k-del" type="button" data-act="del-cardrow" data-i="${i}" aria-label="Remove card" title="Remove card">×</button>
-      <details class="k-more"><summary class="hint">Limit, and what you owed when you started</summary>
+  const th = vTheme(k.name), last4 = (String(k.name || '').match(/(\d{4})\D*$/) || [])[1] || '';
+  if (!k.name) state.srOpen = Object.assign(state.srOpen || {}, {[k.id]: 1});
+  return `<details class="edrow card-row srw" data-i="${i}" data-sr="${id}"${(state.srOpen || {})[k.id] ? ' open' : ''}>
+      <summary class="sr-h"><span class="sr-cf" style="--c1:${th[0]};--c2:${th[1]}" aria-hidden="true"><i></i>${last4 ? `<b>${last4}</b>` : ''}</span><span class="sr-tx"><span class="sr-nm">${esc(k.name || 'New card')}</span><span class="sr-sub">${esc(srCardSub(k))}</span></span><span class="sr-cv" aria-hidden="true"><svg class="ic"><use href="#i-down"/></svg></span></summary>
+      <div class="sr-body">
+      <div class="sr-f sr-wide"><span class="sr-l">Name</span><input id="k-name-${id}" type="text" value="${esc(k.name)}" data-k="name" aria-label="Card name"></div>
+      <label class="sr-f"><span class="sr-l">Stmt Date</span><select id="k-sd-${id}" data-k="stmtDay" aria-label="Stmt Date">${days(k.stmtDay)}</select></label>
+      <label class="sr-f"><span class="sr-l">Pay By</span><select id="k-dd-${id}" data-k="dueDay" aria-label="Pay By">${days(k.dueDay, 'About 20 days later')}</select></label>
+      <details class="k-more sr-wide"><summary><span>Limit, and what you owed when you started</span><svg class="ic"><use href="#i-down"/></svg></summary>
         <p class="hint k-how">Start in one of two ways, not both: type what you owed on a day here, <b>or</b> leave these at 0 and add every past spend as an entry. Entries dated <b>before</b> the As of day are treated as already inside these figures and left out; entries <b>on or after</b> it are added on top.</p><div class="kgrid">
         <label class="f"><span class="fl2">Limit ₹</span><input id="k-lim-${id}" type="text" inputmode="numeric" value="${amt(k.limit)}" data-k="limit" placeholder="—"></label>
         <label class="f"><span class="fl2">Billed, unpaid ₹</span><input id="k-ob-${id}" type="text" inputmode="numeric" value="${amt(k.openBilled)}" data-k="openBilled" placeholder="0"></label>
         <label class="f"><span class="fl2">Not yet billed ₹</span><input id="k-ou-${id}" type="text" inputmode="numeric" value="${amt(k.openUnbilled)}" data-k="openUnbilled" placeholder="0"></label>
         <label class="f"><span class="fl2">As of (start of day)</span><input id="k-od-${id}" type="date" value="${esc(k.openDate || '')}" data-k="openDate"></label>
-      </div><p class="hint k-pv" id="k-pv-${id}" aria-live="polite">${esc(cardOpenPreview(k))}</p></details></div>`;
+      </div><p class="hint k-pv" id="k-pv-${id}" aria-live="polite">${esc(cardOpenPreview(k))}</p></details>
+      <div class="sr-act"><button class="sr-del" type="button" data-act="del-cardrow" data-i="${i}" aria-label="Remove card ${esc(k.name)}"><svg class="ic"><use href="#i-trash"/></svg><span>Remove card</span></button></div>
+      </div></details>`;
 }
+const srCatSub = c => c.type + (c.short && c.short !== c.name ? ' · button “' + c.short + '”' : '');
+const srAccSub = a => [a.owner, a.cls, a.liquid ? 'liquid' : '', a.counted === false ? 'not counted' : ''].filter(Boolean).join(' · ');
+const srCardSub = k => 'Stmt Date ' + ordinal(+k.stmtDay || 1) + ' · Pay By ' + (+k.dueDay ? ordinal(+k.dueDay) : 'about 20 days later');
 // Live check under the starting figures: what the card will owe, and which entries are left out or added on top.
 function cardOpenPreview(k) {
   if (!state.config) return '';
@@ -5919,10 +6071,11 @@ function accountHtml() {
   const me = Sync.me || {}, owner = me.role === 'Owner';
   const who = me.email ? `Signed in as <b>${esc(me.name || me.email)}</b>${me.name ? ' · ' + esc(me.email) : ''}` : 'Connected with a set-up link';
   const users = owner && Array.isArray(Sync.users) ? Sync.users : null;
-  const list = users ? users.map(u => `<div class="li"><div class="l"><div class="t1">${esc(u.name || u.email)}</div><div class="t2">${esc(u.email)} · ${esc(u.role)}</div></div>
+  const av = t => `<span class="sav" aria-hidden="true">${esc(String(t || '?').trim()[0] || '?').toUpperCase()}</span>`;
+  const list = users ? users.map(u => `<div class="li"><div class="l sav-l">${av(u.name || u.email)}<div><div class="t1">${esc(u.name || u.email)}</div><div class="t2">${esc(u.email)} · ${esc(u.role)}</div></div></div>
       ${u.email === me.email ? '<span class="hint">You</span>' : `<button class="icon-btn" type="button" data-act="del-user" data-email="${esc(u.email)}" aria-label="Remove ${esc(u.email)}">×</button>`}</div>`).join('') : '';
   return `<section class="card"><div class="sec-h"><h2>Account and sync</h2><span class="hint">${esc(syncLabel())}</span></div>
-      <div class="ed" style="padding-top:12px"><p class="muted" style="margin:0;font-size:calc(14.5px*var(--fs,1));overflow-wrap:anywhere">${who}. Your data is in the <b>Budget Tracker data</b> Google Sheet.</p></div>
+      <div class="ed sid">${av(me.name || me.email || 'S')}<p class="muted">${who}. Your data is in the <b>Budget Tracker data</b> Google Sheet.</p></div>
       <div class="row-actions"><button class="btn" type="button" data-act="sync-now">Sync now</button><button class="btn danger" type="button" data-act="disconnect">Sign out of this phone</button></div></section>
     ${installHtml()}
     ${owner ? entryLinksHtml() + killSwitchHtml() : ''}
