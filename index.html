@@ -1061,7 +1061,12 @@ details.srw[open]>.sr-h .sr-cv{transform:rotate(180deg);color:var(--s-acc)}
 .nav.l-efrah{background:var(--good-soft);color:var(--good-ink)}.nav.l-other{background:var(--fill);color:var(--ink-2)}
 .pinmark{display:inline-grid;place-items:center;vertical-align:-3px;margin-right:6px;color:var(--accent)}
 .pinmark .ic{width:16px;height:16px;stroke-width:2.2}
-.ngrip{flex:0 0 auto;align-self:center;width:40px;height:44px;display:grid;place-items:center;margin:-8px -6px -8px 0;font-size:24px;color:var(--ink-3);cursor:grab;touch-action:none;border-radius:10px}
+.ncol{flex:0 0 auto;width:40px;align-self:stretch;display:flex;flex-direction:column;align-items:center;justify-content:space-between;margin:-8px -6px -8px 0}
+.ncopy{width:34px;height:34px;display:grid;place-items:center;border:0;background:none;padding:0;border-radius:10px;color:var(--ink-3);cursor:pointer;-webkit-tap-highlight-color:transparent}
+.ncopy:active{background:var(--fill-2);color:var(--ink)}
+@media (hover:hover){.ncopy:hover{background:var(--fill-2);color:var(--ink)}}
+.ncopy:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+.ngrip{flex:0 0 auto;width:40px;height:44px;display:grid;place-items:center;margin:0;font-size:24px;color:var(--ink-3);cursor:grab;touch-action:none;border-radius:10px}
 .ngrip:active{background:var(--fill-2);cursor:grabbing}
 .ngrp{margin:8px 4px -2px;font-size:calc(13.5px*var(--fs,1));font-weight:700;color:var(--ink-3)}
 .nhint{margin:4px 2px 0;text-align:center}
@@ -2988,7 +2993,7 @@ function noteCard(n, pinned) {
       <span class="nav l-${n.cat}" aria-hidden="true">${esc(labelName(n.cat)[0].toUpperCase())}</span>
       <span class="nmain"><span class="t1">${pinned ? '<span class="pinmark" aria-label="Pinned"><svg class="ic" aria-hidden="true"><use href="#i-pin"/></svg></span>' : ''}${esc(noteName(n))}</span>${noteRest(n) ? `<span class="t2">${esc(noteRest(n))}</span>` : ''}
         <span class="t3">${esc(labelName(n.cat))} · ${fmtWhen(n.updatedAt)}${n.type !== 'txt' ? ' · ' + NOTE_KINDS[n.type].short : ''}${n.dirty || n.metaDirty ? ` · <span class="nsync">${Sync.notesOk ? 'saving' : 'on this phone'}</span>` : ''}</span></span>
-      ${pinned ? `<span class="ngrip" data-grip="${esc(n.id)}" role="button" aria-label="Drag to move" title="Drag to move">≡</span>` : ''}</div>`;
+      <span class="ncol"><button type="button" class="ncopy" data-act="n-qcopy" data-id="${esc(n.id)}" aria-label="Copy this note" title="Copy the text">${COPY_ICON}</button>${pinned ? `<span class="ngrip" data-grip="${esc(n.id)}" role="button" aria-label="Drag to move" title="Drag to move">≡</span>` : ''}</span></div>`;
 }
 function renderNoteList() {
   const box = $('#nList'); if (!box) return;
@@ -3448,6 +3453,11 @@ document.addEventListener('click', async ev => {
   const a = b.dataset.act, o = N.open;
   if (a === 'n-new') { const id = 'n' + newId(); openNote(id, {id, title: '', type: 'txt', cat: N.cat || defaultLabel(), content: ''}); }
   else if (a === 'n-open') openNote(b.dataset.id);
+  else if (a === 'n-qcopy') { // copy a note straight from its tile, without opening it
+    const id = b.dataset.id, n = noteList().find(x => x.id === id); let t = noteBody(id);
+    if (t == null) { try { const j = await call([], {noteIds: [id]}); takeReply(j); t = noteBody(id); } catch (e) {} }
+    if (t == null) { toast("Couldn't copy this note. Check the connection.", 'bad'); return; }
+    try { await navigator.clipboard.writeText(t); toast('Copied'); } catch (e) { showCopy(n ? noteName(n) : 'Note', t); } }
   else if (a === 'n-cat') { N.cat = b.dataset.v; renderNotes(); }
   else if (a === 'n-allmenu') { const pop = b.parentElement.querySelector('.npop'), show = pop.hidden; document.querySelectorAll('.npop').forEach(x => { x.hidden = true; }); if (show) { const r = b.getBoundingClientRect(); pop.style.top = (r.bottom + 6) + 'px'; pop.style.left = Math.max(8, r.left) + 'px'; } pop.hidden = !show; }
   else if (a === 'n-search') { N.searchOpen = true; $('#nFilter').classList.add('searching'); focusBox($('#nQ')); }
@@ -6321,7 +6331,7 @@ function setBarsHidden(h) { document.documentElement.classList.toggle('tb-hide',
 const navTabs = () => [...document.querySelectorAll('#navbar .nv[data-v]')].filter(a => !a.hidden && getComputedStyle(a).display !== 'none').map(a => a.dataset.v);
 function swipeNeighbour(dir) { const t = navTabs(), i = t.indexOf(state.view); return i < 0 ? null : t[i + dir] || null; }
 function swipeBlocked(el) {
-  if (el.closest('input,textarea,select,[contenteditable="true"],.tin,.ngrip,[data-noswipe],.scrim,iframe')) return true;
+  if (el.closest('input,textarea,select,[contenteditable="true"],.tin,.ngrip,.ncopy,[data-noswipe],.scrim,iframe')) return true;
   for (let n = el; n && n.id !== 'main'; n = n.parentElement) {
     if (n.scrollWidth > n.clientWidth + 2) { const ox = getComputedStyle(n).overflowX; if (ox === 'auto' || ox === 'scroll') return true; }
   }
