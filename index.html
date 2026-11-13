@@ -1175,7 +1175,12 @@ html.kb .sheet.note.writing:not(.showmeta) .nact,.sheet.note.writing.tight:not(.
 .ntool.wide{padding:0 13px;font-size:calc(14.5px*var(--fs,1))}
 .ntool.red{color:var(--bad-ink);background:var(--bad-soft)}.ntool.red.armed{background:var(--bad);color:#fff}
 .nkbdone{display:none;background:var(--accent-soft);color:var(--accent);padding:0 15px;font-size:calc(14.5px*var(--fs,1))}
-.sheet.note.writing .nkbdone{display:inline-grid}
+.nhead .nclr{height:36px;flex:0 0 auto}
+.sheet.note.writing .nkbdone{display:inline-grid;position:sticky;right:0;padding:0 12px;background:linear-gradient(var(--accent-soft),var(--accent-soft)) var(--sheet-2);box-shadow:-8px 0 6px -2px var(--sheet-2)}
+.ntools .ntool:not(.wide){min-width:38px}
+.sheet.note.writing .ntools .nsep{display:none}
+.ntools{padding:8px 8px;gap:4px}
+.ncount{padding:0 6px}
 .sheet.note.writing .npin{display:none}
 .nsep{flex:0 0 auto;width:1px;height:24px;background:var(--rule-2);margin:0 3px}
 .ncount{flex:0 0 auto;margin-left:auto;padding:0 8px;font-size:calc(12.5px*var(--fs,1));color:var(--ink-3);white-space:nowrap;font-variant-numeric:tabular-nums}
@@ -3292,7 +3297,7 @@ function drawNote() {
       ${o.ro ? `<span class="nro">${SHARE_IC}${esc(o.by || 'Shared')}</span>` : `<button type="button" class="npin nshare" data-act="n-share" aria-pressed="${o.shared}" aria-label="${o.shared ? 'Shared with everyone. Tap to stop sharing' : 'Share with everyone'}" title="${o.shared ? 'Shared with everyone' : 'Share with everyone'}">${SHARE_IC}</button>`}
       ${fancy && !o.ro ? `<div class="seg nmode" role="group" aria-label="Mode"><button type="button" class="segb" data-act="n-mode" data-v="edit" aria-pressed="${N.mode === 'edit'}">Edit</button><button type="button" class="segb" data-act="n-mode" data-v="view" aria-pressed="${N.mode === 'view'}">${o.type === 'json' ? 'Check' : 'Preview'}</button></div>` : ''}
       ${o.ro ? '' : `<button type="button" class="npin" data-act="n-pin" aria-pressed="${o.pinned}" aria-label="${o.pinned ? 'Unpin' : 'Pin'}" title="${o.pinned ? 'Unpin' : 'Pin'}"><svg class="ic" aria-hidden="true"><use href="#i-pin"/></svg></button>`}
-      <button type="button" class="ntool nkbdone" data-tool="done" aria-label="Hide the keyboard">Done</button></div>
+      ${!o.ro && ready && N.mode === 'edit' ? '<button type="button" class="ntool wide red nclr" data-tool="clear" aria-label="Clear the whole note" title="Clear the whole note">Clear</button>' : ''}</div>
     ${o.ro ? '' : `<div class="nmeta">
       <input id="nTitle" type="text" class="ntitle" placeholder="Title (optional)" aria-label="Title" value="${esc(o.title)}">
       <div class="nlabels" role="group" aria-label="Label">${allLabels().map(k => [k, labelName(k)]).map(([kk, v]) => `<button type="button" class="nlab l-${esc(kk)}" data-act="n-label" data-v="${esc(kk)}" aria-pressed="${kk === o.cat}"><i>${esc(v[0].toUpperCase())}</i>${esc(v)}</button>`).join('')}<button type="button" class="nlab nlab-add" data-act="n-addlabel" data-for="note" aria-label="Add a person"><i>+</i></button></div></div>`}
@@ -3320,8 +3325,8 @@ function noteToolsHtml() {
   return `<div class="ntools" role="toolbar" aria-label="Writing tools">
     ${T('undo', 'Undo', '↶')}${T('redo', 'Redo', '↷')}<span class="nsep"></span>
     ${rich ? T('bold', 'Bold', '<b>B</b>') + T('bullet', 'Bullet list', NT_BULLET) + T('task', 'Checklist: tap to add a box, tap again to tick it', NT_TASK) + T('stamp', 'Put today\u2019s date and time in', '<svg class="ic" aria-hidden="true"><use href="#i-cal"/></svg>') + '<span class="nsep"></span>' : ''}
-    ${o.type === 'json' ? T('tidy', 'Tidy the JSON', 'Tidy', 'wide') : ''}${T('clear', 'Clear the whole note', 'Clear', 'wide red')}
-    <span class="ncount" id="nCount"></span></div>`;
+    ${o.type === 'json' ? T('tidy', 'Tidy the JSON', 'Tidy', 'wide') : ''}
+    <span class="ncount" id="nCount"></span>${T('done', 'Hide the keyboard', 'Done', 'wide nkbdone')}</div>`;
 }
 function noteBodyHtml() {
   const o = N.open;
@@ -3458,8 +3463,8 @@ function noteToolState() {
 function noteCount() {
   const e = $('#nCount'); if (!e) return;
   const box = $('#nText'), t = box ? box.value : (N.open ? N.open.content : '');
-  const w = (String(t).match(/[^\s]+/g) || []).length;
-  e.textContent = w === 1 ? '1 word' : w + ' words';
+  const w = String(t).length;
+  e.textContent = w.toLocaleString('en-IN') + (w === 1 ? ' char' : ' chars'); e.title = w.toLocaleString('en-IN') + (w === 1 ? ' character' : ' characters');
 }
 
 /* --- where the caret is, in lines. Every line of a plain-text note is its own <div>, so this is exact. --- */
