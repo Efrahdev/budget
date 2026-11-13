@@ -22,6 +22,7 @@
  * upsert or a delete, so sending the same op twice is harmless.
  * The reply is the full, current data set and its version (rev). A request with no ops and
  * {since: rev} for the current version gets a tiny {same: true} reply instead.
+ * A request with no ops and {lite: true} gets the notes only (list, and text for noteIds), without the budget data.
  */
 
 var TABS = {
@@ -88,7 +89,10 @@ function doPost(e) {
     vaultApply(ss, vaultOps, who.user);
     if (ops.length) { SpreadsheetApp.flush(); rev = Date.now().toString(36) + Math.random().toString(36).slice(2, 7); props.setProperty('REV', rev); }
     if (!rev) { rev = Date.now().toString(36); props.setProperty('REV', rev); }
-    var reply = {ok: true, applied: ops.length, rev: rev, data: role === 'Entry' ? entryData(ss, who.user) : readAll(ss), me: who.user, at: Date.now()};
+    // lite: the app only wants notes (their list or text), so the budget data is not read or sent. Much faster.
+    var lite = !!req.lite && !ops.length;
+    var reply = {ok: true, applied: ops.length, rev: rev, me: who.user, at: Date.now()};
+    if (!lite) reply.data = role === 'Entry' ? entryData(ss, who.user) : readAll(ss);
     if (who.session) reply.session = who.session;
     if (role === 'Owner') { reply.users = listUsers(ss); reply.entryLinks = listEntryLinks(props); reply.killCode = !!props.getProperty('KILL_CODE'); if (killErr) reply.killErr = killErr; }
     if (req.vault && who.user.role === 'Owner') reply.vault = readVault(ss);
