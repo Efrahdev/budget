@@ -686,6 +686,7 @@ details.ct-hist[open] summary::after{transform:rotate(-135deg) translateY(-1px)}
 .damt{text-align:right;font-weight:700;white-space:nowrap;padding-top:2px;display:flex;flex-direction:column;align-items:flex-end}
 .damt.rec{color:var(--good-ink)}.damt small,.dgh small{font-size:calc(12.5px*var(--fs,1));font-weight:600;opacity:.85}
 .dtags .cnt{font-weight:600;opacity:.8;margin-left:2px}
+#eInvBox{display:flex;flex-direction:column;gap:6px;margin-top:8px}#eInvBox[hidden]{display:none}
 #eDiscTagBox{display:flex;flex-direction:column;gap:6px;margin-top:8px}#eDiscTagBox[hidden]{display:none}
 /* ---------- setup editors ---------- */
 .ed{padding:8px 18px 16px}
@@ -2009,6 +2010,7 @@ body[data-view="read"] main{padding:0}
       </div>
       <div class="chips" id="ePayChips" role="group" aria-label="Which one" hidden></div>
       <div id="ePayCardBox" hidden><span class="sublbl">Card being paid</span><div class="chips" id="ePayCardChips" role="group" aria-label="Card being paid"></div></div>
+      <div id="eInvBox" hidden><span class="sublbl">Into which investment</span><div class="chips" id="eInvChips" role="group" aria-label="Into which investment"></div></div>
       <small id="ePayHint"></small>
     </div>
     <div class="field"><span id="eDateLbl">Date</span>
@@ -2376,7 +2378,8 @@ function loadCache() {
     if (d) { state.mine = {}; (d.mine || []).forEach(id => { state.mine[id] = 1; }); state.config = d.config || null; state.cycles = d.cycles || {}; state.balances = d.balances || {}; state.cardfix = d.cardfix || {}; Sync.last = d.last || 0; } } catch (e) {}
   try { Sync.outbox = JSON.parse(localStorage.getItem(LS_OUT) || '[]') || []; } catch (e) { Sync.outbox = []; }
 }
-const txnBody = t => ({id: t.id, date: t.date, amount: t.amount, cat: t.cat, acct: t.acct || '', note: t.note || '', member: t.member || '', tag: t.tag || '', at: t.at || Date.now(), refund: !!t.refund, card: t.card || ''});
+const INV_PFX = 'inv:';
+const txnBody = t => { const inv = t.inv || (String(t.card || '').startsWith(INV_PFX) ? String(t.card).slice(INV_PFX.length) : ''); const b = ({id: t.id, date: t.date, amount: t.amount, cat: t.cat, acct: t.acct || '', note: t.note || '', member: t.member || '', tag: t.tag || '', at: t.at || Date.now(), refund: !!t.refund, card: t.card || ''}); b.card = inv ? '' : b.card; if (inv) b.inv = inv; return b; };
 function dropTxn(id) { for (const d of Object.values(state.cycles)) if (d && d.txns && d.txns[id]) delete d.txns[id]; }
 function placeTxn(t) { const k = cycleKeyOf(t.date); const d = state.cycles[k] || (state.cycles[k] = {key: k, txns: {}}); d.txns = d.txns || {}; d.txns[t.id] = txnBody(t); }
 function applyLocal(op) {
@@ -2420,7 +2423,8 @@ async function flush() {
   // Nothing to send and a full copy fetched in the last 10 minutes: ask only "anything new?" (the server's version).
   const quick = !sent.length && Sync.rev && state.config && Date.now() - Sync.full < 10 * 60000;
   try {
-    const j = await call(sent, quick ? {since: Sync.rev} : {});
+    const wire = sent.map(o => o && o.t === 'txn' && o.txn && o.txn.inv ? Object.assign({}, o, {txn: Object.assign({}, o.txn, {card: INV_PFX + o.txn.inv})}) : o);
+    const j = await call(wire, quick ? {since: Sync.rev} : {});
     Sync.outbox.splice(0, sent.length);
     takeReply(j);
     Sync.outbox.forEach(applyLocal); // changes made while this request was in flight
@@ -2536,6 +2540,7 @@ function ctx() {
   // a balance re-ties it. "After the record" = a later date, or the same day but entered after you recorded it.
   const live = {};
   c.accounts.forEach(a => { if (isLiveAcct(a) && latest[a.id]) live[a.id] = []; });
+  txns.forEach(t => { const a = t.inv && am[t.inv]; if (a && !a.pay && isInvest(t.cat, cm) && !live[a.id]) { if (!latest[a.id]) latest[a.id] = {v: 0, date: '', at: 0}; live[a.id] = []; } });
   txns.forEach(t => moneyMoves(t, X).forEach(m => { const L = latest[m.id]; if (live[m.id] && m.v && afterRecord(t, L)) live[m.id].push({t, v: m.v}); }));
   Object.entries(live).forEach(([id, moves]) => {
     const L = latest[id], delta = r2(moves.reduce((x, m) => x + m.v, 0));
@@ -2576,6 +2581,7 @@ function moneyMoves(t, X) {
   if (ty === 'Income') return [{id, v: amt}];
   if (ty === 'Expense') return [{id, v: t.refund ? amt : -amt}];
   if (pay) return [{id, v: -amt}];
+  if (isInvest(t.cat, X.cm) && t.inv) return t.inv === id ? [] : [{id, v: -amt}, {id: t.inv, v: amt}]; // bank → investment
   if (isAtm(t.cat, X.cm)) { // cash out of a bank into cash in hand
     const cash = X.cashMain ? X.cashMain.id : '';
     if (id === cash || (X.am[id] && X.am[id].cls === 'Cash')) return [];
@@ -3740,7 +3746,7 @@ const sum = (xs, f) => xs.reduce((a, x) => a + f(x), 0);
 const ymdLabel = d => fmtDate(d);
 // An entry as a line: tap it to edit the entry.
 function entLine(t, X, v) {
-  const c = X.cm[t.cat], how = t.card ? cardName(t.card) : t.acct === 'cash' ? 'Cash' : (X.am[t.acct] || {}).name || '';
+  const c = X.cm[t.cat], how = t.card ? cardName(t.card) : t.acct === 'cash' ? 'Cash' : (X.am[t.acct] || {}).name || '' + (t.inv && X.am[t.inv] ? ' → ' + X.am[t.inv].name : '');
   return {label: t.note || (c ? c.name : 'Unlisted'), sub: [fmtDM(t.date), t.note && c ? c.name : '', how, t.refund ? 'refund' : ''].filter(Boolean).join(' · '), v, t};
 }
 const byDateDesc = (a, b) => a.date === b.date ? (b.at || 0) - (a.at || 0) : (a.date < b.date ? 1 : -1);
@@ -4661,6 +4667,15 @@ const ordinal = n => { const v = n % 100; return n + ((v >= 11 && v <= 13) ? 'th
 const r2 = v => Math.round(v * 100) / 100;
 function cardList() { return (state.config && Array.isArray(state.config.cards)) ? state.config.cards : []; }
 function cardName(id) { if (!id) return ''; const c = cardList().find(x => x.id === id) || ((state.config && state.config.cardsRemoved) || []).find(x => x.id === id); return c ? c.name : 'Removed card'; }
+// Investment: a Transfer from a bank account into one of your investments (FD, bonds, funds… set up in Setup → Accounts).
+const INV_CLASSES = ['FD', 'Bond', 'Retirement', 'Equity', 'ETF', 'Gold', 'Other'];
+const isInvest = (catId, cm) => { const c = cm[catId]; return !!c && c.type === 'Transfer' && (c.role === 'invest' || c.id === 'invest'); };
+const invAccts = () => state.config.accounts.filter(a => !a.pay && INV_CLASSES.includes(a.cls));
+function ensureInvestCat() {
+  if (!state.config || state.dirty || !(Sync.me && Sync.me.role === 'Owner')) return;
+  if (state.config.categories.some(c => c.role === 'invest' || c.id === 'invest')) return;
+  const cfg = clone(state.config); cfg.categories.push({id: 'invest', name: 'Investment', type: 'Transfer', role: 'invest', group: '', budget: 0}); API.saveConfig(cfg);
+}
 function isCardPay(catId, cm) { const c = cm[catId]; return !!c && c.type === 'Transfer' && c.role !== 'cardadj' && (c.role === 'cardpay' || c.id === 'cardpay' || /card/i.test(c.name)); }
 function cardBillDate(t, X) {
   const c = cardList().find(x => x.id === t.card); if (!c || isCardPay(t.cat, X.cm)) return '';
@@ -5007,7 +5022,7 @@ function chipsShow(box, reset) {
 }
 // ---- How it was paid: Cash (nothing more to pick), Bank (pick an account), Card (pick a card).
 // Bank accounts and cards come from the vault (copied as names only into Setup data, so every phone has them).
-let payMode = 'bank', payAcct = '', payCard = '';
+let payMode = 'bank', payAcct = '', payCard = '', payInv = '';
 function payBanks() {
   const am = {}; state.config.accounts.forEach(a => { am[a.id] = a; });
   const list = (state.config.payBanks || []).map(id => am[id]).filter(Boolean);
@@ -5024,11 +5039,11 @@ function cashInHand(X) {
 }
 function renderPay() {
   if (!state.config) return;
-  const X = ctx(), cat = $('#eCat').value, c = X.cm[cat], ty = (c && c.type) || 'Expense', pay = isCardPay(cat, X.cm), date = $('#eDate').value;
-  if (pay && payMode !== 'bank') payMode = 'bank'; // paying a card bill: the money leaves a bank account
-  $('#ePayLbl').textContent = pay ? 'Paid from' : ty === 'Income' ? 'Received in' : ty === 'Transfer' ? 'From' : 'Paid with';
-  document.querySelectorAll('#ePaySeg .segb').forEach(b => { b.setAttribute('aria-pressed', String(b.dataset.v === payMode)); b.hidden = pay && b.dataset.v !== 'bank'; });
-  $('#ePaySeg').classList.toggle('seg3', !pay);
+  const X = ctx(), cat = $('#eCat').value, c = X.cm[cat], ty = (c && c.type) || 'Expense', pay = isCardPay(cat, X.cm), inv = isInvest(cat, X.cm), date = $('#eDate').value;
+  if ((pay || inv) && payMode !== 'bank') payMode = 'bank'; // card bill or investment: the money leaves a bank account // paying a card bill: the money leaves a bank account
+  $('#ePayLbl').textContent = pay || inv ? 'Paid from' : ty === 'Income' ? 'Received in' : ty === 'Transfer' ? 'From' : 'Paid with';
+  document.querySelectorAll('#ePaySeg .segb').forEach(b => { b.setAttribute('aria-pressed', String(b.dataset.v === payMode)); b.hidden = (pay || inv) && b.dataset.v !== 'bank'; });
+  $('#ePaySeg').classList.toggle('seg3', !pay && !inv);
   let banks = payBanks(), cards = cardList();
   // Keep an entry's own account/card selectable when editing, even if it is not in today's lists.
   if (payAcct && !banks.some(a => a.id === payAcct) && X.am[payAcct] && payAcct !== 'cash') banks = [X.am[payAcct]].concat(banks);
@@ -5044,21 +5059,28 @@ function renderPay() {
   else { paint(pc, ''); pc.hidden = true; }
   $('#ePayCardBox').hidden = !pay;
   paint($('#ePayCardChips'), pay ? cards.map(k => chip(k.id, k.name, 'e-cardpick', k.id === payCard)).join('') : '');
+  let invs = invAccts();
+  if (payInv && !invs.some(a => a.id === payInv) && X.am[payInv]) invs = [X.am[payInv]].concat(invs);
+  if (inv && !invs.some(a => a.id === payInv)) payInv = (invs.find(a => a.id === pref.inv) || invs[0] || {}).id || '';
+  $('#eInvBox').hidden = !inv;
+  paint($('#eInvChips'), inv ? invs.map(a => chip(a.id, a.name, 'e-invpick', a.id === payInv)).join('') : '');
   let h = '';
-  const card = cards.find(k => k.id === payCard);
+  const card = cards.find(k => k.id === payCard), invA = X.am[payInv];
   if (!payMode) h = 'Payment not recorded for this entry. Tap Cash, Bank or Card to set it.';
   else if (payMode === 'cash' && !pay) h = acctHint(X, X.res('cash'), 'Cash in hand');
   else if (payMode === 'bank' && !banks.length) h = "No bank accounts yet. Add them in the vault's Savings accounts.";
-  else if (payMode === 'bank' && !pay && payAcct) h = acctHint(X, X.res(payAcct));
+  else if (payMode === 'bank' && !pay && !inv && payAcct) h = acctHint(X, X.res(payAcct));
   else if ((payMode === 'card' || pay) && !cards.length) h = "No cards yet. Add them in the vault's Credit cards.";
+  else if (inv && !invs.length) h = 'No investments yet. Add them in Setup → Accounts (kind FD, Bond, Equity, ETF, Gold, Retirement or Other).';
+  else if (inv) h = invA ? 'Moves money into ' + invA.name + '. A transfer, so not counted as spending.' + (X.latest[invA.id] ? ' ' + invA.name + ' now: ' + rs(X.latest[invA.id].v) + '.' : '') + (payAcct ? ' ' + acctHint(X, X.res(payAcct)) : '') : 'Choose the investment.';
   else if (pay) h = card ? 'Reduces what you owe on ' + card.name + '. A transfer, so not counted as spending.' + (payAcct ? ' ' + acctHint(X, X.res(payAcct)) : '') : 'Choose the card you are paying.';
   else if (payMode === 'card' && card && card.stmtDay && /^\d{4}-\d{2}-\d{2}$/.test(date)) {
     const S = dayOf(card.stmtDay, 1), sd = stmtFor(date, S);
     h = 'Stmt Date ' + fmtDate(sd) + ' · Pay By ' + fmtDate(dueOf(card, sd)) + '.';
   }
   $('#ePayHint').textContent = h; $('#ePayHint').hidden = !h;
-  $('#eRefundLbl').textContent = ty === 'Transfer' && !pay ? 'Money coming in (e.g. a loan repaid to you), not going out' : 'This is a refund (reduces spending in its category)';
-  pc.scrollLeft = keep; chipsShow(pc); chipsShow($('#ePayCardChips'));
+  $('#eRefundLbl').textContent = ty === 'Transfer' && !pay && !inv ? 'Money coming in (e.g. a loan repaid to you), not going out' : 'This is a refund (reduces spending in its category)';
+  pc.scrollLeft = keep; chipsShow(pc); chipsShow($('#ePayCardChips')); chipsShow($('#eInvChips'));
 }
 // One line on what the chosen account holds now, or why an entry will not move it.
 function acctHint(X, id, label) {
@@ -5334,6 +5356,7 @@ function impactToast(head, oldT, newT, X0) {
 /* ---------- entry sheet ---------- */
 let editing = null, delArmed = false;
 function openEntry(t) {
+  ensureInvestCat();
   const X = ctx(); editing = t || null; delArmed = false;
   fillCatOptions($('#eCat'), X, false); fillCatChips();
   const pref = readPref();
@@ -5344,7 +5367,7 @@ function openEntry(t) {
   $('#eRefund').checked = !!(t && t.refund);
   $('#eMore').open = !!(t && (t.member || t.tag || t.refund));
   // How it was paid. New entries start on Cash; an edited entry shows what it was.
-  payAcct = ''; payCard = '';
+  payAcct = ''; payCard = ''; payInv = t && t.inv || '';
   if (!t) payMode = 'bank';
   else if (isCardPay(t.cat, X.cm)) { payMode = 'bank'; payAcct = X.res(t.acct) || ''; payCard = t.card || ''; }
   else if (t.card) { payMode = 'card'; payCard = t.card; }
@@ -5352,7 +5375,7 @@ function openEntry(t) {
   else if (t.acct) { payMode = 'bank'; payAcct = X.res(t.acct); }
   else payMode = ''; // older entry with no payment recorded: left as it is unless you pick one
   $('#eCat').value = startCat; $('#eCatText').value = '';
-  ['#eCatChips', '#ePayChips', '#ePayCardChips'].forEach(sel => { $(sel).scrollLeft = 0; delete $(sel).dataset.mode; });
+  ['#eCatChips', '#ePayChips', '#ePayCardChips', '#eInvChips'].forEach(sel => { $(sel).scrollLeft = 0; delete $(sel).dataset.mode; });
   $('#entryScrim').hidden = false; // shown first so the rows can measure themselves
   setCat(startCat); setEntryDate(t ? t.date : todayStr());
   $('#eDel').hidden = !t; $('#eDel').classList.remove('armed'); $('#eDel').textContent = 'Delete';
@@ -5376,24 +5399,27 @@ async function saveEntry(again) {
   if (amt < 0) {
     if (cat && (X.cm[cat] || {}).type !== 'Expense') return fail('Only spending can take a minus sign. For money back, tick "This is a refund" instead.', $('#eAmt'));
     if (isCardPay(cat, X.cm)) return fail('A card bill payment cannot be negative.', $('#eAmt'));
+    if (isInvest(cat, X.cm)) return fail('An investment cannot be negative.', $('#eAmt'));
     amt = -amt; refund = !refund;
   }
   if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) return fail('Choose a date.');
   if (!cat) return fail('Tap a category.');
-  const pay = isCardPay(cat, X.cm);
-  let acct = '', card = '';
-  if (pay) { if (!payCard) return fail('Choose the card you are paying.'); if (!payAcct) return fail('Choose the bank account you paid from.'); acct = payAcct; card = payCard; }
+  const pay = isCardPay(cat, X.cm), inv = isInvest(cat, X.cm);
+  let acct = '', card = '', invTo = '';
+  if (inv) { if (!payInv) return fail('Choose the investment (add them in Setup → Accounts).'); if (!payAcct) return fail('Choose the bank account the money went from.'); acct = payAcct; invTo = payInv; }
+  else if (pay) { if (!payCard) return fail('Choose the card you are paying.'); if (!payAcct) return fail('Choose the bank account you paid from.'); acct = payAcct; card = payCard; }
   else if (payMode === 'cash') acct = 'cash';
   else if (payMode === 'bank') { if (!payAcct) return fail("Choose the bank account (add accounts in the vault's Savings accounts)."); acct = payAcct; }
   else if (payMode === 'card') { if (!payCard) return fail("Choose the card (add cards in the vault's Credit cards)."); card = payCard; }
   else { acct = editing ? editing.acct || '' : ''; card = editing ? editing.card || '' : ''; }
   const t = {id: editing ? editing.id : newId(), date, amount: amt, cat, acct, card, note: $('#eNote').value.trim(),
-    member: $('#eMember').value.trim(), tag: $('#eTag').value.trim(), at: editing ? editing.at : Date.now(), refund};
+    member: $('#eMember').value.trim(), tag: $('#eTag').value.trim(), at: editing ? editing.at : Date.now(), refund: inv ? false : refund};
+  if (invTo) t.inv = invTo;
   const wasEditing = editing, oldT = wasEditing ? (X.txns.find(x => x.id === wasEditing.id) || wasEditing) : null;
   if (isEntry()) state.mine[t.id] = 1;
   try { await API.putTxn(t, wasEditing ? wasEditing._doc : null); } catch (e) { return fail(writeErr(e)); }
   const pref = readPref();
-  writePref({cat, bank: (payMode === 'bank' || pay) && payAcct ? payAcct : pref.bank || '', card: card || pref.card || ''});
+  writePref({cat, bank: (payMode === 'bank' || pay || inv) && payAcct ? payAcct : pref.bank || '', card: card || pref.card || '', inv: invTo || pref.inv || ''});
   const k = cycleKeyOf(date);
   impactToast(k === state.cur ? 'Saved' : 'Saved in ' + cycleLabel(k), oldT, t, X); buzz(12);
   // Save & add another: the cursor goes back to Amount only if you were typing (keyboard up) or have a mouse. A phone whose
@@ -5475,7 +5501,7 @@ function defaultConfig() {
     C('school', 'School fees', 'Expense', 'Fixed'), C('groc', 'Groceries & household', 'Expense', 'Variable'), C('car', 'Car & bike', 'Expense', 'Variable'), C('med', 'Medical', 'Expense', 'Variable'),
     C('eat', 'Eating out & ordering', 'Expense', 'Discretionary'), C('shop', 'Shopping & clothes', 'Expense', 'Discretionary'), C('ins', 'Insurance premiums', 'Expense', 'Sinking'),
     C('gifts', 'Gifts & festivals', 'Expense', 'Sinking'), C('travel', 'Travel', 'Expense', 'Sinking'), C('salary', 'Salary', 'Income'), C('interest', 'Interest', 'Income'),
-    C('oinc', 'Other income', 'Income'), Object.assign(C('cardpay', 'Card bill payment', 'Transfer'), {role: 'cardpay'}), C('lend', 'Loan given / repaid', 'Transfer'), C('tosave', 'To savings / FD', 'Transfer'), C('atm', 'ATM cash', 'Transfer')],
+    C('oinc', 'Other income', 'Income'), Object.assign(C('cardpay', 'Card bill payment', 'Transfer'), {role: 'cardpay'}), C('lend', 'Loan given / repaid', 'Transfer'), C('tosave', 'To savings / FD', 'Transfer'), Object.assign(C('invest', 'Investment', 'Transfer'), {role: 'invest'}), C('atm', 'ATM cash', 'Transfer')],
     accounts: [{id: 'savings', name: 'Savings account', owner: 'Me', cls: 'Bank', liquid: true, counted: true, matures: ''},
       {id: 'cash', name: 'Cash', owner: 'Me', cls: 'Cash', liquid: true, counted: true, matures: ''},
       ], cards: []};
@@ -5599,6 +5625,7 @@ document.addEventListener('click', ev => {
   else if (a === 'e-pay') setPay(b.dataset.v);
   else if (a === 'e-acct') { payAcct = b.dataset.id; renderPay(); }
   else if (a === 'e-cardpick') { payCard = b.dataset.id; renderPay(); }
+  else if (a === 'e-invpick') { payInv = b.dataset.id; renderPay(); }
   else if (a === 'e-gocards') { closeEntry(); location.hash = '#vault'; }
 });
 $('#main').addEventListener('change', async ev => {
