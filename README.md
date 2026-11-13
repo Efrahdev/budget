@@ -33,6 +33,15 @@ Card, bank and personal details live in three tables in the app's **Vault** tab:
 - A copy is kept on the owner's phone so the vault opens instantly; it is removed on sign-out.
 - Card and bank **names** (never numbers) feed the Cash / Bank / Card buttons on the entry form.
 
+## Notes
+
+Each note is a real file in Google Drive (folder *Budget Tracker notes*). Your notes follow you to every phone you sign in on. Nobody else sees them, unless you share one.
+
+- **Shared notes:** open a note and tap the **people** button at the top, or press and hold the note and choose **Share with everyone**. Everyone who can open the app (everyone on the **Users** tab, and anyone holding an entry link) then sees it on every phone, within a minute of their next sync. Tap again (or **Stop sharing**) to make it private again.
+- Shared notes carry a **Shared** mark on your list, and a **From <name>** mark on everyone else's. **All ▾ → Shared** lists only the shared ones.
+- Only the author can change, label, pin, unshare or delete a shared note. Everyone else reads it, and can copy the text or tap **⋯ → Make a copy** to get their own copy to edit.
+- Sharing needs the Apps Script from Nov 2026 (it adds a **Shared** column to the `Notes` tab by itself). With an older script, the app asks you to update it first.
+
 ## Reader
 
 The **Reader** tab (sidebar on a laptop, **More** on a phone) reads PDFs, web pages, Markdown and text in beautiful type that always fits the screen, at any zoom.
