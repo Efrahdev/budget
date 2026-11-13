@@ -342,50 +342,36 @@ textarea{resize:vertical}
 .kpi.head .lbl{font-size:calc(14px*var(--fs,1))}
 .kpi.head .val{font-size:calc(30px*var(--fs,1));font-weight:700;letter-spacing:-.028em;line-height:1.1}
 .kpi.head .sub{font-size:calc(13.5px*var(--fs,1))}
-/* Overview banner (.ovb): neutral graphite, hairline structure, status colour only on the meter and its word. */
-.ovb{position:relative;isolation:isolate;overflow:hidden;display:flex;flex-direction:column;gap:0;padding:18px 18px 4px;border-radius:24px;color:var(--ovb-ink);
-  background:radial-gradient(90% 70% at 100% 0%,rgba(255,255,255,.07),transparent 60%),linear-gradient(165deg,var(--ovb-a),var(--ovb-b));
-  border:1px solid var(--ovb-edge);box-shadow:var(--ovb-shadow),inset 0 1px 0 rgba(255,255,255,.07)}
-.ovb::before{content:"";position:absolute;inset:0;z-index:-1;pointer-events:none;opacity:.55;
-  background-image:linear-gradient(rgba(255,255,255,.035) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.035) 1px,transparent 1px);background-size:22px 22px;
-  -webkit-mask-image:radial-gradient(120% 90% at 100% 0%,#000,transparent 70%);mask-image:radial-gradient(120% 90% at 100% 0%,#000,transparent 70%)}
+/* Overview banner (.ovb), Nov 2026: a compact, discreet panel. Six figures in one size, a label over each, no sentences.
+   Colour carries the meaning: green = money in hand (left, saved), amber = running fast, red = over budget or in the minus.
+   Small type on purpose: the figures should not be readable from across the room. A hairline edge, a top highlight and a
+   soft two-layer shadow give it a slight lift off the page. */
+.ovb{position:relative;isolation:isolate;overflow:hidden;display:flex;flex-direction:column;padding:12px 14px 0;border-radius:18px;color:var(--ovb-ink);
+  background:linear-gradient(180deg,rgba(255,255,255,.045),transparent 42%),linear-gradient(165deg,var(--ovb-a),var(--ovb-b));
+  border:1px solid var(--ovb-edge);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.10),inset 0 -1px 0 rgba(0,0,0,.28),0 1px 2px rgba(16,24,40,.10),0 12px 26px -16px rgba(16,24,40,.55)}
 .ovb-top{display:flex;align-items:center;justify-content:space-between;gap:10px;min-width:0}
-.ovb-eye{display:inline-flex;align-items:center;gap:8px;min-width:0;font-size:calc(13px*var(--fs,1));font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:var(--ovb-ink-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.ovb-eye .ic{flex:0 0 auto;width:16px;height:16px;opacity:.8}
-.ovb-day{flex:0 0 auto;padding:4px 10px;border-radius:99px;font-size:calc(13px*var(--fs,1));font-weight:600;color:var(--ovb-ink-2);background:rgba(255,255,255,.06);box-shadow:inset 0 0 0 1px rgba(255,255,255,.09);font-variant-numeric:tabular-nums;white-space:nowrap}
-.ovb-main{display:flex;align-items:flex-end;justify-content:space-between;gap:14px;margin:16px -8px 0;padding:6px 8px;border-radius:16px;min-width:0;transition:background .2s,transform .18s var(--spring)}
-.ovb-hl{display:flex;flex-direction:column;gap:2px;min-width:0;flex:1 1 auto}
-.ovb-side{display:flex;flex-direction:column;align-items:flex-end;gap:3px;flex:0 0 auto;text-align:right;padding-left:14px;border-left:1px solid var(--ovb-rule)}
-.ovb-lbl{font-size:calc(13.5px*var(--fs,1));font-weight:600;color:var(--ovb-ink-2)}
-.ovb-big{display:block;max-width:100%;font-family:var(--f-display);font-weight:700;font-size:calc(34px*var(--fs,1));line-height:1.08;letter-spacing:-.03em;white-space:nowrap;overflow:hidden}
-.ovb-of{font-size:calc(14px*var(--fs,1));color:var(--ovb-ink-2);font-variant-numeric:tabular-nums}
-.ovb-mid{font-family:var(--f-display);font-weight:700;font-size:calc(20px*var(--fs,1));line-height:1.15;letter-spacing:-.02em;white-space:nowrap}
-.ovb-mid.neg,.ovb-cv.neg{color:var(--ovb-bad)}
-.ovb-st{display:inline-flex;align-items:center;gap:0;margin-top:2px;padding:3px 9px 3px 8px;border-radius:99px;font-size:calc(13px*var(--fs,1));font-weight:600;white-space:nowrap;background:rgba(255,255,255,.07);color:var(--ovb-ink)}
-.ovb-st .sd{width:8px;height:8px;margin-right:6px;vertical-align:0}
-.ovb-st.good .sd{background:var(--ovb-good)}.ovb-st.warn .sd{background:var(--ovb-warn)}.ovb-st.bad .sd{background:var(--ovb-bad)}
-.ovb-meter{position:relative;display:block;height:6px;margin:16px 0 0;border-radius:99px;background:rgba(255,255,255,.10)}
+.ovb-eye,.ovb-day{font-size:calc(11.5px*var(--fs,1));font-weight:650;letter-spacing:.06em;text-transform:uppercase;color:var(--ovb-ink-2);white-space:nowrap;font-variant-numeric:tabular-nums}
+.ovb-eye{overflow:hidden;text-overflow:ellipsis;min-width:0}
+.ovb-meter{position:relative;display:block;height:4px;margin:10px 0 0;border-radius:99px;background:rgba(255,255,255,.10)}
 .ovb-meter i{position:absolute;left:0;top:0;bottom:0;border-radius:99px;background:var(--ovb-ink);transition:width .9s var(--ease)}
 .ovb-meter i.good{background:var(--ovb-good)}.ovb-meter i.warn{background:var(--ovb-warn)}.ovb-meter i.bad{background:var(--ovb-bad)}
-.ovb-meter .pace{position:absolute;top:-5px;bottom:-5px;width:2px;margin-left:-1px;border-radius:2px;background:var(--ovb-ink);box-shadow:0 0 0 2px var(--ovb-a)}
-.ovb-scale{display:flex;justify-content:space-between;gap:10px;margin-top:8px;font-size:calc(13px*var(--fs,1));color:var(--ovb-ink-2);font-variant-numeric:tabular-nums}
-.ovb-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));margin:16px -18px 0;border-top:1px solid var(--ovb-rule)}
-.ovb-c{display:flex;flex-direction:column;gap:2px;min-width:0;padding:13px 18px 14px;transition:background .2s}
-.ovb-c:nth-child(odd){border-right:1px solid var(--ovb-rule)}
-.ovb-c:nth-child(-n+2){border-bottom:1px solid var(--ovb-rule)}
-.ovb-cl{font-size:calc(13px*var(--fs,1));font-weight:600;color:var(--ovb-ink-2)}
-.ovb-cv{display:block;font-family:var(--f-display);font-weight:700;font-size:calc(19px*var(--fs,1));line-height:1.2;letter-spacing:-.02em;white-space:nowrap;overflow:hidden}
-.ovb-cs{font-size:calc(13px*var(--fs,1));color:var(--ovb-ink-2)}
-@media (hover:hover){.ovb [data-act="why"]{cursor:pointer}.ovb-main[data-act="why"]:hover,.ovb-c[data-act="why"]:hover{background:rgba(255,255,255,.05)}}
-.ovb-main[data-act="why"]:active{transform:scale(.99)}.ovb-c[data-act="why"]:active{background:rgba(255,255,255,.07)}
-@media (max-width:380px){.ovb{padding:16px 14px 4px}.ovb-grid{margin:14px -14px 0}.ovb-c{padding:12px 14px 13px}.ovb-big{font-size:calc(29px*var(--fs,1))}.ovb-mid{font-size:calc(18px*var(--fs,1))}.ovb-cv{font-size:calc(17.5px*var(--fs,1))}}
+.ovb-meter .pace{position:absolute;top:-3px;bottom:-3px;width:2px;margin-left:-1px;border-radius:2px;background:var(--ovb-ink);box-shadow:0 0 0 2px var(--ovb-a)}
+.ovb-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));margin:11px -14px 0;border-top:1px solid var(--ovb-rule)}
+.ovb-c{display:flex;flex-direction:column;gap:3px;min-width:0;padding:9px 14px 10px;transition:background .2s}
+.ovb-c:not(:nth-child(3n+1)){border-left:1px solid var(--ovb-rule)}
+.ovb-c:nth-child(-n+3){border-bottom:1px solid var(--ovb-rule)}
+.ovb-cl{font-size:calc(11px*var(--fs,1));font-weight:650;letter-spacing:.05em;text-transform:uppercase;color:var(--ovb-ink-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ovb-cv{display:block;font-family:var(--f-display);font-weight:700;font-size:calc(15px*var(--fs,1));line-height:1.25;letter-spacing:-.01em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-variant-numeric:tabular-nums}
+.ovb-cv.pos{color:var(--ovb-good)}.ovb-cv.warn{color:var(--ovb-warn)}.ovb-cv.neg,.ovb-cv.bad{color:var(--ovb-bad)}
+@media (hover:hover){.ovb [data-act="why"]{cursor:pointer}.ovb-c[data-act="why"]:hover{background:rgba(255,255,255,.05)}}
+.ovb-c[data-act="why"]:active{background:rgba(255,255,255,.08)}
+@media (max-width:370px){.ovb{padding:11px 12px 0}.ovb-grid{margin:10px -12px 0}.ovb-c{padding:8px 10px 9px}.ovb-cv{font-size:calc(14px*var(--fs,1))}}
 @media (min-width:760px){
-  .ovb{padding:22px 24px 4px}
-  .ovb-big{font-size:calc(38px*var(--fs,1))}.ovb-mid{font-size:calc(22px*var(--fs,1))}
-  .ovb-grid{grid-template-columns:repeat(4,minmax(0,1fr));margin:20px -24px 0}
-  .ovb-c{padding:15px 24px 16px;border-bottom:0!important}
-  .ovb-c:nth-child(odd){border-right:0}.ovb-c+.ovb-c{border-left:1px solid var(--ovb-rule)}
-  .ovb-cv{font-size:calc(21px*var(--fs,1))}
+  .ovb{padding:13px 18px 0}
+  .ovb-grid{grid-template-columns:repeat(6,minmax(0,1fr));margin:12px -18px 0}
+  .ovb-c{padding:10px 18px 11px;border-bottom:0!important}
+  .ovb-c:not(:nth-child(3n+1)){border-left:0}.ovb-c+.ovb-c{border-left:1px solid var(--ovb-rule)}
 }
 .hbar{position:relative;display:block;height:8px;border-radius:99px;background:rgba(255,255,255,.18);margin:8px 0 4px}
 .hbar i{position:absolute;left:0;top:0;bottom:0;border-radius:99px;background:#fff;transition:width .9s var(--ease)}
@@ -1616,7 +1602,30 @@ html.tb-hide:not(.kb) .topbar{transform:translateY(-100%)}
 .ovx-meta b{color:var(--ink-2);font-weight:700}
 .ovx-meta>[data-act]{cursor:pointer;border-radius:8px;transition:color .2s}.ovx-meta>[data-act]:hover b{color:var(--ink)}
 .ovx-sep{width:3px;height:3px;border-radius:50%;background:var(--ink-3);opacity:.6}
-.ov-wx{margin-top:4px}
+.ov-wx{margin-top:4px;gap:10px}
+/* Overview sections fold to a single line (closed by default, remembered on this phone): the label, the one figure
+   that matters, a chevron. Open, the full card slides down; the figure moves from the line into the card. */
+.ovx.ovsec{padding:0;interpolate-size:allow-keywords}
+.ovsec::details-content{block-size:0;overflow:clip;transition:block-size .45s var(--spring),content-visibility .45s allow-discrete}
+.ovsec[open]::details-content{block-size:auto}
+.ovsec-h{display:flex;align-items:center;gap:12px;min-height:54px;padding:12px 14px 12px 18px;cursor:pointer;list-style:none;-webkit-tap-highlight-color:transparent;border-radius:inherit;transition:background .2s}
+.ovsec-h::-webkit-details-marker{display:none}
+.ovsec-h:hover{background:var(--fill-2)}.ovsec-h:active{background:var(--fill)}
+.ovsec-h:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
+.ovsec-h .ovx-lbl{flex:1 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ovsec-v{flex:0 0 auto;font-family:var(--f-display);font-weight:700;font-size:calc(15px*var(--fs,1));letter-spacing:-.01em;white-space:nowrap;font-variant-numeric:tabular-nums;color:var(--ink);transition:opacity .25s}
+.ovsec-v.good{color:var(--good-ink)}.ovsec-v.warn{color:var(--warn-ink)}.ovsec-v.bad{color:var(--bad-ink)}.ovsec-v.meta{font-family:var(--f-body);font-size:calc(13px*var(--fs,1));font-weight:600;color:var(--ink-3)}
+.ovsec-v.meta.warn{color:var(--warn-ink)}.ovsec-v.meta.bad{color:var(--bad-ink)}
+.ovsec[open] .ovsec-v{opacity:0}
+.ovsec-cv{flex:0 0 auto;display:grid;place-items:center;width:28px;height:28px;border-radius:50%;background:var(--fill-2);color:var(--ink-2);transition:transform .35s var(--spring),background .2s}
+.ovsec-cv .ic{width:16px;height:16px;stroke-width:2.4}
+.ovsec[open] .ovsec-cv{transform:rotate(180deg)}
+.ovsec-b{padding:0 18px 8px}
+.ovsec-b>.ovx-top{margin-top:-4px}.ovsec-b>.ovx-top .ovx-total{margin-top:0;font-size:calc(26px*var(--fs,1))}
+.ovx-net .ovsec-b{padding-bottom:0}
+.ovx-spend{--wash:#6366f1;--wash2:#0ea5e9}.ovx-spend .ovsec-b{padding:2px 12px 12px}
+.ovx-spend .htile{box-shadow:none;background:var(--sheet-2)}
+@media (prefers-reduced-motion:reduce){.ovsec::details-content,.ovsec-cv,.ovsec-v{transition:none!important}}
 @media (min-width:1024px){.ov-wx{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:22px 24px;align-items:start}}
 /* the net card: the answer large, the bar that shows where the bank money goes, the sum as three quiet cells */
 .ovx-net{--wash:#10b981;--wash2:#14b8a6;padding-bottom:0}
@@ -2668,25 +2677,22 @@ function renderOverview(X) {
   const saved = T.inc - T.exp, rate = T.inc > 0 ? saved / T.inc : null, OL = cycleOutlook(T, key);
   const unknown = Object.keys(T.byCat).filter(id => !X.cm[id]).reduce((a, id) => a + T.byCat[id], 0);
 
-  // The banner: one neutral graphite panel. Spent against the budget is the headline, with what is left, the
-  // month's pace and four supporting figures underneath. Status colour only on the meter and its word.
-  const st = OL.st, left = budgetTotal - T.exp, daysLeft = e.f > 0 && e.f < 1 ? e.days - e.day + 1 : 0;
-  const used = budgetTotal > 0 ? T.exp / budgetTotal : null, w = budgetTotal > 0 ? Math.min(T.exp / budgetTotal, 1) * 100 : (T.exp > 0 ? 100 : 0);
-  const dayTxt = e.f <= 0 ? 'Not started' : e.f >= 1 ? 'Cycle closed' : `Day ${e.day} of ${e.days}`;
-  const cell = (k, lbl, val, sub, tone) => `<div class="ovb-c"${whyAttr(k)}><span class="ovb-cl">${lbl}</span><span class="ovb-cv num fit${tone ? ' ' + tone : ''}">${val}</span>${sub ? `<span class="ovb-cs">${sub}</span>` : ''}</div>`;
-  const kpis = `<section class="card ovb" aria-label="Budget summary for ${esc(cycleLabel(key))}">
-    <div class="ovb-top"><span class="ovb-eye"><svg class="ic" aria-hidden="true"><use href="#i-cal"/></svg>Budget · ${esc(cycleLabel(key))}</span><span class="ovb-day">${dayTxt}</span></div>
-    <div class="ovb-main"${whyAttr('ov-exp')}>
-      <div class="ovb-hl"><span class="ovb-lbl">Spent</span><span class="ovb-big num fit">${rs(T.exp)}</span><span class="ovb-of">of ${rs(budgetTotal)} budget</span></div>
-      <div class="ovb-side"><span class="ovb-lbl">${left < -0.5 ? 'Over by' : 'Left'}</span><span class="ovb-mid num${left < -0.5 ? ' neg' : ''}">${rs(Math.abs(left))}</span><span class="ovb-st ${st}">${sdot(st)}${STATUS_WORD[st]}</span></div>
-    </div>
+  // The banner: a compact graphite panel. Six figures, all one size, a short label over each; colour says good or bad.
+  const st = OL.st, left = budgetTotal - T.exp;
+  const w = budgetTotal > 0 ? Math.min(T.exp / budgetTotal, 1) * 100 : (T.exp > 0 ? 100 : 0);
+  const dayTxt = e.f <= 0 ? 'Not started' : e.f >= 1 ? 'Closed' : `Day ${e.day} / ${e.days}`;
+  const sign = v => v < -0.5 ? 'neg' : v > 0.5 ? 'pos' : '';
+  const cell = (k, lbl, val, tone) => `<div class="ovb-c"${whyAttr(k)}><span class="ovb-cl">${lbl}</span><span class="ovb-cv num${tone ? ' ' + tone : ''}">${val}</span></div>`;
+  const kpis = `<section class="card ovb" aria-label="Budget summary for ${esc(cycleLabel(key))}, ${STATUS_WORD[st]}">
+    <div class="ovb-top"><span class="ovb-eye">${esc(cycleLabel(key))}</span><span class="ovb-day">${dayTxt}</span></div>
     <div class="ovb-meter" role="img" aria-label="${rs(T.exp)} spent of ${rs(budgetTotal)}, ${STATUS_WORD[st]}"><i class="${st}" style="width:${w}%"></i>${e.f > 0 && e.f < 1 ? `<b class="pace" style="left:${(e.f * 100).toFixed(1)}%" title="Where you would be at an even pace"></b>` : ''}</div>
-    <div class="ovb-scale"><span>${used == null ? 'No budget set' : pct(used) + ' used'}</span>${e.f > 0 && e.f < 1 ? `<span>Even pace ${pct(e.f)}</span>` : ''}</div>
     <div class="ovb-grid">
-      ${cell('ov-inc', 'Income', rs(T.inc), '', '')}
-      ${cell('ov-saved', 'Saved', T.inc > 0 ? rs(saved) : '—', '', T.inc > 0 && saved < -0.5 ? 'neg' : '')}
-      ${cell('ov-rate', 'Savings rate', pct(rate), '', rate != null && rate < 0 ? 'neg' : '')}
-      ${cell('ov-exp', 'Per day left', daysLeft && left > 0.5 ? rs(left / daysLeft) : '—', daysLeft ? daysLeft + (daysLeft === 1 ? ' day' : ' days') + ' to go' : '', '')}
+      ${cell('', 'Budget', rs(budgetTotal), '')}
+      ${cell('ov-exp', 'Spent', rs(T.exp), st === 'good' ? '' : st)}
+      ${cell('ov-exp', left < -0.5 ? 'Over' : 'Left', rs(Math.abs(left)), sign(left))}
+      ${cell('ov-inc', 'Income', rs(T.inc), '')}
+      ${cell('ov-saved', 'Saved', T.inc > 0 ? rs(saved) : '—', T.inc > 0 ? sign(saved) : '')}
+      ${cell('ov-rate', 'Saved %', pct(rate), rate == null ? '' : sign(rate * 1000))}
     </div>
   </section>`;
 
@@ -2709,8 +2715,13 @@ function renderOverview(X) {
     + (unknown ? tile(null, 'Unlisted', unknown, 0, false, 'ov-unl') : '');
 
   const inst = coarse.matches && !isInstalled() && !readPref().instHide ? `<div class="inst"><span class="mt-ic"><svg class="ic" aria-hidden="true"><use href="#i-install"/></svg></span><span class="it"><b>Install the app</b><span>Full screen, with a clean keyboard and no web address above it.</span></span><button class="btn sm primary" type="button" data-act="install-go">Install</button><button class="ix" type="button" data-act="inst-x" aria-label="Not now"><svg class="ic" aria-hidden="true"><use href="#i-x"/></svg></button></div>` : '';
-  paint($('#v-overview'), `${inst}${kpis}${tiles ? `<div class="hgrid">${tiles}</div>` : '<div class="card empty">No entries in ' + cycleLabel(key) + ' yet.</div>'}
-    ${(() => { const nt = netStripHtml(X), ls = leftStripHtml(X), cs = cardStripHtml(X), bs = bankStripHtml(X); return nt || ls || cs || bs ? `<div class="wx ov-wx">${nt}${ls}${cs}${bs}</div>` : ''; })()}`);
+  // Spending by category, folded like the sections under it; the closed line says how many are over or running fast.
+  const stc = cats.map(c => { const sp = T.byCat[c.id] || 0; return (budgetOf(c, sp) > 0 || sp) ? catStatus(c, sp, key) : null; }).filter(x => x != null);
+  const nOver = stc.filter(x => x === 'bad').length, nFast = stc.filter(x => x === 'warn').length;
+  const spendMeta = nOver ? [nOver + ' over', 'bad'] : nFast ? [nFast + ' running fast', 'warn'] : [stc.length + (stc.length === 1 ? ' category' : ' categories'), ''];
+  const spend = tiles ? ovSec('spend', 'ovx-spend', 'Spending', spendMeta[0], 'meta' + (spendMeta[1] ? ' ' + spendMeta[1] : ''), `<div class="hgrid">${tiles}</div>`) : '';
+  paint($('#v-overview'), `${inst}${kpis}${tiles ? '' : '<div class="card empty">No entries in ' + cycleLabel(key) + ' yet.</div>'}
+    ${(() => { const nt = netStripHtml(X), ls = leftStripHtml(X), cs = cardStripHtml(X), bs = bankStripHtml(X); return spend || nt || ls || cs || bs ? `<div class="wx ov-wx">${spend}${nt}${ls}${cs}${bs}</div>` : ''; })()}`);
   if ($('#v-overview').classList.contains('enter')) wcCount($('#v-overview'));
 }
 
@@ -4718,15 +4729,14 @@ function cardStripHtml(X) {
   });
   const upCards = Ls.filter(L => (L.nextSt ? L.nextSt.left : 0) + L.laterAmt > 0.5), firstStmt = upCards.map(L => L.nextSt && L.nextSt.sd).filter(Boolean).sort()[0];
   const nextSub = !upCards.length ? 'nothing building up' : firstStmt ? 'next Stmt ' + fmtDM(firstStmt) : upCards.length + ' card' + (upCards.length === 1 ? '' : 's');
-  return `<section class="ovx ovx-cards tone-${tone || 'none'}">
-    <div class="ovx-top"><span class="ovx-lbl">Credit cards</span><a class="ovx-link" href="#cards">All cards<svg class="ic" aria-hidden="true"><use href="#i-right"/></svg></a></div>
+  return ovSec('cards', 'ovx-cards tone-' + (tone || 'none'), 'Credit cards', rs(dueNow), tone === 'good' ? '' : tone, `
+    <div class="ovx-top"><span></span><a class="ovx-link" href="#cards">All cards<svg class="ic" aria-hidden="true"><use href="#i-right"/></svg></a></div>
     <div class="ovx-pair">
       <div class="ovx-bill ovx-hb cur t-${tone || 'calm'}"${whyAttr('c-due')}><span class="ovx-bl"><i></i>Current bills</span><b class="ovx-ba num" data-count="${r2(dueNow)}">${rs(dueNow)}</b><span class="ovx-hs">${esc(dueSub[0].toUpperCase() + dueSub.slice(1))}</span></div>
       <div class="ovx-bill ovx-hb nxt"${whyAttr('c-next')}><span class="ovx-bl"><i></i>Upcoming bills</span><b class="ovx-ba num" data-count="${r2(nextAmt)}">${rs(nextAmt)}</b><span class="ovx-hs">${esc(nextSub[0].toUpperCase() + nextSub.slice(1))}</span></div>
     </div>
     <div class="ovx-chips"><span class="ovx-meta"><span${whyAttr('c-owed')}>Owed in total <b>${rs(owed)}</b></span></span></div>
-    <div class="ovx-list">${ovxRows(rows, 'ov:cards-more', 'card')}</div>
-  </section>`;
+    <div class="ovx-list">${ovxRows(rows, 'ov:cards-more', 'card')}</div>`);
 }
 // Bank identity on the Overview: each bank's own colour, toned to read in day and night, and a short wordmark.
 const BRAND_C = {hdfc: '#2563eb', icici: '#ea580c', sbi: '#0891b2', axis: '#be185d', kotak: '#dc2626', hsbc: '#e11d48', amex: '#0284c7', 'american express': '#0284c7',
@@ -4740,6 +4750,12 @@ function brandOf(name) {
   return {col, mark};
 }
 const ovBadge = name => { const {col, mark} = brandOf(name); return `<span class="ovx-badge m${Math.min(5, mark.length)}" style="--kc:${col}" aria-hidden="true">${esc(mark)}</span>`; };
+// Overview sections fold to one line: label, the figure that matters, a chevron. Closed by default; which ones are
+// open is remembered on this phone (pref ovOpen), so a re-render after a sync never snaps them shut.
+const ovIsOpen = k => !!(readPref().ovOpen || {})[k];
+function ovSec(k, cls, label, val, tone, body) {
+  return `<details class="ovx ovsec ${cls}" data-ov="${k}"${ovIsOpen(k) ? ' open' : ''}><summary class="ovsec-h"><span class="ovx-lbl">${label}</span><span class="ovsec-v num${tone ? ' ' + tone : ''}">${val}</span><span class="ovsec-cv" aria-hidden="true"><svg class="ic"><use href="#i-down"/></svg></span></summary><div class="ovsec-b">${body}</div></details>`;
+}
 // Up to four rows show; the rest fold behind "N more" (same smooth open as Wealth; remembered).
 function ovxRows(rows, key, noun) {
   if (rows.length <= 4) return rows.join('');
@@ -4766,17 +4782,15 @@ function netStripHtml(X) {
   const neg = N.any && N.net < 0, hasCards = cardList().length > 0;
   const segs = N.any && N.bank > 0 ? [[Math.max(0, N.net), '#10b981', 'left'], [Math.max(0, N.cards), '#f43f5e', 'card bills'], [Math.max(0, N.left), '#f59e0b', 'budget left']].filter(x => x[0] > 0.5) : [];
   const sign = v => (v >= 0 ? '−' : '+') + rs(Math.abs(v));
-  return `<section class="ovx ovx-net${neg ? ' neg' : ''}">
-    <div class="ovx-top"><span class="ovx-lbl">Left after bills and budget</span><span class="ovx-tag">${esc(cycleLabel(N.key))}</span></div>
-    <div class="ovx-total"${whyAttr('ov-net')}${N.any ? ` data-count="${r2(N.net)}"` : ''}>${N.any ? rs(N.net) : '—'}</div>
+  return ovSec('net', 'ovx-net' + (neg ? ' neg' : ''), 'After bills &amp; budget', N.any ? rs(N.net) : '—', neg ? 'bad' : '', `
+    <div class="ovx-top"><div class="ovx-total"${whyAttr('ov-net')}${N.any ? ` data-count="${r2(N.net)}"` : ''}>${N.any ? rs(N.net) : '—'}</div><span class="ovx-tag">${esc(cycleLabel(N.key))}</span></div>
     <div class="ovx-lede">${!N.any ? 'Record your bank balances in Wealth to see this.' : neg ? `Short by ${rs(-N.net)}: card bills and the budget left are more than your banks hold.` : 'What your banks hold once every card bill and this month\u2019s budget are covered.'}</div>
     ${segs.length ? `<div class="ovx-bar" role="img" aria-label="${esc(segs.map(x => rs(x[0]) + ' ' + x[2]).join(', '))}">${segs.map(([v, c], i) => `<i style="--kc:${c};flex:${v};--i:${i}"></i>`).join('')}</div>` : ''}
     <div class="ovx-eq">
       <div class="ovx-cell"${whyAttr('ov-net')}><span><i class="ring"></i>In banks</span><b class="num">${N.any ? rs(N.bank) : '—'}</b></div>
       <div class="ovx-cell"${whyAttr(hasCards ? 'c-owed' : '')}><span><i style="--kc:#f43f5e"></i>Card bills</span><b class="num">${sign(N.cards)}</b></div>
       <div class="ovx-cell"${whyAttr('w-left')}><span><i style="--kc:#f59e0b"></i>Budget left</span><b class="num">${sign(N.left)}</b></div>
-    </div>
-  </section>`;
+    </div>`);
 }
 // Overview "Still to spend": what each budgeted category has left this month. Same surface, type and rows as the
 // neighbouring cards; the total and every row open the usual breakdown (w-left, then each category).
@@ -4792,13 +4806,11 @@ function leftStripHtml(X) {
       <span class="ovx-v"><b class="num">${rs(r.left)}</b><small>${esc(st || (bl.left > 0 ? wxPctTxt(r.left, bl.left) : ''))}</small></span></div>`;
   });
   const bar = segs.length ? `<div class="ovx-bar" role="img" aria-label="${esc(segs.map(r => r.c.name + ' ' + rs(r.left)).join(', '))}">${segs.map((r, i) => `<i style="--kc:${cols[i % cols.length]};flex:${r.left};--i:${i}"></i>`).join('')}</div>` : '';
-  return `<section class="ovx ovx-left${tone}">
-    <div class="ovx-top"><span class="ovx-lbl">Still to spend</span><span class="ovx-tag">${esc(cycleLabel(bl.key))}</span></div>
-    <div class="ovx-total"${whyAttr('w-left')} data-count="${r2(bl.left)}">${rs(bl.left)}</div>
+  return ovSec('left', 'ovx-left' + tone, 'Still to spend', rs(bl.left), '', `
+    <div class="ovx-top"><div class="ovx-total"${whyAttr('w-left')} data-count="${r2(bl.left)}">${rs(bl.left)}</div><span class="ovx-tag">${esc(cycleLabel(bl.key))}</span></div>
     <div class="ovx-chips"><span class="ovx-meta">of ${rs(bl.budget)} budgeted · ${rs(bl.budget - bl.left)} used${over ? ' · ' + over + ' over' : ''}</span></div>
     ${bar}
-    <div class="ovx-list">${ovxRows(rows, 'ov:left-more', 'category')}</div>
-  </section>`;
+    <div class="ovx-list">${ovxRows(rows, 'ov:left-more', 'category')}</div>`);
 }
 function bankStripHtml(X) {
   const list = ovBanks(X).map(b => b.a);
@@ -4822,14 +4834,12 @@ function bankStripHtml(X) {
       <span class="ovx-v"><b class="num">${L ? rs(L.v) : '—'}</b>${share ? `<small>${esc(share)}</small>` : ''}</span></div>`;
   });
   const bar = any && total > 0 ? `<div class="ovx-bar" role="img" aria-label="${esc(list.map((a, i) => names[i] + ' ' + (Ls[i] && Ls[i].v > 0 ? wxPctTxt(Ls[i].v, total) : '0%')).join(', '))}">${list.map((a, i) => Ls[i] && Ls[i].v > 0 ? `<i style="--kc:${brandOf(names[i]).col};flex:${Ls[i].v};--i:${i}"></i>` : '').join('')}</div>` : '';
-  return `<section class="ovx ovx-banks">
-    <div class="ovx-top"><span class="ovx-lbl">Bank balance</span><a class="ovx-link" href="#wealth">Wealth<svg class="ic" aria-hidden="true"><use href="#i-right"/></svg></a></div>
-    <div class="ovx-total"${any ? ` data-count="${r2(total)}"` : ''}>${any ? rs(total) : '—'}</div>
+  return ovSec('banks', 'ovx-banks', 'Bank balance', any ? rs(total) : '—', '', `
+    <div class="ovx-top"><div class="ovx-total"${any ? ` data-count="${r2(total)}"` : ''}>${any ? rs(total) : '—'}</div><a class="ovx-link" href="#wealth">Wealth<svg class="ic" aria-hidden="true"><use href="#i-right"/></svg></a></div>
     <div class="ovx-chips">${delta != null && Math.abs(delta) >= 1 ? `<span class="ovx-chip ${delta >= 0 ? 'up' : 'down'}">${delta >= 0 ? '▲' : '▼'} ${rs(Math.abs(delta))} since ${esc(fmtDM(prev.date))}</span>` : ''}
       <span class="ovx-meta">${list.length} account${list.length === 1 ? '' : 's'}${oneDate ? ' · ' + esc(fmtDM(oneDate)) : ''}</span></div>
     ${bar}
-    <div class="ovx-list">${ovxRows(rows, 'ov:banks-more', 'account')}</div>
-  </section>`;
+    <div class="ovx-list">${ovxRows(rows, 'ov:banks-more', 'account')}</div>`);
 }
 // "HDFC AMMI UPI" → brand HDFC, who "Ammi UPI": the bank on top, the person or card name under it.
 const WC_BANK = /\b(hdfc|icici|sbi|axis|kotak|hsbc|amex|american express|yes|idfc(?: first)?|indusind|rbl|federal|au|dcb|bob|baroda|standard chartered|citi|onecard|amazon pay|scapia|pnb|canara|union)\b/i;
@@ -5552,7 +5562,7 @@ $('#main').addEventListener('change', async ev => {
   if ((typeof cur === 'number' ? cur : null) === v) return;
   try { await API.putFix(el.dataset.card, el.dataset.sd, v); toast(v === null ? 'Using the calculated amount' : 'Your figure saved'); } catch (e) { toast(writeErr(e), 'bad'); }
 });
-document.addEventListener('toggle', ev => { const d = ev.target; if (d && d.matches && d.matches('details.ct-hist')) state.openHist[d.dataset.card] = d.open; if (d && d.matches && d.matches('details.wtree')) { state.openTree = state.openTree || {}; state.openTree[d.dataset.tree] = d.open; } }, true);
+document.addEventListener('toggle', ev => { const d = ev.target; if (d && d.matches && d.matches('details.ct-hist')) state.openHist[d.dataset.card] = d.open; if (d && d.matches && d.matches('details.wtree')) { state.openTree = state.openTree || {}; state.openTree[d.dataset.tree] = d.open; } if (d && d.matches && d.matches('details.ovsec')) { const o = Object.assign({}, readPref().ovOpen); if (d.open) o[d.dataset.ov] = 1; else delete o[d.dataset.ov]; writePref({ovOpen: o}); } }, true);
 window.addEventListener('hashchange', () => {
   const lg = location.hash.match(/^#login=([a-f0-9]{20,80})$/);
   if (lg) { history.replaceState(null, '', location.pathname + '#overview'); if (!Sync.session) useLoginLink(lg[1]); setView('overview'); return; }
