@@ -1,6 +1,6 @@
 // Budget Tracker service worker: keeps the app itself available offline.
 // Money data never passes through here; it goes straight to Google Sheets.
-const CACHE = 'budget-tracker-v87';
+const CACHE = 'budget-tracker-v88';
 // The Reader's pinned third-party files (pdf.js, marked) live in their own cache. Their paths carry the version, so
 // they never change: fetched once, on first use, and kept across budget app updates (which replace CACHE).
 const VENDOR = 'reader-vendor-v1';

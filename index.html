@@ -2305,7 +2305,7 @@ const LS_CONN = 'budgetTracker.conn.v1', LS_OUT = 'budgetTracker.outbox.v1', LS_
 // the script only answers people who sign in with an email on the sheet's Users tab.
 const API_URL = 'https://script.google.com/macros/s/AKfycbzMb_87-nOMCRF10ieNSvUPlBLcIbu6PhpqQHw8riETufRlKF2ZEdBFttyMZc8Rwngg/exec';
 const GOOGLE_CLIENT_ID = '';
-const Sync = { url: '', key: '', session: '', me: null, users: null, outbox: [], busy: false, again: false, last: 0, err: '', timer: null, rev: '', full: 0 };
+const Sync = { url: '', key: '', session: '', me: null, users: null, outbox: [], busy: false, again: false, last: 0, err: '', timer: null, rev: '', full: 0, seen: new Set(), inFlight: 0 };
 const isEntry = () => !!(Sync.me && Sync.me.role === 'Entry');
 /* ---------- device storage ----------
    localStorage holds only ~5 MB, shared by the sheet copy, unsent changes and (until Nov 2026) every note, and a full
@@ -2371,12 +2371,24 @@ async function bootStore() {
 }
 function saveCache() {
   try { localStorage.setItem(LS_CACHE, JSON.stringify({mine: Object.keys(state.mine || {}), config: state.config, cycles: state.cycles, balances: state.balances, cardfix: state.cardfix, last: Sync.last})); } catch (e) { storageFull(); }
+  stampOps();
   try { localStorage.setItem(LS_OUT, JSON.stringify(Sync.outbox)); } catch (e) { storageFull(); }
 }
+// Every unsent change carries its own id (u), so a second window of the app on this phone can tell which changes it
+// has not seen yet and take them in, instead of overwriting them with its own list.
+function stampOps() { Sync.outbox.forEach(o => { if (o && !o.u) o.u = newId(); if (o) Sync.seen.add(o.u); }); }
+window.addEventListener('storage', e => {
+  if (e.key !== LS_OUT || !e.newValue || !signedIn()) return;
+  let list; try { list = JSON.parse(e.newValue) || []; } catch (x) { return; }
+  const fresh = list.filter(o => o && o.u && !Sync.seen.has(o.u)); if (!fresh.length) return;
+  fresh.forEach(o => { Sync.seen.add(o.u); try { applyLocal(o); } catch (x) {} Sync.outbox.push(o); });
+  saveCache(); render(); flush();
+});
 function loadCache() {
   try { const d = JSON.parse(localStorage.getItem(LS_CACHE) || 'null');
     if (d) { state.mine = {}; (d.mine || []).forEach(id => { state.mine[id] = 1; }); state.config = d.config || null; state.cycles = d.cycles || {}; state.balances = d.balances || {}; state.cardfix = d.cardfix || {}; Sync.last = d.last || 0; } } catch (e) {}
   try { Sync.outbox = JSON.parse(localStorage.getItem(LS_OUT) || '[]') || []; } catch (e) { Sync.outbox = []; }
+  stampOps();
 }
 const INV_PFX = 'inv:';
 const txnBody = t => { const inv = t.inv || (String(t.card || '').startsWith(INV_PFX) ? String(t.card).slice(INV_PFX.length) : ''); const b = ({id: t.id, date: t.date, amount: t.amount, cat: t.cat, acct: t.acct || '', note: t.note || '', member: t.member || '', tag: t.tag || '', at: t.at || Date.now(), refund: !!t.refund, card: t.card || ''}); b.card = inv ? '' : b.card; if (inv) b.inv = inv; return b; };
@@ -2419,13 +2431,13 @@ async function flush() {
   if (!signedIn()) return;
   if (Sync.busy) { Sync.again = true; return; }
   Sync.busy = true; Sync.again = false;
-  const sent = Sync.outbox.slice(0, 200);
+  const sent = Sync.outbox.slice(0, 200); Sync.inFlight = sent.length;
   // Nothing to send and a full copy fetched in the last 10 minutes: ask only "anything new?" (the server's version).
   const quick = !sent.length && Sync.rev && state.config && Date.now() - Sync.full < 10 * 60000;
   try {
     const wire = sent.map(o => o && o.t === 'txn' && o.txn && o.txn.inv ? Object.assign({}, o, {txn: Object.assign({}, o.txn, {card: INV_PFX + o.txn.inv})}) : o);
     const j = await call(wire, quick ? {since: Sync.rev} : {});
-    Sync.outbox.splice(0, sent.length);
+    Sync.outbox.splice(0, sent.length); Sync.inFlight = 0;
     takeReply(j);
     Sync.outbox.forEach(applyLocal); // changes made while this request was in flight
     Sync.last = Date.now(); Sync.err = ''; state.got.config = true; state.stale = false; state.connErr = ''; state.killed = false;
@@ -2436,7 +2448,7 @@ async function flush() {
     if (Sync.err === 'signed_out' || Sync.err === 'not_allowed' || Sync.err === 'bad_key') { forgetSignIn(Sync.err); Sync.busy = false; render(); return; }
     state.stale = true;
   }
-  Sync.busy = false;
+  Sync.busy = false; Sync.inFlight = 0;
   render();
   if (Sync.again || (Sync.outbox.length && !Sync.err)) setTimeout(flush, 300);
   else if (Sync.outbox.length) { clearTimeout(Sync.timer); Sync.timer = setTimeout(flush, 15000); }
@@ -2466,6 +2478,7 @@ function forgetSignIn(reason) {
   // Hide the saved copy of the family's data until someone signs in again.
   state.config = null; state.cycles = {}; state.balances = {}; state.cardfix = {}; state.got.config = false; state.dirty = false; state.draft = null;
   if (reason === 'not_allowed') Sync.outbox = [];
+  state.notes = []; N.bodies = {}; saveNotes();
   try { localStorage.removeItem(LS_CACHE); } catch (e) {}
   saveConn(); saveCache();
 }
@@ -2530,7 +2543,7 @@ function ctx() {
   const nwSeries = []; const run = {};
   snaps.forEach(s => {
     const vals = s.values || {};
-    for (const [id, v] of Object.entries(vals)) if (typeof v === 'number' && !isTimeKey(id)) { run[id] = v; latest[id] = {v, date: s.date, at: +vals[TIME_KEY + id] || 0}; }
+    for (const [id, v] of Object.entries(vals)) if (typeof v === 'number' && !isTimeKey(id)) { const w = owedVal(am[id], v); run[id] = w; latest[id] = {v: w, date: s.date, at: +vals[TIME_KEY + id] || 0}; }
     let nw = 0; for (const [id, v] of Object.entries(run)) if (am[id] && am[id].counted !== false) nw += v;
     nwSeries.push({date: s.date, nw});
   });
@@ -2551,6 +2564,8 @@ function ctx() {
 // Balances recorded today also carry the moment they were typed ("time:<account id>" beside the figure), so entries
 // made later the same day still move the balance. A balance for an earlier day counts as the end of that day.
 const TIME_KEY = 'time:', isTimeKey = id => String(id).startsWith(TIME_KEY);
+// A loan is money you owe: its balance counts as a minus figure even if it was typed without the minus sign.
+const owedVal = (a, v) => a && a.cls === 'Loan' && v > 0 ? -v : v;
 const isLiveAcct = a => !!a && !a.pay && (a.cls === 'Bank' || a.cls === 'Cash');
 // The sheet keeps an entry's "Created at" to the whole second, so the same second counts as after.
 function afterRecord(t, L) { return t.date > L.date || (t.date === L.date && !!L.at && Math.floor((+t.at || 0) / 1000) >= Math.floor(L.at / 1000)); }
@@ -2995,12 +3010,13 @@ const canShare = () => Sync.notesOk && Sync.notesV >= 3;
 const SHARED = '@shared'; // the "Shared" filter
 const SHARE_IC = '<svg class="ic" aria-hidden="true"><use href="#i-users"/></svg>';
 // Notes on this phone live in IndexedDB (see bootStore); localStorage only if IndexedDB can't be used.
-function setNotes(s) { s = s || {}; N.local = s.local || {}; N.meta = s.meta || {}; N.del = s.del || {}; N.bodies = s.bodies || {}; N.loaded = true; }
-const notesJson = () => JSON.stringify({local: N.local, meta: N.meta, del: N.del, bodies: N.bodies});
+function setNotes(s) { s = s || {}; N.local = s.local || {}; N.meta = s.meta || {}; N.del = s.del || {}; N.bodies = s.bodies || {}; if (Array.isArray(s.list)) state.notes = s.list; N.loaded = true; }
+// list = the sheet's list of notes as last seen, so the Notes screen is there the moment the app opens (and with no connection).
+const notesJson = () => JSON.stringify({local: N.local, meta: N.meta, del: N.del, bodies: N.bodies, list: state.notes || []});
 // Two saved copies (IndexedDB and an older localStorage one): keep the newer of each note.
 function mergeNotes(a, b) {
   if (!a || !b) return a || b;
-  const m = {local: Object.assign({}, a.local), meta: Object.assign({}, a.meta, b.meta), del: Object.assign({}, a.del, b.del), bodies: Object.assign({}, a.bodies)};
+  const m = {local: Object.assign({}, a.local), meta: Object.assign({}, a.meta, b.meta), del: Object.assign({}, a.del, b.del), bodies: Object.assign({}, a.bodies), list: a.list || b.list};
   Object.entries(b.local || {}).forEach(([id, l]) => { if (!m.local[id] || (l.updatedAt || 0) > (m.local[id].updatedAt || 0)) m.local[id] = l; });
   Object.entries(b.bodies || {}).forEach(([id, x]) => { if (!m.bodies[id] || (x.u || 0) > (m.bodies[id].u || 0)) m.bodies[id] = x; });
   return m;
@@ -3071,13 +3087,41 @@ function notesReply(j) {
   if (N.open && N.open.ro && !state.notes.some(x => x.id === N.open.id)) { N.open = null; $('#noteScrim').hidden = true; toast('That note is no longer shared'); }
   saveNotes();
   if (sent && !N.err) setTimeout(flush, 400);
+  setTimeout(notePrefetch, 600);
+}
+// One waiting copy per note: a newer save replaces an older one that has not left the phone yet (the editor saves at
+// every pause, and each copy holds the whole text). Copies already on their way are left alone.
+function queueNote(op) {
+  const idOf = o => o.t === 'nput' ? (o.note || {}).id : o.id, id = idOf(op);
+  for (let i = Sync.outbox.length - 1; i >= (Sync.busy ? Sync.inFlight : 0); i--) { const o = Sync.outbox[i]; if (o && o.t === op.t && idOf(o) === id) Sync.outbox.splice(i, 1); }
+  Sync.outbox.push(op);
+}
+// Note text only. "lite" asks the script to skip reading the whole budget (a newer script does; an older one sends
+// it anyway and it is ignored here), so this never touches budget data or unsent changes.
+async function noteFetch(ids) {
+  const j = await call([], {noteIds: ids, lite: true});
+  if (Array.isArray(j.notes)) state.notes = j.notes;
+  for (const [id, c] of Object.entries(j.noteBodies || {})) { const n = (state.notes || []).find(x => x.id === id); if (n) N.bodies[id] = {u: n.updatedAt, c}; }
+  saveNotes();
+}
+// Fetch the text of notes this phone does not hold yet, newest first, quietly in the background, so a note opens at once.
+async function notePrefetch() {
+  if (notePrefetch.on || !Sync.notesOk || !signedIn() || navigator.onLine === false) return; notePrefetch.on = true;
+  const tried = new Set(), have = n => N.bodies[n.id] && N.bodies[n.id].u === n.updatedAt; let got = false;
+  try { for (let round = 0; round < 8; round++) {
+    const want = (state.notes || []).filter(n => !tried.has(n.id) && !N.local[n.id] && !N.del[n.id] && (n.size || 0) <= 200000 && !have(n)).sort((a, b) => (b.updatedAt || 0) - (a.updatedAt || 0)).slice(0, 20).map(n => n.id);
+    if (!want.length) break; want.forEach(id => tried.add(id));
+    await noteFetch(want); got = true;
+  } } catch (e) {}
+  notePrefetch.on = false;
+  if (got && state.view === 'notes' && !N.open && !typingIn('#v-notes') && $('#nList')) renderNoteList();
 }
 function noteSave(n) {
   const cur = noteList().find(x => x.id === n.id) || {}; if (cur.mine === false) return; // never write someone else's note
   N.local[n.id] = {id: n.id, title: n.title, type: n.type, content: n.content, cat: n.cat || cur.cat || defaultLabel(), pinned: n.pinned != null ? !!n.pinned : !!cur.pinned, order: n.order != null ? n.order : (cur.order || 0), shared: n.shared != null ? !!n.shared : !!cur.shared, updatedAt: Date.now()};
   delete N.meta[n.id];
   saveNotes();
-  if (Sync.notesOk) { Sync.outbox.push({t: 'nput', note: Object.assign({}, N.local[n.id])}); saveCache(); clearTimeout(N.flushT); N.flushT = setTimeout(flush, 600); }
+  if (Sync.notesOk) { queueNote({t: 'nput', note: Object.assign({}, N.local[n.id])}); saveCache(); clearTimeout(N.flushT); N.flushT = setTimeout(flush, 600); }
 }
 // Label, pin and order changes: only the list changes, not the file.
 function noteSetMeta(id, patch) {
@@ -3085,7 +3129,7 @@ function noteSetMeta(id, patch) {
   const mt = {cat: cur.cat, pinned: !!cur.pinned, order: cur.order || 0, shared: !!cur.shared, ...patch};
   if (N.local[id]) Object.assign(N.local[id], mt); else N.meta[id] = mt;
   saveNotes();
-  if (Sync.notesOk) { if (N.local[id]) Sync.outbox.push({t: 'nput', note: Object.assign({}, N.local[id])}); else if (Sync.notesV >= 2) Sync.outbox.push(Object.assign({t: 'nmeta', id}, mt)); saveCache(); clearTimeout(N.flushT); N.flushT = setTimeout(flush, 600); }
+  if (Sync.notesOk) { if (N.local[id]) queueNote({t: 'nput', note: Object.assign({}, N.local[id])}); else if (Sync.notesV >= 2) queueNote(Object.assign({t: 'nmeta', id}, mt)); saveCache(); clearTimeout(N.flushT); N.flushT = setTimeout(flush, 600); }
 }
 function pinNote(id, on) {
   if (!on) return noteSetMeta(id, {pinned: false, order: 0});
@@ -3229,7 +3273,7 @@ async function openNote(id, fresh) {
   N.mode = ro ? 'view' : 'edit'; N.kinds = false;
   drawNote();
   if (c == null) {
-    try { const j = await call([], {noteIds: [id]}); takeReply(j); c = noteBody(id); } catch (e) {}
+    try { await noteFetch([id]); c = noteBody(id); } catch (e) {}
     if (!N.open || N.open.id !== id) return;
     N.open.loading = false; if (c == null) N.open.failed = true; else N.open.content = c;
     drawNote();
@@ -3601,7 +3645,7 @@ document.addEventListener('click', async ev => {
   else if (a === 'n-open') openNote(b.dataset.id);
   else if (a === 'n-qcopy') { // copy a note straight from its tile, without opening it
     const id = b.dataset.id, n = noteList().find(x => x.id === id); let t = noteBody(id);
-    if (t == null) { try { const j = await call([], {noteIds: [id]}); takeReply(j); t = noteBody(id); } catch (e) {} }
+    if (t == null) { try { await noteFetch([id]); t = noteBody(id); } catch (e) {} }
     if (t == null) { toast("Couldn't copy this note. Check the connection.", 'bad'); return; }
     try { await navigator.clipboard.writeText(t); toast('Copied'); } catch (e) { showCopy(n ? noteName(n) : 'Note', t); } }
   else if (a === 'n-cat') { N.cat = b.dataset.v; renderNotes(); }
@@ -3779,7 +3823,7 @@ function whyAcct(id, X) {
   const a = state.config.accounts.find(x => x.id === id); if (!a) return null;
   const L = X.latest[a.id], hist = [];
   let prev = null;
-  X.snaps.forEach(s => { const v = (s.values || {})[a.id]; if (typeof v !== 'number') return; hist.push({date: s.date, v, ch: prev == null ? null : v - prev}); prev = v; });
+  X.snaps.forEach(s => { let v = (s.values || {})[a.id]; if (typeof v !== 'number') return; v = owedVal(a, v); hist.push({date: s.date, v, ch: prev == null ? null : v - prev}); prev = v; });
   const counted = a.counted !== false;
   const how = [{label: 'Counted in net worth', text: counted ? 'Yes' : 'No'}, {label: 'Liquid money', text: a.liquid && counted ? 'Yes' : 'No'}];
   if (a.owner || a.cls) how.push({label: 'Owner · kind', text: [a.owner, a.cls].filter(Boolean).join(' · ')});
@@ -3916,7 +3960,7 @@ function whyBuild(k) {
   }
   if (kind === 'w-acct') return whyAcct(arg, X);
   if (kind === 'w-snap') {
-    const run = {}; X.snaps.forEach(s => { if (s.date <= arg) for (const [id, v] of Object.entries(s.values || {})) if (typeof v === 'number') run[id] = v; });
+    const run = {}; X.snaps.forEach(s => { if (s.date <= arg) for (const [id, v] of Object.entries(s.values || {})) if (typeof v === 'number') run[id] = owedVal(X.am[id], v); });
     const lines = Object.keys(run).filter(id => X.am[id] && X.am[id].counted !== false).map(id => ({label: X.am[id].name, sub: X.am[id].cls || '', v: run[id], k: 'w-acct:' + id}));
     W0.cardLs.forEach(L => { const o = cardOwedAsOf(L, arg); if (Math.abs(o) > 0.004) lines.push({label: L.card.name, sub: 'credit card owed on that day', v: -o, k: 'card:' + L.card.id}); });
     const p = W0.series.find(z => z.date === arg); if (!p) return null;
@@ -3946,7 +3990,11 @@ function whyBuild(k) {
       return {title: 'Billed, to pay', head: 'Bills already made', value: rs(v), sections: [{title: 'Unpaid bills', lines: xs.length ? xs : [{label: 'No bill is waiting', text: ''}], total: {label: 'Billed, to pay', v}}]}; }
     const xs = W0.cardLs.filter(L => L.nextSt).map(L => ({label: L.card.name, sub: 'Stmt Date ' + fmtDate(L.nextSt.sd) + ' · ' + L.nextSt.items.length + ' spends', v: L.nextSt.left, k: 'card:' + L.card.id}));
     const v = sum(W0.cardLs, L => L.nextSt ? L.nextSt.left : 0);
-    return {title: 'On next bills', head: 'Spent since the last bills', value: rs(v), sections: [{title: 'Each card', lines: xs, total: {label: 'On next bills', v}}]};
+    const ys = W0.cardLs.filter(L => L.laterAmt > 0.004).map(L => ({label: L.card.name, sub: 'entries dated after Stmt Date ' + fmtDate(L.nextSt.sd), v: L.laterAmt, k: 'card:' + L.card.id})), lv = sum(W0.cardLs, L => L.laterAmt);
+    if (!ys.length) return {title: 'On next bills', head: 'Spent since the last bills', value: rs(v), sections: [{title: 'Each card', lines: xs, total: {label: 'On next bills', v}}]};
+    return {title: 'Upcoming bills', head: 'Next bills plus later bills', value: rs(v + lv), sections: [{title: 'On next bills', lines: xs, total: {label: 'On next bills', v}},
+      {title: 'On later bills', lines: ys, total: {label: 'On later bills', v: lv}},
+      {title: 'Together', lines: [{label: 'On next bills', v}, {label: 'On later bills', v: lv}], total: {label: 'Upcoming bills', v: v + lv}}]};
   }
   return null;
 }
@@ -4882,7 +4930,9 @@ function bankStripHtml(X) {
   // change since the record before the latest (the same comparison as the Wealth hero)
   const snaps = (X.snaps || []).filter(sn => ids.some(id => typeof (sn.values || {})[id] === 'number'));
   const prev = snaps.length >= 2 ? snaps[snaps.length - 2] : null;
-  const delta = prev && any ? total - ids.reduce((s, id) => s + (typeof prev.values[id] === 'number' ? prev.values[id] : 0), 0) : null;
+  // each account against its own last known figure on that day (a snapshot may hold one account only)
+  const asOf = (id, d) => { let v = null; for (const sn of X.snaps) { if (sn.date > d) break; const x = (sn.values || {})[id]; if (typeof x === 'number') v = x; } return v; };
+  const delta = prev && any ? ids.reduce((s, id, i) => { const p = asOf(id, prev.date); return p == null || !Ls[i] ? s : s + Ls[i].v - p; }, 0) : null;
   const dates = [...new Set(Ls.filter(Boolean).map(L => L.date))], oneDate = dates.length === 1 ? dates[0] : null;
   const rows = list.map((a, i) => {
     const id = ids[i], L = Ls[i];
@@ -5430,29 +5480,44 @@ async function saveEntry(again) {
 
 /* ---------- balances sheet ---------- */
 // Record balances: all accounts, or just one (e.g. EPF or NPS each month) via openBalances(id).
+let balOnly = null;
 function openBalances(only) {
-  const X = ctx(), one = typeof only === 'string' ? state.config.accounts.find(a => a.id === only) : null;
+  balOnly = typeof only === 'string' && state.config.accounts.some(a => a.id === only) ? only : null;
+  const one = balOnly ? state.config.accounts.find(a => a.id === balOnly) : null;
   $('#bDate').value = todayStr(); $('#bErr').hidden = true; $('#balForm').scrollTop = 0;
   $('#balForm h3').textContent = one ? 'Update ' + one.name : 'Record balances';
-  $('#balForm h3 + p').textContent = one ? 'Type what ' + one.name + ' holds now. Only this account changes.' : 'Type what each account holds today. Enter debts as negative numbers, like −50,000.';
-  paint($('#balGrid'), state.config.accounts.filter(a => !a.pay && (!one || a.id === one.id)).map(a => { const L = X.latest[a.id];
-    return `<div class="balrow"><div><div class="bn">${esc(a.name)}</div><div class="bm">${esc([a.owner, a.cls].filter(Boolean).join(' · '))}${L ? ' · last ' + rs(L.v) : ''}</div></div>
-      <input id="bal-${esc(a.id)}" data-id="${esc(a.id)}" type="text" inputmode="numeric" value="${L ? INR.format(Math.round(L.v)) : ''}" aria-label="Balance for ${esc(a.name)}"></div>`; }).join('')
-    || '<p class="muted">Add accounts in Setup first.</p>');
+  $('#balForm h3 + p').textContent = one ? 'Type what ' + one.name + ' holds now. Only this account changes.' : 'Change the figures you have checked. Only the ones you change are saved. A loan is saved as money you owe, with or without a minus sign.';
+  balFill();
   $('#balScrim').hidden = false;
   if (one) setTimeout(() => { const b = $('#bal-' + one.id); if (b) b.select(); }, 60);
 }
+// The boxes start from the chosen day: today shows what each account holds now; an earlier day shows only what was
+// recorded for that day (today's figures must never be saved under an earlier date: entries since would count twice).
+function balFill() {
+  const X = ctx(), date = $('#bDate').value, today = date === todayStr(), rec = ((state.balances || {})[date] || {}).values || {};
+  paint($('#balGrid'), state.config.accounts.filter(a => !a.pay && (!balOnly || a.id === balOnly)).map(a => { const L = X.latest[a.id];
+    const v = today ? (L ? L.v : null) : (typeof rec[a.id] === 'number' ? owedVal(a, rec[a.id]) : null), shown = v == null ? '' : INR.format(Math.round(v));
+    return `<div class="balrow"><div><div class="bn">${esc(a.name)}</div><div class="bm">${esc([a.owner, a.cls].filter(Boolean).join(' · '))}${L ? ' · ' + (today ? 'last ' : 'now ') + rs(L.v) : ''}</div></div>
+      <input id="bal-${esc(a.id)}" data-id="${esc(a.id)}" data-was="${shown}" type="text" inputmode="numeric" value="${shown}" aria-label="Balance for ${esc(a.name)}"></div>`; }).join('')
+    || '<p class="muted">Add accounts in Setup first.</p>');
+}
+$('#bDate').addEventListener('change', () => { if (!$('#balScrim').hidden && state.config) { $('#bErr').hidden = true; balFill(); } });
 async function saveBalances() {
   const date = $('#bDate').value, err = $('#bErr');
   if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) { err.textContent = 'Choose a date.'; err.hidden = false; return; }
-  const values = {}; let bad = '';
-  document.querySelectorAll('#balGrid .tin').forEach(inp => { const v = parseSigned(inp.value); if (v === null) return; if (isNaN(v)) bad = inp.getAttribute('aria-label'); else values[inp.dataset.id] = v; });
+  const values = {}, today = date === todayStr(); let bad = '';
+  document.querySelectorAll('#balGrid .tin').forEach(inp => {
+    // An untouched box is not a balance you checked, so it is not recorded (Update balance for one account today is: you are confirming it).
+    if (!(balOnly && today) && inp.value.trim() === (inp.dataset.was || '')) return;
+    const v = parseSigned(inp.value); if (v === null) return;
+    if (isNaN(v)) bad = inp.getAttribute('aria-label'); else values[inp.dataset.id] = owedVal(state.config.accounts.find(a => a.id === inp.dataset.id), v); });
   if (bad) { err.textContent = bad + ' is not a number.'; err.hidden = false; return; }
+  if (!Object.keys(values).length) { err.textContent = 'Nothing to save yet: change a figure first.'; err.hidden = false; return; }
   const merged = Object.assign({}, ((state.balances || {})[date] || {}).values || {}, values);
   // Today's figures carry the moment they were typed, so entries made later today still move them.
   // A figure for an earlier day stands for the end of that day.
   const now = Date.now();
-  Object.keys(values).forEach(id => { if (date === todayStr()) merged[TIME_KEY + id] = now; else delete merged[TIME_KEY + id]; });
+  Object.keys(values).forEach(id => { if (today) merged[TIME_KEY + id] = now; else delete merged[TIME_KEY + id]; });
   try { await API.putBalance(date, merged); } catch (e) { err.textContent = writeErr(e); err.hidden = false; return; }
   $('#balScrim').hidden = true; toast(Object.keys(values).length === 1 ? 'Balance updated' : 'Balances saved');
 }
@@ -6441,6 +6506,7 @@ document.addEventListener('click', ev => {
     Sync.key = ''; Sync.session = ''; Sync.me = null; Sync.users = null; Sync.outbox = []; Sync.last = 0; Sync.rev = ''; Sync.full = 0;
     saveConn(); // an empty sign-in, newer than any saved copy, in both stores
     state.config = null; state.cycles = {}; state.balances = {}; state.cardfix = {}; state.got.config = false; state.dirty = false; state.draft = null;
+    state.notes = []; N.bodies = {}; saveNotes();
     render();
   }
 });
@@ -6799,7 +6865,7 @@ const KILL_MSG = {bad_code: "That kill code isn't right.", too_many: 'Too many w
 function wipeForKill() {
   state.killed = true;
   lockVault('', true); V.loaded = false; V.meta = null; V.enc = {}; V.pending = [];
-  Object.assign(N, {local: {}, meta: {}, del: {}, bodies: {}, open: null});
+  Object.assign(N, {local: {}, meta: {}, del: {}, bodies: {}, open: null}); state.notes = [];
   state.config = null; state.cycles = {}; state.balances = {}; state.cardfix = {}; state.got.config = false; state.dirty = false; state.draft = null;
   Sync.outbox = []; Sync.users = null; Sync.entryLinks = null;
   closeMore(); try { closeEntry(); } catch (e) {}
