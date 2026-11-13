@@ -39,8 +39,8 @@ Each note is a real file in Google Drive (folder *Budget Tracker notes*). Your n
 
 - **Shared notes:** open a note and tap the **people** button at the top, or press and hold the note and choose **Share with everyone**. Everyone who can open the app (everyone on the **Users** tab, and anyone holding an entry link) then sees it on every phone, within a minute of their next sync. Tap again (or **Stop sharing**) to make it private again.
 - Shared notes carry a **Shared** mark on your list, and a **From <name>** mark on everyone else's. **All ▾ → Shared** lists only the shared ones.
-- Only the author can change, label, pin, unshare or delete a shared note. Everyone else reads it, and can copy the text or tap **⋯ → Make a copy** to get their own copy to edit.
-- Sharing needs the Apps Script from Nov 2026 (it adds a **Shared** column to the `Notes` tab by itself). With an older script, the app asks you to update it first.
+- **Everyone can edit a shared note** (text, title and type), and their changes reach everyone. The note stays the author's: only the author can label, pin, unshare or delete it. If two people edit the same note at the same moment, the last one saved wins.
+- Sharing needs the latest Apps Script (Nov 2026) (it adds a **Shared** column to the `Notes` tab by itself). With an older script, the app asks you to update it first.
 
 ## Reader
 
