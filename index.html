@@ -351,7 +351,7 @@ textarea{resize:vertical}
   border:1px solid var(--ovb-edge);
   box-shadow:inset 0 1px 0 rgba(255,255,255,.10),inset 0 -1px 0 rgba(0,0,0,.28),0 1px 2px rgba(16,24,40,.10),0 12px 26px -16px rgba(16,24,40,.55)}
 .ovb-top{display:flex;align-items:center;justify-content:space-between;gap:10px;min-width:0}
-.ovb-eye,.ovb-day{font-size:calc(11.5px*var(--fs,1));font-weight:650;letter-spacing:.06em;text-transform:uppercase;color:var(--ovb-ink-2);white-space:nowrap;font-variant-numeric:tabular-nums}
+.ovb-eye,.ovb-day{font-size:calc(12.5px*var(--fs,1));font-weight:650;letter-spacing:.06em;text-transform:uppercase;color:var(--ovb-ink-2);white-space:nowrap;font-variant-numeric:tabular-nums}
 .ovb-eye{overflow:hidden;text-overflow:ellipsis;min-width:0}
 .ovb-meter{position:relative;display:block;height:4px;margin:10px 0 0;border-radius:99px;background:rgba(255,255,255,.10)}
 .ovb-meter i{position:absolute;left:0;top:0;bottom:0;border-radius:99px;background:var(--ovb-ink);transition:width .9s var(--ease)}
@@ -361,12 +361,12 @@ textarea{resize:vertical}
 .ovb-c{display:flex;flex-direction:column;gap:3px;min-width:0;padding:9px 14px 10px;transition:background .2s}
 .ovb-c:not(:nth-child(3n+1)){border-left:1px solid var(--ovb-rule)}
 .ovb-c:nth-child(-n+3){border-bottom:1px solid var(--ovb-rule)}
-.ovb-cl{font-size:calc(11px*var(--fs,1));font-weight:650;letter-spacing:.05em;text-transform:uppercase;color:var(--ovb-ink-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.ovb-cv{display:block;font-family:var(--f-display);font-weight:700;font-size:calc(15px*var(--fs,1));line-height:1.25;letter-spacing:-.01em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-variant-numeric:tabular-nums}
+.ovb-cl{font-size:calc(12px*var(--fs,1));font-weight:650;letter-spacing:.05em;text-transform:uppercase;color:var(--ovb-ink-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ovb-cv{display:block;font-family:var(--f-display);font-weight:700;font-size:calc(16.5px*var(--fs,1));line-height:1.25;letter-spacing:-.01em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-variant-numeric:tabular-nums}
 .ovb-cv.pos{color:var(--ovb-good)}.ovb-cv.warn{color:var(--ovb-warn)}.ovb-cv.neg,.ovb-cv.bad{color:var(--ovb-bad)}
 @media (hover:hover){.ovb [data-act="why"]{cursor:pointer}.ovb-c[data-act="why"]:hover{background:rgba(255,255,255,.05)}}
 .ovb-c[data-act="why"]:active{background:rgba(255,255,255,.08)}
-@media (max-width:370px){.ovb{padding:11px 12px 0}.ovb-grid{margin:10px -12px 0}.ovb-c{padding:8px 10px 9px}.ovb-cv{font-size:calc(14px*var(--fs,1))}}
+@media (max-width:370px){.ovb{padding:11px 12px 0}.ovb-grid{margin:10px -12px 0}.ovb-c{padding:8px 10px 9px}.ovb-cv{font-size:calc(15px*var(--fs,1))}}
 @media (min-width:760px){
   .ovb{padding:13px 18px 0}
   .ovb-grid{grid-template-columns:repeat(6,minmax(0,1fr));margin:12px -18px 0}
@@ -1084,6 +1084,18 @@ details.srw[open]>.sr-h .sr-cv{transform:rotate(180deg);color:var(--s-acc)}
 .nmain .t2{color:var(--ink-2);font-size:calc(14.5px*var(--fs,1));display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
 .nmain .t3{color:var(--ink-3);font-size:calc(13.5px*var(--fs,1))}
 .nsync{color:var(--warn-ink);font-weight:600}
+/* Shared notes: a small people mark on the tile. Yours in the accent colour, someone else's in violet. */
+.nshared{display:inline-flex;align-items:center;gap:4px;font-weight:650;color:var(--accent);vertical-align:bottom}
+.nshared.in{color:var(--pur-ink)}
+.nshared .ic{width:14px;height:14px;stroke-width:2.2}
+.nshare[aria-pressed="true"]{background:color-mix(in srgb,var(--good) 16%,transparent);color:var(--good-ink)}
+.nro{flex:0 0 auto;display:inline-flex;align-items:center;gap:6px;max-width:42%;padding:7px 12px;border-radius:99px;background:var(--pur-soft);color:var(--pur-ink);font-size:calc(13px*var(--fs,1));font-weight:650;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.nro .ic{flex:0 0 auto;width:16px;height:16px}
+.nrotxt{font-size:calc(13px*var(--fs,1));color:var(--ink-3);font-weight:600;align-self:center}
+.nm-note{display:flex;gap:8px;align-items:flex-start;margin:4px 2px 12px;font-size:calc(14px*var(--fs,1));line-height:1.45;color:var(--ink-2)}
+.nm-note .ic{flex:0 0 auto;width:18px;height:18px;margin-top:1px;color:var(--pur-ink)}
+.nm-b[data-act="n-m-share"][aria-pressed="true"]>span{color:var(--good-ink)}
+.txtview.rich div{min-height:1.4em}
 /* The note editor is its own layer, sized to the VISUAL viewport (--nvh/--nvt, set in JS). That is the
    part of the screen the keyboard has NOT covered, so the writing area and the toolbar are always in
    sight, whatever the browser does to the page itself. Inside it exactly one thing scrolls (#nEdit):
@@ -1092,6 +1104,7 @@ details.srw[open]>.sr-h .sr-cv{transform:rotate(180deg);color:var(--s-acc)}
 .scrim .sheet.note{width:100%;max-width:860px;height:100%;max-height:none;gap:0;padding:0;overflow:hidden;
   display:grid;grid-template-columns:minmax(0,1fr);grid-template-rows:auto auto minmax(0,1fr) auto;border-radius:20px 20px 0 0}
 .scrim .sheet.note::before{display:none}
+.scrim .sheet.note.ro{grid-template-rows:auto minmax(0,1fr) auto} /* read only: no title/label row */
 @media (min-width:700px){#noteScrim{align-items:center;padding:24px}.scrim .sheet.note{border-radius:24px}}
 .nhead{display:flex;align-items:center;gap:8px;min-width:0;padding:10px 10px 8px;min-height:54px;touch-action:none} /* also the drag handle that closes the editor */
 .sheet-grab{position:sticky;top:0;z-index:5;flex:0 0 auto;align-self:stretch;touch-action:none;cursor:grab;background:transparent}
@@ -1605,19 +1618,23 @@ html.tb-hide:not(.kb) .topbar{transform:translateY(-100%)}
 .ov-wx{margin-top:4px;gap:10px}
 /* Overview sections fold to a single line (closed by default, remembered on this phone): the label, the one figure
    that matters, a chevron. Open, the full card slides down; the figure moves from the line into the card. */
-.ovx.ovsec{padding:0;interpolate-size:allow-keywords}
-.ovsec::details-content{block-size:0;overflow:clip;transition:block-size .45s var(--spring),content-visibility .45s allow-discrete}
+.ovx.ovsec{padding:0;interpolate-size:allow-keywords;
+  /* the colour wash has a fixed size, so it stays still while the card grows (a %-sized one shimmered as the height changed) */
+  background:radial-gradient(520px 300px at 100% 0%,color-mix(in srgb,var(--wash) 10%,transparent),transparent 62%),radial-gradient(420px 260px at 0% 100%,color-mix(in srgb,var(--wash2) 6%,transparent),transparent 60%),var(--sheet)}
+/* the screen's rise-in plays on the folded cards only; rows, bars and tiles inside a section never replay it when opened */
+.view.enter .ovsec .ovx-row,.view.enter .ovsec .ovx-bar i,.view.enter .ovsec .hgrid>*,.view.enter .ovsec .htile .hb i{animation:none}
+.ovsec::details-content{block-size:0;overflow:clip;transition:block-size .34s cubic-bezier(.2,.8,.2,1),content-visibility .34s allow-discrete} /* no overshoot: a spring curve grows past full height and bounces, shaking every card below */
 .ovsec[open]::details-content{block-size:auto}
 .ovsec-h{display:flex;align-items:center;gap:12px;min-height:54px;padding:12px 14px 12px 18px;cursor:pointer;list-style:none;-webkit-tap-highlight-color:transparent;border-radius:inherit;transition:background .2s}
 .ovsec-h::-webkit-details-marker{display:none}
-.ovsec-h:hover{background:var(--fill-2)}.ovsec-h:active{background:var(--fill)}
+@media (hover:hover){.ovsec-h:hover{background:var(--fill-2)}} /* no tap flash on phones */
 .ovsec-h:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
 .ovsec-h .ovx-lbl{flex:1 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .ovsec-v{flex:0 0 auto;font-family:var(--f-display);font-weight:700;font-size:calc(15px*var(--fs,1));letter-spacing:-.01em;white-space:nowrap;font-variant-numeric:tabular-nums;color:var(--ink);transition:opacity .25s}
 .ovsec-v.good{color:var(--good-ink)}.ovsec-v.warn{color:var(--warn-ink)}.ovsec-v.bad{color:var(--bad-ink)}.ovsec-v.meta{font-family:var(--f-body);font-size:calc(13px*var(--fs,1));font-weight:600;color:var(--ink-3)}
 .ovsec-v.meta.warn{color:var(--warn-ink)}.ovsec-v.meta.bad{color:var(--bad-ink)}
-.ovsec[open] .ovsec-v{opacity:0}
-.ovsec-cv{flex:0 0 auto;display:grid;place-items:center;width:28px;height:28px;border-radius:50%;background:var(--fill-2);color:var(--ink-2);transition:transform .35s var(--spring),background .2s}
+.ovsec[open] .ovsec-v{opacity:0;transition:opacity .15s}
+.ovsec-cv{flex:0 0 auto;display:grid;place-items:center;width:28px;height:28px;border-radius:50%;background:var(--fill-2);color:var(--ink-2);transition:transform .3s cubic-bezier(.2,.8,.2,1)}
 .ovsec-cv .ic{width:16px;height:16px;stroke-width:2.4}
 .ovsec[open] .ovsec-cv{transform:rotate(180deg)}
 .ovsec-b{padding:0 18px 8px}
@@ -2955,7 +2972,8 @@ document.addEventListener('change', ev => {
    (Arhaan, Efrah, Others), can be pinned, and pinned notes can be put in any order. Press and hold a note
    for its menu; drag the grip of a pinned note to move it. Each note is a real file in Google Drive (folder
    "Budget Tracker notes"); the sheet keeps only the list. Notes save on this phone first and are sent again
-   until the sheet shows them. Each person sees only their own notes. */
+   until the sheet shows them. Each person sees their own notes, plus every note someone marked Shared: a
+   Shared note reaches everyone who can open the app, on every phone, and is read only for all but its author. */
 const LS_NOTES = 'budgetTracker.notes.v1';
 const NOTE_KINDS = {txt: {label: 'Plain text', short: 'TXT', mime: 'text/plain', ext: 'txt'}, md: {label: 'Markdown', short: 'MD', mime: 'text/markdown', ext: 'md'},
   html: {label: 'HTML', short: 'HTML', mime: 'text/html', ext: 'html'}, json: {label: 'JSON', short: 'JSON', mime: 'application/json', ext: 'json'}};
@@ -2966,6 +2984,10 @@ const okLabel = v => NOTE_LABELS[v] || (/^[^\u0000-\u001f<>"]{1,24}$/.test(v || 
 function extraLabels() { const set = new Set((readPref().noteLabels || []).filter(okLabel)); noteList().forEach(n => { if (!NOTE_LABELS[n.cat] && okLabel(n.cat)) set.add(n.cat); }); return [...set].sort((a, b) => a.localeCompare(b)); }
 const allLabels = () => ['arhaan', 'efrah', 'other'].concat(extraLabels().filter(x => !NOTE_LABELS[x]));
 const N = {local: {}, meta: {}, del: {}, bodies: {}, err: '', q: '', cat: '', open: null, mode: 'edit', timer: 0, kinds: false, hist: null};
+// Shared notes need the Apps Script from Nov 2026 (notesV 3); an older script would never store the mark.
+const canShare = () => Sync.notesOk && Sync.notesV >= 3;
+const SHARED = '@shared'; // the "Shared" filter
+const SHARE_IC = '<svg class="ic" aria-hidden="true"><use href="#i-users"/></svg>';
 // Notes on this phone live in IndexedDB (see bootStore); localStorage only if IndexedDB can't be used.
 function setNotes(s) { s = s || {}; N.local = s.local || {}; N.meta = s.meta || {}; N.del = s.del || {}; N.bodies = s.bodies || {}; N.loaded = true; }
 const notesJson = () => JSON.stringify({local: N.local, meta: N.meta, del: N.del, bodies: N.bodies});
@@ -2999,8 +3021,8 @@ const notePreview = c => String(c || '').replace(/<[^>]*>/g, ' ').replace(/```[^
   .replace(/(\*\*|__|~~|`)/g, '').replace(/(\s*\|\s*)+/g, ' · ').replace(/[ \t]*\n+[ \t]*/g, ' · ').replace(/( · )+/g, ' · ').replace(/\s+/g, ' ').replace(/^( · )+|( · )+$/g, '').trim().slice(0, 140);
 // The list: the sheet's list, with this phone's unsent changes on top.
 function noteList() {
-  const m = {}; (state.notes || []).forEach(n => { if (!N.del[n.id]) m[n.id] = Object.assign({cat: 'other', pinned: false, order: 0}, n, {preview: notePreview(n.preview)}); });
-  Object.values(N.local).forEach(l => { if (N.del[l.id]) return; m[l.id] = Object.assign({}, m[l.id] || {}, {id: l.id, title: l.title, type: l.type, cat: l.cat, pinned: !!l.pinned, order: l.order || 0, updatedAt: l.updatedAt, preview: notePreview(l.content), size: l.content.length, dirty: true}); });
+  const m = {}; (state.notes || []).forEach(n => { if (!N.del[n.id]) m[n.id] = Object.assign({cat: 'other', pinned: false, order: 0, shared: false}, n, {mine: n.mine !== false, preview: notePreview(n.preview)}, n.mine === false ? {pinned: false, order: 0} : {}); });
+  Object.values(N.local).forEach(l => { if (N.del[l.id]) return; m[l.id] = Object.assign({}, m[l.id] || {}, {id: l.id, title: l.title, type: l.type, cat: l.cat, pinned: !!l.pinned, order: l.order || 0, shared: !!l.shared, mine: true, updatedAt: l.updatedAt, preview: notePreview(l.content), size: l.content.length, dirty: true}); });
   Object.entries(N.meta).forEach(([id, mt]) => { if (m[id]) Object.assign(m[id], mt, {metaDirty: true}); });
   Object.values(m).forEach(n => { const body = N.local[n.id] ? N.local[n.id].content : N.bodies[n.id] && N.bodies[n.id].u === n.updatedAt ? N.bodies[n.id].c : null; if (body != null) n.preview = notePreview(body); });
   return Object.values(m);
@@ -3017,37 +3039,44 @@ function notesReply(j) {
   N.err = j.noteErrors && j.noteErrors.length ? j.noteErrors[0].error : '';
   if (!Sync.notesOk) return;
   let sent = false; const queued = (t, id) => Sync.outbox.some(o => o.t === t && (o.id || (o.note || {}).id) === id);
+  const theirs = id => { const s = state.notes.find(x => x.id === id); return !!s && s.mine === false; }; // someone else's Shared note: read only here
+  const sameShare = (s, l) => !canShare() || !!s.shared === !!l.shared;
   Object.values(N.local).forEach(l => {
     const s = state.notes.find(x => x.id === l.id);
+    if (theirs(l.id)) { delete N.local[l.id]; return; }
     if (s && s.updatedAt >= Math.floor(l.updatedAt / 1000) * 1000) { N.bodies[l.id] = {u: s.updatedAt, c: l.content};
-      if (Sync.notesV < 2 || s.cat !== l.cat || !!s.pinned !== !!l.pinned || (+s.order || 0) !== (+l.order || 0)) N.meta[l.id] = {cat: l.cat, pinned: !!l.pinned, order: +l.order || 0};
+      if (Sync.notesV < 2 || s.cat !== l.cat || !!s.pinned !== !!l.pinned || (+s.order || 0) !== (+l.order || 0) || !sameShare(s, l)) N.meta[l.id] = {cat: l.cat, pinned: !!l.pinned, order: +l.order || 0, shared: !!l.shared};
       delete N.local[l.id]; return; }
     if (!queued('nput', l.id)) { Sync.outbox.push({t: 'nput', note: Object.assign({}, l)}); sent = true; }
   });
   Object.entries(N.meta).forEach(([id, mt]) => {
     const s = state.notes.find(x => x.id === id); if (!s) { if (!N.local[id]) delete N.meta[id]; return; }
+    if (s.mine === false) { delete N.meta[id]; return; }
     if (Sync.notesV < 2) return; // the sheet can't hold labels yet: keep them on the phone
-    if (s.cat === mt.cat && !!s.pinned === !!mt.pinned && (+s.order || 0) === (+mt.order || 0)) { delete N.meta[id]; return; }
+    if (s.cat === mt.cat && !!s.pinned === !!mt.pinned && (+s.order || 0) === (+mt.order || 0) && sameShare(s, mt)) { delete N.meta[id]; return; }
     if (Sync.notesV >= 2 && !queued('nmeta', id)) { Sync.outbox.push(Object.assign({t: 'nmeta', id}, mt)); sent = true; }
   });
   Object.keys(N.del).forEach(id => {
-    if (!state.notes.some(x => x.id === id)) { delete N.del[id]; delete N.bodies[id]; delete N.meta[id]; return; }
+    if (!state.notes.some(x => x.id === id) || theirs(id)) { delete N.del[id]; delete N.bodies[id]; delete N.meta[id]; return; }
     if (!queued('ndel', id)) { Sync.outbox.push({t: 'ndel', id}); sent = true; }
   });
+  // Text kept for a note this phone can no longer see (unshared, or deleted by its author) is dropped.
+  Object.keys(N.bodies).forEach(id => { if (!N.local[id] && !N.del[id] && !state.notes.some(x => x.id === id)) delete N.bodies[id]; });
+  if (N.open && N.open.ro && !state.notes.some(x => x.id === N.open.id)) { N.open = null; $('#noteScrim').hidden = true; toast('That note is no longer shared'); }
   saveNotes();
   if (sent && !N.err) setTimeout(flush, 400);
 }
 function noteSave(n) {
-  const cur = noteList().find(x => x.id === n.id) || {};
-  N.local[n.id] = {id: n.id, title: n.title, type: n.type, content: n.content, cat: n.cat || cur.cat || defaultLabel(), pinned: n.pinned != null ? !!n.pinned : !!cur.pinned, order: n.order != null ? n.order : (cur.order || 0), updatedAt: Date.now()};
+  const cur = noteList().find(x => x.id === n.id) || {}; if (cur.mine === false) return; // never write someone else's note
+  N.local[n.id] = {id: n.id, title: n.title, type: n.type, content: n.content, cat: n.cat || cur.cat || defaultLabel(), pinned: n.pinned != null ? !!n.pinned : !!cur.pinned, order: n.order != null ? n.order : (cur.order || 0), shared: n.shared != null ? !!n.shared : !!cur.shared, updatedAt: Date.now()};
   delete N.meta[n.id];
   saveNotes();
   if (Sync.notesOk) { Sync.outbox.push({t: 'nput', note: Object.assign({}, N.local[n.id])}); saveCache(); clearTimeout(N.flushT); N.flushT = setTimeout(flush, 600); }
 }
 // Label, pin and order changes: only the list changes, not the file.
 function noteSetMeta(id, patch) {
-  const cur = noteList().find(x => x.id === id); if (!cur) return;
-  const mt = {cat: cur.cat, pinned: !!cur.pinned, order: cur.order || 0, ...patch};
+  const cur = noteList().find(x => x.id === id); if (!cur || cur.mine === false) return;
+  const mt = {cat: cur.cat, pinned: !!cur.pinned, order: cur.order || 0, shared: !!cur.shared, ...patch};
   if (N.local[id]) Object.assign(N.local[id], mt); else N.meta[id] = mt;
   saveNotes();
   if (Sync.notesOk) { if (N.local[id]) Sync.outbox.push({t: 'nput', note: Object.assign({}, N.local[id])}); else if (Sync.notesV >= 2) Sync.outbox.push(Object.assign({t: 'nmeta', id}, mt)); saveCache(); clearTimeout(N.flushT); N.flushT = setTimeout(flush, 600); }
@@ -3056,6 +3085,11 @@ function pinNote(id, on) {
   if (!on) return noteSetMeta(id, {pinned: false, order: 0});
   const pins = sortNotes(noteList()).filter(n => n.pinned);
   noteSetMeta(id, {pinned: true, order: pins.length ? Math.min(...pins.map(n => n.order || 0)) - 1 : 0}); // newest pin goes to the top
+}
+// Shared: everyone who can open the app sees the note (read only), on every phone, within a minute.
+function shareNote(id, on) {
+  if (!canShare()) { toast(Sync.notesOk ? 'Update the Apps Script in the sheet first (see README), then try again' : 'Sharing needs a connection to the sheet', 'bad', 6000); return false; }
+  noteSetMeta(id, {shared: !!on}); toast(on ? 'Shared: everyone with the app sees this note' : 'Not shared: only you see this note'); return true;
 }
 function movePinned(ids) { ids.forEach((id, i) => { const n = noteList().find(x => x.id === id); if (n && n.order !== i) noteSetMeta(id, {order: i}); }); }
 const fmtWhen = ms => { if (!ms) return ''; const d = new Date(ms), t = new Date(), hm = pad(d.getHours()) + ':' + pad(d.getMinutes());
@@ -3066,9 +3100,10 @@ function renderNotes() {
     paint(el, `<button type="button" class="nfab" data-act="n-new" aria-label="New note"><b>+</b> Note</button>
     <div class="nfilter${N.searchOpen ? ' searching' : ''}" id="nFilter">
       <div class="nchips" id="nCats" role="group" aria-label="Show">
-        <div class="npopw"><button type="button" class="nchip nall" data-act="n-allmenu" aria-haspopup="true" aria-pressed="${N.cat !== 'arhaan' && N.cat !== 'efrah'}">${N.cat && N.cat !== 'arhaan' && N.cat !== 'efrah' ? esc(labelName(N.cat)) : 'All'} ▾</button>
+        <div class="npopw"><button type="button" class="nchip nall" data-act="n-allmenu" aria-haspopup="true" aria-pressed="${N.cat !== 'arhaan' && N.cat !== 'efrah'}">${N.cat === SHARED ? 'Shared' : N.cat && N.cat !== 'arhaan' && N.cat !== 'efrah' ? esc(labelName(N.cat)) : 'All'} ▾</button>
           <div class="npop nallpop" hidden role="menu">
             <button type="button" class="npi" role="menuitemradio" data-act="n-cat" data-v="" aria-checked="${!N.cat}"><b>All notes</b></button>
+            <button type="button" class="npi" role="menuitemradio" data-act="n-cat" data-v="${SHARED}" aria-checked="${N.cat === SHARED}"><b>Shared</b><small>Notes everyone sees</small></button>
             ${allLabels().filter(k => k !== 'arhaan' && k !== 'efrah').map(k => `<button type="button" class="npi" role="menuitemradio" data-act="n-cat" data-v="${esc(k)}" aria-checked="${N.cat === k}"><b>${esc(labelName(k))}</b></button>`).join('')}
             <button type="button" class="npi nadd" data-act="n-addlabel"><b>+ Add a person</b></button>
           </div></div>
@@ -3087,17 +3122,17 @@ function noteCard(n, pinned) {
   return `<div class="ncard${pinned ? ' pinned' : ''}" data-act="n-open" data-id="${esc(n.id)}" role="button" tabindex="0" aria-label="${esc(noteName(n))}. Press and hold for options.">
       <span class="nav l-${n.cat}" aria-hidden="true">${esc(labelName(n.cat)[0].toUpperCase())}</span>
       <span class="nmain"><span class="t1">${pinned ? '<span class="pinmark" aria-label="Pinned"><svg class="ic" aria-hidden="true"><use href="#i-pin"/></svg></span>' : ''}${esc(noteName(n))}</span>${noteRest(n) ? `<span class="t2">${esc(noteRest(n))}</span>` : ''}
-        <span class="t3">${esc(labelName(n.cat))} · ${fmtWhen(n.updatedAt)}${n.type !== 'txt' ? ' · ' + NOTE_KINDS[n.type].short : ''}${n.dirty || n.metaDirty ? ` · <span class="nsync">${Sync.notesOk ? 'saving' : 'on this phone'}</span>` : ''}</span></span>
+        <span class="t3">${n.shared ? `<span class="nshared${n.mine ? '' : ' in'}">${SHARE_IC}${n.mine ? 'Shared' : 'From ' + esc(n.by || 'someone')}</span> · ` : ''}${esc(labelName(n.cat))} · ${fmtWhen(n.updatedAt)}${n.type !== 'txt' ? ' · ' + NOTE_KINDS[n.type].short : ''}${n.dirty || n.metaDirty ? ` · <span class="nsync">${Sync.notesOk ? 'saving' : 'on this phone'}</span>` : ''}</span></span>
       <span class="ncol"><button type="button" class="ncopy" data-act="n-qcopy" data-id="${esc(n.id)}" aria-label="Copy this note" title="Copy the text">${COPY_ICON}</button>${pinned ? `<span class="ngrip" data-grip="${esc(n.id)}" role="button" aria-label="Drag to move" title="Drag to move">≡</span>` : ''}</span></div>`;
 }
 function renderNoteList() {
   const box = $('#nList'); if (!box) return;
-  const q = N.q.trim().toLowerCase(), list = sortNotes(noteList()).filter(n => (!N.cat || n.cat === N.cat) && (!q || (n.title + ' ' + n.preview + ' ' + ((N.local[n.id] || {}).content || (N.bodies[n.id] || {}).c || '')).toLowerCase().includes(q)));
+  const q = N.q.trim().toLowerCase(), list = sortNotes(noteList()).filter(n => (!N.cat || (N.cat === SHARED ? n.shared : n.cat === N.cat)) && (!q || (n.title + ' ' + n.preview + ' ' + ((N.local[n.id] || {}).content || (N.bodies[n.id] || {}).c || '')).toLowerCase().includes(q)));
   const pins = list.filter(n => n.pinned), rest = list.filter(n => !n.pinned);
   paint(box, list.length ? `${pins.length ? `<div class="ngrp">Pinned</div><div class="nlist" id="nPinned">${pins.map(n => noteCard(n, true)).join('')}</div>` : ''}
       ${rest.length ? `${pins.length ? '<div class="ngrp">Notes</div>' : ''}<div class="nlist">${rest.map(n => noteCard(n, false)).join('')}</div>` : ''}
       <p class="hint nhint">Press and hold a note to pin, move, label or delete it.</p>`
-    : `<div class="card empty">${q || N.cat ? 'No notes match.' : 'No notes yet. Tap “+ Note” at the bottom and start typing.'}</div>`);
+    : `<div class="card empty">${N.cat === SHARED && !q ? 'No shared notes yet. Open a note and tap the people button to share it with everyone.' : q || N.cat ? 'No notes match.' : 'No notes yet. Tap “+ Note” at the bottom and start typing.'}</div>`);
 }
 
 document.addEventListener('submit', ev => { if (ev.target.closest('.nlabform')) { ev.preventDefault(); const go = ev.target.querySelector('[data-act="n-addlabel-go"]'); if (go) go.click(); } });
@@ -3132,10 +3167,17 @@ document.addEventListener('pointermove', ev => { if (lp && Math.hypot(ev.clientX
 document.addEventListener('contextmenu', ev => { if (ev.target.closest('.ncard')) ev.preventDefault(); });
 function noteMenu(id) {
   const n = noteList().find(x => x.id === id); if (!n) return;
+  if (!n.mine) { // someone else's Shared note: read only
+    paint($('#noteMenuBox'), `<div class="nm-h"><span class="nav l-${esc(n.cat)}">${esc(labelName(n.cat)[0].toUpperCase())}</span><b>${esc(noteName(n))}</b></div>
+      <p class="nm-note">${SHARE_IC}Shared by ${esc(n.by || 'someone')}. Only they can change it; open it to copy the text or make your own copy.</p>
+      <button type="button" class="btn ghost nm-close" data-act="n-m-close">Close</button>`);
+    $('#noteMenu').hidden = false; document.querySelectorAll('.ncard.held').forEach(x => x.classList.remove('held')); return;
+  }
   const pins = sortNotes(noteList()).filter(x => x.pinned), pi = pins.findIndex(x => x.id === id);
   paint($('#noteMenuBox'), `<div class="nm-h"><span class="nav l-${esc(n.cat)}">${esc(labelName(n.cat)[0].toUpperCase())}</span><b>${esc(noteName(n))}</b></div>
     <button type="button" class="nm-b" data-act="n-m-pin" data-id="${esc(id)}"><span><svg class="ic" aria-hidden="true"><use href="#i-pin"/></svg></span>${n.pinned ? 'Unpin' : 'Pin to the top'}</button>
     ${n.pinned && pins.length > 1 ? `<div class="nm-row"><button type="button" class="nm-b" data-act="n-m-move" data-d="-1" data-id="${esc(id)}"${pi <= 0 ? ' disabled' : ''}><span>↑</span>Move up</button><button type="button" class="nm-b" data-act="n-m-move" data-d="1" data-id="${esc(id)}"${pi >= pins.length - 1 ? ' disabled' : ''}><span>↓</span>Move down</button></div>` : ''}
+    <button type="button" class="nm-b" data-act="n-m-share" data-id="${esc(id)}" aria-pressed="${!!n.shared}"><span>${SHARE_IC}</span>${n.shared ? 'Stop sharing' : 'Share with everyone'}</button>
     <div class="nm-lbl">Label</div><div class="nm-row nm-wrap">${allLabels().map(k => [k, labelName(k)]).map(([k, v]) => `<button type="button" class="nm-b nm-c" data-act="n-m-cat" data-v="${esc(k)}" data-id="${esc(id)}" aria-pressed="${n.cat === k}">${v}</button>`).join('')}</div>
     <button type="button" class="nm-b danger" data-act="n-m-del" data-id="${esc(id)}"><span><svg class="ic" aria-hidden="true"><use href="#i-trash"/></svg></span>Delete</button>
     <button type="button" class="btn ghost nm-close" data-act="n-m-close">Cancel</button>`);
@@ -3176,8 +3218,9 @@ function noteBody(id) {
 async function openNote(id, fresh) {
   const s = noteList().find(x => x.id === id) || fresh; if (!s) return;
   let c = fresh ? fresh.content : noteBody(id);
-  N.open = {id, title: s.title || '', type: s.type || 'txt', cat: s.cat || defaultLabel(), pinned: !!s.pinned, order: s.order || 0, content: c == null ? '' : c, fileId: s.fileId || '', loading: c == null, fresh: !!fresh};
-  N.mode = 'edit'; N.kinds = false;
+  const ro = s.mine === false; // someone else's Shared note: read it, copy it, never change it
+  N.open = {id, title: s.title || '', type: s.type || 'txt', cat: s.cat || defaultLabel(), pinned: !!s.pinned, order: s.order || 0, shared: !!s.shared, ro, by: s.by || '', content: c == null ? '' : c, fileId: s.fileId || '', loading: c == null, fresh: !!fresh};
+  N.mode = ro ? 'view' : 'edit'; N.kinds = false;
   drawNote();
   if (c == null) {
     try { const j = await call([], {noteIds: [id]}); takeReply(j); c = noteBody(id); } catch (e) {}
@@ -3196,22 +3239,24 @@ function drawNote() {
   paint($('#noteBox'), `<div class="nhead">
       <button type="button" class="nback" data-act="n-close" aria-label="Back to all notes"><svg class="ic" aria-hidden="true"><use href="#i-left"/></svg><span>Notes</span></button>
       <button type="button" class="nttl" data-act="n-meta" aria-label="Title and label for this note"><b id="nTtl" class="${o.title ? '' : 'none'}">${esc(o.title || 'Untitled note')}</b><span class="nstate" id="nState"></span></button>
-      ${fancy ? `<div class="seg nmode" role="group" aria-label="Mode"><button type="button" class="segb" data-act="n-mode" data-v="edit" aria-pressed="${N.mode === 'edit'}">Edit</button><button type="button" class="segb" data-act="n-mode" data-v="view" aria-pressed="${N.mode === 'view'}">${o.type === 'json' ? 'Check' : 'Preview'}</button></div>` : ''}
-      <button type="button" class="npin" data-act="n-pin" aria-pressed="${o.pinned}" aria-label="${o.pinned ? 'Unpin' : 'Pin'}" title="${o.pinned ? 'Unpin' : 'Pin'}"><svg class="ic" aria-hidden="true"><use href="#i-pin"/></svg></button>
+      ${o.ro ? `<span class="nro">${SHARE_IC}${esc(o.by || 'Shared')}</span>` : `<button type="button" class="npin nshare" data-act="n-share" aria-pressed="${o.shared}" aria-label="${o.shared ? 'Shared with everyone. Tap to stop sharing' : 'Share with everyone'}" title="${o.shared ? 'Shared with everyone' : 'Share with everyone'}">${SHARE_IC}</button>`}
+      ${fancy && !o.ro ? `<div class="seg nmode" role="group" aria-label="Mode"><button type="button" class="segb" data-act="n-mode" data-v="edit" aria-pressed="${N.mode === 'edit'}">Edit</button><button type="button" class="segb" data-act="n-mode" data-v="view" aria-pressed="${N.mode === 'view'}">${o.type === 'json' ? 'Check' : 'Preview'}</button></div>` : ''}
+      ${o.ro ? '' : `<button type="button" class="npin" data-act="n-pin" aria-pressed="${o.pinned}" aria-label="${o.pinned ? 'Unpin' : 'Pin'}" title="${o.pinned ? 'Unpin' : 'Pin'}"><svg class="ic" aria-hidden="true"><use href="#i-pin"/></svg></button>`}
       <button type="button" class="ntool nkbdone" data-tool="done" aria-label="Hide the keyboard">Done</button></div>
-    <div class="nmeta">
+    ${o.ro ? '' : `<div class="nmeta">
       <input id="nTitle" type="text" class="ntitle" placeholder="Title (optional)" aria-label="Title" value="${esc(o.title)}">
-      <div class="nlabels" role="group" aria-label="Label">${allLabels().map(k => [k, labelName(k)]).map(([kk, v]) => `<button type="button" class="nlab l-${esc(kk)}" data-act="n-label" data-v="${esc(kk)}" aria-pressed="${kk === o.cat}"><i>${esc(v[0].toUpperCase())}</i>${esc(v)}</button>`).join('')}<button type="button" class="nlab nlab-add" data-act="n-addlabel" data-for="note" aria-label="Add a person"><i>+</i></button></div></div>
+      <div class="nlabels" role="group" aria-label="Label">${allLabels().map(k => [k, labelName(k)]).map(([kk, v]) => `<button type="button" class="nlab l-${esc(kk)}" data-act="n-label" data-v="${esc(kk)}" aria-pressed="${kk === o.cat}"><i>${esc(v[0].toUpperCase())}</i>${esc(v)}</button>`).join('')}<button type="button" class="nlab nlab-add" data-act="n-addlabel" data-for="note" aria-label="Add a person"><i>+</i></button></div></div>`}
     <div class="nedit${ecls}" id="nEdit">${o.loading ? '<div class="empty">Opening from Google Drive…</div>' : o.failed ? '<div class="empty">Couldn\'t open this note from Google Drive. Check the connection and try again.</div>' : noteBodyHtml()}</div>
     <div class="nfoot">${noteToolsHtml()}
-      <div class="nact"><div class="npopw"><button type="button" class="nkindb" data-act="n-kinds" aria-haspopup="true" aria-expanded="false">${k.label} ▾</button>
-        <div class="npop nkpop" hidden role="menu">${Object.entries(NOTE_KINDS).map(([kk, v]) => `<button type="button" class="npi" role="menuitemradio" data-act="n-kind" data-v="${kk}" aria-checked="${kk === o.type}"><b>${v.label}</b><small>${{txt: 'Simple text, with bold', md: 'Headings, lists, tables', html: 'A web page', json: 'Data, checked and tidied'}[kk]}</small></button>`).join('')}</div></div>
+      <div class="nact">${o.ro ? `<span class="nrotxt">Shared by ${esc(o.by || 'someone')} · read only</span>` : `<div class="npopw"><button type="button" class="nkindb" data-act="n-kinds" aria-haspopup="true" aria-expanded="false">${k.label} ▾</button>
+        <div class="npop nkpop" hidden role="menu">${Object.entries(NOTE_KINDS).map(([kk, v]) => `<button type="button" class="npi" role="menuitemradio" data-act="n-kind" data-v="${kk}" aria-checked="${kk === o.type}"><b>${v.label}</b><small>${{txt: 'Simple text, with bold', md: 'Headings, lists, tables', html: 'A web page', json: 'Data, checked and tidied'}[kk]}</small></button>`).join('')}</div></div>`}
       <div class="nbtns"><div class="npopw nmorew"><button type="button" class="nmoreb" data-act="n-more" aria-haspopup="true" aria-expanded="false" aria-label="More for this note">⋯</button>
           <div class="npop" hidden role="menu"><button type="button" class="npi" data-act="n-copy"><b>Copy the text</b><small>Puts the whole note on the clipboard</small></button>
             <button type="button" class="npi" data-act="n-dl"><b>Download</b><small>Saves a .${NOTE_KINDS[o.type].ext} file to this phone</small></button>
             <button type="button" class="npi" data-act="n-dup"><b>Make a copy</b><small>Opens a new note with the same text</small></button>
             <button type="button" class="npi" data-act="n-read"><b>Read in Reader</b><small>Full screen, with themes and zoom</small></button></div></div>
-        <button type="button" class="nbtn ndel" data-act="n-del">Delete</button><button type="button" class="nbtn nsave" data-act="n-save">✓ Done</button></div></div></div>`);
+        ${o.ro ? '' : '<button type="button" class="nbtn ndel" data-act="n-del">Delete</button>'}<button type="button" class="nbtn nsave" data-act="${o.ro ? 'n-close' : 'n-save'}">✓ Done</button></div></div></div>`);
+  $('#noteBox').classList.toggle('ro', !!o.ro);
   $('#noteScrim').hidden = false; noteVV(); noteFit(); noteState();
   histReset(ready ? o.content : '');
   richBox(); plainBox(); titleBox(); noteCount(); noteToolState();
@@ -3237,7 +3282,7 @@ function noteBodyHtml() {
   if (o.type === 'json') { if (!o.content.trim()) return '<p class="muted">Nothing written yet.</p>';
     try { return `<div class="jsonok">${sdot('good')}Valid JSON</div><pre class="jsonview">${jsonHtml(JSON.parse(o.content))}</pre>`; }
     catch (e) { return `<div class="jsonbad">${sdot('bad')}Not valid JSON: ${esc(e.message)}</div><pre class="jsonview plain">${esc(o.content)}</pre>`; } }
-  return `<div class="txtview">${esc(o.content)}</div>`;
+  return `<div class="txtview${o.type === 'txt' ? ' rich' : ''}">${o.type === 'txt' ? textToRich(o.content) || '<p class="muted">Nothing written yet.</p>' : esc(o.content)}</div>`;
 }
 // Plain-text notes: a box where selected words can be made bold. Bold is stored as **word** (readable anywhere).
 function textToRich(s) {
@@ -3480,20 +3525,20 @@ document.addEventListener('click', ev => { const it = ev.target.closest('.npi');
 function noteState() {
   const o = N.open, el = $('#nState'); if (!o || !el) return;
   const l = N.local[o.id];
-  el.textContent = o.loading ? 'Opening…' : l ? (Sync.notesOk ? (N.err ? 'Saved on phone · Drive will retry' : 'Saving to Drive…') : 'Saved on this phone') : o.fileId ? 'Saved in Drive' : '';
+  el.textContent = o.loading ? 'Opening…' : o.ro ? 'Read only' : l ? (Sync.notesOk ? (N.err ? 'Saved on phone · Drive will retry' : 'Saving to Drive…') : 'Saved on this phone') : o.fileId ? 'Saved in Drive' : '';
 }
 function noteChanged(now) {
-  const o = N.open; if (!o || o.loading || o.failed) return;
+  const o = N.open; if (!o || o.loading || o.failed || o.ro) return;
   const t = $('#nTitle'), x = $('#nText');
   if (t) o.title = t.value.trim(); if (x) o.content = x.value;
   clearTimeout(N.timer); N.timer = setTimeout(() => commitNote(), now ? 150 : 900);
 }
 function commitNote() {
-  clearTimeout(N.timer); const o = N.open; if (!o || o.loading || o.failed) return;
+  clearTimeout(N.timer); const o = N.open; if (!o || o.loading || o.failed || o.ro) return;
   const was = N.local[o.id] || (state.notes || []).find(x => x.id === o.id), body = noteBody(o.id);
   const isNew = !was, same = was && (was.title || '') === o.title && was.type === o.type && body === o.content;
   if (isNew && !o.title && !o.content) return;
-  if (same) { const cur = noteList().find(x => x.id === o.id) || {}; if (cur.cat !== o.cat || !!cur.pinned !== !!o.pinned) noteSetMeta(o.id, {cat: o.cat, pinned: o.pinned, order: o.order}); return; }
+  if (same) { const cur = noteList().find(x => x.id === o.id) || {}; if (cur.cat !== o.cat || !!cur.pinned !== !!o.pinned || !!cur.shared !== !!o.shared) noteSetMeta(o.id, {cat: o.cat, pinned: o.pinned, order: o.order, shared: o.shared}); return; }
   noteSave(o); noteState(); if (!N.open) renderNoteList();
 }
 function closeNote() {
@@ -3566,6 +3611,7 @@ document.addEventListener('click', async ev => {
   else if (a === 'n-m-pin') { const n = noteList().find(x => x.id === b.dataset.id); pinNote(b.dataset.id, !(n && n.pinned)); closeNoteMenu(); renderNotes(); toast(n && n.pinned ? 'Unpinned' : 'Pinned to the top'); }
   else if (a === 'n-m-move') { const ids = sortNotes(noteList()).filter(x => x.pinned).map(x => x.id), i = ids.indexOf(b.dataset.id), j = i + (+b.dataset.d);
     if (i >= 0 && j >= 0 && j < ids.length) { ids.splice(j, 0, ids.splice(i, 1)[0]); movePinned(ids); renderNoteList(); noteMenu(b.dataset.id); } }
+  else if (a === 'n-m-share') { const n = noteList().find(x => x.id === b.dataset.id); closeNoteMenu(); if (n && shareNote(n.id, !n.shared)) renderNotes(); }
   else if (a === 'n-m-cat') { noteSetMeta(b.dataset.id, {cat: b.dataset.v}); writePref({noteCat: b.dataset.v}); closeNoteMenu(); renderNotes(); }
   else if (a === 'n-m-del') { if (!arm(b, 'nmdel' + b.dataset.id, 'Tap again to delete')) return; deleteNote(b.dataset.id); closeNoteMenu(); renderNotes(); }
   else if (!o) return;
@@ -3581,11 +3627,12 @@ document.addEventListener('click', async ev => {
     if (o.type === 'json') { try { o.content = JSON.stringify(JSON.parse(o.content), null, 2); } catch (e) {} }
     N.mode = o.type === 'txt' || !o.content.trim() ? 'edit' : 'view'; commitNote(); drawNote(); toast(NOTE_KINDS[o.type].label); }
   else if (a === 'n-label') { o.cat = b.dataset.v; writePref({noteCat: o.cat}); document.querySelectorAll('.nlab').forEach(x => x.setAttribute('aria-pressed', String(x.dataset.v === o.cat))); commitNote(); }
+  else if (a === 'n-share') { if (!canShare()) { shareNote(o.id, !o.shared); return; } o.shared = !o.shared; b.setAttribute('aria-pressed', String(o.shared)); b.title = o.shared ? 'Shared with everyone' : 'Share with everyone'; commitNote(); toast(o.shared ? 'Shared: everyone with the app sees this note' : 'Not shared: only you see this note'); }
   else if (a === 'n-pin') { if (!o.pinned) { const pins = sortNotes(noteList()).filter(n => n.pinned && n.id !== o.id); o.order = pins.length ? Math.min(...pins.map(n => n.order || 0)) - 1 : 0; } o.pinned = !o.pinned; b.setAttribute('aria-pressed', String(o.pinned)); commitNote(); toast(o.pinned ? 'Pinned to the top' : 'Unpinned'); }
   else if (a === 'n-tidy') { try { o.content = JSON.stringify(JSON.parse(o.content), null, 2); commitNote(); drawNote(); toast('JSON tidied'); } catch (e) { toast('Not valid JSON: ' + e.message, 'bad'); } }
   else if (a === 'n-copy') { commitNote(); try { await navigator.clipboard.writeText(o.content); toast('Copied'); } catch (e) { showCopy(o.title || 'Note', o.content); } }
   else if (a === 'n-dup') { commitNote(); const id = 'n' + newId();
-    openNote(id, {id, title: o.title ? o.title + ' (copy)' : '', type: o.type, cat: o.cat, content: o.content}); toast('A copy, ready to change'); }
+    openNote(id, {id, title: o.title ? o.title + ' (copy)' : '', type: o.type, cat: o.ro ? defaultLabel() : o.cat, content: o.content, shared: false}); toast('A copy, ready to change'); }
   else if (a === 'n-read') { commitNote(); const msg = {type: 'open-text', title: o.title || noteName({preview: notePreview(o.content)}), kind: o.type, content: o.content}; closeNote(); rdFrame(); rdPost(msg); location.hash = '#read'; }
   else if (a === 'n-dl') { commitNote(); offerFile((o.title || noteName({preview: notePreview(o.content)})).replace(/[\\/:*?"<>|]+/g, ' ').trim() + '.' + NOTE_KINDS[o.type].ext, o.content, NOTE_KINDS[o.type].mime); }
   else if (a === 'n-del') { if (!arm(b, 'ndel' + o.id, 'Sure?')) return; deleteNote(o.id); N.open = null; $('#noteScrim').hidden = true; renderNotes(); }
@@ -4870,7 +4917,7 @@ function wcThemes(names) {
 function wcCount(root) {
   if (!root || matchMedia('(prefers-reduced-motion: reduce)').matches) return;
   const t0 = performance.now();
-  root.querySelectorAll('.wc-amt[data-v],[data-count]').forEach((el, i) => {
+  root.querySelectorAll('.wc-amt[data-v],[data-count]').forEach((el, i) => { if (el.closest('details:not([open])')) return; // folded away: no count-up to catch half-way when opened
     const v = +(el.dataset.v ?? el.dataset.count), start = t0 + Math.min(i, 7) * 55 + 120, D = 850; if (!v) return;
     el.textContent = rs(0);
     const step = now => { if (!el.isConnected) return; const k = Math.min(1, Math.max(0, (now - start) / D)), e = 1 - Math.pow(1 - k, 4);

@@ -34,7 +34,7 @@ var TABS = {
   // Encrypted on the phone before it arrives. This script never sees readable vault data.
   Vault: ['ID', 'Encrypted data', 'Saved at'],
   // Notes live as real files in Drive (folder "Budget Tracker notes"); this tab is only the list.
-  Notes: ['ID', 'Title', 'Type', 'Owner', 'Drive file ID', 'Updated at', 'Size', 'Preview', 'Label', 'Pinned', 'Pin order'],
+  Notes: ['ID', 'Title', 'Type', 'Owner', 'Drive file ID', 'Updated at', 'Size', 'Preview', 'Label', 'Pinned', 'Pin order', 'Shared'],
   // Which entries came from an entry link, so that link can see and change only those.
   EntryLog: ['Entry ID', 'Link ID', 'Link name', 'Added at']
 };
@@ -92,7 +92,7 @@ function doPost(e) {
     if (who.session) reply.session = who.session;
     if (role === 'Owner') { reply.users = listUsers(ss); reply.entryLinks = listEntryLinks(props); reply.killCode = !!props.getProperty('KILL_CODE'); if (killErr) reply.killErr = killErr; }
     if (req.vault && who.user.role === 'Owner') reply.vault = readVault(ss);
-    reply.notes = readNotes(ss, who.user); reply.notesV = 2;
+    reply.notes = readNotes(ss, who.user); reply.notesV = 3; // 3: notes can be Shared
     if (noteErrors.length) reply.noteErrors = noteErrors;
     if (Array.isArray(req.noteIds) && req.noteIds.length) { try { reply.noteBodies = noteBodies(ss, req.noteIds, who.user); } catch (x) { reply.noteErrors = (reply.noteErrors || []).concat([{id: '', error: String(x && x.message || x)}]); } }
     return out(reply);
@@ -343,7 +343,9 @@ function readVault(ss) {
 
 
 /* ---------- notes: one real file per note in Drive ----------
-   Each person sees and changes only their own notes. Files sit in the owner's Drive, folder "Budget Tracker notes".
+   Each person sees and changes only their own notes, plus (read only) every note someone marked Shared:
+   a Shared note reaches everyone who can open the app (Users tab and entry links). Only its author can
+   change, unshare, label, pin or delete it. Files sit in the owner's Drive, folder "Budget Tracker notes".
    Run setupNotes() once from the editor after pasting this file: Google then asks to allow Drive access. */
 var NOTE_TYPES = {md: ['md', 'text/markdown'], html: ['html', 'text/html'], txt: ['txt', 'text/plain'], json: ['json', 'application/json']};
 var NOTES_FOLDER = 'Budget Tracker notes';
@@ -366,18 +368,28 @@ function noteFileName(title, type) {
 var NOTE_LABELS = {arhaan: 1, efrah: 1, other: 1};
 // Built-in labels, or a name the person added (letters, numbers, spaces; up to 24 characters).
 function okLabel(v) { v = String(v == null ? '' : v); return NOTE_LABELS[v] || /^[^\u0000-\u001f<>"]{1,24}$/.test(v) && v.trim() === v ? v : ''; }
-function notesHead(sh) { // older Notes tabs get the label/pin columns added
-  if (sh.getLastColumn() < TABS.Notes.length || String(sh.getRange(1, 9).getValue()) !== 'Label') sh.getRange(1, 1, 1, TABS.Notes.length).setValues([TABS.Notes]).setFontWeight('bold');
+function notesHead(sh) { // older Notes tabs get the label/pin/shared columns added
+  if (sh.getLastColumn() < TABS.Notes.length || String(sh.getRange(1, 9).getValue()) !== 'Label' || String(sh.getRange(1, 12).getValue()) !== 'Shared') sh.getRange(1, 1, 1, TABS.Notes.length).setValues([TABS.Notes]).setFontWeight('bold');
 }
+function isYes(v) { return /^(yes|true|1)$/i.test(txt(v)); }
+// Label, pin, pin order, shared. An older app that sends no "shared" keeps what the sheet has.
 function noteMeta(n, old) {
-  return [okLabel(n.cat) || (old && okLabel(old[8])) || 'other', n.pinned ? 'Yes' : '', isFinite(+n.order) ? +n.order : 0];
+  var shared = n.shared != null ? !!n.shared : !!(old && isYes(old[11]));
+  return [okLabel(n.cat) || (old && okLabel(old[8])) || 'other', n.pinned ? 'Yes' : '', isFinite(+n.order) ? +n.order : 0, shared ? 'Yes' : ''];
+}
+// Who wrote a shared note: the name on the Users tab, or the entry link's name.
+function noteAuthors(ss) {
+  var m = {};
+  listUsers(ss).forEach(function (u) { m[u.email] = u.name || u.email; });
+  listEntryLinks(PropertiesService.getScriptProperties()).forEach(function (L) { m['entry-' + L.id] = L.name || 'Entry link'; });
+  return m;
 }
 function noteOp(ss, op, user) {
   var sh = ss.getSheetByName('Notes'); notesHead(sh);
   var r = rows(sh), me = noteOwner(user);
   var id = String((op.t === 'nput' ? (op.note || {}).id : op.id) || '');
   if (op.t === 'nmeta') { // label, pin and pin order only: the file in Drive is untouched
-    for (var k = 0; k < r.length; k++) if (String(r[k][0]) === id && String(r[k][3]).toLowerCase() === me) { sh.getRange(k + 2, 9, 1, 3).setNumberFormat('@').setValues([noteMeta(op, r[k])]); return; }
+    for (var k = 0; k < r.length; k++) if (String(r[k][0]) === id && String(r[k][3]).toLowerCase() === me) { sh.getRange(k + 2, 9, 1, 4).setNumberFormat('@').setValues([noteMeta(op, r[k])]); return; }
     return;
   }
   if (!/^[A-Za-z0-9_\-]{1,64}$/.test(id)) return;
@@ -405,17 +417,21 @@ function noteOp(ss, op, user) {
   else sh.getRange(sh.getLastRow() + 1, 1, 1, row.length).setNumberFormat('@').setValues([row]);
 }
 function readNotes(ss, user) {
-  var me = noteOwner(user);
-  return rows(ss.getSheetByName('Notes')).filter(function (r) { return r[0] && String(r[3]).toLowerCase() === me; }).map(function (r) {
-    return {id: String(r[0]), title: txt(r[1]), type: NOTE_TYPES[r[2]] ? String(r[2]) : 'txt', fileId: txt(r[4]), updatedAt: Date.parse(txt(r[5])) || 0, size: +r[6] || 0, preview: txt(r[7]),
-      cat: okLabel(txt(r[8])) || 'other', pinned: /^(yes|true|1)$/i.test(txt(r[9])), order: +r[10] || 0};
+  var me = noteOwner(user), names = null;
+  return rows(ss.getSheetByName('Notes')).filter(function (r) { return r[0] && (String(r[3]).toLowerCase() === me || isYes(r[11])); }).map(function (r) {
+    var owner = String(r[3]).toLowerCase(), mine = owner === me, n = {id: String(r[0]), title: txt(r[1]), type: NOTE_TYPES[r[2]] ? String(r[2]) : 'txt', fileId: txt(r[4]),
+      updatedAt: Date.parse(txt(r[5])) || 0, size: +r[6] || 0, preview: txt(r[7]), cat: okLabel(txt(r[8])) || 'other', shared: isYes(r[11]), mine: mine,
+      pinned: mine && isYes(r[9]), order: mine ? +r[10] || 0 : 0}; // the author's pins are the author's own
+    if (!mine) { names = names || noteAuthors(ss); n.by = names[owner] || owner.replace(/@.*/, ''); n.fileId = ''; }
+    return n;
   });
 }
+// Note text from Drive, for your own notes and Shared ones only.
 function noteBodies(ss, ids, user) {
-  var mine = {}, out = {};
-  readNotes(ss, user).forEach(function (n) { mine[n.id] = n; });
-  ids.slice(0, 20).forEach(function (id) { var n = mine[String(id)]; if (!n || !n.fileId) return;
-    try { out[n.id] = DriveApp.getFileById(n.fileId).getBlob().getDataAsString('UTF-8'); } catch (e) {} });
+  var me = noteOwner(user), ok = {}, out = {};
+  rows(ss.getSheetByName('Notes')).forEach(function (r) { if (r[0] && r[4] && (String(r[3]).toLowerCase() === me || isYes(r[11]))) ok[String(r[0])] = String(r[4]); });
+  ids.slice(0, 20).forEach(function (id) { var f = ok[String(id)]; if (!f) return;
+    try { out[String(id)] = DriveApp.getFileById(f).getBlob().getDataAsString('UTF-8'); } catch (e) {} });
   return out;
 }
 
