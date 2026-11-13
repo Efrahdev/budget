@@ -92,7 +92,7 @@ function doPost(e) {
     if (who.session) reply.session = who.session;
     if (role === 'Owner') { reply.users = listUsers(ss); reply.entryLinks = listEntryLinks(props); reply.killCode = !!props.getProperty('KILL_CODE'); if (killErr) reply.killErr = killErr; }
     if (req.vault && who.user.role === 'Owner') reply.vault = readVault(ss);
-    reply.notes = readNotes(ss, who.user); reply.notesV = 3; // 3: notes can be Shared
+    reply.notes = readNotes(ss, who.user); reply.notesV = 4; // 3: notes can be Shared · 4: anyone can edit a Shared note
     if (noteErrors.length) reply.noteErrors = noteErrors;
     if (Array.isArray(req.noteIds) && req.noteIds.length) { try { reply.noteBodies = noteBodies(ss, req.noteIds, who.user); } catch (x) { reply.noteErrors = (reply.noteErrors || []).concat([{id: '', error: String(x && x.message || x)}]); } }
     return out(reply);
@@ -343,9 +343,9 @@ function readVault(ss) {
 
 
 /* ---------- notes: one real file per note in Drive ----------
-   Each person sees and changes only their own notes, plus (read only) every note someone marked Shared:
-   a Shared note reaches everyone who can open the app (Users tab and entry links). Only its author can
-   change, unshare, label, pin or delete it. Files sit in the owner's Drive, folder "Budget Tracker notes".
+   Each person sees their own notes, plus every note someone marked Shared: a Shared note reaches everyone
+   who can open the app (Users tab and entry links), and anyone can change its text and title. Only its
+   author can unshare, label, pin or delete it, and it stays the author's (Owner column) whoever edits it. Files sit in the owner's Drive, folder "Budget Tracker notes".
    Run setupNotes() once from the editor after pasting this file: Google then asks to allow Drive access. */
 var NOTE_TYPES = {md: ['md', 'text/markdown'], html: ['html', 'text/html'], txt: ['txt', 'text/plain'], json: ['json', 'application/json']};
 var NOTES_FOLDER = 'Budget Tracker notes';
@@ -395,7 +395,8 @@ function noteOp(ss, op, user) {
   if (!/^[A-Za-z0-9_\-]{1,64}$/.test(id)) return;
   var at = -1;
   for (var i = 0; i < r.length; i++) if (String(r[i][0]) === id) { at = i; break; }
-  if (at >= 0 && String(r[at][3]).toLowerCase() !== me) return; // someone else's note
+  var guest = at >= 0 && String(r[at][3]).toLowerCase() !== me;
+  if (guest && (op.t === 'ndel' || !isYes(r[at][11]))) return; // someone else's note: only its text, and only while it is Shared
   var oldFile = at >= 0 ? String(r[at][4] || '') : '';
   if (op.t === 'ndel') {
     if (oldFile) { try { DriveApp.getFileById(oldFile).setTrashed(true); } catch (e) {} }
@@ -412,7 +413,9 @@ function noteOp(ss, op, user) {
   }
   var preview = content.replace(/<[^>]*>/g, ' ').replace(/```[^\n]*/g, ' ').replace(/^\s{0,3}(#{1,6}|>|[-*+]|\d+[.)])\s+/gm, '').replace(/\[( |x|X)\]\s+/g, '')
     .replace(/(\*\*|__|~~|`)/g, '').replace(/[ \t]*\n+[ \t]*/g, ' · ').replace(/\s+/g, ' ').trim().slice(0, 140);
-  var row = [id, title, type, me, file.getId(), stamp(+n.updatedAt || Date.now()), content.length, preview].concat(noteMeta(n, at >= 0 ? r[at] : null));
+  // A guest's edit keeps the author as owner, and the author's label, pin and Shared mark.
+  var meta = guest ? [txt(r[at][8]) || 'other', txt(r[at][9]), +r[at][10] || 0, 'Yes'] : noteMeta(n, at >= 0 ? r[at] : null);
+  var row = [id, title, type, guest ? String(r[at][3]) : me, file.getId(), stamp(+n.updatedAt || Date.now()), content.length, preview].concat(meta);
   if (at >= 0) sh.getRange(at + 2, 1, 1, row.length).setNumberFormat('@').setValues([row]);
   else sh.getRange(sh.getLastRow() + 1, 1, 1, row.length).setNumberFormat('@').setValues([row]);
 }
