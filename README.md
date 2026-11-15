@@ -52,6 +52,16 @@ The **Reader** tab (sidebar on a laptop, **More** on a phone) reads PDFs, web pa
 - **Save:** to **Notes** (name and label it; it syncs to Drive like any note) or to your **device** (original, web page, Markdown, text, or PDF via print).
 - Documents stay on that device only. The Reader is its own page (`reader/`), loaded only when you open it, so the budget app stays as fast as before. It also works on its own at `https://efrahdev.github.io/budget/reader/`.
 
+## Contacts
+
+The family phone book. Tap the **contacts button** beside **+** (on Notes, beside the new-note button): Contacts opens on its search box. Also in **More**, the sidebar on a laptop, and the bottom bar on entry links.
+
+- Search is one exact phrase: “DB Sana” finds names with exactly those letters together, in names, tags, numbers, emails and notes.
+- Tags come from name prefixes (BT, E31, DB…). Hold a contact (or tap the select icon) to tag, star or delete many at once.
+- **Call** offers your calling apps (Phone, Truecaller) as icons. Message and WhatsApp are one tap.
+- Settings (the sliders icon): Recent changes (what changed, like a diff), Merge all duplicates with the same number or email, number formatting, tags, import/export (.vcf).
+- Everyone signed in to the budget app shares the same contacts, kept in their own Google Sheet (**Budget Tracker contacts**), never in the budget sheet. The budget's sign-in and kill switch apply to Contacts too.
+
 ## One-time setup
 
 1. *Optional* **Google sign-in client** (Google Cloud Console → Google Auth Platform): create a *Web application* OAuth client with the authorised JavaScript origin `https://efrahdev.github.io`. Put its Client ID in `GOOGLE_CLIENT_ID` in `index.html` and in the sheet's **Config** tab (`google client id`).

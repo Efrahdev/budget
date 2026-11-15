@@ -187,7 +187,7 @@ img{max-width:100%}
 .prog i{display:block;height:100%;width:0;border-radius:0 2px 2px 0;background:linear-gradient(90deg,var(--accent),#38bdf8);transition:width .8s var(--ease)}
 /* phone: floating bottom bar with the four main screens + More */
 .navbar{position:fixed;z-index:40;left:max(12px,env(safe-area-inset-left,0px));right:max(12px,env(safe-area-inset-right,0px));bottom:calc(10px + env(safe-area-inset-bottom,0px));height:var(--nbh);max-width:620px;margin:0 auto;
-  display:grid;grid-template-columns:repeat(7,minmax(0,1fr));align-items:center;padding:0 4px;border-radius:26px;background:var(--glass-2);-webkit-backdrop-filter:saturate(180%) blur(24px);backdrop-filter:saturate(180%) blur(24px);
+  display:grid;grid-template-columns:repeat(6,minmax(0,1fr));align-items:center;padding:0 4px;border-radius:26px;background:var(--glass-2);-webkit-backdrop-filter:saturate(180%) blur(24px);backdrop-filter:saturate(180%) blur(24px);
   box-shadow:var(--shade-float),inset 0 1px 0 var(--glass-line);border:1px solid var(--glass-edge);transition:transform .38s var(--ease),opacity .25s ease}
 .nv{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;min-width:0;height:100%;border:0;background:none;padding:0;color:var(--ink-3);font-size:min(calc(11.5px*var(--fs,1)),13.5px);font-weight:600;letter-spacing:-.005em;text-decoration:none;cursor:pointer;-webkit-tap-highlight-color:transparent}
 .nv .nvi{position:relative;display:grid;place-items:center;width:44px;height:28px;border-radius:14px;transition:background .3s var(--ease),transform .2s var(--ease)}
@@ -198,20 +198,28 @@ img{max-width:100%}
 .nv[aria-current="page"] .ic{stroke-width:2.2;transform:translateY(-1px) scale(1.04)}
 .nv:active .nvi{transform:scale(.9)}
 .nv-2{display:none}
-.nv-new .nvi{color:var(--accent);background:color-mix(in srgb,var(--accent) 9%,transparent);box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--accent) 16%,transparent)}
-.nv-new{color:var(--ink-2)}
 .nv-lbl{display:none}
 /* the add button */
 .fab{position:fixed;right:max(16px,env(safe-area-inset-right,0px));bottom:calc(var(--nbh) + 22px + env(safe-area-inset-bottom,0px));z-index:39;width:60px;height:60px;border-radius:22px;border:0;display:grid;place-items:center;cursor:pointer;
-  color:#fff;background:linear-gradient(160deg,var(--btn-a),var(--btn-b));box-shadow:0 14px 30px -10px color-mix(in srgb,var(--btn-b) 70%,transparent),inset 0 1px 0 rgba(255,255,255,.28);transition:transform .25s var(--spring),box-shadow .25s,opacity .25s}
+  color:#fff;background:var(--fab-grad);box-shadow:var(--fab-shadow);transition:transform .25s var(--spring),box-shadow .25s,opacity .25s}
+:root{--fab-grad:radial-gradient(120% 90% at 30% 12%,rgba(255,255,255,.32),rgba(255,255,255,0) 55%),linear-gradient(155deg,color-mix(in srgb,var(--btn-a) 80%,#9cc0ff),var(--btn-b));
+  --fab-shadow:0 14px 28px -12px color-mix(in srgb,var(--btn-b) 72%,transparent),0 2px 6px -2px color-mix(in srgb,var(--btn-b) 40%,transparent),inset 0 1px 0 rgba(255,255,255,.3)}
 .fab .ic{width:28px;height:28px;stroke-width:2.4}
+/* Contacts, beside the add button: the same soft shape in frosted glass, so + stays the main action */
+.ctfab{position:fixed;right:calc(max(16px,env(safe-area-inset-right,0px)) + 72px);bottom:calc(var(--nbh) + 26px + env(safe-area-inset-bottom,0px));z-index:39;width:52px;height:52px;border-radius:19px;border:1px solid var(--glass-edge);display:grid;place-items:center;cursor:pointer;
+  color:var(--accent);background:linear-gradient(160deg,color-mix(in srgb,var(--accent) 16%,var(--glass-2)),var(--glass-2));-webkit-backdrop-filter:saturate(180%) blur(20px);backdrop-filter:saturate(180%) blur(20px);
+  box-shadow:var(--shade-float),inset 0 1px 0 var(--glass-line);transition:transform .25s var(--spring),opacity .25s}
+.ctfab .ic{width:24px;height:24px;stroke-width:2}
+.ctfab:active{transform:scale(.92)}
+.ctfab[hidden]{display:none}
 .fab:active{transform:scale(.92)}
 body[data-view="vault"] .fab,body[data-view="vault"] #addTop,body[data-view="notes"] .fab,body[data-view="disc"] .fab,body[data-view="setup"] .fab{display:none!important}
+body[data-view="vault"] .ctfab,body[data-view="disc"] .ctfab,body[data-view="setup"] .ctfab,body[data-view="add"] .ctfab,body[data-view="read"] .ctfab,body[data-view="contacts"] .ctfab{display:none!important}
 #saveSlot{display:contents} /* the unsaved-changes bar floats over Setup while you edit, not only at its very end */
 body[data-view="vault"] #cycBar{display:none!important}
 body[data-view="add"] .fab{display:none!important}
 @media (max-width:1023.98px){main .view{touch-action:pan-y}} /* sideways drags belong to the tab swipe */
-@media (max-width:1023.98px){html.role-entry .navbar{grid-template-columns:repeat(5,minmax(0,1fr));max-width:520px}}
+@media (max-width:1023.98px){html.role-entry .navbar{grid-template-columns:repeat(5,minmax(0,1fr));max-width:520px}html.role-entry .navbar .nv-ct{display:flex}}
 html.role-entry body:not([data-view="entries"]) #cycBar{display:none!important}
 .addhome{display:flex;flex-direction:column;gap:14px}
 .addhome .hero-add{padding:22px 20px;display:flex;flex-direction:column;gap:14px;align-items:flex-start}
@@ -999,7 +1007,7 @@ details.srw[open]>.sr-h .sr-cv{transform:rotate(180deg);color:var(--s-acc)}
 .mtile.on{box-shadow:inset 0 0 0 2px var(--accent);background:var(--accent-soft)}
 .mt-ic{width:42px;height:42px;border-radius:14px;display:grid;place-items:center;color:#fff;background:linear-gradient(150deg,var(--btn-a),var(--btn-b));box-shadow:0 8px 16px -8px color-mix(in srgb,var(--btn-b) 80%,transparent)}
 .mt-ic .ic{width:22px;height:22px}
-.mt-ic.c2{background:linear-gradient(150deg,#22c1ee,#0e7fbf)}.mt-ic.c3{background:linear-gradient(150deg,#a78bfa,#7c4ddb)}.mt-ic.c4{background:linear-gradient(150deg,#94a3b8,#52607a)}.mt-ic.c5{background:linear-gradient(150deg,#34d399,#0f8a68)}.mt-ic.c6{background:linear-gradient(150deg,#ff9a5a,#e0431f)}
+.mt-ic.c6{background:linear-gradient(150deg,#34d399,#0f9b72)}.mt-ic.c2{background:linear-gradient(150deg,#22c1ee,#0e7fbf)}.mt-ic.c3{background:linear-gradient(150deg,#a78bfa,#7c4ddb)}.mt-ic.c4{background:linear-gradient(150deg,#94a3b8,#52607a)}.mt-ic.c5{background:linear-gradient(150deg,#34d399,#0f8a68)}.mt-ic.c6{background:linear-gradient(150deg,#ff9a5a,#e0431f)}
 .mtile b{font-size:calc(16px*var(--fs,1));font-weight:700}
 .mtile small{font-size:calc(13px*var(--fs,1));color:var(--ink-3);line-height:1.35}
 .more-set{display:flex;flex-direction:column;border-radius:20px;background:var(--sheet-2);box-shadow:inset 0 0 0 1px var(--rule);overflow:hidden}
@@ -1040,10 +1048,10 @@ details.srw[open]>.sr-h .sr-cv{transform:rotate(180deg);color:var(--s-acc)}
 .lockcard .field .tin,.lockcard .field input{font-size:calc(17px*var(--fs,1))}
 .warnbox{background:var(--warn-soft);border-radius:14px;padding:12px 14px;font-size:calc(14.5px*var(--fs,1));color:var(--ink)}
 /* ---------- notes ---------- */
-.nfab{position:fixed;right:max(16px,env(safe-area-inset-right,0px));bottom:calc(var(--nbh) + 22px + env(safe-area-inset-bottom,0px));z-index:39;display:inline-flex;align-items:center;gap:8px;padding:0 22px;height:56px;border:0;border-radius:20px;color:#fff;
-  background:linear-gradient(160deg,var(--btn-a),var(--btn-b));font-weight:700;font-size:calc(16.5px*var(--fs,1));box-shadow:0 14px 30px -10px color-mix(in srgb,var(--btn-b) 70%,transparent),inset 0 1px 0 rgba(255,255,255,.25);cursor:pointer;transition:transform .25s var(--spring),opacity .25s}
-.nfab b{font-size:calc(24px*var(--fs,1));line-height:1;font-weight:500}
-.nfab:active{transform:scale(.94)}
+.nfab{position:fixed;right:max(16px,env(safe-area-inset-right,0px));bottom:calc(var(--nbh) + 22px + env(safe-area-inset-bottom,0px));z-index:39;display:grid;place-items:center;width:60px;height:60px;padding:0;border:0;border-radius:22px;color:#fff;
+  background:var(--fab-grad);box-shadow:var(--fab-shadow);cursor:pointer;transition:transform .25s var(--spring),opacity .25s}
+.nfab .ic{width:27px;height:27px;stroke-width:2.1}
+.nfab:active{transform:scale(.92)}
 #v-notes{padding-bottom:84px}
 .nlist{display:flex;flex-direction:column;gap:10px}
 .ncard{position:relative;display:flex;gap:12px;align-items:flex-start;width:100%;padding:14px 14px 14px 14px;border:1px solid var(--rule);border-radius:var(--r);background:var(--sheet);box-shadow:var(--shade);color:inherit;font:inherit;text-align:left;cursor:pointer;
@@ -1355,7 +1363,7 @@ html.kb .sheet.note.writing:not(.showmeta) .nact,.sheet.note.writing.tight:not(.
    While the on-screen keyboard is up (html.kb, set by the script), the top bar, bottom bar and floating buttons
    step aside, sheets take the whole space above the keyboard, and the box you type in is kept in view. */
 html.kb .topbar{transform:translateY(-110%);pointer-events:none}
-html.kb .navbar,html.kb .fab,html.kb .nfab,html.kb .savebar{opacity:0;pointer-events:none;transform:translateY(30px)}
+html.kb .navbar,html.kb .fab,html.kb .nfab,html.kb .ctfab,html.kb .savebar{opacity:0;pointer-events:none;transform:translateY(30px)}
 html.kb main{padding-top:calc(env(safe-area-inset-top,0px) + 10px);padding-bottom:28px}
 html.kb .eday-h{top:env(safe-area-inset-top,0px)}
 /* Every sheet covers exactly the part of the screen the keyboard leaves visible (--nvh/--nvt from noteVV),
@@ -1477,6 +1485,7 @@ html.tb-hide:not(.kb) .topbar{transform:translateY(-100%)}
   .pagehead h1{margin:0;font-family:var(--f-display);font-size:calc(32px*var(--fs,1));font-weight:700;letter-spacing:-.03em;line-height:1.1}
   .pagehead .ph-sub{color:var(--ink-3);font-size:calc(14.5px*var(--fs,1));margin-top:4px}
   .fab{display:none}
+  .ctfab{display:none!important}
   .nfab{bottom:28px;right:32px}
   .toast{bottom:28px;left:calc(50% + var(--sbw) / 2)}
   .savebar{bottom:22px}
@@ -1793,6 +1802,14 @@ body[data-view="read"] main{padding:0}
 @media (max-width:1023.98px){body[data-view="read"] .topbar{transform:translateY(-100%);visibility:hidden}
   html.rd-bars body[data-view="read"] .navbar,html.rd-imm body[data-view="read"] .navbar{transform:translateY(calc(100% + 24px));opacity:0;pointer-events:none}}
 @media (min-width:1024px){#v-read{left:var(--sbw)}html.rd-imm body[data-view="read"] #v-read{left:0;z-index:60}}
+/* ---------- Contacts: its own page (contacts/), shown edge to edge in this tab, like the Reader ---------- */
+#v-contacts{position:fixed;inset:0;z-index:30;display:block;max-width:none!important;margin:0!important;width:auto!important}
+#v-contacts[hidden]{display:none}
+#v-contacts iframe{display:block;width:100%;height:100%;border:0;background:transparent}
+body[data-view="contacts"] .fab,body[data-view="contacts"] #pagehead,body[data-view="contacts"] #banner,body[data-view="contacts"] #cycBar,body[data-view="contacts"] #addTop{display:none!important}
+body[data-view="contacts"] main{padding:0}
+@media (max-width:1023.98px){body[data-view="contacts"] .topbar{transform:translateY(-100%);visibility:hidden}}
+@media (min-width:1024px){#v-contacts{left:var(--sbw)}}
 /* ============================================================================================================
    "Quiet premium" pass for Entries tab. Subtler controls, tighter ledger, one-line tags.
    On phones: docked nav bar, smaller add button, proper bottom padding.
@@ -1857,6 +1874,11 @@ body[data-view="read"] main{padding:0}
   .nv .nvi{height:26px}
   .fab{width:51px;height:51px;border-radius:16px;bottom:calc(var(--nbh) + 16px + env(safe-area-inset-bottom,0px));box-shadow:0 8px 20px -10px rgba(0,0,0,.6)}
   .fab .ic{width:24px;height:24px}
+  .nfab{width:51px;height:51px;border-radius:16px;bottom:calc(var(--nbh) + 16px + env(safe-area-inset-bottom,0px));box-shadow:0 8px 20px -10px rgba(0,0,0,.6)}
+  .nfab .ic{width:23px;height:23px}
+  /* Contacts: a little smaller than +, centred on it, one gap to its left */
+  .ctfab{width:44px;height:44px;border-radius:14px;right:calc(max(16px,env(safe-area-inset-right,0px)) + 63px);bottom:calc(var(--nbh) + 19.5px + env(safe-area-inset-bottom,0px))}
+  .ctfab .ic{width:21px;height:21px}
   /* nav + add button + 24px of breathing room */
   main{padding-bottom:calc(var(--nbh) + 16px + 51px + 24px + env(safe-area-inset-bottom,0px))}
 }
@@ -1878,6 +1900,7 @@ body[data-view="read"] main{padding:0}
   <symbol id="i-sliders" viewBox="0 0 24 24"><path d="M3.5 6.5h10M17.5 6.5h3M3.5 12h3.5M11 12h9.5M3.5 17.5h12M19.5 17.5h1"/><circle cx="15.5" cy="6.5" r="2"/><circle cx="9" cy="12" r="2"/><circle cx="17.5" cy="17.5" r="2"/></symbol>
   <symbol id="i-vault" viewBox="0 0 24 24"><path d="M12 3l7.5 3v5.2c0 4.6-3.2 8.3-7.5 9.8-4.3-1.5-7.5-5.2-7.5-9.8V6z"/><rect x="9" y="10.5" width="6" height="5" rx="1.2"/><path d="M10.3 10.5V9.2a1.7 1.7 0 0 1 3.4 0v1.3"/></symbol>
   <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+  <symbol id="i-contacts" viewBox="0 0 24 24"><rect x="4.5" y="3" width="15" height="18" rx="3"/><circle cx="12" cy="10" r="2.8"/><path d="M7.8 17.2c.7-2 2.3-3.1 4.2-3.1s3.5 1.1 4.2 3.1"/><path d="M2.8 7.5h1.7M2.8 12h1.7M2.8 16.5h1.7"/></symbol>
   <symbol id="i-left" viewBox="0 0 24 24"><path d="M14.5 18 8.5 12l6-6"/></symbol>
   <symbol id="i-right" viewBox="0 0 24 24"><path d="M9.5 18l6-6-6-6"/></symbol>
   <symbol id="i-down" viewBox="0 0 24 24"><path d="M6 9.5l6 6 6-6"/></symbol>
@@ -1953,8 +1976,8 @@ body[data-view="read"] main{padding:0}
   <a class="nv nv-2" href="#cards" data-v="cards"><span class="nvi"><svg class="ic" aria-hidden="true"><use href="#i-card"/></svg></span><span>Card bills</span></a>
   <a class="nv" href="#wealth" data-v="wealth"><span class="nvi"><svg class="ic" aria-hidden="true"><use href="#i-wealth"/></svg></span><span>Wealth</span></a>
   <a class="nv" href="#notes" data-v="notes"><span class="nvi"><svg class="ic" aria-hidden="true"><use href="#i-notes"/></svg></span><span>Notes</span></a>
-  <button class="nv nv-new" type="button" data-act="n-new" aria-label="New note" title="New note"><span class="nvi"><svg class="ic" aria-hidden="true"><use href="#i-note-new"/></svg></span><span>New note</span></button>
   <a class="nv" href="#read" data-v="read"><span class="nvi"><svg class="ic" aria-hidden="true"><use href="#i-read"/></svg></span><span>Reader</span></a>
+  <a class="nv nv-2 nv-ct" href="#contacts" data-v="contacts"><span class="nvi"><svg class="ic" aria-hidden="true"><use href="#i-contacts"/></svg></span><span>Contacts</span></a>
   <a class="nv nv-2" href="#trend" data-v="trend"><span class="nvi"><svg class="ic" aria-hidden="true"><use href="#i-trend"/></svg></span><span>Trend</span></a>
   <a class="nv nv-2" href="#disc" data-v="disc"><span class="nvi"><svg class="ic" aria-hidden="true"><use href="#i-spark"/></svg></span><span>Discretionary</span></a>
   <a class="nv nv-2" href="#setup" data-v="setup"><span class="nvi"><svg class="ic" aria-hidden="true"><use href="#i-sliders"/></svg></span><span>Setup</span></a>
@@ -1996,9 +2019,11 @@ body[data-view="read"] main{padding:0}
   <section class="view" id="v-vault" hidden></section>
   <section class="view" id="v-disc" hidden></section>
   <section class="view" id="v-read" hidden></section>
+  <section class="view" id="v-contacts" hidden></section>
 </main>
 
 <button class="fab" data-act="add" type="button" aria-label="Add entry"><svg class="ic" aria-hidden="true"><use href="#i-plus"/></svg></button>
+<button class="ctfab" id="ctFab" data-act="ct-open" type="button" aria-label="Contacts" title="Contacts" hidden><svg class="ic" aria-hidden="true"><use href="#i-contacts"/></svg></button>
 <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
 
 <!-- Entry sheet -->
@@ -2128,9 +2153,9 @@ body[data-view="read"] main{padding:0}
 <script>
 (() => {
 'use strict';
-const VIEWS = ['overview','entries','cards','wealth','notes','trend','setup','vault','disc','add','read'];
+const VIEWS = ['overview','entries','cards','wealth','notes','trend','setup','vault','disc','add','read','contacts'];
 // An entry link (role Entry) sees only these. The server refuses everything else for it too.
-const ENTRY_VIEWS = ['add', 'entries', 'notes', 'read']; // shared entry links: add, see entries, notes, and the Reader
+const ENTRY_VIEWS = ['add', 'entries', 'notes', 'read', 'contacts']; // shared entry links: add, see entries, notes, the Reader and Contacts
 const TYPES = ['Expense','Income','Transfer'];
 const GROUPS = ['Fixed','Variable','Discretionary','Sinking'];
 const CLASSES = ['Bank','FD','Bond','Retirement','Equity','ETF','Gold','Cash','Property','Loan','Owed','Other'];
@@ -2645,6 +2670,8 @@ function renderChrome(X) {
   $('#navbar').hidden = !ready;
   document.querySelectorAll('#navbar .nv[data-v]').forEach(a => { if (a.id !== 'vaultTab') a.hidden = entry ? !ENTRY_VIEWS.includes(a.dataset.v) : a.dataset.v === 'add'; });
   $('#navMore').hidden = entry;
+  $('#ctFab').hidden = !ready;
+  if (ready) ctPreload();
   if (!ready) return;
   const nowKey = cycleKeyOf(todayStr());
   if (!state.curPinned || !state.cur) state.cur = nowKey;
@@ -3162,7 +3189,7 @@ const fmtWhen = ms => { if (!ms) return ''; const d = new Date(ms), t = new Date
   if (d.toDateString() === y.toDateString()) return 'Yesterday ' + hm; return d.getDate() + ' ' + MON[d.getMonth()] + (d.getFullYear() !== t.getFullYear() ? ' ' + d.getFullYear() : ''); };
 function renderNotes() {
   const el = $('#v-notes'); if (!el) return;
-    paint(el, `<button type="button" class="nfab" data-act="n-new" aria-label="New note"><b>+</b> Note</button>
+    paint(el, `<button type="button" class="nfab" data-act="n-new" aria-label="New note" title="New note"><svg class="ic" aria-hidden="true"><use href="#i-note-new"/></svg></button>
     <div class="nfilter${N.searchOpen ? ' searching' : ''}" id="nFilter">
       <div class="nchips" id="nCats" role="group" aria-label="Show">
         <div class="npopw"><button type="button" class="nchip nall" data-act="n-allmenu" aria-haspopup="true" aria-pressed="${N.cat !== 'arhaan' && N.cat !== 'efrah'}">${N.cat === SHARED ? 'Shared' : N.cat && N.cat !== 'arhaan' && N.cat !== 'efrah' ? esc(labelName(N.cat)) : 'All'} ▾</button>
@@ -3197,7 +3224,7 @@ function renderNoteList() {
   paint(box, list.length ? `${pins.length ? `<div class="ngrp">Pinned</div><div class="nlist" id="nPinned">${pins.map(n => noteCard(n, true)).join('')}</div>` : ''}
       ${rest.length ? `${pins.length ? '<div class="ngrp">Notes</div>' : ''}<div class="nlist">${rest.map(n => noteCard(n, false)).join('')}</div>` : ''}
       <p class="hint nhint">Press and hold a note to pin, move, label or delete it.</p>`
-    : `<div class="card empty">${N.cat === SHARED && !q ? 'No shared notes yet. Open a note and tap the people button to share it with everyone.' : q || N.cat ? 'No notes match.' : 'No notes yet. Tap “+ Note” at the bottom and start typing.'}</div>`);
+    : `<div class="card empty">${N.cat === SHARED && !q ? 'No shared notes yet. Open a note and tap the people button to share it with everyone.' : q || N.cat ? 'No notes match.' : 'No notes yet. Tap the new-note button at the bottom and start typing.'}</div>`);
 }
 
 document.addEventListener('submit', ev => { if (ev.target.closest('.nlabform')) { ev.preventDefault(); const go = ev.target.querySelector('[data-act="n-addlabel-go"]'); if (go) go.click(); } });
@@ -5174,6 +5201,8 @@ function setView(v) {
   if (prev !== state.view && state.config) viewEntered(state.view);
   if (state.view === 'read' && state.config) { rdFrame(); rdPost({type: 'shown'}); rdPost({type: 'inset', inset: rdInset()}); try { RD.frame.contentWindow.focus(); } catch (e) {} }
   if (prev === 'read' && state.view !== 'read') { document.documentElement.classList.remove('rd-bars', 'rd-imm'); rdPost({type: 'hidden'}); }
+  if (state.view === 'contacts' && state.config) { ctFrame(); ctPost({type: 'shown', search: CT.wantSearch, inset: ctInset()}); CT.wantSearch = false; }
+  if (prev === 'contacts' && state.view !== 'contacts') ctPost({type: 'hidden'});
   if (state.config && (state.view === 'trend' || state.view === 'wealth') && !holdIfTyping('#v-' + state.view)) { const X = ctx(); state.view === 'trend' ? renderTrend(X) : renderWealth(X); }
   if (state.config && state.view === 'vault' && !holdIfTyping('#v-vault')) renderVault();
   fitNums($('#v-' + state.view));
@@ -6535,7 +6564,7 @@ document.addEventListener('click', ev => {
    Phones: a slim top bar (the month) that slides away while you scroll down, and a floating bottom bar with the
    four main screens and More. Laptops, desktops and TVs: the same pieces become a sidebar (CSS only).
    While the phone keyboard is up, every bar steps aside and the box you are typing in is kept in view. */
-const VIEW_TITLE = {add: 'Add entry', overview: 'Overview', entries: 'Entries', cards: 'Card bills', wealth: 'Wealth', notes: 'Notes', trend: 'Trend', setup: 'Setup', vault: 'Vault', disc: 'Discretionary', read: 'Reader'};
+const VIEW_TITLE = {add: 'Add entry', overview: 'Overview', entries: 'Entries', cards: 'Card bills', wealth: 'Wealth', notes: 'Notes', trend: 'Trend', setup: 'Setup', vault: 'Vault', disc: 'Discretionary', read: 'Reader', contacts: 'Contacts'};
 const PRIMARY_VIEWS = ['overview', 'entries', 'wealth', 'notes', 'read'];
 const coarse = matchMedia('(pointer: coarse)');
 const reduceMotion = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -6640,7 +6669,7 @@ function moreHtml() {
   const isOwner = !!(Sync.me && Sync.me.role === 'Owner'), dark = darkNow(), size = (TEXT_SIZES.find(x => x.v === readText().size) || {}).l || '';
   const tiles = [['cards', 'i-card', 'Card bills', 'What to pay, and by when', ''], ['trend', 'i-trend', 'Trend', 'Month by month', 'c2'],
     ['disc', 'i-spark', 'Discretionary', 'Spending outside the plan', 'c3'], ['setup', 'i-sliders', 'Setup', 'Budgets, accounts, cards', 'c4']]
-    .concat(isOwner ? [['vault', 'i-vault', 'Vault', 'Card and account details', 'c5']] : []);
+    .concat(isOwner ? [['vault', 'i-vault', 'Vault', 'Card and account details', 'c5']] : []).concat([['contacts', 'i-contacts', 'Contacts', 'Family phone book', 'c6']]);
   return `<div class="more-h"><b>More</b><span class="hint">${esc(syncLabel())}</span></div>
     <div class="more-grid">${tiles.map(([v, ic, t, sub, c]) => `<a class="mtile${state.view === v ? ' on' : ''}" href="#${v}" data-act="more-go"><span class="mt-ic ${c}"><svg class="ic" aria-hidden="true"><use href="#${ic}"/></svg></span><b>${t}</b><small>${sub}</small></a>`).join('')}</div>
     <div class="more-set">
@@ -7025,6 +7054,44 @@ function rdDrain() {
 }
 window.addEventListener('storage', e => { if (e.key === RD_INBOX && e.newValue) rdDrain(); });
 window.addEventListener('resize', () => { if (state.view === 'read' && RD.ready) rdPost({type: 'inset', inset: rdInset()}); });
+
+/* ---------- Contacts: its own page in contacts/, shown in the Contacts tab ----------
+   Like the Reader: the frame is made only when Contacts is first wanted (or quietly once the app is idle, so the
+   first tap on the contacts button opens the search box with the keyboard straight away). Contacts signs in with
+   this app's own sign-in and asks this app's Apps Script, which keeps contacts in their own spreadsheet.
+     from Contacts: hello          to Contacts: hello · shown {search} · hidden · inset (room our bottom bar takes) */
+const CT = {frame: null, ready: false, queue: [], wantSearch: false};
+function ctFrame() {
+  if (CT.frame) return CT.frame;
+  const f = document.createElement('iframe');
+  f.src = 'contacts/'; f.title = 'Contacts'; f.setAttribute('allow', 'clipboard-read; clipboard-write; web-share');
+  $('#v-contacts').appendChild(f); CT.frame = f; return f;
+}
+function ctPost(m) { m.src = 'budget'; if (CT.frame && CT.ready) CT.frame.contentWindow.postMessage(m, location.origin); else CT.queue.push(m); }
+function ctInset() {
+  if (matchMedia('(min-width:1024px)').matches) return 0;
+  const nb = $('#navbar'); if (!nb || nb.hidden) return 0;
+  const r = nb.getBoundingClientRect(); return r.height && r.top < innerHeight ? Math.max(0, Math.round(innerHeight - r.top + 6)) : 0;
+}
+// The contacts button: open Contacts on its search box. Called straight from the tap, so the phone raises the keyboard.
+function openContacts() {
+  if (!state.config) return;
+  const f = ctFrame(), v = $('#v-contacts');
+  let done = false;
+  if (CT.ready) { try { v.hidden = false; f.contentWindow.budgetContacts.search(); done = true; } catch (e) {} }
+  CT.wantSearch = !done;
+  if (location.hash !== '#contacts') location.hash = '#contacts'; else setView('contacts');
+}
+window.addEventListener('message', ev => {
+  if (ev.origin !== location.origin || !CT.frame || ev.source !== CT.frame.contentWindow) return;
+  const m = ev.data || {}; if (m.src !== 'budget-contacts') return;
+  if (m.type === 'hello') { CT.ready = true; ev.source.postMessage({src: 'budget', type: 'hello', inset: ctInset()}, location.origin); }
+  if (CT.ready && CT.queue.length) CT.queue.splice(0).forEach(ctPost);
+});
+document.addEventListener('click', ev => { if (ev.target.closest('[data-act="ct-open"]')) openContacts(); });
+window.addEventListener('resize', () => { if (state.view === 'contacts' && CT.ready) ctPost({type: 'inset', inset: ctInset()}); });
+// Load it quietly a few seconds after start, once signed in, so the first tap is instant.
+function ctPreload() { if (CT.pre || CT.frame || !state.config || !signedIn()) return; CT.pre = true; const go = () => { if (!CT.frame && state.config && signedIn()) ctFrame(); }; setTimeout(() => 'requestIdleCallback' in window ? requestIdleCallback(go, {timeout: 6000}) : go(), 3000); }
 
 /* ---------- start ---------- */
 function start() {

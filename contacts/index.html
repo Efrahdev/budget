@@ -1,0 +1,1433 @@
+<!doctype html><html lang="en-GB"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#f2f3f7" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#07080c" media="(prefers-color-scheme: dark)">
+<meta name="referrer" content="no-referrer">
+<title>Contacts</title>
+<meta name="description" content="Family contacts, part of the Budget Tracker. Synced through the budget's own contacts sheet.">
+<link rel="icon" href="../icons/icon-192.png" sizes="192x192">
+<link rel="apple-touch-icon" href="../icons/apple-touch-icon.png">
+<script>/* the budget app's Text size, typeface and day/night choice, before the first paint */
+(function(){var h=document.documentElement;try{var x=JSON.parse(localStorage.getItem('budgetTracker.text')||'{}')||{},F={atkinson:['"Atkinson Hyperlegible Next"','Atkinson+Hyperlegible+Next:wght@400..800'],noto:['"Noto Sans"','Noto+Sans:wght@400..800'],roboto:['"Roboto"','Roboto:wght@400..800'],lexend:['"Lexend"','Lexend:wght@400..800'],system:['system-ui']};
+if(x.size>0.5&&x.size<2)h.style.setProperty('--fsu',x.size);var f=F[x.font];if(f){h.style.setProperty('--f-body',f[0]+',system-ui,sans-serif');if(f[1])document.write('<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family='+f[1]+'&display=swap">')}}catch(e){}
+try{var t=localStorage.getItem('budgetTracker.theme');if(t==='light'||t==='dark')h.dataset.theme=t}catch(e){}
+try{if(window.parent!==window&&window.parent.location.origin===location.origin)h.classList.add('embedded')}catch(e){}})();
+</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400..800&display=swap">
+<style>
+/* Budget Tracker look ("calm glass"): soft paper background, quiet solid cards, one blue accent, the budget's
+   button gradient. Day and night follow the budget's switch (budgetTracker.theme) or else the phone's setting.
+   Every font size is calc(Npx*var(--fs,1)), so the budget's Text size setting applies here too. */
+@property --fs{syntax:'<number>';inherits:true;initial-value:1}
+:root{color-scheme:light;--fsu:1;--fsv:1;--fs:calc(var(--fsu) * var(--fsv));--inset:0px;
+  --f-body:"Inter",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;--read:var(--f-body);--bar-h:116px;--ease:cubic-bezier(.2,.8,.2,1);
+  --bg:#f2f3f7;--surface:#ffffff;--surface2:#f6f7fa;--field:#ffffff;--line:rgba(16,24,40,.08);--line2:rgba(16,24,40,.14);--text:#0b0d12;--muted:#636b7d;--faint:#9aa1b0;
+  --accent:#2563eb;--accent-bg:rgba(37,99,235,.09);--danger:#d93f45;--danger-bg:rgba(229,72,77,.09);--ok:#16a34a;--warn:#d98a06;
+  --call:#15803d;--call-bg:rgba(22,163,74,.09);--sms:#2563eb;--sms-bg:rgba(37,99,235,.08);--wa:#16883f;--wa-bg:rgba(22,136,63,.09);
+  --glass:rgba(242,243,247,.82);--press:rgba(16,24,40,.035);--sel:rgba(37,99,235,.07);
+  --btn-a:#3b76ff;--btn-b:#1f54e0;--shade:0 1px 2px rgba(16,24,40,.04),0 8px 24px -14px rgba(16,24,40,.16);--shade-float:0 10px 30px -10px rgba(16,24,40,.28),0 2px 8px rgba(16,24,40,.06);
+  --toast-bg:rgba(22,24,31,.92);--toast-ink:#f5f7fb;--dl-add:#1a7f37;--dl-add-bg:#e6ffec;--dl-del:#cf222e;--dl-del-bg:#ffebe9}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){color-scheme:dark;
+  --bg:#07080c;--surface:#111318;--surface2:#171a21;--field:#111318;--line:rgba(255,255,255,.07);--line2:rgba(255,255,255,.13);--text:#f3f5f9;--muted:#8d96a8;--faint:#5f6777;
+  --accent:#7aa2ff;--accent-bg:rgba(122,162,255,.14);--danger:#ff7378;--danger-bg:rgba(255,99,105,.13);--ok:#2fbf6a;--warn:#f2a93b;
+  --call:#4fc883;--call-bg:rgba(47,191,106,.12);--sms:#7aa2ff;--sms-bg:rgba(122,162,255,.12);--wa:#5cc77a;--wa-bg:rgba(92,199,122,.12);
+  --glass:rgba(7,8,12,.82);--press:rgba(255,255,255,.04);--sel:rgba(122,162,255,.10);
+  --btn-a:#4a7fff;--btn-b:#2a58e6;--shade:0 0 0 1px rgba(255,255,255,.02),0 10px 28px -16px rgba(0,0,0,.9);--shade-float:0 14px 34px -12px rgba(0,0,0,.85),0 0 0 1px rgba(255,255,255,.05);
+  --toast-bg:rgba(236,239,246,.94);--toast-ink:#0b0d12;--dl-add:#7ee2a0;--dl-add-bg:rgba(46,160,67,.14);--dl-del:#ff9e97;--dl-del-bg:rgba(248,81,73,.13)}}
+:root[data-theme="dark"]{color-scheme:dark;
+  --bg:#07080c;--surface:#111318;--surface2:#171a21;--field:#111318;--line:rgba(255,255,255,.07);--line2:rgba(255,255,255,.13);--text:#f3f5f9;--muted:#8d96a8;--faint:#5f6777;
+  --accent:#7aa2ff;--accent-bg:rgba(122,162,255,.14);--danger:#ff7378;--danger-bg:rgba(255,99,105,.13);--ok:#2fbf6a;--warn:#f2a93b;
+  --call:#4fc883;--call-bg:rgba(47,191,106,.12);--sms:#7aa2ff;--sms-bg:rgba(122,162,255,.12);--wa:#5cc77a;--wa-bg:rgba(92,199,122,.12);
+  --glass:rgba(7,8,12,.82);--press:rgba(255,255,255,.04);--sel:rgba(122,162,255,.10);
+  --btn-a:#4a7fff;--btn-b:#2a58e6;--shade:0 0 0 1px rgba(255,255,255,.02),0 10px 28px -16px rgba(0,0,0,.9);--shade-float:0 14px 34px -12px rgba(0,0,0,.85),0 0 0 1px rgba(255,255,255,.05);
+  --toast-bg:rgba(236,239,246,.94);--toast-ink:#0b0d12;--dl-add:#7ee2a0;--dl-add-bg:rgba(46,160,67,.14);--dl-del:#ff9e97;--dl-del-bg:rgba(248,81,73,.13)}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%;background:var(--bg)}
+body{margin:0;min-height:100dvh;background:var(--bg);color:var(--text);font-family:var(--read);-webkit-font-smoothing:antialiased;overflow-x:hidden;font-size:calc(15px*var(--fs,1));line-height:1.45}
+button,input,select,textarea{font:inherit;color:inherit}
+button,a,input,textarea,select,[role=button]{-webkit-tap-highlight-color:transparent}
+button{cursor:pointer}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+svg{display:block}
+.i{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+
+.app{position:relative;width:min(600px,100%);margin:0 auto;padding:0 14px calc(var(--inset) + 100px + env(safe-area-inset-bottom))}
+.titlebar{display:flex;align-items:center;gap:6px;padding:8px 2px 2px}
+.titlebar .tt{flex:1;min-width:0}
+h1{margin:0;font-size:calc(26px*var(--fs,1));line-height:1.15;font-weight:700;letter-spacing:-.02em}
+.meta{margin:3px 0 0;font-size:calc(12.5px*var(--fs,1));color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-variant-numeric:tabular-nums}
+.ibtn{position:relative;flex:none;width:38px;height:38px;border-radius:11px;border:1px solid var(--line);background:var(--surface);display:grid;place-items:center;color:var(--muted);transition:color .15s,border-color .15s,background .15s}
+.ibtn:active{background:var(--surface2)}
+.ibtn.on{color:var(--accent);border-color:color-mix(in srgb,var(--accent) 45%,transparent);background:var(--accent-bg)}
+.ibtn .az{font-size:calc(11.5px*var(--fs,1));font-weight:750;letter-spacing:.02em}
+.ibtn[hidden]{display:none}
+.sdot{position:absolute;top:6px;right:6px;width:7px;height:7px;border-radius:50%;background:var(--faint);box-shadow:0 0 0 2px var(--surface)}
+[data-sync="idle"] .sdot{background:var(--ok)}
+[data-sync="syncing"] .sdot{background:var(--accent)}
+[data-sync="offline"] .sdot{background:var(--faint)}
+[data-sync="error"] .sdot{background:var(--danger)}
+[data-sync="off"] .sdot{background:transparent;box-shadow:inset 0 0 0 1.5px var(--faint),0 0 0 2px var(--surface)}
+
+/* sticky search + tag chips */
+.sentinel{height:1px}
+.bar{position:sticky;top:0;z-index:6;margin:0 -14px;padding:max(6px,env(safe-area-inset-top)) 14px 6px;background:var(--bg);transition:box-shadow .2s,padding .2s}
+.bar .titlebar{padding:6px 2px 8px;transition:padding .2s}
+.bar h1{transition:font-size .2s}
+.bar .meta{max-height:20px;transition:max-height .2s,opacity .2s,margin .2s}
+.bar.stuck .titlebar{padding:2px 2px 6px}
+.bar.stuck h1{font-size:calc(19px*var(--fs,1))}
+.bar.stuck .meta{max-height:0;opacity:0;margin:0}
+.bar.stuck{background:var(--glass);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);box-shadow:0 1px 0 var(--line)}
+.search{position:relative;display:flex;align-items:center;height:46px;border-radius:13px;border:1px solid var(--line2);background:var(--field);transition:border-color .15s}
+.search:focus-within{border-color:color-mix(in srgb,var(--accent) 70%,transparent)}
+.search>.i{position:absolute;left:14px;color:var(--faint)}
+.search input{flex:1;min-width:0;height:100%;border:0;background:transparent;outline:none;padding:0 42px 0 42px;font-size:calc(16px*var(--fs,1));color:var(--text)}
+.search input::placeholder{color:var(--faint)}
+.search input::-webkit-search-cancel-button{display:none}
+.clearq{position:absolute;right:6px;width:34px;height:34px;border:0;border-radius:10px;background:transparent;display:none;place-items:center;color:var(--muted)}
+.clearq.show{display:grid}
+.chips{display:flex;gap:7px;overflow-x:auto;margin:0 -14px;padding:9px 14px 2px;scrollbar-width:none}
+.chips[hidden]{display:none}
+.chips::-webkit-scrollbar{display:none}
+.chip{flex:none;display:inline-flex;align-items:center;gap:6px;height:31px;padding:0 12px;border-radius:999px;border:1px solid var(--line2);background:var(--surface);font-size:calc(13px*var(--fs,1));font-weight:600;color:var(--muted);white-space:nowrap;transition:background .15s,color .15s,border-color .15s}
+.chip small{font-size:calc(11.5px*var(--fs,1));font-weight:600;color:var(--faint);font-variant-numeric:tabular-nums}
+.chip.on{color:var(--accent);border-color:color-mix(in srgb,var(--accent) 50%,transparent);background:var(--accent-bg)}
+.chip.on small{color:inherit;opacity:.75}
+.chip svg{width:13px;height:13px}
+.chip .cs{fill:var(--warn);stroke:none}
+
+/* list */
+.group{margin-top:14px}
+.diff{margin:6px 0 2px;border:1px solid var(--line);border-radius:9px;overflow:hidden;font:calc(12px*var(--fs,1))/1.5 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+.dl{display:flex;gap:8px;padding:3px 9px;white-space:pre-wrap;word-break:break-word}
+.dl b{flex:none;width:9px;font-weight:700}
+.dl i{flex:none;min-width:46px;font-style:normal;opacity:.75}
+.dl.add{color:var(--dl-add);background:var(--dl-add-bg)}
+.dl.del{color:var(--dl-del);background:var(--dl-del-bg)}
+.dl.more{color:var(--muted);background:var(--surface2)}
+.lhead{display:flex;align-items:center;justify-content:space-between;width:100%;min-height:44px;padding:4px 0;border:0;background:none;text-align:left;font-size:calc(12px*var(--fs,1));font-weight:700;letter-spacing:.06em;color:var(--muted)}
+.lhead span{display:flex;align-items:center;gap:7px}
+.lhead .i{width:15px;height:15px}
+.lhead .cnt{font-weight:600;letter-spacing:0;color:var(--faint)}
+.lhead .chev{transition:transform .2s}
+.lhead[aria-expanded="true"] .chev{transform:rotate(180deg)}
+.log li{cursor:pointer}
+.log .lt .sum{display:flex;justify-content:space-between;gap:8px}
+.log .lt .plus{flex:none;font:600 calc(11.5px*var(--fs,1)) ui-monospace,Menlo,monospace}
+.log .lt .plus .a{color:var(--ok)}
+.log .lt .plus .r{color:var(--danger)}
+.gl{position:sticky;top:var(--bar-h);z-index:2;margin:0 0 6px;padding:3px 6px;font-size:calc(12px*var(--fs,1));font-weight:700;letter-spacing:.06em;color:var(--muted);background:var(--bg)}
+.gcard{border-radius:14px;background:var(--surface);border:1px solid var(--line);overflow:hidden}
+.section-label{margin:14px 6px 6px;font-size:calc(12px*var(--fs,1));font-weight:700;letter-spacing:.06em;color:var(--muted)}
+.row{content-visibility:auto;contain-intrinsic-size:auto 64px;position:relative;display:grid;grid-template-columns:40px minmax(0,1fr) auto;grid-template-areas:"av name quick" "av sub acts";column-gap:12px;row-gap:1px;align-items:center;padding:9px 8px 9px 12px;min-height:64px;cursor:pointer;outline:0;transition:background .15s}
+.row+.row:before{content:"";position:absolute;top:0;left:64px;right:0;height:1px;background:var(--line)}
+.row:active,.row:focus-visible{background:var(--press)}
+.row.flash{animation:flash 1.6s ease-out}
+@keyframes flash{0%,35%{background:var(--sel)}100%{background:transparent}}
+.rise{animation:rise .35s var(--ease) both;animation-delay:calc(var(--d,0) * 18ms)}
+@keyframes rise{from{opacity:0;transform:translateY(6px)}}
+.av{--a1:#7c6cf0;--a2:#4f8fe0;grid-area:av;flex:none;width:40px;height:40px;border-radius:50%;display:grid;place-items:center;font-size:calc(14.5px*var(--fs,1));font-weight:650;color:#fff;letter-spacing:.01em;background:linear-gradient(140deg,var(--a1),var(--a2))}
+.av svg{width:48%;height:48%}
+.rn{grid-area:name;display:flex;align-items:center;gap:5px;min-width:0;font-size:calc(15.5px*var(--fs,1));font-weight:600;line-height:1.3;color:var(--text)}
+.rn>span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rn .star{flex:none;width:13px;height:13px;fill:var(--warn);stroke:none}
+.rs{grid-area:sub;display:flex;align-items:center;gap:6px;min-width:0;font-size:calc(13px*var(--fs,1));color:var(--muted);white-space:nowrap;overflow:hidden;font-variant-numeric:tabular-nums}
+.rs .num{overflow:hidden;text-overflow:ellipsis;flex:0 1 auto;min-width:0}
+.tg{flex:none;font-size:calc(10.5px*var(--fs,1));font-weight:650;letter-spacing:.02em;padding:1px 6px;border-radius:6px;color:var(--accent);background:var(--accent-bg)}
+mark{color:inherit;background:var(--accent-bg);border-radius:3px;box-shadow:0 0 0 1px color-mix(in srgb,var(--accent) 25%,transparent)}
+.rq{grid-area:quick;display:flex;gap:2px;justify-self:end}
+.ra{grid-area:acts;display:flex;gap:5px;justify-self:end}
+.mi{width:28px;height:26px;border:0;border-radius:8px;background:transparent;display:grid;place-items:center;color:var(--faint);transition:color .15s,background .15s}
+.mi .i{width:15px;height:15px}
+.mi:active{color:var(--text);background:var(--press)}
+.ic{width:34px;height:30px;border-radius:9px;display:grid;place-items:center;text-decoration:none;transition:filter .15s}
+.ic .i{width:17px;height:17px}
+.ic.call{color:var(--call);background:var(--call-bg)}
+.ic.sms{color:var(--sms);background:var(--sms-bg)}
+.ic.wa{color:var(--wa);background:var(--wa-bg)}
+.ic:active{filter:brightness(1.25)}
+.ic.off{opacity:.28;pointer-events:none}
+.row .chk{grid-area:av;width:40px;height:40px;border-radius:50%;display:none;place-items:center;border:1.5px solid var(--line2);color:#fff}
+body.selecting .row .chk{display:grid}
+body.selecting .row .av{display:none}
+body.selecting .row .rq,body.selecting .row .ra{visibility:hidden}
+.row.selected{background:var(--sel)}
+.row.selected .chk{background:var(--accent);border-color:var(--accent)}
+.row .chk svg{width:18px;height:18px;opacity:0}
+.row.selected .chk svg{opacity:1}
+
+/* A–Z menu */
+.azpop{position:fixed;z-index:30;right:max(14px,calc((100vw - 600px)/2 + 14px));top:64px;width:min(300px,calc(100vw - 28px));padding:10px;border-radius:14px;background:var(--surface);border:1px solid var(--line2);box-shadow:0 18px 40px -20px rgba(0,0,0,.6);display:grid;grid-template-columns:repeat(7,1fr);gap:4px;animation:pop .14s ease}
+.azpop[hidden]{display:none}
+@keyframes pop{from{opacity:0;transform:translateY(-4px)}}
+.azpop button{height:36px;border:0;border-radius:9px;background:transparent;font-size:calc(14px*var(--fs,1));font-weight:650;color:var(--text)}
+.azpop button:active{background:var(--accent-bg);color:var(--accent)}
+.azpop button[disabled]{color:var(--faint);opacity:.45;cursor:default}
+.azpop button.star{color:var(--warn)}
+
+/* empty states */
+.empty{margin:40px 8px;text-align:center}
+.empty .eic{width:64px;height:64px;margin:0 auto;border-radius:20px;display:grid;place-items:center;color:var(--accent);background:var(--accent-bg)}
+.empty .eic .i{width:30px;height:30px}
+.empty h2{margin:16px 0 6px;font-size:calc(19px*var(--fs,1));letter-spacing:-.01em}
+.empty p{margin:0 auto;max-width:300px;font-size:calc(14px*var(--fs,1));line-height:1.55;color:var(--muted)}
+.empty .actions{display:flex;flex-direction:column;gap:9px;max-width:290px;margin:20px auto 0}
+
+/* buttons */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:44px;padding:0 16px;border-radius:12px;border:1px solid var(--line2);background:var(--surface);font-size:calc(14.5px*var(--fs,1));font-weight:600;color:var(--text);text-decoration:none;transition:background .15s}
+.btn:active{background:var(--surface2)}
+.btn.primary{border:0;color:#fff;background:linear-gradient(160deg,var(--btn-a),var(--btn-b));box-shadow:inset 0 1px 0 rgba(255,255,255,.22)}
+.btn.danger{color:var(--danger)}
+.btn.danger.armed{color:#fff;background:var(--danger);border-color:transparent}
+.btn .i{width:17px;height:17px}
+.btn[disabled]{opacity:.5;pointer-events:none}
+.btn.sm{min-height:36px;padding:0 12px;font-size:calc(13.5px*var(--fs,1));border-radius:10px}
+
+/* selection bar */
+.selbar{position:fixed;z-index:25;left:50%;transform:translateX(-50%);bottom:calc(var(--inset) + 14px + env(safe-area-inset-bottom));display:flex;align-items:center;gap:4px;max-width:calc(100vw - 20px);padding:6px;border-radius:16px;background:var(--surface);border:1px solid var(--line2);box-shadow:0 12px 30px -16px rgba(0,0,0,.7)}
+.selbar[hidden]{display:none}
+.selbar b{padding:0 6px;font-size:calc(13px*var(--fs,1));font-weight:650;white-space:nowrap;font-variant-numeric:tabular-nums}
+.selbar button{display:flex;flex-direction:column;align-items:center;gap:2px;min-width:50px;height:48px;padding:4px 5px;border:0;border-radius:11px;background:transparent;font-size:calc(11px*var(--fs,1));font-weight:600;color:var(--muted)}
+.selbar button:active{background:var(--press)}
+.selbar button .i{width:18px;height:18px;color:var(--text)}
+.selbar button.del{color:var(--danger)}
+.selbar button.del .i{color:var(--danger)}
+.selbar button.del.armed{background:var(--danger-bg)}
+
+/* layers */
+html.layer-open,html.layer-open body{overflow:hidden}
+.layer{position:fixed;inset:0;z-index:40;overflow-y:auto;overscroll-behavior:contain;background:var(--bg);-webkit-overflow-scrolling:touch}
+.layer[hidden]{display:none}
+.layer.anim-in{animation:layer-in .3s var(--ease)}
+.layer.anim-out{animation:layer-out .2s ease forwards}
+@keyframes layer-in{from{opacity:0;transform:translateY(24px)}}
+@keyframes layer-out{to{opacity:0;transform:translateY(24px)}}
+html.vt-layer::view-transition-old(root),html.vt-layer::view-transition-new(root){animation:none}
+::view-transition-new(layer){animation:layer-in .3s var(--ease)}
+::view-transition-old(layer){animation:layer-out .2s ease forwards}
+::view-transition-group(hero-av){animation-duration:.32s;animation-timing-function:var(--ease)}
+::view-transition-old(hero-av),::view-transition-new(hero-av){height:100%;width:100%;animation:none}
+.lin{width:min(600px,100%);margin:0 auto;min-height:100%;padding:max(8px,env(safe-area-inset-top)) 14px calc(40px + env(safe-area-inset-bottom))}
+.lbar{position:sticky;top:0;z-index:3;display:flex;align-items:center;gap:8px;margin:0 -14px;padding:8px 14px;background:var(--bg)}
+.lbar h2{flex:1;margin:0;font-size:calc(16.5px*var(--fs,1));font-weight:650;text-align:center}
+.lbar .sp{flex:1}
+.ibtn.starred{color:var(--warn)}
+.ibtn.starred svg{fill:var(--warn)}
+.textbtn{min-height:38px;padding:0 12px;border:0;border-radius:10px;background:none;font-size:calc(15px*var(--fs,1));font-weight:600;color:var(--muted)}
+.textbtn.go{color:#fff;background:linear-gradient(160deg,var(--btn-a),var(--btn-b))}
+
+/* detail */
+.hero{text-align:center;padding:10px 0 4px}
+.av.big{width:96px;height:96px;font-size:calc(34px*var(--fs,1));margin:6px auto 14px}
+.hero h2{margin:0;font-size:calc(24px*var(--fs,1));line-height:1.2;font-weight:700;letter-spacing:-.015em;word-break:break-word}
+.dtags{display:flex;flex-wrap:wrap;justify-content:center;gap:6px;margin-top:10px}
+.st>*{animation:rise .35s var(--ease) both}
+.st>*:nth-child(2){animation-delay:.03s}.st>*:nth-child(3){animation-delay:.06s}.st>*:nth-child(n+4){animation-delay:.09s}
+.acts{display:flex;justify-content:space-between;gap:8px;margin:20px 0 4px}
+.act{flex:1;display:flex;flex-direction:column;align-items:center;gap:6px;text-decoration:none;color:var(--muted);font-size:calc(12px*var(--fs,1));font-weight:600}
+.act span{width:100%;max-width:76px;height:52px;border-radius:14px;display:grid;place-items:center;border:1px solid var(--line)}
+.act .i{width:21px;height:21px}
+.act.call span{color:var(--call);background:var(--call-bg)}
+.act.sms span{color:var(--sms);background:var(--sms-bg)}
+.act.wa span{color:var(--wa);background:var(--wa-bg)}
+.act.mail span{color:var(--accent);background:var(--accent-bg)}
+.act.off{opacity:.3;pointer-events:none}
+.icard{margin-top:12px;border-radius:14px;background:var(--surface);border:1px solid var(--line);overflow:hidden}
+.irow{position:relative;display:flex;align-items:center;gap:8px;padding:11px 8px 11px 14px;min-height:58px}
+.irow+.irow:before{content:"";position:absolute;top:0;left:14px;right:0;height:1px;background:var(--line)}
+.irow .k{flex:1;min-width:0}
+.irow small{display:block;font-size:calc(11.5px*var(--fs,1));font-weight:600;color:var(--muted)}
+.irow .v{display:block;margin-top:1px;font-size:calc(15.5px*var(--fs,1));color:var(--text);text-decoration:none;word-break:break-word;white-space:pre-wrap;font-variant-numeric:tabular-nums}
+.dfoot{display:flex;gap:9px;margin-top:16px}
+.dfoot .btn{flex:1}
+
+/* forms */
+.ehero{display:flex;flex-direction:column;align-items:center;gap:10px;padding:6px 0 2px}
+.ehero .av{width:76px;height:76px;font-size:calc(27px*var(--fs,1))}
+.ename{width:100%;border:0;border-bottom:1px solid var(--line2);background:none;outline:none;text-align:center;font-size:calc(21px*var(--fs,1));font-weight:650;padding:6px 0 8px}
+.ename:focus{border-color:var(--accent)}
+.ename::placeholder{color:var(--faint);font-weight:500}
+.fcard{margin-top:12px;padding:4px 14px 10px;border-radius:14px;background:var(--surface);border:1px solid var(--line)}
+.fhead{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:10px 0 6px;font-size:calc(12px*var(--fs,1));font-weight:700;letter-spacing:.06em;color:var(--muted)}
+.fhead span{display:flex;align-items:center;gap:7px}
+.fhead .i{width:15px;height:15px}
+.frow{display:flex;align-items:center;gap:8px;padding:4px 0}
+.fin,.frow select,.frow input,.fcard textarea{min-width:0;height:44px;border-radius:11px;border:1px solid var(--line2);background:var(--field);padding:0 12px;font-size:calc(16px*var(--fs,1));outline:none;color:var(--text);transition:border-color .15s}
+.fin:focus,.frow select:focus,.frow input:focus,.fcard textarea:focus{border-color:color-mix(in srgb,var(--accent) 70%,transparent)}
+.frow select{flex:none;width:96px;padding:0 6px 0 10px;font-size:calc(14px*var(--fs,1));color:var(--muted)}
+.frow input{flex:1;font-variant-numeric:tabular-nums}
+.fin{width:100%}
+.fcard textarea{width:100%;height:auto;min-height:84px;padding:11px 12px;resize:vertical;line-height:1.5}
+.rm{flex:none;width:36px;height:36px;border:0;border-radius:10px;background:none;color:var(--faint);display:grid;place-items:center}
+.addrow{display:inline-flex;align-items:center;gap:6px;min-height:38px;margin-top:2px;padding:0 2px;border:0;background:none;font-size:calc(14px*var(--fs,1));font-weight:600;color:var(--accent)}
+.addrow .i{width:16px;height:16px}
+.warn{margin:4px 2px 2px;font-size:calc(12.5px*var(--fs,1));color:var(--warn);display:none}
+.warn.show{display:block}
+.flabel{display:block;margin:10px 2px 6px;font-size:calc(12.5px*var(--fs,1));font-weight:600;color:var(--muted)}
+.tagpick{display:flex;flex-wrap:wrap;gap:7px;padding:4px 0 6px}
+.inline{display:flex;gap:8px;padding:4px 0 2px}
+.inline input{flex:1}
+.switch{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:54px;padding:6px 14px;font-size:calc(15px*var(--fs,1));font-weight:600;cursor:pointer}
+.switch input{position:absolute;opacity:0;pointer-events:none}
+.sw{position:relative;flex:none;width:46px;height:28px;border-radius:999px;background:var(--surface2);border:1px solid var(--line2);transition:background .2s}
+.sw:after{content:"";position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.3);transition:transform .2s var(--ease)}
+.switch input:checked+.sw{background:var(--accent);border-color:transparent}
+.switch input:checked+.sw:after{transform:translateX(18px)}
+.switch input:focus-visible+.sw{outline:2px solid var(--accent);outline-offset:2px}
+.bigsave{width:100%;margin-top:16px}
+.seg{display:flex;padding:3px;border-radius:12px;background:var(--surface2);border:1px solid var(--line)}
+.seg button{flex:1;min-height:38px;border:0;border-radius:9px;background:none;font-size:calc(13.5px*var(--fs,1));font-weight:600;color:var(--muted)}
+.seg button.on{color:var(--text);background:var(--surface);box-shadow:0 0 0 1px var(--line2)}
+.statusline{display:flex;align-items:center;gap:12px;padding:6px 2px 8px}
+.statusline .dot{width:10px;height:10px;border-radius:50%;flex:none;background:var(--faint)}
+[data-sync="idle"] .statusline .dot{background:var(--ok)}
+[data-sync="syncing"] .statusline .dot{background:var(--accent)}
+[data-sync="error"] .statusline .dot{background:var(--danger)}
+[data-sync="off"] .statusline .dot{background:transparent;box-shadow:inset 0 0 0 1.5px var(--faint)}
+.statusline b{display:block;font-size:calc(15.5px*var(--fs,1))}
+.statusline span{display:block;margin-top:1px;font-size:calc(13px*var(--fs,1));color:var(--muted)}
+.kv{display:grid;grid-template-columns:auto 1fr;gap:4px 14px;margin:0;padding:2px 2px 10px;font-size:calc(13.5px*var(--fs,1))}
+.kv dt{color:var(--muted)}
+.kv dd{margin:0;text-align:right;font-variant-numeric:tabular-nums}
+.stack{display:flex;flex-direction:column;gap:8px;padding:4px 0}
+.row2{display:flex;gap:8px}
+.row2 .btn{flex:1}
+.note{margin:6px 2px 4px;font-size:calc(12.5px*var(--fs,1));line-height:1.5;color:var(--muted)}
+.log{list-style:none;margin:0;padding:0}
+.log li{display:flex;align-items:flex-start;gap:10px;padding:9px 0;border-top:1px solid var(--line)}
+.log li:first-child{border-top:0}
+.log .lk{flex:none;width:26px;height:26px;border-radius:8px;display:grid;place-items:center;margin-top:1px}
+.log .lk .i{width:14px;height:14px}
+.log .lk.added{color:var(--ok);background:color-mix(in srgb,var(--ok) 14%,transparent)}
+.log .lk.edited,.log .lk.tagged,.log .lk.formatted{color:var(--sms);background:var(--sms-bg)}
+.log .lk.deleted{color:var(--danger);background:var(--danger-bg)}
+.log .lk.merged,.log .lk.synced{color:var(--accent);background:var(--accent-bg)}
+.log .lt{flex:1;min-width:0;font-size:calc(14px*var(--fs,1))}
+.log .lt small{display:block;font-size:calc(12px*var(--fs,1));color:var(--muted)}
+.tagrow{display:flex;align-items:center;gap:8px;padding:7px 0;border-top:1px solid var(--line)}
+.tagrow:first-child{border-top:0}
+.tagrow .tn{flex:1;min-width:0;font-size:calc(14.5px*var(--fs,1));font-weight:600}
+.tagrow .tn small{margin-left:6px;font-weight:500;color:var(--muted);font-variant-numeric:tabular-nums}
+.tagrow input{flex:1;min-width:0}
+.tagrow .mi{width:34px;height:34px}
+.tagrow .mi.armed{color:var(--danger);background:var(--danger-bg)}
+.tcheck{display:flex;align-items:center;gap:12px;width:100%;min-height:50px;padding:6px 2px;border:0;border-top:1px solid var(--line);background:none;text-align:left;font-size:calc(15px*var(--fs,1));font-weight:600}
+.tcheck:first-child{border-top:0}
+.tcheck .bx{position:relative;flex:none;width:22px;height:22px;border-radius:7px;border:1.5px solid var(--line2);display:grid;place-items:center;color:#fff}
+.tcheck .bx svg{position:absolute;width:14px;height:14px;opacity:0}
+.tcheck[data-state="all"] .bx{background:var(--accent);border-color:var(--accent)}
+.tcheck[data-state="all"] .bx svg.ck{opacity:1}
+.tcheck[data-state="some"] .bx{background:var(--accent-bg);border-color:var(--accent);color:var(--accent)}
+.tcheck[data-state="some"] .bx svg.dash{opacity:1}
+.tcheck .tc{flex:1}
+.tcheck small{font-weight:500;color:var(--muted);font-variant-numeric:tabular-nums}
+.dgroup{margin-top:12px;border-radius:14px;background:var(--surface);border:1px solid var(--line);overflow:hidden}
+.dgroup .dh{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:6px 6px 6px 12px;border-bottom:1px solid var(--line);font-size:calc(12.5px*var(--fs,1));color:var(--muted)}
+.dgroup .dr{display:flex;align-items:center;gap:12px;padding:10px 8px 10px 12px;border-top:1px solid var(--line)}
+.dgroup .dh+.dr{border-top:0}
+.dgroup .dr .k{flex:1;min-width:0}
+.dgroup .dr b{display:block;font-size:calc(15px*var(--fs,1));font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.dgroup .dr .k span{display:block;font-size:calc(12.5px*var(--fs,1));color:var(--muted);font-variant-numeric:tabular-nums;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.dgroup .dr .mi{width:34px;height:34px}
+.dgroup .dr .mi.armed{color:var(--danger);background:var(--danger-bg)}
+.dgroup .df{display:flex;gap:8px;padding:10px 12px;border-top:1px solid var(--line)}
+.dgroup .df .btn{flex:1}
+.lockscr{position:fixed;inset:0;z-index:95;display:grid;place-items:center;padding:24px;text-align:center;background:var(--bg)}
+.lockscr[hidden]{display:none}
+.lockscr .eic{width:72px;height:72px;margin:0 auto;border-radius:22px;display:grid;place-items:center;color:var(--accent);background:var(--accent-bg)}
+.lockscr .eic .i{width:32px;height:32px}
+.lockscr h2{margin:18px 0 8px;font-size:calc(22px*var(--fs,1))}
+.lockscr p{max-width:330px;margin:0 auto 18px;font-size:calc(14px*var(--fs,1));line-height:1.55;color:var(--muted)}
+.lockscr .btn{min-width:200px}
+
+/* toast */
+.toast{position:fixed;z-index:60;left:50%;bottom:calc(var(--inset) + 88px + env(safe-area-inset-bottom));display:flex;align-items:center;gap:12px;max-width:calc(100vw - 28px);padding:10px 10px 10px 16px;border-radius:13px;font-size:calc(13.5px*var(--fs,1));line-height:1.35;color:var(--toast-ink);background:var(--toast-bg);-webkit-backdrop-filter:blur(16px);backdrop-filter:blur(16px);border:0;box-shadow:0 12px 30px -14px rgba(0,0,0,.7);opacity:0;transform:translate(-50%,10px);pointer-events:none;transition:opacity .2s,transform .2s var(--ease)}
+.toast.show{opacity:1;transform:translate(-50%,0);pointer-events:auto}
+html.layer-open .toast{bottom:calc(24px + env(safe-area-inset-bottom))!important}
+body.selecting .toast{bottom:calc(var(--inset) + 84px + env(safe-area-inset-bottom))!important}
+.toast button{flex:none;min-height:32px;padding:0 12px;border:0;border-radius:9px;background:color-mix(in srgb,currentColor 14%,transparent);color:inherit;font-weight:650;font-size:calc(13px*var(--fs,1))}
+.toast button:empty{display:none}
+
+/* ===== Compact layout: one slim title row, search behind the dock icon, separate row cards ===== */
+.bar{padding-bottom:4px}
+.bar .titlebar{padding:4px 2px 6px}
+.bar h1{font-size:calc(22px*var(--fs,1))}
+.bar.stuck .titlebar{padding:2px 2px 4px}
+.bar.stuck h1{font-size:calc(19px*var(--fs,1))}
+.ibtn.az{width:auto;min-width:38px;padding:0 9px;font-size:calc(12px*var(--fs,1));font-weight:750;letter-spacing:.02em;color:var(--text)}
+.ibtn.az #azLabel{min-width:12px;text-align:center}
+.searchrow{display:none;align-items:center;gap:6px;padding:4px 0 6px}
+body.searching .searchrow{display:flex}
+body.searching .titlebar{display:none}
+.searchrow .search{flex:1;height:42px}
+.searchrow .textbtn{flex:none;color:var(--accent)}
+.chips{padding:2px 14px 4px}
+.chip{height:30px}
+.gl{display:none}
+.group{margin-top:0}
+.group+.group{margin-top:8px}
+.section-label{margin:6px 6px 6px}
+.gcard{background:none;border:0;border-radius:0;overflow:visible;display:flex;flex-direction:column;gap:8px}
+#list{padding-top:4px}
+.row{background:var(--surface);border:1px solid var(--line);box-shadow:var(--shade);border-radius:16px;padding:12px 10px 12px 12px;min-height:78px;column-gap:12px;row-gap:6px;grid-template-columns:44px minmax(0,1fr) auto;contain-intrinsic-size:auto 80px}
+.row+.row:before{display:none}
+.row:active,.row:focus-visible{background:var(--surface2)}
+.row.selected{background:var(--sel);border-color:color-mix(in srgb,var(--accent) 45%,transparent)}
+.av{width:44px;height:44px;font-size:calc(16px*var(--fs,1))}
+.row .chk{width:44px;height:44px}
+.rn{font-size:calc(17px*var(--fs,1));font-weight:600;letter-spacing:-.005em}
+.rn .star{width:14px;height:14px}
+.rs{font-size:calc(14px*var(--fs,1))}
+.rq{gap:4px}
+.mi{width:30px;height:28px}
+.mi .i{width:16px;height:16px}
+.ra{gap:8px}
+.ic{width:40px;height:34px;border-radius:10px}
+.ic .i{width:18px;height:18px}
+/* the add button: the budget's soft gradient, floating above the budget's bottom bar (--inset is the room that bar takes) */
+.cfab{position:fixed;z-index:24;right:max(16px,calc((100vw - 600px)/2 + 16px));bottom:calc(var(--inset) + 10px + env(safe-area-inset-bottom));width:51px;height:51px;border-radius:16px;border:0;display:grid;place-items:center;color:#fff;
+  background:radial-gradient(120% 90% at 30% 15%,rgba(255,255,255,.34),rgba(255,255,255,0) 55%),linear-gradient(155deg,color-mix(in srgb,var(--btn-a) 82%,#8fb3ff),var(--btn-b));
+  box-shadow:0 14px 28px -12px color-mix(in srgb,var(--btn-b) 75%,transparent),0 2px 6px -2px color-mix(in srgb,var(--btn-b) 45%,transparent),inset 0 1px 0 rgba(255,255,255,.3);transition:transform .3s cubic-bezier(.32,.72,0,1),opacity .2s}
+.cfab svg{width:24px;height:24px;fill:none;stroke:currentColor;stroke-width:2.4;stroke-linecap:round}
+.cfab:active{transform:scale(.92)}
+body.selecting .cfab,body.searching.kb .cfab{opacity:0;pointer-events:none;transform:scale(.8)}
+.layer.pulling{transition:none!important;animation:none!important}
+@media(prefers-reduced-motion:reduce){*,*:before,*:after{animation:none!important;transition:none!important}}
+</style></head>
+<body data-sync="idle">
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="s-phone" viewBox="0 0 24 24"><path d="M6.6 3.8l2.3-.4 1.6 4-2 1.5a11 11 0 0 0 6.6 6.6l1.5-2 4 1.6-.4 2.3a2 2 0 0 1-2.1 1.6C10.6 18.5 5.5 13.4 5 6a2 2 0 0 1 1.6-2.2z"/></symbol>
+  <symbol id="s-msg" viewBox="0 0 24 24"><path d="M5 5h14a1.5 1.5 0 0 1 1.5 1.5v9A1.5 1.5 0 0 1 19 17H10l-4.5 3.5V17H5a1.5 1.5 0 0 1-1.5-1.5v-9A1.5 1.5 0 0 1 5 5z"/></symbol>
+  <symbol id="s-wa" viewBox="0 0 24 24"><path d="M4.5 19.5l1.2-3.6A8 8 0 1 1 8.4 18.6z"/><path d="M9.3 8.6c.2-.5.5-.6.8-.6h.5l.9 2.1-.6.8a5.2 5.2 0 0 0 2.4 2.4l.8-.6 2.1.9v.5c0 .4-.2.7-.6.9-.7.3-1.6.3-2.8-.3a8 8 0 0 1-3.4-3.4c-.5-1.1-.5-2-.1-2.7z"/></symbol>
+  <symbol id="s-edit" viewBox="0 0 24 24"><path d="M4 20h4L19 9a2.1 2.1 0 0 0-4-4L4 16z"/><path d="M13.5 6.5l4 4"/></symbol>
+  <symbol id="s-copy" viewBox="0 0 24 24"><rect x="8.5" y="8.5" width="11" height="11" rx="2.5"/><path d="M15.5 8.5V6a1.5 1.5 0 0 0-1.5-1.5H6A1.5 1.5 0 0 0 4.5 6v8A1.5 1.5 0 0 0 6 15.5h2.5"/></symbol>
+  <symbol id="s-star" viewBox="0 0 24 24"><path d="M12 3.5l2.6 5.4 5.9.8-4.3 4.1 1 5.8L12 16.8l-5.2 2.8 1-5.8-4.3-4.1 5.9-.8z"/></symbol>
+</svg>
+<main class="app" id="app">
+  <div class="sentinel" id="sentinel"></div>
+  <div class="bar" id="bar">
+  <header class="titlebar">
+    <div class="tt"><h1>Contacts</h1><p class="meta" id="metaText">Loading…</p></div>
+    <button class="ibtn" id="searchBtn" type="button" aria-label="Search contacts"><svg class="i" viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5"/><path d="M20 20l-4.2-4.2"/></svg></button>
+    <button class="ibtn az" id="azBtn" type="button" aria-label="Jump to letter" aria-expanded="false"><span id="azLabel">A–Z</span></button>
+    <button class="ibtn" id="selBtn" type="button" aria-label="Select contacts"><svg class="i" viewBox="0 0 24 24"><rect x="3.5" y="4" width="6" height="6" rx="1.5"/><path d="M5 7l1 1 2-2"/><rect x="3.5" y="14" width="6" height="6" rx="1.5"/><path d="M13 7h7.5M13 17h7.5"/></svg></button>
+    <button class="ibtn" id="menuBtn" type="button" aria-label="Settings and sync status"><svg class="i" viewBox="0 0 24 24"><path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2.2"/><circle cx="10" cy="17" r="2.2"/></svg><span class="sdot"></span></button>
+  </header>
+  <div class="searchrow" id="searchRow">
+    <label class="search"><svg class="i" viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5"/><path d="M20 20l-4.2-4.2"/></svg>
+      <input id="q" type="search" placeholder="Name, number, tag or note" autocomplete="off" autocorrect="off" spellcheck="false" enterkeyhint="search" aria-label="Search contacts">
+      <button class="clearq" id="clearQ" type="button" aria-label="Clear search"><svg class="i" viewBox="0 0 24 24"><path d="M7 7l10 10M17 7L7 17"/></svg></button>
+    </label>
+    <button class="textbtn" id="searchCancel" type="button">Cancel</button>
+  </div>
+    <div class="chips" id="chips" role="toolbar" aria-label="Filter by tag"></div>
+  </div>
+  <section id="list" aria-live="polite"></section>
+</main>
+<div class="azpop" id="azPop" role="menu" aria-label="Jump to letter" hidden></div>
+
+<div class="selbar" id="selbar" hidden>
+  <button type="button" data-sb="close" aria-label="Cancel selection"><svg class="i" viewBox="0 0 24 24"><path d="M7 7l10 10M17 7L7 17"/></svg>Cancel</button>
+  <b id="selCount">0 selected</b>
+  <button type="button" data-sb="all"><svg class="i" viewBox="0 0 24 24"><path d="M4 12.5l3.5 3.5L14 9.5M11 16l1 1 8-8.5"/></svg>All</button>
+  <button type="button" data-sb="tags"><svg class="i" viewBox="0 0 24 24"><path d="M3.5 12V4.5a1 1 0 0 1 1-1H12l8.5 8.5-8.5 8.5z"/><circle cx="8" cy="8" r="1.3"/></svg>Tags</button>
+  <button type="button" data-sb="star"><svg class="i" viewBox="0 0 24 24"><path d="M12 3.5l2.6 5.4 5.9.8-4.3 4.1 1 5.8L12 16.8l-5.2 2.8 1-5.8-4.3-4.1 5.9-.8z"/></svg>Star</button>
+  <button type="button" data-sb="del" class="del"><svg class="i" viewBox="0 0 24 24"><path d="M4.5 7h15M10 11v6M14 11v6M6 7l1 12.5a1.5 1.5 0 0 0 1.5 1.5h7a1.5 1.5 0 0 0 1.5-1.5L18 7M9 7V4.5h6V7"/></svg><span>Delete</span></button>
+</div>
+
+<button class="cfab" id="addBtn" type="button" aria-label="New contact"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></button>
+
+<section class="layer" id="detail" role="dialog" aria-modal="true" aria-label="Contact" hidden></section>
+<section class="layer" id="editor" role="dialog" aria-modal="true" aria-label="Edit contact" hidden></section>
+<section class="layer" id="settings" role="dialog" aria-modal="true" aria-label="Settings and sync status" hidden></section>
+<section class="layer" id="tagsheet" role="dialog" aria-modal="true" aria-label="Tags for selected contacts" hidden></section>
+<section class="layer" id="dups" role="dialog" aria-modal="true" aria-label="Possible duplicates" hidden></section>
+<div class="toast" id="toast" role="status" aria-live="polite"><span id="toastText"></span><button type="button" id="toastAct"></button></div>
+<div class="lockscr" id="lockscr" hidden><div><div class="eic"><svg class="i" viewBox="0 0 24 24"><rect x="5" y="10.5" width="14" height="10" rx="2.5"/><path d="M8 10.5V8a4 4 0 0 1 8 0v2.5"/></svg></div>
+<h2 id="lockTitle">Sign in to the budget app</h2><p id="lockMsg">Contacts open for everyone signed in to the Budget Tracker.</p>
+<button class="btn primary" id="lockRetry" type="button">Try again</button></div></div>
+<input type="file" id="vcfFile" accept=".vcf,text/vcard,text/x-vcard" hidden>
+
+<script>
+'use strict';
+(()=>{
+const $=(s,r=document)=>r.querySelector(s),$$=(s,r=document)=>[...r.querySelectorAll(s)];
+const root=document.documentElement,body=document.body;
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const haptic=()=>{}; // budget rule: no vibration
+const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
+const collator=new Intl.Collator('en-GB',{sensitivity:'base',numeric:true});
+const uid=()=>crypto.randomUUID?crypto.randomUUID():'c'+Date.now().toString(36)+Math.random().toString(36).slice(2,12);
+const norm=s=>String(s||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
+const digits=s=>String(s||'').replace(/\D/g,'');
+const raf=f=>requestAnimationFrame(f);
+
+/* ---------- icons ---------- */
+const sv=p=>`<svg class="i" viewBox="0 0 24 24" aria-hidden="true">${p}</svg>`;
+const I={
+  phone:sv('<path d="M6.6 3.8l2.3-.4 1.6 4-2 1.5a11 11 0 0 0 6.6 6.6l1.5-2 4 1.6-.4 2.3a2 2 0 0 1-2.1 1.6C10.6 18.5 5.5 13.4 5 6a2 2 0 0 1 1.6-2.2z"/>'),
+  msg:sv('<path d="M5 5h14a1.5 1.5 0 0 1 1.5 1.5v9A1.5 1.5 0 0 1 19 17H10l-4.5 3.5V17H5a1.5 1.5 0 0 1-1.5-1.5v-9A1.5 1.5 0 0 1 5 5z"/>'),
+  wa:sv('<path d="M4.5 19.5l1.2-3.6A8 8 0 1 1 8.4 18.6z"/><path d="M9.3 8.6c.2-.5.5-.6.8-.6h.5l.9 2.1-.6.8a5.2 5.2 0 0 0 2.4 2.4l.8-.6 2.1.9v.5c0 .4-.2.7-.6.9-.7.3-1.6.3-2.8-.3a8 8 0 0 1-3.4-3.4c-.5-1.1-.5-2-.1-2.7z"/>'),
+  mail:sv('<rect x="3.5" y="5.5" width="17" height="13" rx="2"/><path d="M4 7l8 6 8-6"/>'),
+  starF:'<svg class="star" viewBox="0 0 24 24" aria-label="Starred"><path d="M12 3.5l2.6 5.4 5.9.8-4.3 4.1 1 5.8L12 16.8l-5.2 2.8 1-5.8-4.3-4.1 5.9-.8z"/></svg>',
+  star:sv('<path d="M12 3.5l2.6 5.4 5.9.8-4.3 4.1 1 5.8L12 16.8l-5.2 2.8 1-5.8-4.3-4.1 5.9-.8z"/>'),
+  edit:sv('<path d="M4 20h4L19 9a2.1 2.1 0 0 0-4-4L4 16z"/><path d="M13.5 6.5l4 4"/>'),
+  back:sv('<path d="M15 6l-6 6 6 6"/>'),
+  close:sv('<path d="M7 7l10 10M17 7L7 17"/>'),
+  plus:sv('<path d="M12 5v14M5 12h14"/>'),
+  copy:sv('<rect x="8.5" y="8.5" width="11" height="11" rx="2.5"/><path d="M15.5 8.5V6a1.5 1.5 0 0 0-1.5-1.5H6A1.5 1.5 0 0 0 4.5 6v8A1.5 1.5 0 0 0 6 15.5h2.5"/>'),
+  note:sv('<path d="M6 3.5h8.5L19 8v12a.5.5 0 0 1-.5.5h-12A.5.5 0 0 1 6 20z"/><path d="M14 3.5V8.5h5M9 13h6M9 16.5h4"/>'),
+  share:sv('<path d="M12 15V4M8 8l4-4 4 4"/><path d="M5 12v6.5A1.5 1.5 0 0 0 6.5 20h11a1.5 1.5 0 0 0 1.5-1.5V12"/>'),
+  trash:sv('<path d="M4.5 7h15M10 11v6M14 11v6M6 7l1 12.5a1.5 1.5 0 0 0 1.5 1.5h7a1.5 1.5 0 0 0 1.5-1.5L18 7M9 7V4.5h6V7"/>'),
+  tag:sv('<path d="M3.5 12V4.5a1 1 0 0 1 1-1H12l8.5 8.5-8.5 8.5z"/><circle cx="8" cy="8" r="1.3"/>'),
+  user:sv('<circle cx="12" cy="8" r="4"/><path d="M4 20.5c.6-4 3.9-6.5 8-6.5s7.4 2.5 8 6.5"/>'),
+  users:sv('<circle cx="9" cy="8.5" r="3.5"/><path d="M2.5 19.5c.5-3.3 3.2-5.3 6.5-5.3s6 2 6.5 5.3M16 5.2a3.5 3.5 0 0 1 0 6.6M18.5 14.6c1.7.8 2.8 2.5 3 4.9"/>'),
+  sync:sv('<path d="M20 11a8 8 0 0 0-14.5-4.5L4 8M4 4v4h4M4 13a8 8 0 0 0 14.5 4.5L20 16M20 20v-4h-4"/>'),
+  phoneBook:sv('<rect x="5" y="2.5" width="14" height="19" rx="3"/><path d="M10 18.5h4"/>'),
+  up:sv('<path d="M12 16V4M7.5 8.5L12 4l4.5 4.5M4.5 15v3.5A1.5 1.5 0 0 0 6 20h12a1.5 1.5 0 0 0 1.5-1.5V15"/>'),
+  down:sv('<path d="M12 4v12M7.5 11.5L12 16l4.5-4.5M4.5 15v3.5A1.5 1.5 0 0 0 6 20h12a1.5 1.5 0 0 0 1.5-1.5V15"/>'),
+  link:sv('<path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/>'),
+  check:sv('<path d="M5 12.5l4.5 4.5L19 7.5"/>'),
+  merge:sv('<path d="M7 4v5a5 5 0 0 0 5 5h5M7 20v-5M14 11l3 3-3 3"/>'),
+  hash:sv('<path d="M5 9h14M5 15h14M10 4L8 20M16 4l-2 16"/>'),
+  shield:sv('<path d="M12 3l7.5 3v5.5c0 4.5-3.2 8.3-7.5 9.5-4.3-1.2-7.5-5-7.5-9.5V6z"/>'),
+  swap:sv('<path d="M7 7h12l-3-3M17 17H5l3 3"/>')
+};
+const CK='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>';
+
+/* ---------- palettes ---------- */
+const PAL=[['#6a64b8','#56789f'],['#9a6a86','#7469a8'],['#4b847a','#567a9c'],['#a3845a','#9c6a74'],['#5a72a3','#7470a8'],['#a27461','#93626a'],['#55806f','#76875c'],['#83679f','#626ba0'],['#55809b','#558678'],['#966a6e','#a08660']];
+const hash=s=>{let h=2166136261;for(let i=0;i<s.length;i++){h^=s.charCodeAt(i);h=Math.imul(h,16777619)}return h>>>0};
+const pal=c=>PAL[hash(c.id||'x')%PAL.length];
+const DEFAULT_TAGS=['BT','E31','DB','South Point'];
+
+/* ---------- storage ---------- */
+let db;
+const rq=r=>new Promise((res,rej)=>{r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error)});
+function openDB(){return new Promise((res,rej)=>{const r=indexedDB.open('budget-contacts',1);r.onupgradeneeded=()=>{const d=r.result;if(!d.objectStoreNames.contains('contacts'))d.createObjectStore('contacts',{keyPath:'id'});if(!d.objectStoreNames.contains('kv'))d.createObjectStore('kv')};r.onsuccess=()=>{db=r.result;res()};r.onerror=()=>rej(r.error)})}
+const strip=c=>{const o={};for(const k in c)if(k[0]!=='_')o[k]=c[k];return o};
+const idb={
+  all:()=>rq(db.transaction('contacts').objectStore('contacts').getAll()),
+  put:list=>new Promise((res,rej)=>{const tx=db.transaction('contacts','readwrite'),s=tx.objectStore('contacts');for(const c of list)s.put(strip(c));tx.oncomplete=()=>res();tx.onerror=()=>rej(tx.error)}),
+  del:ids=>new Promise((res,rej)=>{const tx=db.transaction('contacts','readwrite'),s=tx.objectStore('contacts');for(const id of ids)s.delete(id);tx.oncomplete=()=>res();tx.onerror=()=>rej(tx.error)}),
+  get:k=>rq(db.transaction('kv').objectStore('kv').get(k)),
+  set:(k,v)=>new Promise((res,rej)=>{const tx=db.transaction('kv','readwrite');tx.objectStore('kv').put(v,k);tx.oncomplete=()=>res();tx.onerror=()=>rej(tx.error)})
+};
+
+/* ---------- settings state ---------- */
+let cfg={cursor:0,lastSync:0,lastFull:0,cc:'',locked:''};
+function defaultCC(){return '91'} // the budget household is in India; Settings → Default country code changes it
+const myCC=()=>cfg.cc||defaultCC();
+
+/* ---------- phone numbers: one international format ---------- */
+const CC2=new Set(['20','27','30','31','32','33','34','36','39','40','41','43','44','45','46','47','48','49','51','52','53','54','55','56','57','58','60','61','62','63','64','65','66','81','82','84','86','90','91','92','93','94','95','98']);
+function splitCC(d){if(d[0]==='1'||d[0]==='7')return[d[0],d.slice(1)];if(CC2.has(d.slice(0,2)))return[d.slice(0,2),d.slice(2)];return[d.slice(0,3),d.slice(3)]}
+function groupNat(cc,n){
+  if(cc==='91'&&n.length===10)return n.slice(0,5)+' '+n.slice(5);
+  if(cc==='44'&&n.length===10){if(n.startsWith('20'))return '20 '+n.slice(2,6)+' '+n.slice(6);return n.slice(0,4)+' '+n.slice(4)}
+  if(cc==='1'&&n.length===10)return n.slice(0,3)+' '+n.slice(3,6)+' '+n.slice(6);
+  if(cc==='971'&&n.length===9)return n.slice(0,2)+' '+n.slice(2,5)+' '+n.slice(5);
+  if(cc==='61'&&n.length===9)return n.slice(0,3)+' '+n.slice(3,6)+' '+n.slice(6);
+  const g=[];let i=0;while(n.length-i>4){g.push(n.slice(i,i+3));i+=3}g.push(n.slice(i));return g.join(' ');
+}
+// Returns "+CC national-grouped". Short codes, extensions and anything with letters stay exactly as typed.
+function fmtPhone(raw){
+  const v=String(raw||'').trim().replace(/^tel:/i,'');
+  if(!v)return '';
+  if(/[a-z,;#*]/i.test(v))return v;
+  let d=v.replace(/[^\d+]/g,'');
+  let plus=d.startsWith('+');d=d.replace(/\+/g,'');
+  if(!plus&&d.startsWith('00')){plus=true;d=d.slice(2)}
+  if(!plus){
+    const cc=myCC();
+    if(cc==='91'&&/^1[0-9]{9,12}$/.test(d))return tollGroup(d); // 1800 / 1860 toll-free: dialled without +91
+    if(d.length<7||!cc)return v;
+    if(!(!d.startsWith('0')&&d.startsWith(cc)&&d.length>=11&&d.length-cc.length>=9))d=cc+d.replace(/^0+/,'');
+  }
+  if(d.length<8||d.length>15)return v;
+  const[c,n]=splitCC(d);
+  if(c==='91'&&n[0]==='1')return tollGroup(n);
+  return '+'+c+' '+groupNat(c,n);
+}
+function tollGroup(n){const g=[n.slice(0,4)];let i=4;while(n.length-i>4){g.push(n.slice(i,i+3));i+=3}if(i<n.length)g.push(n.slice(i));return g.join(' ')}
+const phoneKey=v=>{const d=digits(v);return d.length>=7?d.slice(-10):''};
+
+/* ---------- model ---------- */
+const str=(v,n)=>String(v??'').trim().slice(0,n);
+function vals(a,def,isPhone,format){if(!Array.isArray(a))return[];const out=[],seen=new Set();for(const x of a){let v=str(x&&typeof x==='object'?x.value:x,200);if(!v)continue;if(isPhone&&format)v=fmtPhone(v);const k=isPhone?(phoneKey(v)||v):v.toLowerCase();if(seen.has(k))continue;seen.add(k);out.push({label:str(x&&x.label,40)||def,value:v})}return out.slice(0,20)}
+function tagList(a,max=30){const out=[],seen=new Set();for(const t of Array.isArray(a)?a:String(a||'').split(',')){const v=str(t,40);if(v&&!seen.has(v.toLowerCase())){seen.add(v.toLowerCase());out.push(v)}}return out.slice(0,max)}
+function clean(c,{format=false}={}){const now=Date.now();return{id:str(c.id,80)||uid(),name:str(c.name,200),phones:vals(c.phones,'Mobile',true,format),emails:vals(c.emails,'Personal',false,false),tags:tagList(c.tags),notes:str(c.notes,5000),fav:c.fav===true||c.fav==='true'||c.fav===1,createdAt:Number(c.createdAt)||now,updatedAt:Number(c.updatedAt)||now,deleted:c.deleted===true||c.deleted==='true'||c.deleted===1,dirty:c.dirty===true}}
+let all=new Map();
+const live=()=>{const o=[];for(const c of all.values())if(!c.deleted)o.push(c);return o};
+const disp=c=>(c.name||'').replace(/\s+/g,' ').trim()||c.phones[0]?.value||c.emails[0]?.value||'Unnamed';
+function initials(c){const n=c.name;if(!n)return '';let w=n.trim().split(/\s+/);const pt=c._pt||prefixTagOf(n);if(pt&&w.length>(pt.second?2:1))w=w.slice(pt.second?2:1); // skip the tag prefix
+  w=w.map(x=>x.replace(/^[^\p{L}]+/u,'')).filter(x=>x&&/^\p{L}/u.test(x)&&!/\d/.test(x)); // letters only, never numbers
+  if(!w.length)return '';const a=[...w[0]][0],b=w.length>1?[...w[w.length-1]][0]:'';return(a+b).toUpperCase()}
+function av(c,cls=''){const p=pal(c),ini=initials(c);return `<span class="av ${cls}" style="--a1:${p[0]};--a2:${p[1]}">${ini?esc(ini):I.user}</span>`}
+function indexOf(c){computePrefixes();if(c._v===c.updatedAt&&c._pv===prefixVer)return;c._v=c.updatedAt;c._pv=prefixVer;
+  const pt=prefixTagOf(c.name);const tg=[...c.tags];if(pt&&!tg.some(t=>t.toLowerCase()===pt.tag.toLowerCase()))tg.unshift(pt.tag);c._tags=tg;c._pt=pt;
+  c._n=norm(c.name||disp(c)).replace(/\s+/g,' ');c._d=c.phones.map(p=>digits(p.value)).join(' ');c._e=norm(c.emails.map(e=>e.value).join(' '));c._no=norm(c.notes);c._t=tg.map(norm)}
+const telHref=v=>String(v).replace(/[^\d+*#,;]/g,'');
+// A plain tel: link: Android offers every calling app (Phone, Truecaller…) as icons to pick from.
+const callHref=v=>'tel:'+telHref(v);
+function waNumber(v){const f=fmtPhone(v);const d=digits(f);if(f.startsWith('+'))return d;const cc=myCC();return cc&&!d.startsWith(cc)?cc+d.replace(/^0+/,''):d}
+const contactText=c=>[disp(c),...c.phones.map(p=>`${p.label}: ${p.value}`),...c.emails.map(e=>e.value)].filter(Boolean).join('\n');
+
+/* ---------- tag library (synced through the Sheet) ---------- */
+let tagLib={list:DEFAULT_TAGS.slice(),updatedAt:1};
+const libPlain=()=>tagLib.list.filter(t=>t[0]!=='!'&&!t.includes('=>'));
+const libHidden=()=>new Set(tagLib.list.filter(t=>t[0]==='!').map(t=>t.slice(1).toUpperCase()));
+const libAlias=()=>{const m=new Map();for(const t of tagLib.list){const i=t.indexOf('=>');if(i>0)m.set(t.slice(0,i).toUpperCase(),t.slice(i+2))}return m};
+/* Tags from name prefixes: the first word shared by several names ("BT …", "DB …", "South Point …") is a tag. */
+const PREFIX_MIN=10,CODE_MIN=3; // ordinary words need 10+ names; short codes (BT, LX, KKEL, E31) need 3+
+let dataVer=0,prefixVer=-1,prefixMap=new Map();
+const pKey=w=>String(w||'').replace(/[.,:;'’]+$/,'').toUpperCase();
+function computePrefixes(){
+  if(prefixVer===dataVer)return;prefixVer=dataVer;
+  const first=new Map();
+  for(const c of all.values()){if(c.deleted||!c.name)continue;const w=c.name.trim().split(/\s+/);if(w.length<2)continue;const k=pKey(w[0]);if(k.length<2||!/[A-Z]/.test(k))continue;
+    let e=first.get(k);if(!e){e={n:0,cas:new Map(),sec:new Map()};first.set(k,e)}e.n++;const cw=w[0].replace(/[.,:;'’]+$/,'');e.cas.set(cw,(e.cas.get(cw)||0)+1);
+    const sk=pKey(w[1]);const se=e.sec.get(sk)||{n:0,cas:w[1].replace(/[.,:;'’]+$/,'')};se.n++;e.sec.set(sk,se)}
+  const lib=new Map(libPlain().map(t=>[t.toUpperCase(),t])),hidden=libHidden(),alias=libAlias();
+  const m=new Map();
+  for(const[k,e]of first){
+    const libTwo=[...lib.keys()].find(t=>t.startsWith(k+' ')&&t.split(' ').length===2);
+    if(libTwo){const sk=libTwo.split(' ')[1];if((e.sec.get(sk)||{}).n>=1){const name=alias.get(libTwo)||lib.get(libTwo);if(!hidden.has(libTwo))m.set(k,{tag:name,second:sk,key:libTwo});continue}}
+    const casSum=[...e.cas.values()].reduce((a,b)=>a+b,0),capsN=e.cas.get(k)||0;
+    const codeLike=/\d/.test(k)||(k.length<=4&&capsN/casSum>=0.5);
+    if(!lib.has(k)&&e.n<(codeLike?CODE_MIN:PREFIX_MIN))continue;
+    const top=[...e.sec.entries()].sort((a,b)=>b[1].n-a[1].n)[0];
+    let name,second=null,key=k;
+    if(top&&e.n>=3&&top[1].n/e.n>=0.9&&/[A-Z]/.test(top[0])){second=top[0];key=k+' '+second;name=[...e.cas.entries()].sort((a,b)=>b[1]-a[1])[0][0]+' '+top[1].cas}
+    else{const cas=[...e.cas.entries()].sort((a,b)=>b[1]-a[1]);name=lib.get(k)||(k.length<=4&&cas.some(([c])=>c===k)?k:cas[0][0])}
+    if(hidden.has(key))continue;
+    m.set(k,{tag:alias.get(key)||name,second,key});
+  }
+  prefixMap=m;
+}
+function prefixTagOf(name){const w=String(name||'').trim().split(/\s+/);if(w.length<2)return null;const e=prefixMap.get(pKey(w[0]));if(!e)return null;if(e.second&&pKey(w[1])!==e.second)return null;return e}
+const effTags=c=>{indexOf(c);return c._tags};
+function libTags(){computePrefixes();const out=[],seen=new Set();const add=t=>{const k=t.toLowerCase();if(!seen.has(k)){seen.add(k);out.push(t)}};for(const t of libPlain())add(t);
+  const pre=[...prefixMap.values()].map(e=>e.tag);const counts=new Map();for(const c of live())for(const t of effTags(c))counts.set(t.toLowerCase(),(counts.get(t.toLowerCase())||0)+1);
+  for(const t of pre.sort((a,b)=>(counts.get(b.toLowerCase())||0)-(counts.get(a.toLowerCase())||0)))add(t);
+  for(const c of live())for(const t of c.tags)add(t);return out}
+function tagCounts(cs){const m=new Map();for(const t of libTags())m.set(t.toLowerCase(),{name:t,n:0});for(const c of cs)for(const t of effTags(c)){const e=m.get(t.toLowerCase());if(e)e.n++}return[...m.values()]}
+async function setLib(list){tagLib={list:tagList(list,200),updatedAt:Date.now()};dataVer++;await idb.set('taglib',tagLib);queueSync(500)}
+
+/* ---------- recent changes ---------- */
+let changeLog=[],lastDiff=null;
+// Field-by-field difference between two versions of a contact, as [op, field, value] lines
+function diffLines(a,b,who=''){
+  const f=c=>c?{Name:c.name?[c.name.replace(/\s+/g,' ').trim()]:[],Phone:c.phones.map(p=>p.label+' '+p.value),Email:c.emails.map(e=>e.value),Tag:c.tags,Notes:c.notes?c.notes.split('\n'):[],Star:c.fav?['starred']:[]}:{};
+  const A=f(a),B=f(b),L=[];const pre=who?who+' · ':'';
+  for(const k of ['Name','Phone','Email','Tag','Notes','Star']){const x=A[k]||[],y=B[k]||[];const P=k==='Name'?'':pre;for(const v of x)if(!y.includes(v))L.push(['-',k,P+v]);for(const v of y)if(!x.includes(v))L.push(['+',k,P+v])}
+  return L;
+}
+async function logAdd(k,text,src='here',d){if(d===undefined&&lastDiff&&Date.now()-lastDiff.t<3000){d=lastDiff.d}lastDiff=null;changeLog.unshift({t:Date.now(),k,text,src,d:(d||[]).slice(0,80),n:(d||[]).length});changeLog=changeLog.slice(0,200);try{await idb.set('log',changeLog)}catch{}}
+
+/* ---------- search: the whole query is one exact, contiguous phrase ---------- */
+const phraseOf=q=>norm(q).replace(/\s+/g,' ').trim();
+const isNumQ=ph=>/^[\d\s+()\-.]{3,}$/.test(ph);
+function matchScore(c,ph){
+  if(ph[0]==='#'){const t=ph.slice(1).trim();if(!t)return 1;return c._t.includes(t)?95:c._t.some(x=>x.startsWith(t))?60:0}
+  let s=0;const n=c._n,i=n.indexOf(ph);
+  if(i===0)s=100;
+  else if(i>0){const re=new RegExp('(^|[^\\p{L}\\p{N}])'+ph.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'),'u');s=re.test(n)?85:40}
+  if(c._t.includes(ph))s=Math.max(s,95);else if(c._t.some(x=>x.startsWith(ph)))s=Math.max(s,70);
+  if(isNumQ(ph)){const d=digits(ph).replace(/^0+/,'');if(d.length>=3&&c._d.includes(d))s=Math.max(s,90)}
+  if(!s&&ph.length>=2&&c._e.includes(ph))s=30;
+  if(!s&&ph.length>=3&&c._no.includes(ph))s=20;
+  return s;
+}
+function normMap(s){let out='';const map=[];for(let i=0;i<s.length;i++){for(const ch of norm(s[i])){out+=ch;map.push(i)}}return{out,map}}
+function hl(name,ph){
+  if(!ph||ph[0]==='#')return `<span>${esc(name)}</span>`;
+  const{out,map}=normMap(name);
+  const re=new RegExp('(^|[^\\p{L}\\p{N}])'+ph.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'),'u'),m=out.match(re);
+  const at=m?m.index+m[1].length:out.indexOf(ph);
+  if(at<0)return `<span>${esc(name)}</span>`;
+  const a=map[at],b=map[Math.min(at+ph.length,map.length)-1]+1;
+  return `<span>${esc(name.slice(0,a))}<mark>${esc(name.slice(a,b))}</mark>${esc(name.slice(b))}</span>`;
+}
+function context(c,ph){
+  if(isNumQ(ph)){const d=digits(ph).replace(/^0+/,'');const p=c.phones.find(p=>digits(p.value).includes(d));if(p)return p.value}
+  if(ph&&ph[0]!=='#'&&!c._n.includes(ph)){const e=c.emails.find(e=>norm(e.value).includes(ph));if(e)return e.value;if(c._no.includes(ph)){const i=c._no.indexOf(ph);return(i>20?'…':'')+c.notes.slice(Math.max(0,i-20),i+50)}}
+  return c.phones[0]?.value||c.emails[0]?.value||'';
+}
+
+/* ---------- list ---------- */
+let q='',activeTags=new Set(),starOnly=false,firstPaint=true,lastResults=[];
+let selecting=false;const selected=new Set();
+const list=$('#list');
+const U=(id,cls='i')=>`<svg class="${cls}" aria-hidden="true"><use href="#s-${id}"/></svg>`;
+function chipOrder(tags){const lib=libPlain().map(t=>t.toLowerCase());const li=t=>{const i=lib.indexOf(t.name.toLowerCase());return i<0?1e6:i};
+  return tags.filter(t=>t.n>0||li(t)<1e6).sort((a,b)=>li(a)-li(b)||b.n-a.n||collator.compare(a.name,b.name))}
+async function moveTag(name,dir){const order=chipOrder(tagCounts(live())).map(t=>t.name);const i=order.findIndex(t=>t.toLowerCase()===name.toLowerCase()),j=i+dir;if(i<0||j<0||j>=order.length)return;[order[i],order[j]]=[order[j],order[i]];
+  const markers=tagLib.list.filter(t=>t[0]==='!'||t.includes('=>'));const others=libPlain().filter(t=>!order.some(o=>o.toLowerCase()===t.toLowerCase()));
+  await setLib([...order,...others,...markers]);render();drawTagMgr();haptic(5)}
+function renderChips(cs){
+  const tags=tagCounts(cs),starN=cs.filter(c=>c.fav).length;
+  for(const t of [...activeTags])if(!tags.some(x=>x.name.toLowerCase()===t))activeTags.delete(t);
+  if(starOnly&&!starN)starOnly=false;
+  const none=!starOnly&&!activeTags.size;
+  const shown=chipOrder(tags);
+  let h=`<button class="chip ${none?'on':''}" data-chip="all">All <small>${cs.length}</small></button>`;
+  if(starN)h+=`<button class="chip ${starOnly?'on':''}" data-chip="star">${U('star','cs')}Starred <small>${starN}</small></button>`;
+  for(const t of shown)h+=`<button class="chip ${activeTags.has(t.name.toLowerCase())?'on':''}" data-chip="tag" data-tag="${esc(t.name.toLowerCase())}">${esc(t.name)} <small>${t.n}</small></button>`;
+  $('#chips').innerHTML=h;
+  $('#chips').hidden=!cs.length;
+}
+function rowHTML(c,ph,d){
+  const name=disp(c),sub=ph?context(c,ph):(c.phones[0]?.value||c.emails[0]?.value||'');
+  const tel=c.phones[0]?.value;
+  const off=tel?'':' off',th=tel?esc(telHref(tel)):'';
+  return `<div class="row${d!==undefined?' rise':''}${selected.has(c.id)?' selected':''}"${d!==undefined?` style="--d:${d}"`:''} data-id="${esc(c.id)}" role="button" tabindex="0">`+
+    `${av(c)}<span class="chk" aria-hidden="true">${CK}</span>`+
+    `<div class="rn">${hl(name,ph)}${c.fav?U('star','star'):''}</div>`+
+    `<div class="rq"><button class="mi" data-r="edit" aria-label="Edit">${U('edit')}</button><button class="mi" data-r="copy" aria-label="Copy">${U('copy')}</button></div>`+
+    `<div class="rs"><span class="num">${esc(sub)}</span></div>`+
+    `<div class="ra"><a class="ic sms${off}" href="${tel?'sms:'+th:'#'}" aria-label="Message">${U('msg')}</a><a class="ic wa${off}" href="${tel?'https://wa.me/'+esc(waNumber(tel)):'#'}" target="_blank" rel="noopener noreferrer" aria-label="WhatsApp">${U('wa')}</a><a class="ic call${off}" href="${tel?esc(callHref(tel)):'#'}" aria-label="Call">${U('phone')}</a></div>`+
+  `</div>`;
+}
+const letterOf=c=>{const ch=(norm(disp(c)).match(/\p{L}/u)||[''])[0].toUpperCase();return /^[A-Z]$/.test(ch)?ch:'#'};
+let groupLetters=[],pendingBlocks=[],renderToken=0;
+function flushPending(){if(pendingBlocks.length){list.insertAdjacentHTML('beforeend',pendingBlocks.map(b=>b.html()).join(''));pendingBlocks=[]}}
+function pump(token){if(token!==renderToken||!pendingBlocks.length)return;let html='',rows=0;while(pendingBlocks.length&&rows<120){const b=pendingBlocks.shift();html+=b.html();rows+=b.n}list.insertAdjacentHTML('beforeend',html);requestAnimationFrame(()=>pump(token))}
+function render(){
+  const cs=live();for(const c of cs)indexOf(c);
+  renderChips(cs);
+  const ph=phraseOf(q);
+  let res=cs;
+  if(starOnly||activeTags.size)res=res.filter(c=>(starOnly&&c.fav)||effTags(c).some(t=>activeTags.has(t.toLowerCase())));
+  const anim=firstPaint&&!reduce;let d=0;const A=()=>anim&&d<14?d++:undefined;
+  const blocks=[];groupLetters=[];
+  if(ph){
+    const scored=[];for(const c of res){const v=matchScore(c,ph);if(v)scored.push([v+(c.fav?3:0),c])}
+    scored.sort((a,b)=>b[0]-a[0]||collator.compare(disp(a[1]),disp(b[1])));
+    res=scored.map(x=>x[1]);
+    const cap=Math.min(res.length,300);
+    if(res.length)blocks.push({n:cap,html:()=>`<div class="section-label">${res.length} ${res.length===1?'MATCH':'MATCHES'}${res.length>cap?` · SHOWING ${cap}`:''}</div><div class="gcard">${res.slice(0,cap).map(c=>rowHTML(c,ph,A())).join('')}</div>`});
+  }else{
+    res=[...res].sort((a,b)=>collator.compare(disp(a),disp(b)));
+    const starred=res.filter(c=>c.fav);
+    if(starred.length&&!starOnly){blocks.push({n:starred.length,html:()=>`<div class="group" data-letter="★"><div class="gl">★ STARRED</div><div class="gcard">${starred.map(c=>rowHTML(c,'',A())).join('')}</div></div>`});groupLetters.push('★')}
+    const groups=new Map();for(const c of res){const L=letterOf(c);if(!groups.has(L))groups.set(L,[]);groups.get(L).push(c)}
+    const keys=[...groups.keys()].sort((a,b)=>a==='#'?1:b==='#'?-1:a.localeCompare(b));
+    for(const L of keys){const g=groups.get(L);blocks.push({n:g.length,html:()=>`<div class="group" data-letter="${L}"><div class="gl">${L}</div><div class="gcard">${g.map(c=>rowHTML(c,'',A())).join('')}</div></div>`});groupLetters.push(L)}
+  }
+  lastResults=res;
+  renderToken++;
+  if(!res.length){list.innerHTML=emptyHTML(cs.length,!!ph);pendingBlocks=[]}
+  else{
+    // first screen immediately, the rest streamed in on the next frames
+    let first='',rows=0;while(blocks.length&&rows<60){const b=blocks.shift();first+=b.html();rows+=b.n}
+    list.innerHTML=first;pendingBlocks=blocks;const tk=renderToken;requestAnimationFrame(()=>pump(tk));
+  }
+  firstPaint=false;
+  $('#azBtn').hidden=!!ph||res.length<2;requestAnimationFrame(updateLetter);
+  updateMeta();updateSelbar();
+}
+function emptyHTML(total,searching){
+  if(searching){const t=q.trim(),isNum=isNumQ(t);return `<div class="empty"><div class="eic">${sv('<circle cx="11" cy="11" r="6.5"/><path d="M20 20l-4.2-4.2"/>')}</div><h2>No one matches “${esc(t)}”</h2><p>Search looks for exactly these characters together, in names, tags, numbers, emails and notes.</p><div class="actions"><button class="btn primary" data-act="new-from-q">${I.plus}Add “${esc(t.slice(0,30))}” as ${isNum?'a number':'a contact'}</button></div></div>`}
+  if(total)return `<div class="empty"><h2>No contacts with these tags</h2><div class="actions"><button class="btn" data-act="clear-filters">Show everyone</button></div></div>`;
+  const picker='contacts' in navigator&&'ContactsManager' in window;
+  return `<div class="empty"><div class="eic">${I.users}</div><h2>No contacts yet</h2><p>Add someone or import from your phone. Contacts are shared with everyone signed in to the budget app.</p><div class="actions"><button class="btn primary" data-act="new">${I.plus}Add contact</button>${picker?`<button class="btn" data-act="pick">${I.phoneBook}Import from this phone</button>`:''}<button class="btn" data-act="vcf">${I.down}Import .vcf file</button><button class="btn" data-act="settings">${I.sync}Sync now</button></div></div>`;
+}
+let renderQueued=false;const scheduleRender=()=>{if(renderQueued)return;renderQueued=true;raf(()=>{renderQueued=false;render();refreshDetail();refreshOpenLayers()})};
+
+/* ---------- list interactions ---------- */
+let lpTimer=0,lpFired=false,lpX=0,lpY=0;
+list.addEventListener('pointerdown',e=>{const r=e.target.closest('.row');if(!r||e.target.closest('a,button'))return;lpFired=false;lpX=e.clientX;lpY=e.clientY;clearTimeout(lpTimer);lpTimer=setTimeout(()=>{lpFired=true;haptic(15);if(!selecting)startSelect();toggleSel(r.dataset.id)},460)});
+list.addEventListener('pointermove',e=>{if(Math.abs(e.clientX-lpX)>9||Math.abs(e.clientY-lpY)>9)clearTimeout(lpTimer)});
+['pointerup','pointercancel','pointerleave'].forEach(ev=>list.addEventListener(ev,()=>clearTimeout(lpTimer)));
+list.addEventListener('contextmenu',e=>{if(e.target.closest('.row')&&!e.target.closest('a'))e.preventDefault()});
+list.addEventListener('click',async e=>{
+  if(lpFired){lpFired=false;e.preventDefault();return}
+  const a=e.target.closest('[data-act]');if(a){act(a.dataset.act);return}
+  const r=e.target.closest('.row');if(!r)return;
+  const id=r.dataset.id,c=all.get(id);if(!c)return;
+  if(selecting){e.preventDefault();toggleSel(id);return}
+  const rb=e.target.closest('[data-r]');
+  if(rb){e.preventDefault();if(rb.dataset.r==='edit')openEditor(c);else{const ok=await copyText(contactText(c));toast(ok?`Copied ${disp(c)}`:'Could not copy');haptic(8)}return}
+  if(e.target.closest('a.ic')){haptic(8);return}
+  openDetail(id,r.querySelector('.av'));
+});
+list.addEventListener('keydown',e=>{if(e.key==='Enter'&&e.target.classList.contains('row'))e.target.click()});
+function act(a){
+  if(a==='new')openEditor();
+  else if(a==='pick')pickFromPhone();
+  else if(a==='vcf')$('#vcfFile').click();
+  else if(a==='settings')openSettings();
+  else if(a==='clear-filters'){activeTags.clear();starOnly=false;render()}
+  else if(a==='new-from-q'){const t=q.trim();openEditor(null,/^[\d\s+()\-.]{3,}$/.test(t)?{phones:[{label:'Mobile',value:t}]}:{name:t})}
+}
+$('#chips').addEventListener('click',e=>{
+  const c=e.target.closest('.chip');if(!c)return;haptic(5);
+  const k=c.dataset.chip;
+  if(k==='all'){activeTags.clear();starOnly=false}
+  else if(k==='star')starOnly=!starOnly;
+  else{const t=c.dataset.tag;activeTags.has(t)?activeTags.delete(t):activeTags.add(t)}
+  render();window.scrollTo({top:Math.min(scrollY,$('#sentinel').offsetTop)});
+});
+const qi=$('#q');
+let qTimer=0;qi.addEventListener('input',()=>{q=qi.value;$('#clearQ').classList.toggle('show',!!q);clearTimeout(qTimer);qTimer=setTimeout(scheduleRender,90)});
+qi.addEventListener('keydown',e=>{if(e.key==='Enter'){qi.blur();if(lastResults.length===1)openDetail(lastResults[0].id,$('.row .av'))}});
+$('#clearQ').addEventListener('click',()=>{qi.value='';q='';$('#clearQ').classList.remove('show');render();qi.focus()});
+function openSearch(){if(selecting)endSelect();closeAZ();body.classList.add('searching');window.scrollTo({top:0,behavior:'instant'});qi.focus()}
+function closeSearch(){body.classList.remove('searching');if(q){qi.value='';q='';$('#clearQ').classList.remove('show');render()}qi.blur()}
+$('#searchBtn').addEventListener('click',openSearch);
+$('#searchCancel').addEventListener('click',closeSearch);
+new IntersectionObserver(([en])=>$('#bar').classList.toggle('stuck',!en.isIntersecting)).observe($('#sentinel'));
+new ResizeObserver(()=>root.style.setProperty('--bar-h',$('#bar').offsetHeight+'px')).observe($('#bar'));
+
+/* ---------- A–Z menu ---------- */
+const azPop=$('#azPop'),azBtn=$('#azBtn'),azLabel=$('#azLabel');
+let letterTick=0;
+function updateLetter(){letterTick=0;if(phraseOf(q))return;const y=$('#bar').getBoundingClientRect().bottom+12;const el=document.elementFromPoint(Math.min(innerWidth/2,300),y);const g=el&&el.closest('.group');
+  azLabel.textContent=scrollY<8||!g?'A–Z':g.dataset.letter}
+addEventListener('scroll',()=>{if(!letterTick)letterTick=requestAnimationFrame(updateLetter)},{passive:true});
+function openAZ(){
+  azPop.style.top=(azBtn.getBoundingClientRect().bottom+8)+'px';
+  const has=new Set(groupLetters);
+  azPop.innerHTML=(has.has('★')?`<button type="button" class="star" data-l="★" aria-label="Starred">★</button>`:'')+[...'ABCDEFGHIJKLMNOPQRSTUVWXYZ#'].map(L=>`<button type="button" data-l="${L}" ${has.has(L)?'':'disabled'}>${L}</button>`).join('');
+  azPop.hidden=false;azBtn.classList.add('on');azBtn.setAttribute('aria-expanded','true');
+}
+function closeAZ(){azPop.hidden=true;azBtn.classList.remove('on');azBtn.setAttribute('aria-expanded','false')}
+azBtn.addEventListener('click',e=>{e.stopPropagation();azPop.hidden?openAZ():closeAZ()});
+azPop.addEventListener('click',e=>{const b=e.target.closest('[data-l]');if(!b||b.disabled)return;flushPending();const g=$(`.group[data-letter="${CSS.escape(b.dataset.l)}"]`);closeAZ();if(g){const off=parseFloat(getComputedStyle(root).getPropertyValue('--bar-h'))||110;const aim=()=>window.scrollTo({top:g.getBoundingClientRect().top+scrollY-parseFloat(getComputedStyle(root).getPropertyValue('--bar-h'))+2,behavior:'instant'});aim();let n=0;const again=()=>{aim();if(++n<4)requestAnimationFrame(again)};requestAnimationFrame(again)}});
+document.addEventListener('click',e=>{if(!azPop.hidden&&!e.target.closest('#azPop,#azBtn'))closeAZ()});
+
+/* ---------- selection & bulk actions ---------- */
+function startSelect(){selecting=true;body.classList.add('selecting');closeAZ();$('#selBtn').classList.add('on');updateSelbar()}
+function endSelect(){selecting=false;selected.clear();body.classList.remove('selecting');$('#selBtn').classList.remove('on');$$('.row.selected').forEach(r=>r.classList.remove('selected'));updateSelbar()}
+function toggleSel(id){selected.has(id)?selected.delete(id):selected.add(id);const r=$(`.row[data-id="${CSS.escape(id)}"]`);if(r)r.classList.toggle('selected',selected.has(id));haptic(4);updateSelbar()}
+let delArm=0;
+function updateSelbar(){$('#selbar').hidden=!selecting;$('#selCount').textContent=`${selected.size} selected`;const d=$('[data-sb="del"]');if(d&&!delArm){d.classList.remove('armed');$('span',d).textContent='Delete'}}
+$('#selBtn').addEventListener('click',()=>selecting?endSelect():startSelect());
+const pickedContacts=()=>[...selected].map(id=>all.get(id)).filter(c=>c&&!c.deleted);
+$('#selbar').addEventListener('click',async e=>{
+  const b=e.target.closest('[data-sb]');if(!b)return;const k=b.dataset.sb;
+  if(k==='close'){endSelect();return}
+  if(k==='all'){const ids=lastResults.map(c=>c.id);const allOn=ids.length&&ids.every(id=>selected.has(id));ids.forEach(id=>allOn?selected.delete(id):selected.add(id));render();return}
+  const cs=pickedContacts();if(!cs.length){toast('Select contacts first');return}
+  if(k==='tags')openTagSheet();
+  else if(k==='star'){const on=!cs.every(c=>c.fav);await saveMany(cs.map(c=>({...c,fav:on})));await logAdd('edited',`${on?'Starred':'Unstarred'} ${cs.length} ${cs.length===1?'contact':'contacts'}`);toast(`${on?'Starred':'Unstarred'} ${cs.length}`);endSelect();render()}
+  else if(k==='del'){
+    if(!b.classList.contains('armed')){b.classList.add('armed');$('span',b).textContent='Confirm';haptic(15);clearTimeout(delArm);delArm=setTimeout(()=>{delArm=0;updateSelbar()},3000);return}
+    clearTimeout(delArm);delArm=0;
+    const snap=cs.map(c=>({...c}));await saveMany(cs.map(c=>({...c,deleted:true})));await logAdd('deleted',`Deleted ${cs.length} ${cs.length===1?'contact':'contacts'}`);endSelect();render();
+    toast(`Deleted ${cs.length}`,'Undo',async()=>{await saveMany(snap.map(c=>({...c,deleted:false})));await logAdd('added',`Restored ${snap.length} ${snap.length===1?'contact':'contacts'}`)});
+  }
+});
+
+/* ---------- tag sheet (bulk apply) ---------- */
+function tagSheetHTML(){
+  const cs=pickedContacts(),n=cs.length;
+  const rows=libTags().map(t=>{const k=t.toLowerCase(),have=cs.filter(c=>effTags(c).some(x=>x.toLowerCase()===k)).length;const st=have===0?'none':have===n?'all':'some';
+    return `<button type="button" class="tcheck" data-tt="${esc(t)}" data-state="${st}"><span class="bx">${CK.replace('<svg','<svg class="ck"')}<svg class="dash" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M7 12h10"/></svg></span><span class="tc">${esc(t)}</span><small>${have} of ${n}</small></button>`}).join('');
+  return `<div class="lin"><div class="lbar"><button class="ibtn" data-ts="close" aria-label="Back">${I.back}</button><h2>Tags for ${n} ${n===1?'contact':'contacts'}</h2><button class="textbtn go" data-ts="done">Done</button></div>
+  <div class="fcard"><div style="padding:4px 0">${rows||'<p class="note">No tags yet. Create one below.</p>'}</div></div>
+  <div class="fcard"><div class="fhead"><span>${I.plus}NEW TAG</span></div><form class="inline" id="tsNew" autocomplete="off"><input class="fin" id="tsNewName" placeholder="Tag name" maxlength="40" enterkeyhint="done"><button class="btn" type="submit">Add &amp; apply</button></form></div>
+  <p class="note">Tap a tag to add it to all selected contacts. Tap it again to remove it from all of them.</p></div>`;
+}
+function openTagSheet(){openLayer('tagsheet',()=>{$('#tagsheet').innerHTML=tagSheetHTML()})}
+async function applyTag(t,add){const cs=pickedContacts();const k=t.toLowerCase();const change=cs.filter(c=>add!==c.tags.some(x=>x.toLowerCase()===k));if(!change.length)return;
+  await saveMany(change.map(c=>({...c,tags:add?[...c.tags,t]:c.tags.filter(x=>x.toLowerCase()!==k)})));
+  await logAdd('tagged',`${add?'Added':'Removed'} tag ${t} ${add?'to':'from'} ${change.length} ${change.length===1?'contact':'contacts'}`);
+  toast(`${add?'Added':'Removed'} ${t} · ${change.length}`)}
+$('#tagsheet').addEventListener('click',async e=>{
+  const b=e.target.closest('[data-tt]');if(b){haptic(6);await applyTag(b.dataset.tt,b.dataset.state!=='all');$('#tagsheet').innerHTML=tagSheetHTML();return}
+  const x=e.target.closest('[data-ts]');if(!x)return;
+  const done=x.dataset.ts==='done';closeTop();if(done){endSelect();render()}
+});
+$('#tagsheet').addEventListener('submit',async e=>{e.preventDefault();const t=str($('#tsNewName').value,40);if(!t)return;
+  const existing=libTags().find(x=>x.toLowerCase()===t.toLowerCase());const name=existing||t;
+  if(!existing){await setLib([...tagLib.list,name]);await logAdd('tagged',`Created tag ${name}`)}
+  await applyTag(name,true);$('#tagsheet').innerHTML=tagSheetHTML()});
+
+/* ---------- layers (the Back button closes them) ---------- */
+const stack=[];
+history.replaceState({depth:0},'');
+function animate(el,update,morph,opening){
+  const hero=()=>el.querySelector('.hero-av');
+  if(document.startViewTransition&&!reduce){
+    root.classList.add('vt-layer');el.style.viewTransitionName='layer';
+    if(opening&&morph)morph.style.viewTransitionName='hero-av';
+    if(!opening&&morph&&hero())hero().style.viewTransitionName='hero-av';
+    const cleanup=()=>{root.classList.remove('vt-layer');el.style.viewTransitionName='';const h=hero();if(h)h.style.viewTransitionName='';if(morph)morph.style.viewTransitionName=''};
+    let t;
+    try{t=document.startViewTransition(()=>{update();if(opening&&morph){morph.style.viewTransitionName='';const h=hero();if(h)h.style.viewTransitionName='hero-av'}if(!opening&&morph)morph.style.viewTransitionName='hero-av'})}
+    catch{update();cleanup();return}
+    t.finished.then(cleanup,cleanup);t.ready.catch(()=>{});
+    return;
+  }
+  if(opening){update();el.classList.remove('anim-out');el.classList.add('anim-in');setTimeout(()=>el.classList.remove('anim-in'),320)}
+  else{el.classList.add('anim-out');setTimeout(()=>{el.classList.remove('anim-out');update()},200)}
+}
+function openLayer(id,setup,morph){
+  const el=$('#'+id);closeAZ();
+  if(stack.includes(id)){setup&&setup();return}
+  stack.push(id);history.pushState({depth:stack.length,layer:id},'');
+  animate(el,()=>{setup&&setup();el.hidden=false;el.scrollTop=0;root.classList.add('layer-open')},morph,true);
+}
+function hideLayer(id){
+  const el=$('#'+id);let morph=null;
+  if(id==='detail'&&stack.length===0){const r=$(`.row[data-id="${CSS.escape(detailId||'')}"] .av`);if(r){const b=r.getBoundingClientRect();if(b.bottom>0&&b.top<innerHeight)morph=r}}
+  const done=()=>{el.hidden=true;if(!stack.length)root.classList.remove('layer-open');if(id==='detail')detailId=null};
+  if(el.dataset.pulled){done();resetPull(el);return} // already slid away under the finger
+  animate(el,done,morph,false);
+}
+function closeTop(){if(stack.length)history.back()}
+addEventListener('popstate',e=>{const depth=e.state?.depth||0;while(stack.length>depth)hideLayer(stack.pop())});
+addEventListener('keydown',e=>{if(e.key==='Escape'){if(!azPop.hidden)closeAZ();else if(stack.length)closeTop();else if(selecting)endSelect();else if(body.classList.contains('searching'))closeSearch()}});
+function refreshOpenLayers(){if(!$('#settings').hidden)paintSettingsLive();if(!$('#dups').hidden)$('#dups').innerHTML=dupsHTML();if(!$('#tagsheet').hidden&&selecting)$('#tagsheet').innerHTML=tagSheetHTML()}
+
+/* ---------- detail ---------- */
+let detailId=null;
+function detailHTML(c){
+  const name=disp(c),tel=c.phones[0]?.value,mail=c.emails[0]?.value,th=tel?esc(telHref(tel)):'';
+  return `<div class="lin">
+  <div class="lbar"><button class="ibtn" data-d="close" aria-label="Back">${I.back}</button><span class="sp"></span><button class="ibtn ${c.fav?'starred':''}" data-d="fav" aria-label="${c.fav?'Unstar':'Star'}">${I.star}</button><button class="ibtn" data-d="copy" aria-label="Copy contact">${I.copy}</button><button class="ibtn" data-d="edit" aria-label="Edit">${I.edit}</button></div>
+  <div class="hero">${av(c,'big hero-av')}<div class="st"><h2>${esc(name)}</h2>${effTags(c).length?`<div class="dtags">${effTags(c).map(t=>`<span class="chip on">${esc(t)}</span>`).join('')}</div>`:''}</div></div>
+  <div class="st">
+  <div class="acts">
+    <a class="act call ${tel?'':'off'}" href="${tel?esc(callHref(tel)):'#'}"><span>${I.phone}</span>Call</a>
+    <a class="act sms ${tel?'':'off'}" href="${tel?'sms:'+th:'#'}"><span>${I.msg}</span>Message</a>
+    <a class="act wa ${tel?'':'off'}" href="${tel?'https://wa.me/'+esc(waNumber(tel)):'#'}" target="_blank" rel="noopener noreferrer"><span>${I.wa}</span>WhatsApp</a>
+    <a class="act mail ${mail?'':'off'}" href="${mail?'mailto:'+esc(mail):'#'}"><span>${I.mail}</span>Email</a>
+  </div>
+  ${c.phones.length?`<div class="icard">${c.phones.map(x=>`<div class="irow"><div class="k"><small>${esc(x.label)}</small><a class="v" href="${esc(callHref(x.value))}">${esc(x.value)}</a></div><a class="ic sms" href="sms:${esc(telHref(x.value))}" aria-label="Message">${I.msg}</a><a class="ic wa" href="https://wa.me/${esc(waNumber(x.value))}" target="_blank" rel="noopener noreferrer" aria-label="WhatsApp">${I.wa}</a><button class="mi" data-copy="${esc(x.value)}" aria-label="Copy number">${I.copy}</button></div>`).join('')}</div>`:''}
+  ${c.emails.length?`<div class="icard">${c.emails.map(x=>`<div class="irow"><div class="k"><small>${esc(x.label)}</small><a class="v" href="mailto:${esc(x.value)}">${esc(x.value)}</a></div><button class="mi" data-copy="${esc(x.value)}" aria-label="Copy email">${I.copy}</button></div>`).join('')}</div>`:''}
+  ${c.notes?`<div class="icard"><div class="irow"><div class="k"><small>Notes</small><span class="v">${esc(c.notes)}</span></div></div></div>`:''}
+  <div class="dfoot"><button class="btn" data-d="share">${I.share}Share</button><button class="btn danger" data-d="delete">${I.trash}<span>Delete</span></button></div>
+  </div></div>`;
+}
+function setDetail(c){$('#detail').innerHTML=detailHTML(c)}
+function openDetail(id,morph){const c=all.get(id);if(!c)return;detailId=id;openLayer('detail',()=>setDetail(c),morph)}
+function refreshDetail(){if(!detailId||$('#detail').hidden)return;const c=all.get(detailId);if(!c||c.deleted){if(stack[stack.length-1]==='detail')closeTop();return}const y=$('#detail').scrollTop;setDetail(c);$$('#detail .st').forEach(s=>s.classList.remove('st'));$('#detail').scrollTop=y}
+let delTimer=0;
+$('#detail').addEventListener('click',async e=>{
+  const cp=e.target.closest('[data-copy]');if(cp){const ok=await copyText(cp.dataset.copy);toast(ok?'Copied':'Could not copy');haptic(6);return}
+  const b=e.target.closest('[data-d]');if(!b){if(e.target.closest('a'))haptic(8);return}
+  const c=all.get(detailId);if(!c)return;const k=b.dataset.d;
+  if(k==='close')closeTop();
+  else if(k==='fav'){haptic(10);await save({...c,fav:!c.fav});toast(c.fav?'Unstarred':'Starred')}
+  else if(k==='copy'){const ok=await copyText(contactText(c));toast(ok?'Contact copied':'Could not copy')}
+  else if(k==='edit')openEditor(c);
+  else if(k==='share')shareContact(c);
+  else if(k==='delete'){
+    if(!b.classList.contains('armed')){b.classList.add('armed');$('span',b).textContent='Tap again to delete';haptic(15);clearTimeout(delTimer);delTimer=setTimeout(()=>{b.classList.remove('armed');$('span',b).textContent='Delete'},3000);return}
+    const snapshot={...c};await save({...c,deleted:true});closeTop();haptic([10,30,10]);
+    toast(`Deleted ${disp(c)}`,'Undo',()=>save({...snapshot,deleted:false}));
+  }
+});
+
+/* ---------- editor ---------- */
+let edit=null;
+const LABELS_P=['Mobile','Home','Work','Other'],LABELS_E=['Personal','Work','Other'];
+function frow(kind,x={}){const labels=kind==='p'?LABELS_P:LABELS_E;const lab=x.label&&!labels.includes(x.label)?[...labels,x.label]:labels;return `<div class="frow" data-kind="${kind}"><select aria-label="Label">${lab.map(l=>`<option ${l===(x.label||labels[0])?'selected':''}>${esc(l)}</option>`).join('')}</select><input ${kind==='p'?'type="tel" inputmode="tel" autocomplete="tel" placeholder="Phone number"':'type="email" inputmode="email" autocomplete="email" placeholder="Email address"'} value="${esc(x.value||'')}" maxlength="200"><button type="button" class="rm" aria-label="Remove">${I.close}</button></div>`}
+function openEditor(c,prefill){
+  const isNew=!c;
+  edit={base:c?{...c}:null,id:c?c.id:uid(),tags:new Set(((c&&c.tags)||prefill?.tags||[]).map(String))};
+  const d=c||{name:'',phones:[],emails:[],notes:'',fav:false,...prefill};
+  const html=`<form class="lin" id="eForm" novalidate>
+  <div class="lbar"><button type="button" class="textbtn" data-e="cancel">Cancel</button><h2>${isNew?'New contact':'Edit contact'}</h2><button type="submit" class="textbtn go">Save</button></div>
+  <div class="ehero"><span id="eAvWrap">${av({...d,id:edit.id})}</span><input class="ename" id="eName" placeholder="Full name" value="${esc(d.name)}" maxlength="200" autocomplete="off" autocapitalize="words" enterkeyhint="next"></div>
+  <div class="fcard"><div class="fhead"><span>${I.phone}PHONE</span></div><div id="ePhones">${(d.phones.length?d.phones:[{}]).map(x=>frow('p',x)).join('')}</div><p class="warn" id="dupWarn"></p><button type="button" class="addrow" data-e="addp">${I.plus}Add phone</button></div>
+  <div class="fcard"><div class="fhead"><span>${I.mail}EMAIL</span></div><div id="eEmails">${d.emails.map(x=>frow('e',x)).join('')}</div><button type="button" class="addrow" data-e="adde">${I.plus}Add email</button></div>
+  <div class="fcard"><div class="fhead"><span>${I.tag}TAGS</span></div><div class="tagpick" id="eTags"></div><div class="inline"><input class="fin" id="eTagNew" placeholder="Create a tag" maxlength="40" enterkeyhint="done"><button type="button" class="btn" data-e="addtag">Add</button></div></div>
+  <div class="fcard"><div class="fhead"><span>${I.note}NOTES</span></div><textarea id="eNotes" rows="3" maxlength="5000" placeholder="Anything worth remembering">${esc(d.notes)}</textarea></div>
+  <label class="fcard switch"><span>Star this contact</span><input type="checkbox" id="eFav" ${d.fav?'checked':''}><span class="sw"></span></label>
+  <button type="submit" class="btn primary bigsave">${I.check}${isNew?'Save contact':'Save changes'}</button>
+  </form>`;
+  const setup=()=>{$('#editor').innerHTML=html;drawTags();checkDup()};
+  if(stack.includes('editor')){setup();return}
+  openLayer('editor',setup);
+  if(isNew)setTimeout(()=>{const n=$('#eName');if(n&&!n.value)n.focus({preventScroll:true})},350);
+}
+function drawTags(){const box=$('#eTags');if(!box)return;const items=libTags();for(const t of edit.tags)if(!items.some(x=>x.toLowerCase()===t.toLowerCase()))items.push(t);const sel=new Set([...edit.tags].map(t=>t.toLowerCase()));box.innerHTML=items.map(t=>`<button type="button" class="chip ${sel.has(t.toLowerCase())?'on':''}" data-t="${esc(t)}">${esc(t)}</button>`).join('')||'<span class="note">No tags yet.</span>'}
+async function addTag(){const i=$('#eTagNew'),v=str(i.value,40);if(!v)return;const ex=libTags().find(x=>x.toLowerCase()===v.toLowerCase());const name=ex||v;if(![...edit.tags].some(t=>t.toLowerCase()===name.toLowerCase()))edit.tags.add(name);if(!ex){await setLib([...tagLib.list,name]);await logAdd('tagged',`Created tag ${name}`)}i.value='';drawTags();haptic(6)}
+function checkDup(){const w=$('#dupWarn');if(!w)return;const keys=$$('#ePhones input').map(i=>phoneKey(i.value)).filter(Boolean);let hit=null;if(keys.length)for(const c of live()){if(c.id===edit.id)continue;if(c.phones.some(p=>keys.includes(phoneKey(p.value)))){hit=c;break}}w.textContent=hit?`This number is already saved for ${disp(hit)}.`:'';w.classList.toggle('show',!!hit)}
+const editorEl=$('#editor');
+editorEl.addEventListener('click',e=>{
+  const b=e.target.closest('[data-e],[data-t],.rm');if(!b)return;
+  if(b.classList.contains('rm')){b.closest('.frow').remove();checkDup();return}
+  if(b.dataset.t){const t=b.dataset.t,k=[...edit.tags].find(x=>x.toLowerCase()===t.toLowerCase());k?edit.tags.delete(k):edit.tags.add(t);b.classList.toggle('on');haptic(5);return}
+  const k=b.dataset.e;
+  if(k==='cancel')closeTop();
+  else if(k==='addp'){$('#ePhones').insertAdjacentHTML('beforeend',frow('p'));$('#ePhones .frow:last-child input').focus()}
+  else if(k==='adde'){$('#eEmails').insertAdjacentHTML('beforeend',frow('e'));$('#eEmails .frow:last-child input').focus()}
+  else if(k==='addtag')addTag();
+});
+editorEl.addEventListener('input',e=>{
+  if(e.target.id==='eName')$('#eAvWrap').innerHTML=av({id:edit.id,name:$('#eName').value,phones:[],emails:[]});
+  if(e.target.closest('#ePhones'))checkDup();
+});
+editorEl.addEventListener('focusout',e=>{if(e.target.matches('#ePhones input')&&e.target.value.trim())e.target.value=fmtPhone(e.target.value)});
+editorEl.addEventListener('keydown',e=>{if(e.target.id==='eTagNew'&&(e.key==='Enter'||e.key===',')){e.preventDefault();addTag()}else if(e.target.id==='eName'&&e.key==='Enter'){e.preventDefault();$('#ePhones input')?.focus()}});
+editorEl.addEventListener('submit',async e=>{
+  e.preventDefault();
+  if($('#eTagNew').value.trim())await addTag();
+  const rows=k=>$$(`#${k} .frow`).map(r=>({label:$('select',r).value,value:$('input',r).value.trim()})).filter(x=>x.value);
+  const data={...(edit.base||{}),id:edit.id,name:$('#eName').value,phones:rows('ePhones'),emails:rows('eEmails'),tags:[...edit.tags],notes:$('#eNotes').value,fav:$('#eFav').checked,deleted:false};
+  if(!str(data.name,1)&&!data.phones.length&&!data.emails.length){toast('Add a name, number or email first');$('#eName').focus();haptic([20,40,20]);return}
+  const isNew=!edit.base;
+  const saved=await save(data);
+  haptic([8,30,12]);
+  closeTop();
+  if(isNew){q='';qi.value='';$('#clearQ').classList.remove('show');activeTags.clear();starOnly=false;render();
+    setTimeout(()=>{flushPending();const r=$(`.row[data-id="${CSS.escape(saved.id)}"]`);if(r){r.scrollIntoView({block:'center'});r.classList.add('flash')}},260);
+    toast(`${disp(saved)} saved`)}
+  else toast('Changes saved');
+});
+
+/* ---------- saving ---------- */
+async function save(data,{silent=false}={}){
+  const c=clean({...data,updatedAt:Date.now(),dirty:true},{format:true});
+  const old=all.get(c.id);if(old&&old.createdAt)c.createdAt=old.createdAt;
+  all.set(c.id,c);await idb.put([c]);
+  dataVer++;
+  const kind=!old||old.deleted?(c.deleted?null:'added'):c.deleted?'deleted':'edited';
+  if(kind)await logAdd(kind,`${kind==='added'?'Added':kind==='deleted'?'Deleted':'Edited'} ${disp(c)}`,'here',diffLines(old&&!old.deleted?old:null,c.deleted?null:c));
+  if(!silent)scheduleRender();
+  queueSync(700);
+  return c;
+}
+async function saveMany(items){const now=Date.now();const lines=[];const cs=items.map((d,i)=>{const c=clean({...d,updatedAt:now+i,dirty:true},{format:true});const old=all.get(c.id);if(old&&old.createdAt)c.createdAt=old.createdAt;if(lines.length<200)lines.push(...diffLines(old&&!old.deleted?old:null,c.deleted?null:c,disp(c.deleted&&old?old:c)));return c});lastDiff={t:Date.now(),d:lines};dataVer++;for(const c of cs)all.set(c.id,c);await idb.put(cs);scheduleRender();queueSync(300);return cs}
+
+/* ---------- duplicates ---------- */
+let dupIgnore=new Set();
+function dupGroups(){
+  const cs=live(),parent=new Map(cs.map(c=>[c.id,c.id]));
+  const find=x=>{while(parent.get(x)!==x){parent.set(x,parent.get(parent.get(x)));x=parent.get(x)}return x};
+  const seen=new Map(),why=new Map(),strong=new Set();
+  const add=(k,id,reason)=>{if(k.length<2)return;if(seen.has(k)){const o=seen.get(k);const a=find(o),b=find(id);if(a!==b)parent.set(b,a);if(!why.has(o))why.set(o,reason);if(!why.has(id))why.set(id,reason);if(reason!=='Same name'){strong.add(o);strong.add(id)}}else seen.set(k,id)};
+  for(const c of cs){for(const p of c.phones)add('p'+phoneKey(p.value),c.id,'Same number');for(const e of c.emails)add('e'+e.value.trim().toLowerCase(),c.id,'Same email');const n=norm(c.name).replace(/\s+/g,' ').trim();if(n.split(' ').length>=2)add('n'+n,c.id,'Same name')}
+  const groups=new Map();for(const c of cs){const r=find(c.id);if(!groups.has(r))groups.set(r,[]);groups.get(r).push(c)}
+  return[...groups.values()].filter(g=>g.length>1).map(g=>{g.sort((a,b)=>a.createdAt-b.createdAt);const st=g.some(c=>strong.has(c.id));return{ids:g.map(c=>c.id).sort().join('|'),items:g,strong:st,reason:st?(g.map(c=>why.get(c.id)).find(r=>r&&r!=='Same name')||'Same number'):'Same name only, check before merging'}}).filter(g=>!dupIgnore.has(g.ids)).sort((a,b)=>collator.compare(disp(a.items[0]),disp(b.items[0])));
+}
+const richness=c=>c.phones.length*3+c.emails.length*2+c.tags.length+(c.name?2:0)+(c.notes?1:0);
+const nameWords=n=>norm(n).replace(/\s+/g,' ').trim().split(' ').filter(Boolean);
+// The record with the most detail wins. The fullest name is kept (repeated words do not count).
+// Every number, email and tag is kept; other names go into the notes as "Also saved as".
+function mergeInto(items){
+  const primary=[...items].sort((a,b)=>richness(b)-richness(a)||a.createdAt-b.createdAt)[0];
+  const others=items.filter(c=>c!==primary);
+  const dl=n=>[...new Set(nameWords(n))].join('').length;
+  const byName=items.filter(c=>c.name).sort((a,b)=>new Set(nameWords(b.name)).size-new Set(nameWords(a.name)).size||nameWords(a.name).length-nameWords(b.name).length||dl(b.name)-dl(a.name)||(b===primary)-(a===primary));
+  const m={...primary};
+  m.name=(byName[0]||primary).name.replace(/\s+/g,' ').trim();
+  m.phones=[...primary.phones,...others.flatMap(c=>c.phones)];
+  m.emails=[...primary.emails,...others.flatMap(c=>c.emails)];
+  const tags=[...primary.tags,...others.flatMap(c=>c.tags)];
+  const mp=prefixTagOf(m.name);for(const c of items){const pt=prefixTagOf(c.name);if(pt&&(!mp||mp.tag!==pt.tag))tags.push(pt.tag)}
+  m.tags=tagList(tags);
+  const keep=new Set(nameWords(m.name));
+  const aka=[...new Set(items.map(c=>c.name.replace(/\s+/g,' ').trim()).filter(n=>n&&norm(n)!==norm(m.name)&&!nameWords(n).every(w=>keep.has(w))))];
+  const notes=[...new Set(items.map(c=>c.notes.trim()).filter(Boolean))];if(aka.length)notes.push('Also saved as: '+aka.join(', '));
+  m.notes=notes.join('\n');
+  m.fav=items.some(c=>c.fav);
+  return{merged:m,others};
+}
+async function mergeGroups(groups){
+  const snaps=[],writes=[];let names=[];
+  for(const g of groups){const items=g.items.filter(c=>c&&!c.deleted);if(items.length<2)continue;snaps.push(...items.map(c=>({...c})));const{merged,others}=mergeInto(items);writes.push(merged,...others.map(c=>({...c,deleted:true})));names.push(disp(merged))}
+  if(!writes.length)return 0;
+  await saveMany(writes);
+  await logAdd('merged',names.length===1?`Merged duplicates into ${names[0]}`:`Merged ${names.length} duplicate groups`);
+  haptic([8,30,12]);
+  toast(names.length===1?`Merged into ${names[0]}`:`Merged ${names.length} duplicate groups`,'Undo',async()=>{await saveMany(snaps);await logAdd('edited',`Undid merge of ${names.length} ${names.length===1?'group':'groups'}`)});
+  return names.length;
+}
+function dupsHTML(){
+  const gs=dupGroups(),sg=gs.filter(g=>g.strong).length;
+  const inner=gs.length?gs.map(g=>`<div class="dgroup"><div class="dh"><span>${esc(g.reason)} · ${g.items.length} contacts</span><button class="textbtn" style="min-height:32px;font-size:calc(13px*var(--fs,1))" data-dg="ignore" data-ids="${esc(g.ids)}">Not duplicates</button></div>${g.items.map(c=>`<div class="dr">${av(c)}<div class="k"><b>${esc(disp(c))}</b><span>${esc([...c.phones.map(p=>p.value),...c.emails.map(e=>e.value)].join(' · ')||'No number')}</span></div><button class="mi" data-dg="del" data-id="${esc(c.id)}" aria-label="Delete ${esc(disp(c))}">${I.trash}</button></div>`).join('')}<div class="df"><button class="btn sm primary" data-dg="merge" data-ids="${esc(g.ids)}">${I.merge}Merge into one</button></div></div>`).join('')
+    :`<div class="empty"><div class="eic">${I.check}</div><h2>No duplicates</h2><p>Every contact has its own numbers and emails.</p></div>`;
+  return `<div class="lin"><div class="lbar"><button class="ibtn" data-dg="close" aria-label="Back">${I.back}</button><h2>Duplicates</h2><span style="width:38px"></span></div>${sg?`<button class="btn primary" style="width:100%;margin-top:4px" data-dg="mergeall">${I.merge}Merge all ${sg} with the same number or email</button>`:''}${gs.length?`<p class="note">The contact with the most detail wins and keeps the fullest name. Every number, email and tag is kept, and the other names are saved in the notes. Contacts that only share a name are never merged automatically; merge or delete those one at a time below.</p>`:''}${inner}</div>`;
+}
+function openDuplicates(){openLayer('dups',()=>{$('#dups').innerHTML=dupsHTML()})}
+$('#dups').addEventListener('click',async e=>{
+  const b=e.target.closest('[data-dg]');if(!b)return;const k=b.dataset.dg;
+  if(k==='close'){closeTop();return}
+  if(k==='ignore'){dupIgnore.add(b.dataset.ids);await idb.set('dupIgnore',[...dupIgnore]);$('#dups').innerHTML=dupsHTML();return}
+  if(k==='del'){const c=all.get(b.dataset.id);if(!c)return;if(!b.classList.contains('armed')){b.classList.add('armed');haptic(12);setTimeout(()=>b.classList.remove('armed'),2500);return}
+    const snap={...c};await save({...c,deleted:true});toast(`Deleted ${disp(c)}`,'Undo',()=>save({...snap,deleted:false}));return}
+  if(k==='merge'){const items=b.dataset.ids.split('|').map(id=>all.get(id)).filter(c=>c&&!c.deleted);await mergeGroups([{items}]);return}
+  if(k==='mergeall'){await mergeGroups(dupGroups().filter(g=>g.strong));return}
+});
+
+/* ---------- sync engine (Google Apps Script + Sheet) ---------- */
+let syncing=false,again=false,syncTimer=0,status='off',statusMsg='',failCount=0;
+const wire=c=>({id:c.id,name:c.name,phones:c.phones,emails:c.emails,tags:c.tags,notes:c.notes,fav:c.fav,createdAt:c.createdAt,updatedAt:c.updatedAt,deleted:c.deleted});
+function setStatus(s,msg=''){status=s;statusMsg=msg;body.dataset.sync=s;updateMeta();if(!$('#settings').hidden)paintSettingsLive()}
+function ago(t){if(!t)return 'never';const s=(Date.now()-t)/1000;if(s<45)return 'just now';if(s<3600)return Math.round(s/60)+' min ago';if(s<86400)return Math.round(s/3600)+' h ago';return new Date(t).toLocaleDateString('en-GB',{day:'numeric',month:'short'})}
+const pending=()=>{let n=0;for(const c of all.values())if(c.dirty)n++;return n};
+function statusText(){const p=pending();if(status==='off')return 'Not signed in';if(status==='syncing')return 'Syncing…';if(status==='offline')return `Offline${p?` · ${p} waiting`:''}`;if(status==='error')return 'Sync paused';return `Synced ${ago(cfg.lastSync)}`}
+function updateMeta(){const n=live().length;$('#metaText').textContent=`${n} ${n===1?'person':'people'} · ${statusText()}`}
+setInterval(updateMeta,30000);
+function queueSync(ms=0){clearTimeout(syncTimer);if(cfg.locked)return;syncTimer=setTimeout(()=>sync(),ms)}
+/* Sign-in: the budget app's own (the same session or set-up key), read from where the budget app keeps it. Contacts go
+   to the budget's Apps Script, which keeps them in their own spreadsheet. One sign-in, one kill switch. */
+const API_URL='https://script.google.com/macros/s/AKfycbzMb_87-nOMCRF10ieNSvUPlBLcIbu6PhpqQHw8riETufRlKF2ZEdBFttyMZc8Rwngg/exec';
+const LS_CONN='budgetTracker.conn.v1';
+function budgetConnIDB(){return new Promise(res=>{let done=false;const fin=v=>{if(!done){done=true;res(v)}};setTimeout(()=>fin(undefined),1500);
+  try{const r=indexedDB.open('budget-app',1);
+    r.onupgradeneeded=()=>{if(!r.result.objectStoreNames.contains('kv'))r.result.createObjectStore('kv')}; // same as the budget app, so nothing changes for it
+    r.onsuccess=()=>{const d=r.result;try{const g=d.transaction('kv').objectStore('kv').get('conn');g.onsuccess=()=>{fin(g.result||null);d.close()};g.onerror=()=>{fin(undefined);d.close()}}catch{fin(undefined);d.close()}};
+    r.onerror=()=>fin(undefined);r.onblocked=()=>fin(undefined)}catch{fin(undefined)}})}
+// {session,key} when signed in · null when definitely signed out · undefined when it could not be read
+async function budgetAuth(){
+  let ls;try{const t=localStorage.getItem(LS_CONN);ls=t?JSON.parse(t):null}catch{ls=undefined}
+  const idbc=await budgetConnIDB();
+  const cands=[ls,idbc].filter(c=>c&&typeof c==='object');
+  if(!cands.length)return ls===undefined&&idbc===undefined?undefined:null;
+  const c=cands.sort((a,b)=>(b.t||0)-(a.t||0))[0];
+  return c.session||c.key?{session:c.session||'',key:c.key||''}:null;
+}
+const AUTH_ERR={app_killed:1,signed_out:1,not_allowed:1,bad_key:1};
+async function post(payload,timeout=30000){
+  const ctl=new AbortController(),t=setTimeout(()=>ctl.abort(),timeout);
+  try{
+    const r=await fetch(API_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(payload),redirect:'follow',signal:ctl.signal,cache:'no-store'});
+    const text=await r.text();let j;
+    try{j=JSON.parse(text)}catch{throw Error('The budget sheet sent back a web page instead of data. Try again in a minute.')}
+    if(!j.ok){const er=Error(j.error==='busy'?'The sheet is busy. Will retry.':(j.error||'The budget sheet reported an error.'));er.code=j.error;throw er}
+    if(!j.contacts)throw Error('The budget script is not updated for Contacts yet. Paste the new Code.gs and deploy a new version.');
+    return j.contacts;
+  }catch(e){if(e.name==='AbortError')throw Error('Google took too long to answer. Will retry.');throw e}
+  finally{clearTimeout(t)}
+}
+async function sync({full=false}={}){
+  if(cfg.locked)return;
+  if(syncing){again=true;return}
+  if(!navigator.onLine)return setStatus('offline');
+  syncing=true;setStatus('syncing');
+  full=full||!cfg.cursor||Date.now()-cfg.lastFull>6*3600e3;
+  try{
+    const dirty=[...all.values()].filter(c=>c.dirty);
+    const sent=new Map(dirty.map(c=>[c.id,c.updatedAt]));
+    const auth=await budgetAuth();
+    if(auth===null){syncing=false;await lockdown('signin');return}
+    if(!auth){const er=Error('Could not read the budget sign-in on this phone.');throw er}
+    const j=await post({session:auth.session,key:auth.key,contacts:{cursor:full?0:cfg.cursor,changes:dirty.map(wire),tagLib}});
+    const changed=[],events=[];
+    for(const[id,u]of sent){const c=all.get(id);if(c&&c.updatedAt===u&&c.dirty){c.dirty=false;changed.push(c)}}
+    const seen=new Set();
+    for(const r of j.changes||[]){
+      const inc=clean({...r,dirty:false});seen.add(inc.id);
+      const loc=all.get(inc.id);
+      if(loc&&loc.dirty&&loc.updatedAt>inc.updatedAt)continue;
+      if(loc&&!loc.dirty&&JSON.stringify(wire(loc))===JSON.stringify(wire(inc)))continue;
+      if(!sent.has(inc.id)){const k=!loc||loc.deleted?(inc.deleted?null:'added'):inc.deleted?'deleted':'edited';if(k)events.push([k,inc,diffLines(loc&&!loc.deleted?loc:null,inc.deleted?null:inc,disp(inc.deleted&&loc?loc:inc))])}
+      all.set(inc.id,inc);changed.push(inc);
+    }
+    const removed=[];
+    if(full&&Array.isArray(j.changes)){for(const c of [...all.values()])if(!c.dirty&&!seen.has(c.id)){all.delete(c.id);removed.push(c.id);if(!c.deleted)events.push(['deleted',c,diffLines(c,null,disp(c))])}}
+    if(changed.length)await idb.put(changed);
+    if(removed.length)await idb.del(removed);
+    if(j.tagLib&&Array.isArray(j.tagLib.list)&&(Number(j.tagLib.updatedAt)||0)>tagLib.updatedAt){tagLib={list:tagList(j.tagLib.list,200),updatedAt:Number(j.tagLib.updatedAt)};dataVer++;await idb.set('taglib',tagLib);scheduleRender()}
+    if(events.length)dataVer++;
+    if(events.length>8)await logAdd('synced',`Received ${events.length} changes from your other phones or the Sheet`,'sync',events.flatMap(e=>e[2]));
+    else for(const[k,c,d]of events)await logAdd(k,`${k==='added'?'Added':k==='deleted'?'Deleted':'Edited'} ${disp(c)}`,'sync',d.map(x=>[x[0],x[1],x[2].replace(disp(c)+' · ','')]));
+    cfg.cursor=j.cursor||0;cfg.lastSync=Date.now();if(full)cfg.lastFull=Date.now();
+    await idb.set('sync',cfg);
+    failCount=0;setStatus('idle');
+    if(changed.length||removed.length||events.length){dataVer++;scheduleRender()}
+  }catch(e){
+    if(AUTH_ERR[e.code]){syncing=false;await lockdown(e.code);return}
+    failCount++;
+    setStatus(navigator.onLine?'error':'offline',e.message||String(e));
+    clearTimeout(syncTimer);syncTimer=setTimeout(()=>sync(),Math.min(120000,5000*2**failCount));
+  }finally{
+    syncing=false;
+    if(again){again=false;queueSync(200)}
+  }
+}
+setInterval(()=>{if(document.visibilityState==='visible'&&onScreen&&!cfg.locked&&!syncing&&status!=='error')sync()},20000);
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')queueSync(150)});
+addEventListener('online',()=>queueSync(100));
+addEventListener('offline',()=>setStatus('offline'));
+$('#menuBtn').addEventListener('click',()=>openSettings());
+
+/* ---------- settings ---------- */
+function numbersToFormat(){let n=0;const items=[];for(const c of live()){const k=c.phones.filter(p=>fmtPhone(p.value)!==p.value).length;if(k){n+=k;items.push(c)}}return{n,items}}
+function statusBlock(){
+  const t={off:['Not signed in','Sign in to the budget app to see contacts.'],syncing:['Syncing…','Talking to the budget sheet.'],idle:['Connected','Everything is up to date.'],offline:['Offline','Changes will be sent when you are back online.'],error:['Sync paused',statusMsg||'Something went wrong.']}[status];
+  return `<div class="statusline"><span class="dot"></span><div><b>${esc(t[0])}</b><span>${esc(t[1])}</span></div></div>
+  <dl class="kv"><dt>Last synced</dt><dd>${esc(ago(cfg.lastSync))}</dd><dt>Waiting to send</dt><dd>${pending()}</dd><dt>Contacts</dt><dd>${live().length}</dd></dl>`;
+}
+let logLimit=12,logOpen=false;const openEntries=new Set();
+function diffHTML(d,n){if(!d||!d.length)return '';return `<div class="diff">${d.map(([op,f,v])=>`<div class="dl ${op==='+'?'add':'del'}"><b>${op}</b><i>${esc(f)}</i><span>${esc(v)}</span></div>`).join('')}${n>d.length?`<div class="dl more"><b></b><span>… ${n-d.length} more lines</span></div>`:''}</div>`}
+function logHTML(){
+  const head=`<button class="lhead" data-s="togglelog" aria-expanded="${logOpen}"><span>${I.edit}RECENT CHANGES <span class="cnt">${changeLog.length||''}</span></span><svg class="i chev" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg></button>`;
+  if(!logOpen)return head;
+  if(!changeLog.length)return head+'<p class="note">Changes you make here, and changes that arrive from your other phones, will show up here.</p>';
+  const icon={added:I.plus,edited:I.edit,deleted:I.trash,merged:I.merge,tagged:I.tag,synced:I.sync,formatted:I.hash};
+  return head+`<ul class="log">${changeLog.slice(0,logLimit).map((x,i)=>{const a=(x.d||[]).filter(l=>l[0]==='+').length,r=(x.d||[]).filter(l=>l[0]==='-').length;return `<li data-log="${i}"><span class="lk ${esc(x.k)}">${icon[x.k]||I.edit}</span><div class="lt"><div class="sum"><span>${esc(x.text)}</span>${a||r?`<span class="plus">${a?`<span class="a">+${a}</span> `:''}${r?`<span class="r">−${r}</span>`:''}</span>`:''}</div><small>${x.src==='sync'?'From another phone or the Sheet':'On this phone'} · ${esc(ago(x.t))}</small>${openEntries.has(x.t+':'+i)?diffHTML(x.d,x.n):''}</div></li>`}).join('')}</ul>${changeLog.length>logLimit?`<button class="addrow" data-s="morelog">Show all ${changeLog.length}</button>`:''}`;
+}
+function paintSettingsLive(){
+  const s=$('#stLive');if(s)s.innerHTML=statusBlock();
+  const l=$('#stLog');if(l)l.innerHTML=logHTML();
+  const d=$('#stHealth');if(d){const gs=dupGroups(),g=gs.length,sg=gs.filter(x=>x.strong).length,f=numbersToFormat().n;d.innerHTML=`${g?`<div class="row2"><button class="btn" data-s="dups">${I.users}Review ${g}</button>${sg?`<button class="btn primary" data-s="mergeall">${I.merge}Merge all ${sg}</button>`:''}</div>`:`<button class="btn" disabled>${I.check}No duplicates found</button>`}<button class="btn" data-s="format" ${f?'':'disabled'}>${I.hash}${f?`Format ${f} ${f===1?'number':'numbers'}`:'All numbers formatted'}</button>`}
+  drawTagMgr();
+}
+function openSettings(){
+  const picker='contacts' in navigator&&'ContactsManager' in window;
+  logLimit=12;logOpen=false;openEntries.clear();
+  const html=`<div class="lin">
+  <div class="lbar"><button class="ibtn" data-s="close" aria-label="Back">${I.back}</button><h2>Settings</h2><span style="width:38px"></span></div>
+  <div class="fcard"><div class="fhead"><span>${I.sync}SYNC STATUS</span></div><div id="stLive"></div>
+    <div class="row2" style="padding-bottom:4px"><button class="btn sm" data-s="sync">Sync now</button><button class="btn sm" data-s="full">Full resync</button></div>
+    <p class="note">Contacts are kept in the budget's own contacts sheet and shared with everyone signed in to the budget app. The budget's kill switch closes Contacts too.</p></div>
+  <div class="fcard"><div id="stLog"></div></div>
+  <div class="fcard"><div class="fhead"><span>${I.check}DATA CHECKS</span></div><div class="stack" id="stHealth"></div><p class="note">Numbers are saved in one international format, for example +91 98765 43210. The country code below is used when a number has no +.</p></div>
+  <div class="fcard"><div class="fhead"><span>${I.tag}TAGS</span></div><p class="note" style="margin-top:0">Tags are found automatically from name prefixes shared by several contacts (for example “BT …”, “DB …”, “South Point …”). Arrows move a tag left or right in the bar. Delete hides it; the pencil renames it.</p><div id="tagMgr"></div><form class="inline" id="tagAdd" autocomplete="off" style="padding-top:8px"><input class="fin" id="tagAddName" placeholder="New tag" maxlength="40" enterkeyhint="done"><button class="btn" type="submit">Add</button></form><p class="note">To tag many people at once, tap the select icon at the top of the list (or hold a contact), pick people, then tap Tags.</p></div>
+  <div class="fcard"><div class="fhead"><span>${I.phone}CALLS &amp; NUMBERS</span></div><label class="flabel" for="cfgCC" style="margin-top:2px">Default country code</label><input class="fin" id="cfgCC" inputmode="numeric" placeholder="e.g. 91 or 44" value="${esc(cfg.cc||defaultCC())}" maxlength="4"></div>
+  <div class="fcard"><div class="fhead"><span>${I.down}IMPORT &amp; EXPORT</span></div><div class="stack">
+    ${picker?`<button class="btn" data-s="pick">${I.phoneBook}Import from this phone</button>`:''}
+    <div class="row2"><button class="btn" data-s="vcfin">${I.down}Import .vcf</button><button class="btn" data-s="vcfout">${I.up}Export .vcf</button></div></div></div>
+  </div>`;
+  const setup=()=>{$('#settings').innerHTML=html;paintSettingsLive()};
+  if(stack.includes('settings')){setup();return}
+  openLayer('settings',setup);
+}
+let renameKey=null;
+function drawTagMgr(){
+  const box=$('#tagMgr');if(!box)return;
+  if(box.querySelector('form.tagrow input')===document.activeElement)return;
+  const tags=chipOrder(tagCounts(live()));
+  if(!tags.length){box.innerHTML='<p class="note">No tags yet.</p>';return}
+  box.innerHTML=tags.map(t=>renameKey===t.name.toLowerCase()?`<form class="tagrow" data-rename="${esc(t.name)}"><input class="fin" value="${esc(t.name)}" maxlength="40" enterkeyhint="done" aria-label="New name for ${esc(t.name)}"><button class="mi" type="submit" aria-label="Save">${I.check}</button></form>`:`<div class="tagrow"><span class="tn">${esc(t.name)}<small>${t.n} ${t.n===1?'contact':'contacts'}</small></span><button class="mi" data-mv="-1" data-tn="${esc(t.name)}" aria-label="Move ${esc(t.name)} left">${sv('<path d="M15 6l-6 6 6 6"/>')}</button><button class="mi" data-mv="1" data-tn="${esc(t.name)}" aria-label="Move ${esc(t.name)} right">${sv('<path d="M9 6l6 6-6 6"/>')}</button><button class="mi" data-rn="${esc(t.name.toLowerCase())}" aria-label="Rename ${esc(t.name)}">${I.edit}</button><button class="mi" data-rmtag="${esc(t.name)}" aria-label="Delete ${esc(t.name)}">${I.trash}</button></div>`).join('');
+  const f=$('form.tagrow input',box);if(f){f.focus();f.select()}
+}
+const settingsEl=$('#settings');
+settingsEl.addEventListener('submit',async e=>{
+  e.preventDefault();
+  if(e.target.id==='tagAdd'){
+    const t=str($('#tagAddName').value,40);if(!t)return;
+    if(libTags().some(x=>x.toLowerCase()===t.toLowerCase())){toast(`${t} already exists`);return}
+    await setLib([...tagLib.list,t]);await logAdd('tagged',`Created tag ${t}`);$('#tagAddName').value='';render();drawTagMgr();toast(`Tag ${t} created`);
+  }else if(e.target.dataset.rename){
+    const from=e.target.dataset.rename,to=str($('input',e.target).value,40);renameKey=null;document.activeElement?.blur();
+    if(to&&to!==from){const fk=from.toLowerCase();const hit=live().filter(c=>c.tags.some(t=>t.toLowerCase()===fk));
+      const pe=[...prefixMap.values()].find(e=>e.tag.toLowerCase()===fk);
+      await setLib(pe?[...tagLib.list.filter(t=>!t.toUpperCase().startsWith(pe.key+'=>')&&t.toLowerCase()!==fk),pe.key+'=>'+to]:[...tagLib.list.filter(t=>t.toLowerCase()!==fk&&t.toLowerCase()!==to.toLowerCase()),to]);
+      if(hit.length)await saveMany(hit.map(c=>({...c,tags:tagList(c.tags.map(t=>t.toLowerCase()===fk?to:t))})));
+      if(activeTags.delete(fk))activeTags.add(to.toLowerCase());
+      await logAdd('tagged',`Renamed tag ${from} to ${to}`);toast(`Renamed to ${to}`)}
+    render();drawTagMgr();
+  }
+});
+settingsEl.addEventListener('click',async e=>{
+  const le=e.target.closest('[data-log]');if(le&&!e.target.closest('a,button')){const i=+le.dataset.log,x=changeLog[i];if(x){const key=x.t+':'+i;openEntries.has(key)?openEntries.delete(key):openEntries.add(key);$('#stLog').innerHTML=logHTML()}return}
+  const mv=e.target.closest('[data-mv]');if(mv){await moveTag(mv.dataset.tn,+mv.dataset.mv);return}
+  const rn=e.target.closest('[data-rn]');if(rn){renameKey=rn.dataset.rn;drawTagMgr();return}
+  const rt=e.target.closest('[data-rmtag]');if(rt){if(!rt.classList.contains('armed')){rt.classList.add('armed');haptic(12);setTimeout(()=>rt.classList.remove('armed'),2500);return}
+    const t=rt.dataset.rmtag,k=t.toLowerCase();const hit=live().filter(c=>c.tags.some(x=>x.toLowerCase()===k));
+    const pe=[...prefixMap.values()].find(e=>e.tag.toLowerCase()===k);
+    await setLib([...tagLib.list.filter(x=>x.toLowerCase()!==k&&!(pe&&x.toUpperCase().startsWith(pe.key+'=>'))),...(pe?['!'+pe.key]:[])]);if(hit.length)await saveMany(hit.map(c=>({...c,tags:c.tags.filter(x=>x.toLowerCase()!==k)})));
+    await logAdd('tagged',`Deleted tag ${t}${hit.length?` (removed from ${hit.length})`:''}`);activeTags.delete(k);render();drawTagMgr();toast(`Tag ${t} deleted`);return}
+  const b=e.target.closest('[data-s]');if(!b)return;const k=b.dataset.s;
+  if(k==='close')closeTop();
+  else if(k==='sync'){await sync();toast(status==='idle'?'Synced':'Sync failed: '+statusMsg)}
+  else if(k==='full'){await sync({full:true});toast(status==='idle'?'Full resync complete':'Resync failed: '+statusMsg)}
+  else if(k==='morelog'){logLimit=200;paintSettingsLive()}
+  else if(k==='togglelog'){logOpen=!logOpen;paintSettingsLive()}
+  else if(k==='dups')openDuplicates();
+  else if(k==='mergeall'){await mergeGroups(dupGroups().filter(g=>g.strong));paintSettingsLive()}
+  else if(k==='format'){const{n,items}=numbersToFormat();if(!items.length)return;await saveMany(items.map(c=>({...c})));await logAdd('formatted',`Formatted ${n} ${n===1?'number':'numbers'} on ${items.length} ${items.length===1?'contact':'contacts'}`);toast(`Formatted ${n} ${n===1?'number':'numbers'}`);paintSettingsLive()}
+  else if(k==='pick')pickFromPhone();
+  else if(k==='vcfin')$('#vcfFile').click();
+  else if(k==='vcfout')exportVCF();
+});
+settingsEl.addEventListener('change',async e=>{if(e.target.id==='cfgCC'){cfg.cc=digits(e.target.value).slice(0,4);await idb.set('sync',cfg);toast('Country code saved');paintSettingsLive()}});
+/* ---------- signed out or closed: the budget app's rules ----------
+   When the budget app is signed out, its access is switched off, or its owner closes the app (kill switch), the
+   contacts on this phone are wiped. They stay safe in the contacts sheet and come back after the next sign-in. */
+const LOCK_TEXT={
+  signin:['Sign in to the budget app','Contacts open for everyone signed in to the Budget Tracker. Sign in there, then come back.'],
+  signed_out:['Signed out','This sign-in was switched off. Contacts were removed from this phone; they are safe in the contacts sheet. Sign in to the budget app again.'],
+  not_allowed:['Not on the family list','This account is no longer on the family list, so contacts were removed from this phone.'],
+  bad_key:['Set-up link switched off','Sign in to the budget app again to see contacts.'],
+  app_killed:['The app is closed','The owner closed the app. Contacts were removed from this phone; they are safe in the contacts sheet.']};
+async function lockdown(code){
+  clearTimeout(syncTimer);
+  const ids=[...all.keys()];all=new Map();dataVer++;
+  try{if(ids.length)await idb.del(ids)}catch{}
+  changeLog=[];try{await idb.set('log',[])}catch{}
+  cfg={...cfg,cursor:0,lastSync:0,lastFull:0,locked:code||'signin'};
+  try{await idb.set('sync',cfg)}catch{}
+  while(stack.length){const id=stack.pop();$('#'+id).hidden=true}
+  root.classList.remove('layer-open');if(selecting)endSelect();
+  showLock();setStatus('off');render();
+}
+function showLock(){const t=LOCK_TEXT[cfg.locked]||LOCK_TEXT.signin;$('#lockTitle').textContent=t[0];$('#lockMsg').textContent=t[1];$('#lockscr').hidden=!cfg.locked}
+// Signed in again (or the app reopened): unlock and bring everyone back from the sheet.
+async function tryUnlock(quiet){
+  if(!cfg.locked)return;
+  const auth=await budgetAuth();if(!auth){if(!quiet)toast('Sign in to the budget app first');return}
+  const was=cfg.locked;cfg={...cfg,locked:'',cursor:0,lastFull:0};await idb.set('sync',cfg);showLock();
+  await sync({full:true});
+  if(cfg.locked){if(!quiet&&cfg.locked===was)toast('Still not open: '+(LOCK_TEXT[cfg.locked]||LOCK_TEXT.signin)[0])}
+  else if(status==='idle')toast(`${live().length} contacts loaded`);
+}
+$('#lockRetry').addEventListener('click',()=>tryUnlock(false));
+addEventListener('storage',e=>{
+  if(e.key===LS_CONN){if(cfg.locked)tryUnlock(true);else queueSync(300)}
+  if(e.key==='budgetTracker.theme'){const t=e.newValue;if(t==='light'||t==='dark')root.dataset.theme=t;else delete root.dataset.theme}
+  if(e.key==='budgetTracker.text'){try{const x=JSON.parse(e.newValue||'{}')||{};if(x.size>0.5&&x.size<2)root.style.setProperty('--fsu',x.size);else root.style.removeProperty('--fsu')}catch{}}
+});
+
+/* ---------- import / export ---------- */
+async function pickFromPhone(){
+  try{
+    const availP=await navigator.contacts.getProperties();const props=['name','tel','email'].filter(p=>availP.includes(p));
+    const picked=await navigator.contacts.select(props,{multiple:true});if(!picked||!picked.length)return;
+    await importList(picked.map(p=>({name:(p.name||[])[0]||'',phones:(p.tel||[]).map(v=>({label:'Mobile',value:v})),emails:(p.email||[]).map(v=>({label:'Personal',value:v}))})));
+  }catch(e){toast('Import cancelled')}
+}
+async function importList(items){
+  const owner=new Map();for(const c of live()){for(const p of c.phones){const k=phoneKey(p.value);if(k)owner.set('p'+k,c.id)}for(const e of c.emails)owner.set('e'+e.value.toLowerCase(),c.id)}
+  const add=[],upd=new Map();let merged=0;
+  for(const x of items){const c=clean({...x,id:uid()},{format:true});if(!c.name&&!c.phones.length&&!c.emails.length)continue;
+    const ck=[...c.phones.map(p=>phoneKey(p.value)).filter(Boolean).map(k=>'p'+k),...c.emails.map(e=>'e'+e.value.toLowerCase())];
+    const hit=ck.map(k=>owner.get(k)).find(Boolean);
+    if(hit&&ck.every(k=>owner.has(k))){ // already saved: merge, the contact with more detail wins
+      const base=upd.get(hit)||add.find(a=>a.id===hit)||all.get(hit);if(!base)continue;
+      const{merged:m}=mergeInto([base,{...c,createdAt:Date.now()}]);m.id=base.id;m.createdAt=base.createdAt;
+      const ai=add.findIndex(a=>a.id===hit);if(ai>=0)add[ai]=clean(m);else upd.set(hit,m);merged++;continue}
+    ck.forEach(k=>{if(!owner.has(k))owner.set(k,c.id)});add.push(c)}
+  const changedUpd=[...upd.values()].filter(m=>{const o=all.get(m.id);return JSON.stringify(wire(clean(m)))!==JSON.stringify(wire(o))});
+  if(add.length||changedUpd.length){await saveMany([...add,...changedUpd]);await logAdd('added',`Imported ${add.length} ${add.length===1?'contact':'contacts'}${merged?` · ${merged} merged into existing`:''}`)}
+  const g=dupGroups().length;
+  toast(`${add.length} imported${merged?` · ${merged} merged into existing`:''}${g?` · ${g} to review`:''}`,g?'Review':'',g?openDuplicates:null);haptic([8,30,8]);
+}
+$('#vcfFile').addEventListener('change',async e=>{const f=e.target.files[0];e.target.value='';if(!f)return;if(f.size>20*1024*1024){toast('That file is too large (20 MB max)');return}try{const l=parseVCF(await f.text());if(!l.length){toast('No contacts found in that file');return}await importList(l)}catch{toast('Could not read that file')}});
+function qp(s,charset){const bytes=[];for(let i=0;i<s.length;i++){if(s[i]==='='&&/^[0-9A-F]{2}$/i.test(s.substr(i+1,2))){bytes.push(parseInt(s.substr(i+1,2),16));i+=2}else bytes.push(s.charCodeAt(i)&255)}try{return new TextDecoder(charset||'utf-8').decode(new Uint8Array(bytes))}catch{return new TextDecoder().decode(new Uint8Array(bytes))}}
+const unesc=s=>s.replace(/\\n/gi,'\n').replace(/\\([,;\\])/g,'$1');
+function splitV(s,ch){const out=[];let cur='';for(let i=0;i<s.length;i++){if(s[i]==='\\'&&i+1<s.length){cur+=s[i]+s[i+1];i++}else if(s[i]===ch){out.push(cur);cur=''}else cur+=s[i]}out.push(cur);return out}
+function parseVCF(text){
+  const raw=text.replace(/\r\n?/g,'\n').split('\n'),lines=[];
+  for(const l of raw){const last=lines.length-1;if(/^[ \t]/.test(l)&&last>=0)lines[last]+=l.slice(1);else if(last>=0&&/=$/.test(lines[last])&&/QUOTED-PRINTABLE/i.test(lines[last].split(':')[0]))lines[last]=lines[last].slice(0,-1)+l;else lines.push(l)}
+  const out=[];let cur=null;
+  for(const line of lines){
+    const ix=line.indexOf(':');if(ix<0)continue;
+    const left=line.slice(0,ix),value=line.slice(ix+1),parts=left.split(';'),prop=parts[0].split('.').pop().toUpperCase(),params=parts.slice(1).join(';').toUpperCase();
+    if(prop==='BEGIN'&&/VCARD/i.test(value)){cur={name:'',n:'',phones:[],emails:[],tags:[],notes:''};continue}
+    if(!cur)continue;
+    if(prop==='END'){if(!cur.name&&cur.n)cur.name=cur.n;out.push(cur);cur=null;continue}
+    let v=value;if(/QUOTED-PRINTABLE/.test(params))v=qp(v,(params.match(/CHARSET=([\w-]+)/)||[])[1]);
+    const types=(params.match(/(?:TYPE=)?([A-Z-]+)/g)||[]).join(',');
+    const lab=/CELL|MOBILE/.test(types)?'Mobile':/HOME/.test(types)?'Home':/WORK/.test(types)?'Work':'Other';
+    if(prop==='FN')cur.name=unesc(v).trim();
+    else if(prop==='N'){const p=splitV(v,';').map(x=>unesc(x).trim());cur.n=[p[3],p[1],p[2],p[0],p[4]].filter(Boolean).join(' ')}
+    else if(prop==='TEL')cur.phones.push({label:lab,value:unesc(v).replace(/^tel:/i,'').trim()});
+    else if(prop==='EMAIL')cur.emails.push({label:/WORK/.test(types)?'Work':'Personal',value:unesc(v).trim()});
+    else if(prop==='NOTE')cur.notes=unesc(v).trim();
+    else if(prop==='CATEGORIES')cur.tags.push(...splitV(v,',').map(x=>unesc(x).trim()).filter(Boolean));
+  }
+  return out;
+}
+const vesc=s=>String(s).replace(/\\/g,'\\\\').replace(/\n/g,'\\n').replace(/([,;])/g,'\\$1');
+function toVCF(c){
+  const w=(c.name||'').trim().split(/\s+/),family=w.length>1?w.pop():'',given=w.join(' ');
+  const L=['BEGIN:VCARD','VERSION:3.0',`FN:${vesc(disp(c))}`,`N:${vesc(family)};${vesc(given)};;;`];
+  for(const p of c.phones)L.push(`TEL;TYPE=${p.label==='Mobile'?'CELL':p.label==='Home'?'HOME':p.label==='Work'?'WORK':'VOICE'}:${vesc(p.value)}`);
+  for(const e of c.emails)L.push(`EMAIL;TYPE=INTERNET${e.label==='Work'?',WORK':',HOME'}:${vesc(e.value)}`);
+  if(c.notes)L.push(`NOTE:${vesc(c.notes)}`);
+  if(c.tags.length)L.push(`CATEGORIES:${c.tags.map(vesc).join(',')}`);
+  L.push('END:VCARD');return L.join('\r\n');
+}
+function download(name,text,type){const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([text],{type}));a.download=name;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},1000)}
+function exportVCF(){const cs=live().sort((a,b)=>collator.compare(disp(a),disp(b)));if(!cs.length){toast('No contacts to export yet');return}download(`contacts-${new Date().toISOString().slice(0,10)}.vcf`,cs.map(toVCF).join('\r\n')+'\r\n','text/vcard');toast(`${cs.length} contacts exported`)}
+async function shareContact(c){
+  const name=disp(c),file=new File([toVCF(c)],name.replace(/[^\w\- ]+/g,'').trim()+'.vcf',{type:'text/vcard'});
+  try{if(navigator.canShare&&navigator.canShare({files:[file]})){await navigator.share({files:[file],title:name});return}if(navigator.share){await navigator.share({title:name,text:contactText(c)});return}}catch(e){if(e.name==='AbortError')return}
+  const ok=await copyText(contactText(c));toast(ok?'Contact details copied':'Sharing is not available');
+}
+async function copyText(t){try{await navigator.clipboard.writeText(t);return true}catch{const a=document.createElement('textarea');a.value=t;a.style.position='fixed';a.style.opacity='0';document.body.appendChild(a);a.select();let ok=false;try{ok=document.execCommand('copy')}catch{}a.remove();return ok}}
+
+/* ---------- toast ---------- */
+let toastTimer=0,toastFn=null;
+function toast(msg,action='',fn=null){const el=$('#toast');$('#toastText').textContent=msg;$('#toastAct').textContent=action;toastFn=fn;el.classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(()=>el.classList.remove('show'),action?5500:3000)}
+$('#toastAct').addEventListener('click',async()=>{const f=toastFn;toastFn=null;$('#toast').classList.remove('show');if(f)await f()});
+
+/* ---------- add button ---------- */
+$('#addBtn').addEventListener('click',()=>{if(selecting)endSelect();const t=q.trim();if(t&&!lastResults.length)act('new-from-q');else openEditor()});
+
+/* ---------- pull to close (budget rule): every full-screen page here can be dragged down from its top to close ----------
+   It starts only when the page is scrolled to the very top and never inside a text box, so typing and scrolling work
+   as normal. A short drag springs back; a long or quick one closes the page, the same as Back. */
+function pullToClose(el){
+  let y0=0,dy=0,on=false,live=false,trail=[];
+  el.addEventListener('touchstart',e=>{
+    on=e.touches.length===1&&el.scrollTop<=0&&!e.target.closest('input,textarea,select,[contenteditable="true"]');
+    live=false;dy=0;if(on){y0=e.touches[0].clientY;trail=[[0,Date.now()]]}
+  },{passive:true});
+  el.addEventListener('touchmove',e=>{
+    if(!on)return;dy=e.touches[0].clientY-y0;const now=Date.now();trail.push([dy,now]);while(trail.length>2&&now-trail[0][1]>100)trail.shift();
+    if(!live){if(dy<-4||el.scrollTop>0){on=false;return}if(dy<8)return;live=true;el.classList.add('pulling')}
+    e.preventDefault();const k=Math.max(0,dy-8);el.style.transform=`translateY(${k}px)`;el.style.opacity=String(1-Math.min(.5,k/(innerHeight*1.4)));
+  },{passive:false});
+  const end=()=>{
+    if(!on)return;on=false;if(!live)return;live=false;
+    const a=trail[0],b=trail[trail.length-1],fast=(b[0]-a[0])/Math.max(1,b[1]-a[1])>.4&&dy>24,far=dy>Math.min(140,innerHeight*.22);
+    el.classList.remove('pulling');el.style.transition='transform .28s cubic-bezier(.2,.8,.2,1),opacity .28s';
+    if(fast||far){el.style.transform='translateY(100%)';el.style.opacity='0';el.dataset.pulled='1';setTimeout(()=>{if(stack[stack.length-1]===el.id)closeTop();else resetPull(el)},260)}
+    else{el.style.transform='';el.style.opacity='';setTimeout(()=>{if(!live)el.style.transition=''},300)}
+  };
+  el.addEventListener('touchend',end);el.addEventListener('touchcancel',end);
+}
+function resetPull(el){delete el.dataset.pulled;el.style.transform='';el.style.opacity='';el.style.transition=''}
+$$('.layer').forEach(pullToClose);
+
+/* ---------- the budget app around us ----------
+   Shown in the budget's Contacts tab through a frame. Small messages only (same site):
+     budget → contacts: hello (room its bottom bar takes) · shown {search} · hidden · inset
+     contacts → budget: hello
+   The budget app can also call window.budgetContacts.search() straight from a tap, so the keyboard opens at once. */
+const embedded=root.classList.contains('embedded');
+let onScreen=!embedded;
+function setInset(px){root.style.setProperty('--inset',Math.max(0,Math.min(200,Number(px)||0))+'px')}
+function shown(search){
+  const was=onScreen;onScreen=true;
+  if(search)openSearch();
+  if(cfg.locked)tryUnlock(true);else if(!was)queueSync(120);
+}
+window.budgetContacts={search:()=>{shown(false);openSearch()},shown};
+if(embedded){
+  addEventListener('message',e=>{
+    if(e.origin!==location.origin||e.source!==window.parent)return;const m=e.data||{};if(m.src!=='budget')return;
+    if(m.inset!=null)setInset(m.inset);
+    if(m.type==='shown')shown(!!m.search);
+    else if(m.type==='hidden'){onScreen=false;closeAZ();qi.blur()}
+  });
+  try{window.parent.postMessage({src:'budget-contacts',type:'hello'},location.origin)}catch{}
+}
+// on a phone, the keyboard takes the bottom of the screen while searching: the add button steps aside
+if(window.visualViewport)visualViewport.addEventListener('resize',()=>body.classList.toggle('kb',visualViewport.height<innerHeight*.75));
+
+/* ---------- start ---------- */
+async function init(){
+  try{
+    await openDB();
+    const saved=await idb.all();for(const c of saved){const x=clean(c);all.set(x.id,x)}
+    const st=await idb.get('sync');if(st)cfg={...cfg,...st,locked:typeof st.locked==='string'?st.locked:''};
+    const tl=await idb.get('taglib');if(tl&&Array.isArray(tl.list))tagLib=tl;
+    const lg=await idb.get('log');if(Array.isArray(lg))changeLog=lg;
+    const di=await idb.get('dupIgnore');if(Array.isArray(di))dupIgnore=new Set(di);
+    dataVer++;
+  }catch(e){list.innerHTML='<div class="empty"><h2>Storage is blocked</h2><p>Allow site storage (leave private browsing) and reload. Nothing has been deleted.</p></div>';return}
+  // Signed out of the budget app since last time: wipe, the same as the budget app hides its own data.
+  if(!cfg.locked&&(await budgetAuth())===null){await lockdown('signin');return}
+  showLock();
+  setStatus(cfg.locked?'off':navigator.onLine?'idle':'offline');
+  render();
+  if(cfg.locked)tryUnlock(true);else queueSync(250);
+}
+init();
+})();
+</script></body></html>

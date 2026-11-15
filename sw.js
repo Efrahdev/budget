@@ -1,6 +1,6 @@
 // Budget Tracker service worker: keeps the app itself available offline.
 // Money data never passes through here; it goes straight to Google Sheets.
-const CACHE = 'budget-tracker-v90';
+const CACHE = 'budget-tracker-v91';
 // The Reader's pinned third-party files (pdf.js, marked) live in their own cache. Their paths carry the version, so
 // they never change: fetched once, on first use, and kept across budget app updates (which replace CACHE).
 const VENDOR = 'reader-vendor-v1';
@@ -13,12 +13,13 @@ self.addEventListener('install', e => {
 self.addEventListener('activate', e => {
   e.waitUntil(caches.keys().then(ks => Promise.all(ks.filter(k => k !== CACHE && k !== VENDOR).map(k => caches.delete(k)))).then(() => self.clients.claim()));
 });
-// Each page is kept under its own address: the budget app as index.html, the Reader as reader/index.html.
+// Each page is kept under its own address: the budget app as index.html, the Reader as reader/index.html, Contacts as contacts/index.html.
 function pageKey(url) {
   const u = new URL(url); u.hash = ''; u.search = '';
   if (u.pathname.endsWith('/')) u.pathname += 'index.html';
   return u.href;
 }
+const CONTACTS_OFFLINE = '<!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width"><title>Contacts</title><body style="font:16px system-ui;padding:24px;color:#555">Contacts need a connection the first time they open. After that they work offline.</body>';
 const READER_OFFLINE = '<!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width"><title>Reader</title><body style="font:16px system-ui;padding:24px;color:#555">The Reader needs a connection the first time it opens. After that it works offline.</body>';
 /* FRESH FIRST. Pages and the app's own files are always checked with GitHub when online ({cache:'no-cache'} skips the
    browser's 10-minute reuse of old copies; GitHub answers "unchanged" cheaply when nothing is new), so an update is
@@ -41,7 +42,8 @@ self.addEventListener('fetch', e => {
   if (req.mode === 'navigate') {
     const key = mine ? pageKey(req.url) : null;
     e.respondWith((mine ? freshPage(req, key) : fetch(req)).catch(() => (key ? caches.match(key) : Promise.resolve(null)).then(hit => hit ||
-      (key && key.includes('/reader/') ? new Response(READER_OFFLINE, {headers: {'Content-Type': 'text/html; charset=utf-8'}}) : caches.match(pageKey(new URL('./', self.registration.scope).href))))));
+      (key && key.includes('/reader/') ? new Response(READER_OFFLINE, {headers: {'Content-Type': 'text/html; charset=utf-8'}})
+        : key && key.includes('/contacts/') ? new Response(CONTACTS_OFFLINE, {headers: {'Content-Type': 'text/html; charset=utf-8'}}) : caches.match(pageKey(new URL('./', self.registration.scope).href))))));
     return;
   }
   if (mine && url.pathname.includes('/reader/vendor/')) { // pinned, versioned files: saved once, never re-downloaded

@@ -23,6 +23,8 @@
  * The reply is the full, current data set and its version (rev). A request with no ops and
  * {since: rev} for the current version gets a tiny {same: true} reply instead.
  * A request with no ops and {lite: true} gets the notes only (list, and text for noteIds), without the budget data.
+ * A request with {contacts: {...}} is the Contacts page: it gets only contacts (from their own spreadsheet), never
+ * budget data, after the same kill-switch and sign-in checks. See "contacts" near the end of this file.
  */
 
 var TABS = {
@@ -68,6 +70,7 @@ function doPost(e) {
     if (req.emailLink) return out(sendLoginLink(ss, req.emailLink));
     var who = authorise(ss, req);
     if (!who.ok) return out(who);
+    if (req.contacts) return out(contactsSync(req.contacts, who.user)); // Contacts page: its own spreadsheet, nothing else
     var ops = Array.isArray(req.ops) ? req.ops : [], vaultOps = [], noteErrors = [], role = who.user.role, killErr = '';
     var rev = props.getProperty('REV') || '';
     if (!ops.length && req.since && rev && req.since === rev && !req.vault && !(Array.isArray(req.noteIds) && req.noteIds.length) && !who.session)
@@ -652,4 +655,128 @@ function selfTest() {
   var d = readAll(ss);
   Logger.log('Google client ID set: ' + !!configValue(ss, 'google client id') + ', users: ' + listUsers(ss).length);
   Logger.log('Config found: ' + !!d.config + ', entries: ' + d.txns.length + ', balance dates: ' + Object.keys(d.balances).length);
+}
+
+/* ---------- contacts (Nov 2026): the Contacts page (contacts/) keeps its people in their own spreadsheet ----------
+   Same sign-in and the same kill switch as the budget: a contacts request arrives after both checks in doPost.
+   {session, contacts: {cursor, changes, tagLib}} touches only the "Budget Tracker contacts" spreadsheet. No budget
+   data is read or sent, and the budget's version (REV) does not change. Everyone who can open the app (Owners,
+   Members and entry links) can read and edit contacts.
+   Rows: one per person. A delete keeps the row with Deleted = TRUE, so a phone that was offline cannot bring the
+   contact back. Rev is a counter: a phone asks for every row with a Rev above the last one it saw (its cursor).
+   Two phones changing the same contact: the newer Updated time wins. Rows typed straight into the tab get an ID,
+   Created, Updated and Rev the next time any phone does a full sync. */
+var CONTACTS_SHEET_ID = '1id_yHFGNqmjM1KZf-epryRAVmXHvEtsKnLN-ppf8pj8';
+var CT_TAB = 'Contacts', CT_META = '_contacts_meta';
+var CT_HEAD = ['ID', 'Name', 'Phones', 'Emails', 'Tags', 'Notes', 'Favourite', 'Created', 'Updated', 'Deleted', 'Rev'];
+var CT = {}; CT_HEAD.forEach(function (h, i) { CT[h] = i; });
+
+function ctBook() { return SpreadsheetApp.openById(CONTACTS_SHEET_ID); }
+function ctSheets(book) {
+  var sh = book.getSheetByName(CT_TAB);
+  if (!sh) sh = book.insertSheet(CT_TAB);
+  if (sh.getLastRow() === 0) {
+    sh.getRange(1, 1, sh.getMaxRows(), CT_HEAD.length).setNumberFormat('@');
+    sh.getRange(1, 1, 1, CT_HEAD.length).setValues([CT_HEAD]).setFontWeight('bold');
+    sh.setFrozenRows(1);
+  }
+  var meta = book.getSheetByName(CT_META);
+  if (!meta) {
+    meta = book.insertSheet(CT_META);
+    meta.getRange('A1:B2').setValues([['lastRev', 0], ['tagLibrary', '']]);
+    meta.hideSheet();
+  }
+  return {sh: sh, meta: meta};
+}
+function contactsSync(c, user) {
+  var b = ctSheets(ctBook()), sh = b.sh, meta = b.meta;
+  var cursor = Number(c.cursor) || 0;
+  var changes = Array.isArray(c.changes) ? c.changes.slice(0, 3000) : [];
+  var rev = Number(meta.getRange('B1').getValue()) || 0;
+  // Tag library: the tags people created (even ones on no contact yet) and their order. The newest copy wins.
+  var tagLib = {list: [], updatedAt: 0};
+  try { tagLib = JSON.parse(String(meta.getRange('B2').getValue() || '')) || tagLib; } catch (x) {}
+  var inLib = c.tagLib;
+  if (inLib && Array.isArray(inLib.list) && (Number(inLib.updatedAt) || 0) > (Number(tagLib.updatedAt) || 0)) {
+    tagLib = {list: inLib.list.map(function (t) { return ctStr(t, 60); }).filter(String).slice(0, 300), updatedAt: Number(inLib.updatedAt)};
+    meta.getRange('B2').setValue(JSON.stringify(tagLib));
+  }
+  // Nothing to send and nothing new since this phone's cursor: a tiny reply.
+  if (!changes.length && cursor > 0 && cursor >= rev) return {ok: true, contacts: {cursor: rev, changes: [], tagLib: tagLib}, me: user};
+
+  var width = CT_HEAD.length, last = sh.getLastRow();
+  var values = last > 1 ? sh.getRange(2, 1, last - 1, width).getValues() : [];
+  var byId = {}, touched = {}, appended = [], rejected = {}, now = new Date().toISOString();
+  values.forEach(function (row, i) { if (row[CT.ID]) byId[String(row[CT.ID])] = i; });
+  // Rows typed straight into the tab (no ID yet) join in on a full sync.
+  if (cursor === 0) values.forEach(function (row, i) {
+    if (row[CT.ID]) return;
+    var has = false; for (var k = 1; k <= CT.Notes; k++) if (String(row[k]).trim() !== '') { has = true; break; }
+    if (!has) return;
+    row[CT.ID] = Utilities.getUuid(); if (!row[CT.Created]) row[CT.Created] = now; row[CT.Updated] = now;
+    if (String(row[CT.Deleted]).toUpperCase() !== 'TRUE') row[CT.Deleted] = 'FALSE';
+    row[CT.Rev] = ++rev; byId[String(row[CT.ID])] = i; touched[i] = true;
+  });
+  changes.forEach(function (ch) {
+    if (!ch || !ch.id) return;
+    var id = String(ch.id).slice(0, 80), at = byId[id];
+    if (at !== undefined) {
+      if (ctTime(values[at][CT.Updated]) > (Number(ch.updatedAt) || 0)) { rejected[at] = true; return; } // the sheet has a newer copy
+      values[at] = ctRow(ch, ++rev); touched[at] = true;
+    } else {
+      var row = ctRow(ch, ++rev);
+      values.push(row); byId[id] = values.length - 1; appended.push(row);
+    }
+  });
+  var nTouched = Object.keys(touched).length;
+  if (nTouched > 40) {
+    // Many changes (an import, Merge all): one write for the whole block is far faster than one per row.
+    var block = values.slice(0, values.length - appended.length);
+    if (block.length) sh.getRange(2, 1, block.length, width).setValues(block.map(function (r) { return r.map(ctSafe); }));
+  } else {
+    Object.keys(touched).forEach(function (k) { var i = Number(k); sh.getRange(i + 2, 1, 1, width).setValues([values[i].map(ctSafe)]); });
+  }
+  if (appended.length) sh.getRange(Math.max(last, 1) + 1, 1, appended.length, width).setValues(appended.map(function (r) { return r.map(ctSafe); }));
+  if (rev !== (Number(meta.getRange('B1').getValue()) || 0)) meta.getRange('B1').setValue(rev);
+
+  var out = [], seen = {};
+  values.forEach(function (row, i) {
+    if (!row[CT.ID] || seen[row[CT.ID]]) return;
+    if ((Number(row[CT.Rev]) || 0) > cursor || rejected[i]) { out.push(ctFrom(row)); seen[row[CT.ID]] = true; }
+  });
+  return {ok: true, contacts: {cursor: rev, changes: out, tagLib: tagLib, full: cursor === 0}, me: user};
+}
+// One contact -> one row. Phones and emails are one per line as "Label: value"; tags are comma separated.
+function ctRow(c, rev) {
+  var lines = function (list, def) {
+    return (Array.isArray(list) ? list : []).filter(function (x) { return x && String(x.value || '').trim(); }).slice(0, 20)
+      .map(function (x) { return (ctStr(x.label, 40) || def) + ': ' + ctStr(x.value, 200); }).join('\n');
+  };
+  return [String(c.id).slice(0, 80), ctStr(c.name, 200), lines(c.phones, 'Mobile'), lines(c.emails, 'Personal'),
+    (Array.isArray(c.tags) ? c.tags : []).map(function (t) { return ctStr(t, 60); }).filter(String).slice(0, 30).join(', '),
+    ctStr(c.notes, 5000), c.fav ? 'TRUE' : 'FALSE',
+    new Date(Number(c.createdAt) || Date.now()).toISOString(), new Date(Number(c.updatedAt) || Date.now()).toISOString(),
+    c.deleted ? 'TRUE' : 'FALSE', rev]; // escaped once, when written (ctSafe)
+}
+function ctFrom(row) {
+  var parse = function (text, def) {
+    return String(text || '').split(/\n|\s\|\s/).map(function (s) { return s.trim(); }).filter(String).map(function (s) {
+      var m = s.match(/^([^:]{1,40}):\s*(.+)$/);
+      return m && !/^(https?|mailto|tel)$/i.test(m[1]) ? {label: m[1].trim(), value: m[2].trim()} : {label: def, value: s};
+    });
+  };
+  var yes = function (v) { return v === true || /^(true|yes|1)$/i.test(String(v)); };
+  return {id: String(row[CT.ID]), name: String(row[CT.Name] || ''), phones: parse(row[CT.Phones], 'Mobile'), emails: parse(row[CT.Emails], 'Personal'),
+    tags: String(row[CT.Tags] || '').split(',').map(function (s) { return s.trim(); }).filter(String),
+    notes: String(row[CT.Notes] || ''), fav: yes(row[CT.Favourite]),
+    createdAt: ctTime(row[CT.Created]), updatedAt: ctTime(row[CT.Updated]), deleted: yes(row[CT.Deleted])};
+}
+function ctTime(v) { if (v instanceof Date) return v.getTime(); if (typeof v === 'number') return v; var t = Date.parse(String(v || '')); return isNaN(t) ? 0 : t; }
+function ctStr(v, n) { return String(v == null ? '' : v).trim().slice(0, n); }
+// Text that starts with = + - @ would be read as a formula; a leading apostrophe keeps it plain text.
+function ctSafe(v) { return typeof v === 'string' && /^[=+\-@]/.test(v) ? "'" + v : v; }
+/* Run once from the editor (optional) to check the contacts spreadsheet can be reached. */
+function contactsSelfTest() {
+  var b = ctSheets(ctBook());
+  Logger.log('Contacts rows: ' + Math.max(0, b.sh.getLastRow() - 1) + ', last rev: ' + b.meta.getRange('B1').getValue());
 }
