@@ -450,6 +450,15 @@ html.hand-left .sfab{left:calc(max(16px,calc((100vw - 600px)/2 + 16px)) + 64px)}
 .fontopt span{font-size:calc(13px*var(--fs,1));color:var(--muted);font-variant-numeric:tabular-nums}
 .fontopt.on{border-color:color-mix(in srgb,var(--accent) 60%,transparent);background:var(--accent-bg)}
 .fontopt.on b:after{content:"  ✓";color:var(--accent)}
+/* ===== round 4: the page's main actions sit in a bar at the bottom (thumb reach), above the budget's bottom bar ===== */
+.efoot{position:sticky;bottom:0;z-index:3;display:flex;gap:10px;margin:18px -14px 0;padding:10px 14px calc(10px + var(--inset) + env(safe-area-inset-bottom));background:var(--glass);-webkit-backdrop-filter:blur(16px);backdrop-filter:blur(16px);border-top:1px solid var(--line)}
+.efoot .btn{flex:1;min-height:48px;font-size:calc(15.5px*var(--fs,1))}
+.efoot .btn.primary{flex:1.6}
+#eForm.lin,#tagsheet .lin{padding-bottom:0;display:flex;flex-direction:column}
+#eForm.lin>.efoot,#tagsheet .lin>.efoot{margin-top:auto}
+#eForm.lin>.fcard:last-of-type,#tagsheet .lin>.note{margin-bottom:18px}
+/* messages while a page is open: above its bottom bar and the budget bar */
+html.layer-open .toast{bottom:calc(var(--inset) + 92px + env(safe-area-inset-bottom))!important}
 @media(prefers-reduced-motion:reduce){*,*:before,*:after{animation:none!important;transition:none!important}}
 </style></head>
 <body data-sync="idle">
@@ -894,10 +903,11 @@ function tagSheetHTML(){
   const cs=pickedContacts(),n=cs.length;
   const rows=libTags().map(t=>{const k=t.toLowerCase(),have=cs.filter(c=>effTags(c).some(x=>x.toLowerCase()===k)).length;const st=have===0?'none':have===n?'all':'some';
     return `<button type="button" class="tcheck" data-tt="${esc(t)}" data-state="${st}"><span class="bx">${CK.replace('<svg','<svg class="ck"')}<svg class="dash" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M7 12h10"/></svg></span><span class="tc">${esc(t)}</span><small>${have} of ${n}</small></button>`}).join('');
-  return `<div class="lin"><div class="lbar"><button class="ibtn" data-ts="close" aria-label="Back">${I.back}</button><h2>Tags for ${n} ${n===1?'contact':'contacts'}</h2><button class="textbtn go" data-ts="done">Done</button></div>
+  return `<div class="lin"><div class="lbar"><button class="ibtn" data-ts="close" aria-label="Back">${I.back}</button><h2>Tags for ${n} ${n===1?'contact':'contacts'}</h2><span style="width:38px"></span></div>
   <div class="fcard"><div style="padding:4px 0">${rows||'<p class="note">No tags yet. Create one below.</p>'}</div></div>
   <div class="fcard"><div class="fhead"><span>${I.plus}NEW TAG</span></div><form class="inline" id="tsNew" autocomplete="off"><input class="fin" id="tsNewName" placeholder="Tag name" maxlength="40" enterkeyhint="done"><button class="btn" type="submit">Add &amp; apply</button></form></div>
-  <p class="note">Tap a tag to add it to all selected contacts. Tap it again to remove it from all of them.</p></div>`;
+  <p class="note">Tap a tag to add it to all selected contacts. Tap it again to remove it from all of them.</p>
+  <div class="efoot"><button type="button" class="btn primary" data-ts="done">${I.check}Done</button></div></div>`;
 }
 function openTagSheet(){openLayer('tagsheet',()=>{$('#tagsheet').innerHTML=tagSheetHTML()})}
 async function applyTag(t,add){const cs=pickedContacts();const k=t.toLowerCase();const change=cs.filter(c=>add!==c.tags.some(x=>x.toLowerCase()===k));if(!change.length)return;
@@ -1000,14 +1010,14 @@ function openEditor(c,prefill){
   edit={base:c?{...c}:null,id:c?c.id:uid(),tags:new Set(((c&&c.tags)||prefill?.tags||[]).map(String))};
   const d=c||{name:'',phones:[],emails:[],notes:'',fav:false,...prefill};
   const html=`<form class="lin" id="eForm" novalidate>
-  <div class="lbar"><button type="button" class="textbtn" data-e="cancel">Cancel</button><h2>${isNew?'New contact':'Edit contact'}</h2><button type="submit" class="textbtn go">Save</button></div>
+  <div class="lbar"><h2>${isNew?'New contact':'Edit contact'}</h2></div>
   <div class="ehero"><span id="eAvWrap">${av({...d,id:edit.id})}</span><input class="ename" id="eName" placeholder="Full name" value="${esc(d.name)}" maxlength="200" autocomplete="off" autocapitalize="words" enterkeyhint="next"></div>
   <div class="fcard"><div class="fhead"><span>${I.phone}PHONE</span></div><div id="ePhones">${(d.phones.length?d.phones:[{}]).map(x=>frow('p',x)).join('')}</div><p class="warn" id="dupWarn"></p><button type="button" class="addrow" data-e="addp">${I.plus}Add phone</button></div>
   <div class="fcard"><div class="fhead"><span>${I.mail}EMAIL</span></div><div id="eEmails">${d.emails.map(x=>frow('e',x)).join('')}</div><button type="button" class="addrow" data-e="adde">${I.plus}Add email</button></div>
   <div class="fcard"><div class="fhead"><span>${I.tag}TAGS</span></div><div class="tagpick" id="eTags"></div><div class="inline"><input class="fin" id="eTagNew" placeholder="Create a tag" maxlength="40" enterkeyhint="done"><button type="button" class="btn" data-e="addtag">Add</button></div></div>
   <div class="fcard"><div class="fhead"><span>${I.note}NOTES</span></div><textarea id="eNotes" rows="3" maxlength="5000" placeholder="Anything worth remembering">${esc(d.notes)}</textarea></div>
   <label class="fcard switch"><span>Star this contact</span><input type="checkbox" id="eFav" ${d.fav?'checked':''}><span class="sw"></span></label>
-  <button type="submit" class="btn primary bigsave">${I.check}${isNew?'Save contact':'Save changes'}</button>
+  <div class="efoot"><button type="button" class="btn" data-e="cancel">Cancel</button><button type="submit" class="btn primary">${I.check}${isNew?'Save contact':'Save changes'}</button></div>
   </form>`;
   const setup=()=>{$('#editor').innerHTML=html;drawTags();checkDup()};
   if(stack.includes('editor')){setup();return}

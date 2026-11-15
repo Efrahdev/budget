@@ -1989,10 +1989,10 @@ body[data-view="contacts"] main{padding:0}
 </header>
 <nav class="navbar" id="navbar" aria-label="Sections">
   <a class="nv" href="#add" data-v="add" hidden><span class="nvi"><svg class="ic" aria-hidden="true"><use href="#i-plus"/></svg></span><span>Add entry</span></a>
-  <a class="nv" href="#overview" data-v="overview"><span class="nvi"><svg class="ic" aria-hidden="true"><use href="#i-home"/></svg></span><span>Overview</span></a>
   <a class="nv" href="#entries" data-v="entries"><span class="nvi"><svg class="ic" aria-hidden="true"><use href="#i-entries"/></svg></span><span>Entries</span></a>
-  <a class="nv nv-2" href="#cards" data-v="cards"><span class="nvi"><svg class="ic" aria-hidden="true"><use href="#i-card"/></svg></span><span>Card bills</span></a>
+  <a class="nv" href="#overview" data-v="overview"><span class="nvi"><svg class="ic" aria-hidden="true"><use href="#i-home"/></svg></span><span>Overview</span></a>
   <a class="nv" href="#wealth" data-v="wealth"><span class="nvi"><svg class="ic" aria-hidden="true"><use href="#i-wealth"/></svg></span><span>Wealth</span></a>
+  <a class="nv nv-2" href="#cards" data-v="cards"><span class="nvi"><svg class="ic" aria-hidden="true"><use href="#i-card"/></svg></span><span>Card bills</span></a>
   <a class="nv" href="#notes" data-v="notes"><span class="nvi"><svg class="ic" aria-hidden="true"><use href="#i-notes"/></svg></span><span>Notes</span></a>
   <a class="nv" href="#read" data-v="read"><span class="nvi"><svg class="ic" aria-hidden="true"><use href="#i-read"/></svg></span><span>Reader</span></a>
   <a class="nv nv-2 nv-ct" href="#contacts" data-v="contacts"><span class="nvi"><svg class="ic" aria-hidden="true"><use href="#i-contacts"/></svg></span><span>Contacts</span></a>
@@ -6583,7 +6583,7 @@ document.addEventListener('click', ev => {
    four main screens and More. Laptops, desktops and TVs: the same pieces become a sidebar (CSS only).
    While the phone keyboard is up, every bar steps aside and the box you are typing in is kept in view. */
 const VIEW_TITLE = {add: 'Add entry', overview: 'Overview', entries: 'Entries', cards: 'Card bills', wealth: 'Wealth', notes: 'Notes', trend: 'Trend', setup: 'Setup', vault: 'Vault', disc: 'Discretionary', read: 'Reader', contacts: 'Contacts'};
-const PRIMARY_VIEWS = ['overview', 'entries', 'wealth', 'notes', 'read'];
+const PRIMARY_VIEWS = ['entries', 'overview', 'wealth', 'notes', 'read'];
 const coarse = matchMedia('(pointer: coarse)');
 const reduceMotion = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
 const buzz = () => {}; // haptic feedback is switched off everywhere (owner's choice)
@@ -7092,7 +7092,7 @@ function ctFrame() {
 }
 function ctPost(m) { m.src = 'budget'; if (CT.frame && CT.ready) CT.frame.contentWindow.postMessage(m, location.origin); else CT.queue.push(m); }
 function ctInset() {
-  if (matchMedia('(min-width:1024px)').matches) return 0;
+  if (matchMedia('(min-width:1024px)').matches || document.documentElement.classList.contains('kb')) return 0;
   const nb = $('#navbar'); if (!nb || nb.hidden) return 0;
   const r = nb.getBoundingClientRect(); return r.height && r.top < innerHeight ? Math.max(0, Math.round(innerHeight - r.top + 6)) : 0;
 }
