@@ -9,7 +9,7 @@
 <link rel="apple-touch-icon" href="../icons/apple-touch-icon.png">
 <script>/* the budget app's Text size, typeface and day/night choice, before the first paint */
 (function(){var h=document.documentElement;try{var x=JSON.parse(localStorage.getItem('budgetTracker.text')||'{}')||{},F={atkinson:['"Atkinson Hyperlegible Next"','Atkinson+Hyperlegible+Next:wght@400..800'],noto:['"Noto Sans"','Noto+Sans:wght@400..800'],roboto:['"Roboto"','Roboto:wght@400..800'],lexend:['"Lexend"','Lexend:wght@400..800'],system:['system-ui']};
-if(x.size>0.5&&x.size<2)h.style.setProperty('--fsu',x.size);var f=F[x.font];if(f){h.style.setProperty('--f-body',f[0]+',system-ui,sans-serif');if(f[1])document.write('<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family='+f[1]+'&display=swap">')}}catch(e){}
+if(x.size>0.5&&x.size<2){h.style.setProperty('--fsu',x.size);if(x.size>=1.1)h.classList.add('bigtext')}var f=F[x.font];if(f){h.style.setProperty('--f-body',f[0]+',system-ui,sans-serif');if(f[1])document.write('<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family='+f[1]+'&display=swap">')}}catch(e){}
 try{var t=localStorage.getItem('budgetTracker.theme');if(t==='light'||t==='dark')h.dataset.theme=t}catch(e){}
 try{if(window.parent!==window&&window.parent.location.origin===location.origin)h.classList.add('embedded')}catch(e){}})();
 </script>
@@ -394,6 +394,41 @@ body.searching .titlebar{display:none}
 .cfab:active{transform:scale(.92)}
 body.selecting .cfab,body.searching.kb .cfab{opacity:0;pointer-events:none;transform:scale(.8)}
 .layer.pulling{transition:none!important;animation:none!important}
+/* ===== round 2 ===== */
+/* Full names: the name spans the card and wraps onto a second line; nothing is cut off */
+.row{grid-template-columns:40px minmax(0,1fr) auto;grid-template-areas:"av name name" "av sub acts";row-gap:8px;padding:12px}
+.row .av,.row .chk{width:40px;height:40px;font-size:calc(15px*var(--fs,1))}
+.rn{align-items:flex-start}
+.rn>span{white-space:normal;overflow:visible;text-overflow:clip;overflow-wrap:anywhere;line-height:1.3}
+.rn .star{margin-top:calc(4px*var(--fs,1))}
+.rq{display:none}
+/* one chip for every action: same size, same line weight */
+.ra{gap:3px}
+.ic{width:30px;height:30px;border-radius:9px;border:0;padding:0;cursor:pointer}
+.row{column-gap:10px}
+.rs .num{text-overflow:clip}
+/* Narrow phones or large text: the actions take their own line under the number, so the number is never cut */
+#list{container-type:inline-size}
+@container (max-width:369px){.row{grid-template-areas:"av name name" "av sub sub" "av acts acts"}.ra{justify-self:start}}
+html.bigtext .row{grid-template-areas:"av name name" "av sub sub" "av acts acts"}
+html.bigtext .ra{justify-self:start}
+.ic .i{width:17px;height:17px;stroke-width:1.8}
+.ic.tool{color:var(--muted);background:var(--surface2)}
+.ic.tool:active{color:var(--text)}
+/* Floating buttons: neutral and softly lit (faint top-to-bottom gradient, hairline edge, soft shadow), icon in the accent colour */
+:root{--fb-bg:linear-gradient(180deg,#ffffff 0%,#eef0f4 100%);--fb-line:rgba(16,24,40,.09);--fb-shadow:0 1px 1px rgba(16,24,40,.04),0 8px 20px -10px rgba(16,24,40,.24),inset 0 1px 0 rgba(255,255,255,.95)}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--fb-bg:linear-gradient(180deg,#24272e 0%,#17191e 100%);--fb-line:rgba(255,255,255,.09);--fb-shadow:0 10px 22px -12px rgba(0,0,0,.85),inset 0 1px 0 rgba(255,255,255,.07)}}
+:root[data-theme="dark"]{--fb-bg:linear-gradient(180deg,#24272e 0%,#17191e 100%);--fb-line:rgba(255,255,255,.09);--fb-shadow:0 10px 22px -12px rgba(0,0,0,.85),inset 0 1px 0 rgba(255,255,255,.07)}
+.cfab{width:52px;height:52px;border-radius:17px;bottom:calc(var(--inset) + 10px + env(safe-area-inset-bottom));color:var(--accent);background:var(--fb-bg);border:1px solid var(--fb-line);box-shadow:var(--fb-shadow)}
+.cfab svg{width:23px;height:23px;stroke-width:2}
+.sfab{right:calc(max(16px,calc((100vw - 600px)/2 + 16px)) + 64px)}
+body.searching .sfab{opacity:0;pointer-events:none;transform:scale(.8)}
+/* voice search, inside the search box */
+.search input{padding-right:84px}
+.micq{position:absolute;right:6px;width:34px;height:34px;border:0;border-radius:10px;background:transparent;display:grid;place-items:center;color:var(--accent)}
+.micq[hidden]{display:none}
+.micq.on{color:#fff;background:var(--accent)}
+.micq:not([hidden])~.clearq{right:42px}
 @media(prefers-reduced-motion:reduce){*,*:before,*:after{animation:none!important;transition:none!important}}
 </style></head>
 <body data-sync="idle">
@@ -411,7 +446,6 @@ body.selecting .cfab,body.searching.kb .cfab{opacity:0;pointer-events:none;trans
   <div class="bar" id="bar">
   <header class="titlebar">
     <div class="tt"><h1>Contacts</h1><p class="meta" id="metaText">Loading…</p></div>
-    <button class="ibtn" id="searchBtn" type="button" aria-label="Search contacts"><svg class="i" viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5"/><path d="M20 20l-4.2-4.2"/></svg></button>
     <button class="ibtn az" id="azBtn" type="button" aria-label="Jump to letter" aria-expanded="false"><span id="azLabel">A–Z</span></button>
     <button class="ibtn" id="selBtn" type="button" aria-label="Select contacts"><svg class="i" viewBox="0 0 24 24"><rect x="3.5" y="4" width="6" height="6" rx="1.5"/><path d="M5 7l1 1 2-2"/><rect x="3.5" y="14" width="6" height="6" rx="1.5"/><path d="M13 7h7.5M13 17h7.5"/></svg></button>
     <button class="ibtn" id="menuBtn" type="button" aria-label="Settings and sync status"><svg class="i" viewBox="0 0 24 24"><path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2.2"/><circle cx="10" cy="17" r="2.2"/></svg><span class="sdot"></span></button>
@@ -419,6 +453,7 @@ body.selecting .cfab,body.searching.kb .cfab{opacity:0;pointer-events:none;trans
   <div class="searchrow" id="searchRow">
     <label class="search"><svg class="i" viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5"/><path d="M20 20l-4.2-4.2"/></svg>
       <input id="q" type="search" placeholder="Name, number, tag or note" autocomplete="off" autocorrect="off" spellcheck="false" enterkeyhint="search" aria-label="Search contacts">
+      <button class="micq" id="micBtn" type="button" aria-label="Search by voice" hidden><svg class="i" viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21"/></svg></button>
       <button class="clearq" id="clearQ" type="button" aria-label="Clear search"><svg class="i" viewBox="0 0 24 24"><path d="M7 7l10 10M17 7L7 17"/></svg></button>
     </label>
     <button class="textbtn" id="searchCancel" type="button">Cancel</button>
@@ -438,6 +473,7 @@ body.selecting .cfab,body.searching.kb .cfab{opacity:0;pointer-events:none;trans
   <button type="button" data-sb="del" class="del"><svg class="i" viewBox="0 0 24 24"><path d="M4.5 7h15M10 11v6M14 11v6M6 7l1 12.5a1.5 1.5 0 0 0 1.5 1.5h7a1.5 1.5 0 0 0 1.5-1.5L18 7M9 7V4.5h6V7"/></svg><span>Delete</span></button>
 </div>
 
+<button class="cfab sfab" id="searchFab" type="button" aria-label="Search contacts"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="M20 20l-4.2-4.2"/></svg></button>
 <button class="cfab" id="addBtn" type="button" aria-label="New contact"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></button>
 
 <section class="layer" id="detail" role="dialog" aria-modal="true" aria-label="Contact" hidden></section>
@@ -687,9 +723,9 @@ function rowHTML(c,ph,d){
   return `<div class="row${d!==undefined?' rise':''}${selected.has(c.id)?' selected':''}"${d!==undefined?` style="--d:${d}"`:''} data-id="${esc(c.id)}" role="button" tabindex="0">`+
     `${av(c)}<span class="chk" aria-hidden="true">${CK}</span>`+
     `<div class="rn">${hl(name,ph)}${c.fav?U('star','star'):''}</div>`+
-    `<div class="rq"><button class="mi" data-r="edit" aria-label="Edit">${U('edit')}</button><button class="mi" data-r="copy" aria-label="Copy">${U('copy')}</button></div>`+
+    
     `<div class="rs"><span class="num">${esc(sub)}</span></div>`+
-    `<div class="ra"><a class="ic sms${off}" href="${tel?'sms:'+th:'#'}" aria-label="Message">${U('msg')}</a><a class="ic wa${off}" href="${tel?'https://wa.me/'+esc(waNumber(tel)):'#'}" target="_blank" rel="noopener noreferrer" aria-label="WhatsApp">${U('wa')}</a><a class="ic call${off}" href="${tel?esc(callHref(tel)):'#'}" aria-label="Call">${U('phone')}</a></div>`+
+    `<div class="ra"><button class="ic tool" data-r="edit" aria-label="Edit">${U('edit')}</button><button class="ic tool" data-r="copy" aria-label="Copy">${U('copy')}</button><a class="ic sms${off}" href="${tel?'sms:'+th:'#'}" aria-label="Message">${U('msg')}</a><a class="ic wa${off}" href="${tel?'https://wa.me/'+esc(waNumber(tel)):'#'}" target="_blank" rel="noopener noreferrer" aria-label="WhatsApp">${U('wa')}</a><a class="ic call${off}" href="${tel?esc(callHref(tel)):'#'}" aria-label="Call">${U('phone')}</a></div>`+
   `</div>`;
 }
 const letterOf=c=>{const ch=(norm(disp(c)).match(/\p{L}/u)||[''])[0].toUpperCase();return /^[A-Z]$/.test(ch)?ch:'#'};
@@ -778,8 +814,17 @@ qi.addEventListener('keydown',e=>{if(e.key==='Enter'){qi.blur();if(lastResults.l
 $('#clearQ').addEventListener('click',()=>{qi.value='';q='';$('#clearQ').classList.remove('show');render();qi.focus()});
 function openSearch(){if(selecting)endSelect();closeAZ();body.classList.add('searching');window.scrollTo({top:0,behavior:'instant'});qi.focus()}
 function closeSearch(){body.classList.remove('searching');if(q){qi.value='';q='';$('#clearQ').classList.remove('show');render()}qi.blur()}
-$('#searchBtn').addEventListener('click',openSearch);
+$('#searchFab').addEventListener('click',openSearch);
 $('#searchCancel').addEventListener('click',closeSearch);
+/* Voice search: tap the mic and say a name; the words go straight into the search box (Chrome's speech recognition). */
+{const SR=window.SpeechRecognition||window.webkitSpeechRecognition,mic=$('#micBtn');let rec=null;
+ if(SR){mic.hidden=false;mic.addEventListener('click',()=>{
+  if(rec){rec.stop();return}
+  rec=new SR();rec.lang='en-IN';rec.interimResults=true;rec.maxAlternatives=1;mic.classList.add('on');mic.setAttribute('aria-label','Stop listening');
+  rec.onresult=e=>{let t='';for(const r of e.results)t+=r[0].transcript;qi.value=t.replace(/[.?!]+$/,'').trim();qi.dispatchEvent(new Event('input'))};
+  rec.onerror=e=>{if(e.error==='not-allowed'||e.error==='service-not-allowed')toast('Allow the microphone to search by voice');else if(e.error==='no-speech')toast('Did not catch that. Tap the mic and try again')};
+  rec.onend=()=>{rec=null;mic.classList.remove('on');mic.setAttribute('aria-label','Search by voice')};
+  try{rec.start()}catch{rec=null;mic.classList.remove('on')}})}}
 new IntersectionObserver(([en])=>$('#bar').classList.toggle('stuck',!en.isIntersecting)).observe($('#sentinel'));
 new ResizeObserver(()=>root.style.setProperty('--bar-h',$('#bar').offsetHeight+'px')).observe($('#bar'));
 
@@ -1278,7 +1323,7 @@ $('#lockRetry').addEventListener('click',()=>tryUnlock(false));
 addEventListener('storage',e=>{
   if(e.key===LS_CONN){if(cfg.locked)tryUnlock(true);else queueSync(300)}
   if(e.key==='budgetTracker.theme'){const t=e.newValue;if(t==='light'||t==='dark')root.dataset.theme=t;else delete root.dataset.theme}
-  if(e.key==='budgetTracker.text'){try{const x=JSON.parse(e.newValue||'{}')||{};if(x.size>0.5&&x.size<2)root.style.setProperty('--fsu',x.size);else root.style.removeProperty('--fsu')}catch{}}
+  if(e.key==='budgetTracker.text'){try{const x=JSON.parse(e.newValue||'{}')||{};if(x.size>0.5&&x.size<2)root.style.setProperty('--fsu',x.size);else root.style.removeProperty('--fsu');root.classList.toggle('bigtext',x.size>=1.1)}catch{}}
 });
 
 /* ---------- import / export ---------- */

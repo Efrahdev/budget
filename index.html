@@ -1882,6 +1882,19 @@ body[data-view="contacts"] main{padding:0}
   /* nav + add button + 24px of breathing room */
   main{padding-bottom:calc(var(--nbh) + 16px + 51px + 24px + env(safe-area-inset-bottom,0px))}
 }
+/* ---------- Floating buttons (Nov 2026, round 2): one neutral, softly lit style for +, Contacts and New note ----------
+   A faint top-to-bottom gradient on a neutral surface, a hairline edge and a soft shadow; the icon carries the accent.
+   No deep colour, no glow. All the same size and shape. */
+:root{--fb-bg:linear-gradient(180deg,#ffffff 0%,#eef0f4 100%);--fb-line:rgba(16,24,40,.09);--fb-shadow:0 1px 1px rgba(16,24,40,.04),0 8px 20px -10px rgba(16,24,40,.24),inset 0 1px 0 rgba(255,255,255,.95)}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--fb-bg:linear-gradient(180deg,#24272e 0%,#17191e 100%);--fb-line:rgba(255,255,255,.09);--fb-shadow:0 10px 22px -12px rgba(0,0,0,.85),inset 0 1px 0 rgba(255,255,255,.07)}}
+:root[data-theme="dark"]{--fb-bg:linear-gradient(180deg,#24272e 0%,#17191e 100%);--fb-line:rgba(255,255,255,.09);--fb-shadow:0 10px 22px -12px rgba(0,0,0,.85),inset 0 1px 0 rgba(255,255,255,.07)}
+.fab,.nfab,.ctfab{color:var(--accent);background:var(--fb-bg);border:1px solid var(--fb-line);box-shadow:var(--fb-shadow);-webkit-backdrop-filter:none;backdrop-filter:none}
+.fab .ic,.nfab .ic,.ctfab .ic{stroke-width:2}
+@media (max-width:1023.98px){
+  .fab,.nfab,.ctfab{width:52px;height:52px;border-radius:17px;bottom:calc(var(--nbh) + 16px + env(safe-area-inset-bottom,0px))}
+  .ctfab{right:calc(max(16px,env(safe-area-inset-right,0px)) + 64px)}
+  .fab .ic,.nfab .ic,.ctfab .ic{width:23px;height:23px}
+}
 </style>
 </head>
 <body>
@@ -7064,7 +7077,7 @@ const CT = {frame: null, ready: false, queue: [], wantSearch: false};
 function ctFrame() {
   if (CT.frame) return CT.frame;
   const f = document.createElement('iframe');
-  f.src = 'contacts/'; f.title = 'Contacts'; f.setAttribute('allow', 'clipboard-read; clipboard-write; web-share');
+  f.src = 'contacts/'; f.title = 'Contacts'; f.setAttribute('allow', 'clipboard-read; clipboard-write; web-share; microphone');
   $('#v-contacts').appendChild(f); CT.frame = f; return f;
 }
 function ctPost(m) { m.src = 'budget'; if (CT.frame && CT.ready) CT.frame.contentWindow.postMessage(m, location.origin); else CT.queue.push(m); }
