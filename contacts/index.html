@@ -459,6 +459,32 @@ html.hand-left .sfab{left:calc(max(16px,calc((100vw - 600px)/2 + 16px)) + 64px)}
 #eForm.lin>.fcard:last-of-type,#tagsheet .lin>.note{margin-bottom:18px}
 /* messages while a page is open: above its bottom bar and the budget bar */
 html.layer-open .toast{bottom:calc(var(--inset) + 92px + env(safe-area-inset-bottom))!important}
+/* ===== round 5: Settings as collapsed cards; the sync icon ===== */
+.secs{display:flex;flex-direction:column;gap:10px;margin-top:6px}
+.sec{border-radius:16px;background:var(--surface);border:1px solid var(--line);box-shadow:var(--shade);overflow:hidden}
+.sec>summary{list-style:none;display:flex;align-items:center;gap:12px;min-height:64px;padding:10px 12px 10px 14px;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.sec>summary::-webkit-details-marker{display:none}
+.sec>summary:active{background:var(--press)}
+.sic{flex:none;width:36px;height:36px;border-radius:11px;display:grid;place-items:center;color:var(--accent);background:var(--accent-bg)}
+.sic .i{width:18px;height:18px}
+.stt{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+.stt b{font-size:calc(15.5px*var(--fs,1));font-weight:620;letter-spacing:-.01em}
+.stt small{font-size:calc(12.5px*var(--fs,1));color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-variant-numeric:tabular-nums}
+.sec .chev{flex:none;color:var(--faint);transition:transform .2s var(--ease)}
+.sec[open] .chev{transform:rotate(180deg)}
+.sbody{padding:2px 14px 14px;border-top:1px solid var(--line)}
+.sbody>:first-child{margin-top:12px}
+.sec .lhead{display:none}
+.selw{position:relative}
+.selw select{appearance:none;-webkit-appearance:none;width:100%;padding-right:40px;font-size:calc(15.5px*var(--fs,1));background:var(--field)}
+.selw:after{content:"";position:absolute;right:14px;top:50%;width:8px;height:8px;margin-top:-6px;border-right:2px solid var(--muted);border-bottom:2px solid var(--muted);transform:rotate(45deg);pointer-events:none}
+.fprev{margin-top:8px;padding:10px 12px;border-radius:12px;background:var(--surface2);display:flex;flex-direction:column;gap:2px}
+.fprev b{font-size:calc(16px*var(--fs,1));font-weight:620;letter-spacing:-.012em}
+.fprev span{font-size:calc(13.5px*var(--fs,1));color:var(--muted);font-variant-numeric:tabular-nums}
+.ibtn.sync .i{transition:transform .2s}
+[data-sync="syncing"] .ibtn.sync .i,.ibtn.sync.busy .i{animation:spin .9s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.ibtn.sync .sdot{top:5px;right:5px}
 @media(prefers-reduced-motion:reduce){*,*:before,*:after{animation:none!important;transition:none!important}}
 </style></head>
 <body data-sync="idle">
@@ -478,7 +504,8 @@ html.layer-open .toast{bottom:calc(var(--inset) + 92px + env(safe-area-inset-bot
     <div class="tt"><h1>Contacts</h1><p class="meta" id="metaText">Loading…</p></div>
     <button class="ibtn az" id="azBtn" type="button" aria-label="Jump to letter" aria-expanded="false"><span id="azLabel">A–Z</span></button>
     <button class="ibtn" id="selBtn" type="button" aria-label="Select contacts"><svg class="i" viewBox="0 0 24 24"><rect x="3.5" y="4" width="6" height="6" rx="1.5"/><path d="M5 7l1 1 2-2"/><rect x="3.5" y="14" width="6" height="6" rx="1.5"/><path d="M13 7h7.5M13 17h7.5"/></svg></button>
-    <button class="ibtn" id="menuBtn" type="button" aria-label="Settings and sync status"><svg class="i" viewBox="0 0 24 24"><path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2.2"/><circle cx="10" cy="17" r="2.2"/></svg><span class="sdot"></span></button>
+    <button class="ibtn sync" id="syncBtn" type="button" aria-label="Sync now"><svg class="i" viewBox="0 0 24 24"><path d="M19.5 11.5A7.5 7.5 0 0 0 6.3 6.6L4.5 8.3M4.5 4.5v3.8h3.8M4.5 12.5a7.5 7.5 0 0 0 13.2 4.9l1.8-1.7M19.5 19.5v-3.8h-3.8"/></svg><span class="sdot"></span></button>
+    <button class="ibtn" id="menuBtn" type="button" aria-label="Settings"><svg class="i" viewBox="0 0 24 24"><path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2.2"/><circle cx="10" cy="17" r="2.2"/></svg></button>
   </header>
   <div class="searchrow" id="searchRow">
     <label class="search"><svg class="i" viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5"/><path d="M20 20l-4.2-4.2"/></svg>
@@ -1227,6 +1254,19 @@ document.addEventListener('visibilitychange',()=>{if(document.visibilityState===
 addEventListener('online',()=>queueSync(100));
 addEventListener('offline',()=>setStatus('offline'));
 $('#menuBtn').addEventListener('click',()=>openSettings());
+let manualBusy=false;
+$('#syncBtn').addEventListener('click',async()=>{
+  if(manualBusy)return; // one tap at a time: a second tap while this one runs does nothing
+  if(cfg.locked){tryUnlock(false);return}
+  if(!navigator.onLine){const p=pending();toast(p?`Offline · ${p} ${p===1?'change':'changes'} will be sent when you're back online`:"Offline · will sync when you're back online");return}
+  manualBusy=true;$('#syncBtn').classList.add('busy');
+  try{
+    while(syncing)await new Promise(r=>setTimeout(r,150)); // a sync already running: wait for it, then run a fresh one
+    clearTimeout(syncTimer);await sync();
+    if(cfg.locked)return;
+    toast(status==='idle'?(pending()?`Synced · ${pending()} still waiting`:'Synced'):`Sync failed: ${statusMsg||'try again'}`);
+  }finally{manualBusy=false;$('#syncBtn').classList.remove('busy')}
+});
 
 /* ---------- settings ---------- */
 function numbersToFormat(){let n=0;const items=[];for(const c of live()){const k=c.phones.filter(p=>fmtPhone(p.value)!==p.value).length;if(k){n+=k;items.push(c)}}return{n,items}}
@@ -1244,7 +1284,20 @@ function logHTML(){
   const icon={added:I.plus,edited:I.edit,deleted:I.trash,merged:I.merge,tagged:I.tag,synced:I.sync,formatted:I.hash};
   return head+`<ul class="log">${changeLog.slice(0,logLimit).map((x,i)=>{const a=(x.d||[]).filter(l=>l[0]==='+').length,r=(x.d||[]).filter(l=>l[0]==='-').length;return `<li data-log="${i}"><span class="lk ${esc(x.k)}">${icon[x.k]||I.edit}</span><div class="lt"><div class="sum"><span>${esc(x.text)}</span>${a||r?`<span class="plus">${a?`<span class="a">+${a}</span> `:''}${r?`<span class="r">−${r}</span>`:''}</span>`:''}</div><small>${x.src==='sync'?'From another phone or the Sheet':'On this phone'} · ${esc(ago(x.t))}</small>${openEntries.has(x.t+':'+i)?diffHTML(x.d,x.n):''}</div></li>`}).join('')}</ul>${changeLog.length>logLimit?`<button class="addrow" data-s="morelog">Show all ${changeLog.length}</button>`:''}`;
 }
+function settingsSums(){
+  const put=(id,t)=>{const e=$('#sum-'+id);if(e)e.textContent=t};
+  const f=FONTS.find(x=>x[0]===look.font)||FONTS[0];
+  put('look',`${f[0]==='budget'?'Budget font':f[1]} · ${look.density==='comfy'?'Comfortable':'Compact'} · ${hand()==='left'?'Left hand':'Right hand'}`);
+  put('log',changeLog.length?`${changeLog.length} ${changeLog.length===1?'change':'changes'} · latest ${ago(changeLog[0].t)}`:'No changes yet');
+  const gs=dupGroups(),sg=gs.filter(x=>x.strong).length,nf=numbersToFormat().n;
+  put('health',[gs.length?`${gs.length} possible ${gs.length===1?'duplicate':'duplicates'}${sg?` · ${sg} to merge`:''}`:'No duplicates',nf?`${nf} to format`:''].filter(Boolean).join(' · '));
+  const tg=chipOrder(tagCounts(live())).map(t=>t.name);put('tags',tg.length?tg.slice(0,4).join(', ')+(tg.length>4?` +${tg.length-4}`:''):'No tags yet');
+  put('calls','Country code +'+(cfg.cc||defaultCC()));
+  put('io','.vcf files'+(('contacts' in navigator&&'ContactsManager' in window)?' · this phone':''));
+  put('sync',statusText());
+}
 function paintSettingsLive(){
+  settingsSums();
   const s=$('#stLive');if(s)s.innerHTML=statusBlock();
   const l=$('#stLog');if(l)l.innerHTML=logHTML();
   const d=$('#stHealth');if(d){const gs=dupGroups(),g=gs.length,sg=gs.filter(x=>x.strong).length,f=numbersToFormat().n;d.innerHTML=`${g?`<div class="row2"><button class="btn" data-s="dups">${I.users}Review ${g}</button>${sg?`<button class="btn primary" data-s="mergeall">${I.merge}Merge all ${sg}</button>`:''}</div>`:`<button class="btn" disabled>${I.check}No duplicates found</button>`}<button class="btn" data-s="format" ${f?'':'disabled'}>${I.hash}${f?`Format ${f} ${f===1?'number':'numbers'}`:'All numbers formatted'}</button>`}
@@ -1252,22 +1305,20 @@ function paintSettingsLive(){
 }
 function openSettings(){
   const picker='contacts' in navigator&&'ContactsManager' in window;
-  logLimit=12;logOpen=false;openEntries.clear();
+  logLimit=12;logOpen=true;openEntries.clear(); // the Recent changes card itself is the collapse
+  const sec=(id,icon,title,body)=>`<details class="sec" data-sec="${id}"><summary><span class="sic">${icon}</span><span class="stt"><b>${title}</b><small id="sum-${id}"></small></span><svg class="i chev" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg></summary><div class="sbody">${body}</div></details>`;
   const html=`<div class="lin">
   <div class="lbar"><button class="ibtn" data-s="close" aria-label="Back">${I.back}</button><h2>Settings</h2><span style="width:38px"></span></div>
-  <div class="fcard"><div class="fhead"><span>${I.edit}APPEARANCE</span></div><div id="stLook">${appearanceHTML()}</div></div>
-  <div class="fcard"><div class="fhead"><span>${I.sync}SYNC STATUS</span></div><div id="stLive"></div>
-    <div class="row2" style="padding-bottom:4px"><button class="btn sm" data-s="sync">Sync now</button><button class="btn sm" data-s="full">Full resync</button></div>
-    <p class="note">Contacts are kept in the budget's own contacts sheet and shared with everyone signed in to the budget app. The budget's kill switch closes Contacts too.</p></div>
-  <div class="fcard"><div id="stLog"></div></div>
-  <div class="fcard"><div class="fhead"><span>${I.check}DATA CHECKS</span></div><div class="stack" id="stHealth"></div><p class="note">Numbers are saved in one international format, for example +91 98765 43210. The country code below is used when a number has no +.</p></div>
-  <div class="fcard"><div class="fhead"><span>${I.tag}TAGS</span></div><p class="note" style="margin-top:0">Tags are found automatically from name prefixes shared by several contacts (for example “BT …”, “DB …”, “South Point …”). Arrows move a tag left or right in the bar. Delete hides it; the pencil renames it.</p><div id="tagMgr"></div><form class="inline" id="tagAdd" autocomplete="off" style="padding-top:8px"><input class="fin" id="tagAddName" placeholder="New tag" maxlength="40" enterkeyhint="done"><button class="btn" type="submit">Add</button></form><p class="note">To tag many people at once, tap the select icon at the top of the list (or hold a contact), pick people, then tap Tags.</p></div>
-  <div class="fcard"><div class="fhead"><span>${I.phone}CALLS &amp; NUMBERS</span></div><label class="flabel" for="cfgCC" style="margin-top:2px">Default country code</label><input class="fin" id="cfgCC" inputmode="numeric" placeholder="e.g. 91 or 44" value="${esc(cfg.cc||defaultCC())}" maxlength="4"></div>
-  <div class="fcard"><div class="fhead"><span>${I.down}IMPORT &amp; EXPORT</span></div><div class="stack">
-    ${picker?`<button class="btn" data-s="pick">${I.phoneBook}Import from this phone</button>`:''}
-    <div class="row2"><button class="btn" data-s="vcfin">${I.down}Import .vcf</button><button class="btn" data-s="vcfout">${I.up}Export .vcf</button></div></div></div>
-  </div>`;
-  const setup=()=>{$('#settings').innerHTML=html;paintSettingsLive();FONTS.forEach(f=>fontLink(f[3]))}; // previews in their own type
+  <div class="secs">
+  ${sec('look',sv('<path d="M3.5 18.5 8 6.5h1.2l4.5 12M5.2 14h6.8"/><path d="M19.8 18.5v-5.2a2.6 2.6 0 0 0-5 0M14.8 15.4c0-1 1-1.6 2.5-1.6h2.5M19.8 16.2c0 1.4-1.1 2.4-2.6 2.4-1.2 0-2-.6-2-1.6"/>'),'Appearance',`<div id="stLook">${appearanceHTML()}</div>`)}
+  ${sec('log',sv('<path d="M4 12a8 8 0 1 0 2.4-5.7L4 8.5"/><path d="M4 4.5v4h4M12 8v4.3l3 1.7"/>'),'Recent changes','<div id="stLog"></div>')}
+  ${sec('health',I.merge,'Duplicates &amp; numbers','<div class="stack" id="stHealth"></div><p class="note">Numbers are saved in one international format, for example +91 98765 43210.</p>')}
+  ${sec('tags',I.tag,'Tags',`<p class="note" style="margin-top:0">Found from name prefixes shared by several contacts (“BT …”, “DB …”). Arrows move a tag in the bar; the pencil renames; delete hides it.</p><div id="tagMgr"></div><form class="inline" id="tagAdd" autocomplete="off" style="padding-top:8px"><input class="fin" id="tagAddName" placeholder="New tag" maxlength="40" enterkeyhint="done"><button class="btn" type="submit">Add</button></form><p class="note">To tag many people at once, tap the select icon on the list (or hold a contact), pick people, then tap Tags.</p>`)}
+  ${sec('calls',I.phone,'Calls &amp; numbers',`<label class="flabel" for="cfgCC" style="margin-top:0">Default country code</label><input class="fin" id="cfgCC" inputmode="numeric" placeholder="e.g. 91 or 44" value="${esc(cfg.cc||defaultCC())}" maxlength="4"><p class="note">Used when a number is typed without +.</p>`)}
+  ${sec('io',I.down,'Import &amp; export',`<div class="stack">${picker?`<button class="btn" data-s="pick">${I.phoneBook}Import from this phone</button>`:''}<div class="row2"><button class="btn" data-s="vcfin">${I.down}Import .vcf</button><button class="btn" data-s="vcfout">${I.up}Export .vcf</button></div></div>`)}
+  ${sec('sync',I.sync,'Sync','<div id="stLive"></div><div class="stack"><button class="btn" data-s="full">Full resync</button></div><p class="note">Sync now is the small sync icon on the Contacts screen. Full resync downloads every contact again from the sheet. Contacts are shared with everyone signed in to the budget app; the budget\'s kill switch closes Contacts too.</p>')}
+  </div></div>`;
+  const setup=()=>{$('#settings').innerHTML=html;paintSettingsLive()};
   if(stack.includes('settings')){setup();return}
   openLayer('settings',setup);
 }
@@ -1300,8 +1351,8 @@ settingsEl.addEventListener('submit',async e=>{
 });
 settingsEl.addEventListener('click',async e=>{
   const fo=e.target.closest('#fontList [data-font]');if(fo){look.font=fo.dataset.font;saveLook();$$('#fontList .fontopt').forEach(b=>b.classList.toggle('on',b===fo));return}
-  const de=e.target.closest('#segDensity [data-density]');if(de){look.density=de.dataset.density;saveLook();$$('#segDensity button').forEach(b=>b.classList.toggle('on',b===de));return}
-  const ha=e.target.closest('#segHand [data-hand]');if(ha){try{localStorage.setItem('budgetTracker.hand',ha.dataset.hand)}catch{}applyLook();$$('#segHand button').forEach(b=>b.classList.toggle('on',b===ha));toast(ha.dataset.hand==='left'?'Buttons on the left':'Buttons on the right');return}
+  const de=e.target.closest('#segDensity [data-density]');if(de){look.density=de.dataset.density;saveLook();$$('#segDensity button').forEach(b=>b.classList.toggle('on',b===de));settingsSums();return}
+  const ha=e.target.closest('#segHand [data-hand]');if(ha){try{localStorage.setItem('budgetTracker.hand',ha.dataset.hand)}catch{}applyLook();$$('#segHand button').forEach(b=>b.classList.toggle('on',b===ha));settingsSums();toast(ha.dataset.hand==='left'?'Buttons on the left':'Buttons on the right');return}
   const le=e.target.closest('[data-log]');if(le&&!e.target.closest('a,button')){const i=+le.dataset.log,x=changeLog[i];if(x){const key=x.t+':'+i;openEntries.has(key)?openEntries.delete(key):openEntries.add(key);$('#stLog').innerHTML=logHTML()}return}
   const mv=e.target.closest('[data-mv]');if(mv){await moveTag(mv.dataset.tn,+mv.dataset.mv);return}
   const rn=e.target.closest('[data-rn]');if(rn){renameKey=rn.dataset.rn;drawTagMgr();return}
@@ -1312,7 +1363,6 @@ settingsEl.addEventListener('click',async e=>{
     await logAdd('tagged',`Deleted tag ${t}${hit.length?` (removed from ${hit.length})`:''}`);activeTags.delete(k);render();drawTagMgr();toast(`Tag ${t} deleted`);return}
   const b=e.target.closest('[data-s]');if(!b)return;const k=b.dataset.s;
   if(k==='close')closeTop();
-  else if(k==='sync'){await sync();toast(status==='idle'?'Synced':'Sync failed: '+statusMsg)}
   else if(k==='full'){await sync({full:true});toast(status==='idle'?'Full resync complete':'Resync failed: '+statusMsg)}
   else if(k==='morelog'){logLimit=200;paintSettingsLive()}
   else if(k==='togglelog'){logOpen=!logOpen;paintSettingsLive()}
@@ -1323,7 +1373,7 @@ settingsEl.addEventListener('click',async e=>{
   else if(k==='vcfin')$('#vcfFile').click();
   else if(k==='vcfout')exportVCF();
 });
-settingsEl.addEventListener('change',async e=>{if(e.target.id==='cfgCC'){cfg.cc=digits(e.target.value).slice(0,4);await idb.set('sync',cfg);toast('Country code saved');paintSettingsLive()}});
+settingsEl.addEventListener('change',async e=>{if(e.target.id==='fontSel'){look.font=e.target.value;saveLook();settingsSums();return}if(e.target.id==='cfgCC'){cfg.cc=digits(e.target.value).slice(0,4);await idb.set('sync',cfg);toast('Country code saved');paintSettingsLive()}});
 /* ---------- signed out or closed: the budget app's rules ----------
    When the budget app is signed out, its access is switched off, or its owner closes the app (kill switch), the
    contacts on this phone are wiped. They stay safe in the contacts sheet and come back after the next sign-in. */
@@ -1464,7 +1514,8 @@ function applyLook(){
 function saveLook(){const f=FONTS.find(x=>x[0]===look.font)||FONTS[0];look.fam=f[2];look.css=f[3];try{localStorage.setItem('budgetContacts.look',JSON.stringify(look))}catch{}applyLook()}
 function appearanceHTML(){
   const sample=c=>c?esc(disp(c)):'BT Saheli Phone Number';const one=live().find(c=>c.phones.length)||null;
-  return `<label class="flabel" style="margin-top:2px">Font</label><div class="fontlist" id="fontList">${FONTS.map(f=>`<button type="button" class="fontopt ${look.font===f[0]?'on':''}" data-font="${f[0]}" style="font-family:${f[2]?esc(f[2])+',':'var(--f-body),'}system-ui,sans-serif"><b>${esc(f[1])}</b><span>${sample(one)} · ${esc(one?one.phones[0].value:'+91 98308 05257')}</span></button>`).join('')}</div>
+  return `<label class="flabel" for="fontSel" style="margin-top:0">Font</label><div class="selw"><select class="fin" id="fontSel">${FONTS.map(f=>`<option value="${f[0]}" ${look.font===f[0]?'selected':''}>${esc(f[1])}</option>`).join('')}</select></div>
+  <div class="fprev" id="fontPrev"><b>${sample(one)}</b><span>${esc(one?one.phones[0].value:'+91 98308 05257')}</span></div>
   <label class="flabel">Card size</label><div class="seg" id="segDensity"><button type="button" data-density="compact" class="${look.density!=='comfy'?'on':''}">Compact</button><button type="button" data-density="comfy" class="${look.density==='comfy'?'on':''}">Comfortable</button></div>
   <label class="flabel">Floating buttons (search and +)</label><div class="seg" id="segHand"><button type="button" data-hand="left" class="${hand()==='left'?'on':''}">Left hand</button><button type="button" data-hand="right" class="${hand()==='right'?'on':''}">Right hand</button></div>
   <p class="note">The side applies to the budget app's buttons too. Text size follows the budget app (More → Text size and font).</p>`;

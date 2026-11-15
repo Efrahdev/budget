@@ -220,7 +220,7 @@ body[data-view="vault"] .ctfab,body[data-view="disc"] .ctfab,body[data-view="set
 body[data-view="vault"] #cycBar{display:none!important}
 body[data-view="add"] .fab{display:none!important}
 @media (max-width:1023.98px){main .view{touch-action:pan-y}} /* sideways drags belong to the tab swipe */
-@media (max-width:1023.98px){html.role-entry .navbar{grid-template-columns:repeat(5,minmax(0,1fr));max-width:520px}html.role-entry .navbar .nv-ct{display:flex}}
+@media (max-width:1023.98px){html.role-entry .navbar{grid-template-columns:repeat(4,minmax(0,1fr));max-width:440px}html.role-entry .navbar .nv-ct{display:flex}}
 html.role-entry body:not([data-view="entries"]) #cycBar{display:none!important}
 .addhome{display:flex;flex-direction:column;gap:14px}
 .addhome .hero-add{padding:22px 20px;display:flex;flex-direction:column;gap:14px;align-items:flex-start}
@@ -2173,7 +2173,7 @@ body[data-view="contacts"] main{padding:0}
 'use strict';
 const VIEWS = ['overview','entries','cards','wealth','notes','trend','setup','vault','disc','add','read','contacts'];
 // An entry link (role Entry) sees only these. The server refuses everything else for it too.
-const ENTRY_VIEWS = ['add', 'entries', 'notes', 'read', 'contacts']; // shared entry links: add, see entries, notes, the Reader and Contacts
+const ENTRY_VIEWS = ['entries', 'notes', 'read', 'contacts']; // shared entry links open on Entries (+ adds an entry there), Notes, the Reader and Contacts. No separate Add page (owner, Nov 2026).
 const TYPES = ['Expense','Income','Transfer'];
 const GROUPS = ['Fixed','Variable','Discretionary','Sinking'];
 const CLASSES = ['Bank','FD','Bond','Retirement','Equity','ETF','Gold','Cash','Property','Loan','Owed','Other'];
@@ -2864,7 +2864,7 @@ function renderEntries(X) {
         <span class="l"><span class="t1">${esc(c ? c.name : 'Unlisted')}${(tg => tg.length ? ` <span class="etags">${tg.map(esc).join(' · ')}</span>` : '')([ty === 'Transfer' && 'Transfer', t.refund && 'Refund', t.tag].filter(Boolean))}</span>
         <span class="t2">${meta || '&nbsp;'}</span></span>
         <span class="amt num ${ty === 'Income' || t.refund ? 'inc' : ty === 'Transfer' ? 'trf' : ''}">${ty === 'Income' ? '+' : t.refund ? '−' : ''}${rs(t.amount)}</span></button>`; }).join('')}</div>`; }).join('');
-  paint($('#entriesBody'), `<div class="card ledger">${html || `<div class="empty">No entries match. ${(fc.value || ft || q || fp.value) ? 'Clear the filters to see everything in ' + cycleLabel(state.cur) + '.' : 'Tap Add entry to log one.'}</div>`}
+  paint($('#entriesBody'), `<div class="card ledger">${html || `<div class="empty">No entries match. ${(fc.value || ft || q || fp.value) ? 'Clear the filters to see everything in ' + cycleLabel(state.cur) + '.' : 'Tap + to add one.'}</div>`}
     ${list.length ? `<div class="foot"><span>${list.length} entr${list.length === 1 ? 'y' : 'ies'}</span><span>Spent <b class="num">${rs(T.exp)}</b></span><span>Income <b class="num">${rs(T.inc)}</b></span><span>Moved between accounts <b class="num">${rs(T.trf)}</b></span></div>` : ''}</div>`);
 }
 
@@ -5210,7 +5210,7 @@ function setPay(mode) { payMode = mode; if (mode === 'cash') { payCard = ''; } r
 function setView(v) {
   const prev = state.view;
   let want = VIEWS.includes(v) ? v : 'overview';
-  if (isEntry() && !ENTRY_VIEWS.includes(want)) want = 'add';
+  if (isEntry() && !ENTRY_VIEWS.includes(want)) want = 'entries';
   else if (!isEntry() && want === 'add') want = 'overview';
   state.view = want;
   document.body.dataset.view = state.view;
@@ -5768,7 +5768,7 @@ window.addEventListener('hashchange', () => {
   const lg = location.hash.match(/^#login=([a-f0-9]{20,80})$/);
   if (lg) { history.replaceState(null, '', location.pathname + '#overview'); if (!Sync.session) useLoginLink(lg[1]); setView('overview'); return; }
   const en = location.hash.match(/^#entry=([a-f0-9]{40,80})$/);
-  if (en) { history.replaceState(null, '', location.pathname + '#add'); useEntryLink(en[1]); return; }
+  if (en) { history.replaceState(null, '', location.pathname + '#entries'); useEntryLink(en[1]); return; }
   navTo(location.hash.slice(1));
 });
 // Only the charts depend on screen width. Never redraw other screens on resize: the phone keyboard opening
@@ -6890,10 +6890,10 @@ function useEntryLink(tok, starting) {
     if (!starting) setView(state.view);
     return;
   }
-  if (Sync.session === tok) { if (!starting) { setView('add'); flush(); } return; }
+  if (Sync.session === tok) { if (!starting) { setView('entries'); flush(); } return; }
   Sync.session = tok; Sync.key = ''; Sync.me = {role: 'Entry', name: '', email: ''}; Sync.url = API_URL;
   state.mode = 'cloud'; state.config = null; state.cycles = {}; state.balances = {}; state.cardfix = {}; state.got.config = false;
-  saveConn(); state.view = 'add';
+  saveConn(); state.view = 'entries';
   if (!starting) { render(); flush(); }
 }
 function renderAddHome(X) {
@@ -7127,7 +7127,7 @@ function start() {
   if (lg) history.replaceState(null, '', location.pathname + '#overview');
   // Entry-only link: #entry=<token>. No sign-in: the token is the key, and it only opens Add entry and Notes.
   const en = location.hash.match(/^#entry=([a-f0-9]{40,80})$/);
-  if (en) history.replaceState(null, '', location.pathname + '#add');
+  if (en) history.replaceState(null, '', location.pathname + '#entries');
   state.view = VIEWS.includes(location.hash.slice(1)) ? location.hash.slice(1) : 'overview';
   const c = readConn() || {};
   Sync.url = API_URL; Sync.key = c.key || ''; Sync.session = c.session || ''; Sync.me = c.me || null;
