@@ -1,0 +1,2 @@
+Viz.js 3.31.0 (https://github.com/mdaines/viz-js), MIT licence.
+Bundles Graphviz (EPL-1.0) and Expat (MIT) in object code form; see the header of viz-global.js.
