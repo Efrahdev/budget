@@ -1646,23 +1646,73 @@ html.tb-hide:not(.kb) .topbar{transform:translateY(-100%)}
 .ovx-meta>[data-act]{cursor:pointer;border-radius:8px;transition:color .2s}.ovx-meta>[data-act]:hover b{color:var(--ink)}
 .ovx-sep{width:3px;height:3px;border-radius:50%;background:var(--ink-3);opacity:.6}
 .ov-wx{margin-top:4px;gap:10px}
-/* hide/show amounts: a small quiet eye beside the floating buttons, on Overview only */
-.eyefab{position:fixed;right:calc(max(16px,env(safe-area-inset-right,0px)) + 134px);bottom:calc(var(--nbh) + 32px + env(safe-area-inset-bottom,0px));z-index:39;width:40px;height:40px;border-radius:14px;border:1px solid var(--glass-edge);display:grid;place-items:center;cursor:pointer;
-  color:var(--ink-2);background:var(--glass-2);-webkit-backdrop-filter:saturate(180%) blur(20px);backdrop-filter:saturate(180%) blur(20px);box-shadow:var(--shade-float);transition:transform .2s var(--spring)}
-.eyefab .ic{width:20px;height:20px}.eyefab:active{transform:scale(.9)}.eyefab[aria-pressed="true"]{color:var(--accent)}
-body:not([data-view="overview"]) .eyefab{display:none}
-html.hand-left .eyefab{right:auto;left:calc(max(16px,env(safe-area-inset-left,0px)) + 128px)}
-@media (min-width:1024px){.eyefab{bottom:calc(32px + env(safe-area-inset-bottom,0px))}}
+/* New note, on Overview: the same neutral floating style as + and Contacts (owner's rule: no deep colour, no glow).
+   The pen draws a little line when Overview opens and again when pressed; the page lifts as you press. */
+.ovnfab{position:fixed;z-index:39;right:calc(max(16px,env(safe-area-inset-right,0px)) + 128px);bottom:calc(var(--nbh) + 16px + env(safe-area-inset-bottom,0px));width:52px;height:52px;border-radius:17px;
+  display:grid;place-items:center;padding:0;cursor:pointer;color:var(--accent);background:var(--fb-bg);border:1px solid var(--fb-line);box-shadow:var(--fb-shadow);-webkit-tap-highlight-color:transparent;
+  transition:transform .25s var(--spring),opacity .25s}
+.ovnfab .ic{width:24px;height:24px;overflow:visible}
+.ctfab[hidden]+.ovnfab{right:calc(max(16px,env(safe-area-inset-right,0px)) + 64px)}
+html.hand-left .ovnfab{right:auto;left:calc(max(16px,env(safe-area-inset-left,0px)) + 128px)}
+html.hand-left .ctfab[hidden]+.ovnfab{left:calc(max(16px,env(safe-area-inset-left,0px)) + 64px)}
+body:not([data-view="overview"]) .ovnfab{display:none}
+html.kb .ovnfab{opacity:0;pointer-events:none;transform:translateY(30px)}
+.ovnfab .nf-page{transform-origin:12px 20px;transition:transform .3s var(--spring)}
+.ovnfab .nf-line,.ovnfab .nf-line2{stroke-dasharray:12;stroke-dashoffset:0}
+.ovnfab .nf-spark{transform-origin:20.6px 2.9px;opacity:0}
+body[data-view="overview"] .ovnfab{animation:nfIn .55s var(--spring) .12s both}
+body[data-view="overview"] .ovnfab .nf-line{animation:nfDraw .7s ease .5s both}
+body[data-view="overview"] .ovnfab .nf-line2{animation:nfDraw .5s ease .8s both}
+body[data-view="overview"] .ovnfab .nf-spark{animation:nfSpark .9s ease 1.05s both}
+.ovnfab:active{transform:scale(.92)}
+.ovnfab:active .nf-page{transform:translateY(-1px) rotate(-5deg)}
+.ovnfab:hover .nf-line{animation:nfDraw .6s ease both}
+@keyframes nfIn{from{opacity:0;transform:translateY(14px) scale(.7)}}
+@keyframes nfDraw{from{stroke-dashoffset:12}}
+@keyframes nfSpark{0%{opacity:0;transform:scale(.2) rotate(-40deg)}45%{opacity:1;transform:scale(1.15) rotate(0)}100%{opacity:0;transform:scale(.9) rotate(20deg)}}
+@media (min-width:1024px){.ovnfab{right:32px;bottom:28px;width:56px;height:56px;border-radius:18px}html.hand-left .ovnfab{left:auto;right:32px}}
+@media (prefers-reduced-motion:reduce){.ovnfab,.ovnfab *{animation:none!important;transition:none!important}}
+/* Hide/show amounts: the eye in the Wealth banner */
+.ovw-hit{position:absolute;inset:0;z-index:1;border-radius:inherit;-webkit-tap-highlight-color:transparent}
+.ovw:has(.ovw-hit:focus-visible){outline:2px solid var(--wx-up);outline-offset:3px}
+.ovw-hit:focus-visible{outline:none}
+.ovw:has(.ovw-hit:active){transform:scale(.985)}
+.ovw:has(.ovw-hit:hover) .ovw-go{transform:translateX(2px)}
+.ovw-acts{display:flex;align-items:center;gap:8px}
+.ovw-eye{position:relative;z-index:2;width:38px;height:38px;border-radius:50%;display:grid;place-items:center;padding:0;cursor:pointer;color:var(--wx-ink);
+  background:var(--wx-panel-2);border:0;box-shadow:inset 0 0 0 1px var(--wx-line);transition:transform .25s var(--spring),background .2s;-webkit-tap-highlight-color:transparent}
+.ovw-eye:active{transform:scale(.88)}
+.ovw-eye:focus-visible{outline:2px solid var(--wx-up);outline-offset:2px}
+.ovw-eye svg{width:21px;height:21px;overflow:visible}
+.ovw-eye .e-iris{transform-origin:12px 12px;transition:transform .4s var(--spring),opacity .25s}
+.ovw-eye .e-glint{transform-origin:12px 12px;transition:opacity .25s,transform .4s var(--spring)}
+.ovw-eye .e-lid{transition:d .35s var(--ease)}
+.ovw-eye .e-cut,.ovw-eye .e-cut-bg{stroke-dasharray:22.1;stroke-dashoffset:0;transition:stroke-dashoffset .38s cubic-bezier(.65,0,.35,1)}
+.ovw-eye .e-cut-bg{stroke:var(--wx-b);stroke-width:4.4}
+.ovw-eye[aria-pressed="true"] .e-cut,.ovw-eye[aria-pressed="true"] .e-cut-bg{stroke-dashoffset:22.1}
+.ovw-eye[aria-pressed="false"] .e-iris{transform:scale(.55);opacity:.55}
+.ovw-eye[aria-pressed="false"] .e-glint{opacity:0;transform:scale(.3)}
+.ovw-eye[aria-pressed="false"] .e-lid{d:path("M2.5 12S6 8.8 12 8.8 21.5 12 21.5 12 18 15.2 12 15.2 2.5 12 2.5 12z")}
+.ovw-eye[aria-pressed="true"]{color:var(--wx-up)}
+.ovw-eye.pop::after{content:"";position:absolute;inset:-2px;border-radius:50%;border:2px solid var(--wx-up);animation:eyeRing .6s ease-out forwards;pointer-events:none}
+@keyframes eyeRing{from{opacity:.75;transform:scale(.8)}to{opacity:0;transform:scale(1.55)}}
+/* the amounts: blur away when hidden; when shown, the digits roll and settle left to right */
+.mny-out{animation:mnyOut .24s ease forwards;animation-delay:calc(var(--mi,0)*10ms)}
+@keyframes mnyOut{to{filter:blur(7px);opacity:.15;transform:translateY(-3px)}}
+.mny-in{animation:mnyIn .55s cubic-bezier(.2,.8,.2,1) both;animation-delay:calc(var(--mi,0)*26ms)}
+@keyframes mnyIn{from{filter:blur(9px);opacity:0;transform:translateY(4px)}}
+.mny-dec{font-variant-numeric:tabular-nums}
+.ovw.sweep::before{content:"";position:absolute;inset:0;z-index:0;pointer-events:none;border-radius:inherit;
+  background:linear-gradient(105deg,transparent 30%,rgba(255,255,255,.55) 48%,transparent 66%) -150% 0/220% 100% no-repeat;animation:ovwSweep 1.1s cubic-bezier(.3,.6,.2,1) .05s forwards;mix-blend-mode:soft-light}
+@keyframes ovwSweep{to{background-position:150% 0}}
+@media (prefers-reduced-motion:reduce){.mny-out,.mny-in,.ovw.sweep::before,.ovw-eye.pop::after{animation:none!important}}
 /* Overview → Wealth: an emerald doorway right under the key figures */
 .ovw{position:relative;isolation:isolate;overflow:hidden;display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:12px 14px;padding:15px 14px 15px 15px;border-radius:24px;
   text-decoration:none;color:var(--wx-ink);border:1px solid var(--wx-line);cursor:pointer;-webkit-tap-highlight-color:transparent;
   background:radial-gradient(120% 140% at 100% 0%,var(--wx-g1),transparent 58%),radial-gradient(90% 110% at 0% 100%,var(--wx-g2),transparent 62%),linear-gradient(150deg,var(--wx-a) 0%,var(--wx-b) 52%,var(--wx-c) 100%);
   box-shadow:var(--wx-shadow);transition:transform .28s var(--spring),box-shadow .28s var(--ease)}
 .ovw::after{content:"";position:absolute;inset:0;z-index:-1;pointer-events:none;background:radial-gradient(55% 60% at 12% -10%,var(--wx-shine),transparent 70%)}
-.ovw:hover{box-shadow:var(--wx-shadow),0 0 0 1px var(--wx-line)}
-.ovw:hover .ovw-go{transform:translateX(2px)}
-.ovw:active{transform:scale(.985)}
-.ovw:focus-visible{outline:2px solid var(--wx-up);outline-offset:3px}
+.ovw:has(.ovw-hit:hover){box-shadow:var(--wx-shadow),0 0 0 1px var(--wx-line)}
 .ovw-ic{width:42px;height:42px;border-radius:14px;display:grid;place-items:center;color:#fff;background:linear-gradient(150deg,#34d399,#059669 70%,#047857);
   box-shadow:0 10px 20px -10px rgba(5,150,105,.75),inset 0 1px 0 rgba(255,255,255,.38)}
 .ovw-ic .ic{width:25px;height:25px;stroke-width:2.1}
@@ -2087,8 +2137,11 @@ body[data-view="contacts"] main{padding:0}
 </main>
 
 <button class="fab" data-act="add" type="button" aria-label="Add entry"><svg class="ic" aria-hidden="true"><use href="#i-plus"/></svg></button>
-<button class="eyefab" id="eyeFab" data-act="money-eye" type="button" aria-pressed="false" aria-label="Show amounts"></button>
 <button class="ctfab" id="ctFab" data-act="ct-open" type="button" aria-label="Contacts" title="Contacts" hidden><svg class="ic" aria-hidden="true"><use href="#i-contacts"/></svg></button>
+<button class="ovnfab" id="noteFab" data-act="n-new" type="button" aria-label="New note" title="New note"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+  <g class="nf-page"><path d="M14 3.5H7a2.5 2.5 0 0 0-2.5 2.5v12A2.5 2.5 0 0 0 7 20.5h10a2.5 2.5 0 0 0 2.5-2.5V9z"/><path d="M14 3.5V9h5.5"/></g>
+  <path class="nf-line" d="M8 13.2c1-.9 1.9-.9 2.8 0s1.9.9 2.8 0"/><path class="nf-line2" d="M8 16.6h4.6"/>
+  <g class="nf-spark" stroke-width="1.6"><path d="M20.6 1.6v2.6M19.3 2.9h2.6"/></g></svg></button>
 <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
 
 <!-- Entry sheet -->
@@ -2889,10 +2942,20 @@ function wealthLinkHtml(X) {
   const cover = has && W.cover != null ? (W.cover >= 1 ? `${Math.floor(W.cover)} month${Math.floor(W.cover) === 1 ? '' : 's'} of spending` : 'Under a month of spending') : '';
   const fig = (l, v, sub) => `<span class="ovw-f"><span class="ovw-fl">${l}</span><b class="num">${v}</b>${sub ? `<small>${sub}</small>` : ''}</span>`;
   const figs = has ? `<span class="ovw-figs">${fig('Liquid money', rs(W.liquid), cover)}${fig('Liabilities', rs(-W.debts), '')}${fig('Gross assets', rs(W.liqAssets + W.nonLiq), '')}</span>` : '';
-  return `<a class="ovw" href="#wealth" aria-label="Open Wealth">
+  return `<div class="ovw">
+    <a class="ovw-hit" href="#wealth" aria-label="Open Wealth"></a>
     ${spark}<span class="ovw-ic" aria-hidden="true"><svg class="ic"><use href="#i-wealth"/></svg></span>
     <span class="ovw-m"><span class="ovw-l">Net worth${dTxt}</span><b class="ovw-v num${has ? '' : ' none'}">${has ? rs(W.nw) : 'Record your balances to see it'}</b></span>
-    <span class="ovw-go" aria-hidden="true"><svg class="ic"><use href="#i-right"/></svg></span>${figs}</a>`;
+    <span class="ovw-acts">${eyeBtnHtml()}<span class="ovw-go" aria-hidden="true"><svg class="ic"><use href="#i-right"/></svg></span></span>${figs}</div>`;
+}
+// The eye: open when amounts show; closed with a slash when they are hidden. The slash draws itself and the iris
+// shrinks or springs back, so the change is felt, not just seen.
+function eyeBtnHtml() {
+  const on = moneyShown();
+  return `<button type="button" class="ovw-eye" data-act="money-eye" aria-pressed="${on}" aria-label="${on ? 'Hide amounts' : 'Show amounts'}" title="${on ? 'Hide amounts' : 'Show amounts'}">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <path class="e-lid" d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12z"/><circle class="e-iris" cx="12" cy="12" r="3.1"/><circle class="e-glint" cx="13.2" cy="10.8" r=".9" fill="currentColor" stroke="none"/>
+      <path class="e-cut-bg" d="M4.2 4.2 19.8 19.8"/><path class="e-cut" d="M4.2 4.2 19.8 19.8"/></svg></button>`;
 }
 
 /* Hide or show money on Overview (owner, Nov 2026): hidden unless you choose to show it. Every amount becomes ₹XXX. */
@@ -2907,11 +2970,44 @@ function maskMoney(root) {
   root.querySelectorAll('[aria-label*="₹"],[title*="₹"]').forEach(el => ['aria-label', 'title'].forEach(a => { const v = el.getAttribute(a); if (v) el.setAttribute(a, v.replace(MONEY_RE, '₹XXX')); }));
   root.querySelectorAll('[data-count]').forEach(el => el.removeAttribute('data-count'));
 }
-function eyeState() { const b = $('#eyeFab'); if (!b) return; const on = moneyShown(); b.setAttribute('aria-pressed', String(on)); b.setAttribute('aria-label', on ? 'Hide amounts' : 'Show amounts'); b.title = on ? 'Hide amounts' : 'Show amounts';
-  b.innerHTML = `<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12z"/><circle cx="12" cy="12" r="3"/>${on ? '' : '<path d="M4 4l16 16"/>'}</svg>`; }
+function eyeState() {} // the eye lives in the Wealth banner and is drawn with it (eyeBtnHtml)
+// Amount elements on Overview: a number on its own decodes digit by digit; a number inside a sentence just un-blurs.
+function moneyEls(root) {
+  const w = document.createTreeWalker(root, NodeFilter.SHOW_TEXT), set = new Set(); let n;
+  while ((n = w.nextNode())) if (n.nodeValue.includes('₹') && n.parentElement && !n.parentElement.closest('.sr,[aria-hidden="true"]')) set.add(n.parentElement);
+  return [...set];
+}
+const MONEY_ALONE = /^\s*[▲▼]?\s*[-−]?\s?₹\s?[\dX,]+(?:\.\d+)?\s*$/;
+function moneyDecode(el, delay) {
+  const fin = el.textContent; if (!MONEY_ALONE.test(fin)) return;
+  const t0 = performance.now() + delay, D = 560, digits = [...fin].map((c, i) => /\d/.test(c) ? i : -1).filter(i => i >= 0);
+  el.classList.add('mny-dec');
+  const step = now => {
+    if (!el.isConnected) return; const k = Math.max(0, Math.min(1, (now - t0) / D)), done = Math.floor(k * (digits.length + 1));
+    if (k >= 1) { el.textContent = fin; el.classList.remove('mny-dec'); return; }
+    const a = [...fin]; digits.forEach((i, j) => { if (j >= done) a[i] = String((Math.random() * 10) | 0); }); el.textContent = a.join('');
+    requestAnimationFrame(step);
+  };
+  requestAnimationFrame(step);
+}
 function toggleMoney() {
-  try { localStorage.setItem(LS_SHOWMONEY, moneyShown() ? '0' : '1'); } catch (e) {}
-  eyeState(); if (state.config) renderOverview(ctx()); toast(moneyShown() ? 'Amounts shown' : 'Amounts hidden');
+  const show = !moneyShown();
+  try { localStorage.setItem(LS_SHOWMONEY, show ? '1' : '0'); } catch (e) {}
+  const root = $('#v-overview'), calm = reduceMotion();
+  // the eye flips first, on the button you pressed
+  document.querySelectorAll('.ovw-eye').forEach(b => { b.setAttribute('aria-pressed', String(show)); b.setAttribute('aria-label', show ? 'Hide amounts' : 'Show amounts'); b.title = show ? 'Hide amounts' : 'Show amounts'; b.classList.remove('pop'); void b.offsetWidth; b.classList.add('pop'); });
+  if (!state.config || !root) return;
+  const redraw = () => { renderOverview(ctx()); return moneyEls(root); };
+  if (calm) { redraw(); return; }
+  if (!show) {
+    moneyEls(root).forEach((el, i) => { el.style.setProperty('--mi', Math.min(i, 14)); el.classList.add('mny-out'); });
+    setTimeout(() => { redraw().forEach((el, i) => { el.style.setProperty('--mi', Math.min(i, 14)); el.classList.add('mny-in'); }); }, 240);
+  } else {
+    setTimeout(() => {
+      const els = redraw(), ovw = root.querySelector('.ovw'); if (ovw) ovw.classList.add('sweep');
+      els.forEach((el, i) => { el.style.setProperty('--mi', Math.min(i, 14)); el.classList.add('mny-in'); moneyDecode(el, Math.min(i, 14) * 28); });
+    }, 140);
+  }
 }
 
 /* ---------- entries ---------- */
@@ -3803,7 +3899,8 @@ function jsonHtml(v) {
    - Ticking a checklist box in a Markdown preview ticks it in the note's text and saves (nvToggleTask). */
 const NV_V = 'reader/vendor/';
 const NV_FILES = {hljs: 'highlight-11.12.0/highlight.min.js', katex: 'katex-0.16.47/katex.min.js', mhchem: 'katex-0.16.47/mhchem.min.js',
-  katexCss: 'katex-0.16.47/katex.min.css', mermaid: 'mermaid-11.17.2/mermaid.min.js', mono: 'jetbrains-mono-1.0.6/JetBrainsMonoNL-Regular.woff2', monoB: 'jetbrains-mono-1.0.6/JetBrainsMonoNL-Bold.woff2'};
+  katexCss: 'katex-0.16.47/katex.min.css', mermaid: 'mermaid-11.17.2/mermaid.min.js', mono: 'jetbrains-mono-1.0.6/JetBrainsMonoNL-Regular.woff2', monoB: 'jetbrains-mono-1.0.6/JetBrainsMonoNL-Bold.woff2',
+  sans: 'inter-5.3.0/inter-latin-wght-normal.woff2', sansX: 'inter-5.3.0/inter-latin-ext-wght-normal.woff2', viz: 'viz-3.31.0/viz-global.js'};
 const NV = {got: {}, marked: null, frame: null, seq: 0};
 const nvDataUrl = blob => new Promise((res, rej) => { const r = new FileReader(); r.onload = () => res(r.result); r.onerror = rej; r.readAsDataURL(blob); });
 function nvGet(name) {
@@ -3910,10 +4007,16 @@ const nvMarkExt = {name: 'nvMark', level: 'inline', start: s => { const i = s.in
 const nvWikiExt = {name: 'nvWiki', level: 'inline', start: s => { const i = s.indexOf('[['); return i < 0 ? undefined : i; },
   tokenizer(src) { const m = /^\[\[([^\]|\n]+)(?:\|([^\]\n]+))?\]\]/.exec(src); if (m) return {type: 'nvWiki', raw: m[0], to: m[1].trim(), text: (m[2] || m[1]).trim()}; },
   renderer: t => `<span class="wikilink" title="${esc(t.to)}">${esc(t.text)}</span>`};
+const NV_MERMAID_START = /^\s*(?:---\n[\s\S]*?\n---\s*\n\s*)?(?:%%[^\n]*\n\s*)*(?:graph\s+(?:TB|TD|BT|RL|LR)\b|graph\s*$|flowchart\b|sequenceDiagram\b|classDiagram(?:-v2)?\b|stateDiagram(?:-v2)?\b|erDiagram\b|gantt\b|pie\b|journey\b|gitGraph\b|mindmap\b|timeline\b|quadrantChart\b|xychart(?:-beta)?\b|sankey(?:-beta)?\b|C4(?:Context|Container|Component|Dynamic|Deployment)\b|block(?:-beta)?\b|architecture(?:-beta)?\b|requirementDiagram\b|packet(?:-beta)?\b|kanban\b|radar(?:-beta)?\b|treemap(?:-beta)?\b|zenuml\b)/m;
+const NV_DOT_START = /^\s*(?:\/\/[^\n]*\n\s*|\/\*[\s\S]*?\*\/\s*)*(?:strict\s+)?(?:di)?graph\s*(?:"[^"]*"|[\w.]+)?\s*\{/i;
 const NV_ASCII_LANGS = ['ascii', 'asciiart', 'ascii-art', 'diagram', 'art', 'tree', 'box', 'svgbob', 'bob', 'goat', 'boxes'];
 function nvCode(t) {
   const lang = String(t.lang || '').trim().split(/[\s{]/)[0].toLowerCase(), code = String(t.text || '').replace(/\n+$/, '');
-  if (lang === 'mermaid') return `<div class="nv-mermaid"><pre class="mermaid">${esc(code)}</pre></div>\n`;
+  const dg = (kind, inner) => `<div class="nv-diagram${kind === 'mermaid' ? ' nv-mermaid' : ''}" data-kind="${kind}"><div class="nv-dg-stage">${inner}</div></div>\n`;
+  // Diagrams: by their language, or recognised by their first word when the block has no language.
+  if (lang === 'mermaid' || lang === 'mmd' || (!lang || lang === 'text' || lang === 'plain') && NV_MERMAID_START.test(code)) return dg('mermaid', `<pre class="mermaid">${esc(code)}</pre>`);
+  if (lang === 'dot' || lang === 'graphviz' || lang === 'gv' || !lang && NV_DOT_START.test(code)) return dg('dot', `<pre class="dot">${esc(code)}</pre>`);
+  if ((lang === 'svg' || lang === 'xml' || !lang) && /^\s*(<\?xml[^>]*>\s*)?<svg[\s>]/i.test(code) && /<\/svg>\s*$/i.test(code)) return dg('svg', code.replace(/^\s*<\?xml[^>]*>\s*/i, ''));
   if (lang === 'math' || lang === 'katex') return `<div class="math display" data-tex="${esc(code)}">${esc(code)}</div>\n`;
   if (NV_ASCII_LANGS.includes(lang) || (!lang || ['text', 'txt', 'plain', 'plaintext', 'none'].includes(lang)) && code.split('\n').some(NV_ASCII_STRONG))
     return `<div class="nv-ascii"><pre class="ascii"><code>${esc(code)}</code></pre></div>\n`;
@@ -3986,7 +4089,8 @@ function nvPolish(html, M, notes) {
   return {html: B.innerHTML, tasks: ti};
 }
 function nvNeeds(html) {
-  return {code: /class="language-(?!mermaid)/.test(html), math: /class="math/.test(html), mermaid: /class="mermaid"/.test(html), mono: /<(pre|code|kbd)\b/i.test(html)};
+  return {code: /class="language-(?!mermaid|dot|graphviz)/.test(html), math: /class="math/.test(html), mermaid: /class="[^"]*\bmermaid\b|language-mermaid/.test(html),
+    dot: /data-kind="dot"|class="dot"|language-(dot|graphviz)/.test(html), mono: /<(pre|code|kbd)\b/i.test(html)};
 }
 function nvMarkdown(M, src) {
   let s = String(src || '').replace(/\r\n?/g, '\n').replace(/^\uFEFF/, '');
@@ -4055,7 +4159,7 @@ h2{font-size:calc(23px*var(--fs));padding-bottom:.32em;border-bottom:1px solid v
 h3{font-size:calc(19.5px*var(--fs))}h4{font-size:calc(17.5px*var(--fs))}
 h5{font-size:calc(15px*var(--fs));text-transform:uppercase;letter-spacing:.06em;color:var(--ink-2)}h6{font-size:calc(14px*var(--fs));color:var(--ink-3);letter-spacing:.04em;text-transform:uppercase}
 .nv>h1:first-child,.nv>h2:first-child{margin-top:.1em}
-p,ul,ol,dl,pre,blockquote,figure,.callout,details,.nv-table,.nv-ascii,.nv-mermaid,.math.display,nav.toc{margin:0 0 1.05em}
+p,ul,ol,dl,pre,blockquote,figure,.callout,details,.nv-table,.nv-ascii,.nv-diagram,.math.display,nav.toc{margin:0 0 1.05em}
 a{color:var(--accent);text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:.18em;text-decoration-color:color-mix(in srgb,var(--accent) 45%,transparent);overflow-wrap:anywhere}
 a:hover{text-decoration-color:currentColor}
 strong,b{font-weight:680}em{font-style:italic}del,s{color:var(--ink-3);text-decoration-thickness:1.5px}
@@ -4105,7 +4209,7 @@ tbody tr:last-child>td,tbody tr:last-child>th{border-bottom:0}
 tbody tr:nth-child(even)>td{background:color-mix(in srgb,var(--ink) 2%,transparent)}
 th[align="right"],td[align="right"]{text-align:right}th[align="center"],td[align="center"]{text-align:center}
 caption{caption-side:bottom;padding:.5em;color:var(--ink-3);font-size:.88em}
-img,video,svg{max-width:100%;height:auto}img{border-radius:12px}
+img,video{max-width:100%;height:auto}svg{max-width:100%}img{border-radius:12px}
 figure{margin-left:0;margin-right:0}figcaption{color:var(--ink-3);font-size:.88em}
 dt{font-weight:680;margin-top:.6em}dd{margin:0 0 .4em 1.1em;color:var(--ink-2)}
 details:not(.callout){border:1px solid var(--rule);border-radius:14px;padding:0 1em;background:var(--card)}
@@ -4134,10 +4238,64 @@ sup.fnref a{text-decoration:none;font-weight:700;font-size:.95em;padding:0 .12em
 .math.display{display:block;overflow-x:auto;overflow-y:hidden;text-align:center;padding:.3em 0;-webkit-overflow-scrolling:touch}
 .math:not(.ok){font-family:var(--mono);font-size:.9em;color:var(--ink-2)}
 .katex{font-size:1.08em}.katex-display{margin:0}
-.nv-mermaid{border:1px solid var(--rule);border-radius:16px;background:var(--card);padding:16px 12px;overflow-x:auto;text-align:center;-webkit-overflow-scrolling:touch}
-.nv-mermaid pre.mermaid{text-align:left;margin:0;padding:0;font-size:calc(12.5px*var(--fs));color:var(--ink-3);white-space:pre-wrap;background:none;border:0}
-.nv-mermaid.ok svg{display:block;margin:0 auto;height:auto}
-.nv-err{font-size:calc(13px*var(--fs));color:rgb(var(--c-danger));margin-top:.6em;text-align:left}
+.nv-diagram{position:relative;border:1px solid var(--rule);border-radius:18px;background:var(--card);overflow:hidden;
+  box-shadow:0 1px 0 color-mix(in srgb,var(--ink) 3%,transparent),0 14px 30px -24px color-mix(in srgb,var(--ink) 40%,transparent)}
+.nv-dg-bar{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:6px 6px 6px 14px;border-bottom:1px solid var(--rule)}
+.nv-dg-k{font-size:calc(12px*var(--fs));font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.nv-dg-x{display:inline-flex;align-items:center;gap:6px;font:inherit;font-size:calc(12.5px*var(--fs));font-weight:650;color:var(--ink-2);background:var(--fill-2);border:0;border-radius:10px;padding:6px 10px;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.nv-dg-x svg{width:14px;height:14px}.nv-dg-x:active{transform:scale(.95)}
+.nv-diagram:not(.ok) .nv-dg-x{visibility:hidden}
+/* the stage: the context Mermaid measures in; the note's paragraph and line spacing never reach the labels */
+.nv-dg-stage{position:relative;overflow-x:auto;overflow-y:hidden;padding:18px 16px;text-align:center;-webkit-overflow-scrolling:touch;overscroll-behavior-x:contain;
+  font-family:"NV Sans",system-ui,sans-serif;font-size:15px;line-height:normal;letter-spacing:normal;font-feature-settings:normal;word-spacing:normal;text-transform:none;font-variant-numeric:normal}
+.nv-dg-stage :is(p,ul,ol,li,blockquote,pre,figure,table,h1,h2,h3,h4,h5,h6){margin:0;padding:0;font-size:inherit;font-weight:inherit;line-height:inherit;border:0;background:none}
+.nv-dg-stage :is(p,span,div){letter-spacing:normal}
+.nv-dg-stage strong,.nv-dg-stage b{font-weight:700}
+.nv-dg-stage>svg{display:block;margin:0 auto;max-width:none;overflow:visible}
+.nv-dg-stage.nv-measure{position:absolute;left:-12000px;top:0;width:2400px;visibility:hidden;overflow:visible;pointer-events:none}
+.nv-diagram.ok .nv-dg-stage>svg{animation:nvDgIn .55s cubic-bezier(.2,.8,.2,1) both;cursor:zoom-in}
+@keyframes nvDgIn{from{opacity:0;transform:translateY(6px) scale(.985)}}
+.nv-dg-x i{display:contents;font-style:normal}
+.nv-dg-x .i-zm,.nv-dg-x .l-zm,.nv-diagram.small .nv-dg-x .i-ex,.nv-diagram.small .nv-dg-x .l-ex{display:none}
+.nv-diagram.small .nv-dg-x .i-zm,.nv-diagram.small .nv-dg-x .l-zm{display:inline}
+.nv-diagram.small .nv-dg-x{color:var(--accent);background:color-mix(in srgb,var(--accent) 12%,transparent);animation:nvNudge 2.6s ease 1s 2}
+@keyframes nvNudge{0%,100%{transform:none}8%{transform:scale(1.06)}16%{transform:none}}
+/* while it draws: a soft shimmer in the diagram's place, never the raw code */
+.nv-diagram:not(.ok):not(.bad) .nv-dg-stage>pre{display:none}
+.nv-diagram:not(.ok):not(.bad) .nv-dg-stage{min-height:170px}
+.nv-diagram:not(.ok):not(.bad) .nv-dg-stage::before{content:"";position:absolute;inset:18px 16px;border-radius:12px;
+  background:linear-gradient(100deg,var(--fill) 20%,color-mix(in srgb,var(--ink) 11%,transparent) 40%,var(--fill) 60%) 0 0/250% 100%;animation:nvShim 1.3s linear infinite}
+.nv-diagram:not(.ok):not(.bad) .nv-dg-stage::after{content:"Drawing the diagram…";position:absolute;left:0;right:0;top:50%;transform:translateY(-50%);font-size:13px;font-weight:600;color:var(--ink-3)}
+@keyframes nvShim{to{background-position:-250% 0}}
+.nv-diagram.bad .nv-dg-stage{text-align:left}
+.nv-diagram.bad .nv-dg-stage pre{white-space:pre;font-family:var(--mono);font-size:calc(12.5px*var(--fs));line-height:1.5;color:var(--ink-2)}
+.nv-diagram>.nv-err,.nv-diagram>.nv-off{margin:0;padding:0 16px 14px}
+/* ASCII: every non-ASCII character in a fixed cell */
+pre.ascii .g{display:inline-block;width:1ch;text-align:center;vertical-align:top;overflow:visible;white-space:pre}
+pre.ascii .g.w{width:2ch}
+/* the full-screen viewer */
+.nv-zoom{position:fixed;inset:0;z-index:50;touch-action:none;overscroll-behavior:contain}
+.nv-z-bg{position:absolute;inset:0;background:color-mix(in srgb,var(--bg) 84%,transparent);-webkit-backdrop-filter:blur(14px) saturate(140%);backdrop-filter:blur(14px) saturate(140%);opacity:0;transition:opacity .3s ease}
+.nv-zoom.on .nv-z-bg{opacity:1}
+.nv-z-cv{position:absolute;inset:0;overflow:hidden;cursor:grab}
+.nv-z-cv:active{cursor:grabbing}
+.nv-z-in{position:absolute;left:0;top:0;transform-origin:0 0;will-change:transform}
+.nv-z-in svg{filter:drop-shadow(0 18px 40px color-mix(in srgb,var(--ink) 14%,transparent))}
+.nv-z-bar{position:absolute;left:50%;bottom:calc(16px + env(safe-area-inset-bottom,0px));transform:translate(-50%,20px);opacity:0;display:flex;align-items:center;gap:4px;padding:5px;border-radius:18px;
+  background:color-mix(in srgb,var(--card) 82%,transparent);-webkit-backdrop-filter:blur(18px) saturate(160%);backdrop-filter:blur(18px) saturate(160%);border:1px solid var(--rule-2);
+  box-shadow:0 18px 40px -18px color-mix(in srgb,var(--ink) 45%,transparent);transition:transform .38s cubic-bezier(.2,.9,.25,1) .08s,opacity .25s ease .08s;max-width:calc(100% - 24px)}
+.nv-zoom.on .nv-z-bar{transform:translate(-50%,0);opacity:1}
+.nv-z-bar button{width:40px;height:40px;display:grid;place-items:center;border:0;border-radius:13px;background:transparent;color:var(--ink);cursor:pointer;-webkit-tap-highlight-color:transparent}
+.nv-z-bar button:hover{background:var(--fill-2)}.nv-z-bar button:active{transform:scale(.9)}
+.nv-z-bar button svg{width:20px;height:20px}
+.nv-z-bar .nv-z-close{background:var(--ink);color:var(--bg);margin-left:4px}
+.nv-z-k{font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-3);padding:0 8px 0 10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:34vw}
+.nv-z-pct{min-width:46px;text-align:center;font-size:12.5px;font-weight:650;color:var(--ink-2);font-variant-numeric:tabular-nums}
+.nv-z-hint{position:absolute;left:0;right:0;top:calc(14px + env(safe-area-inset-top,0px));text-align:center;font-size:12.5px;font-weight:600;color:var(--ink-3);opacity:0;transition:opacity .4s ease .3s;pointer-events:none}
+.nv-zoom.on .nv-z-hint{opacity:1;animation:nvHint 3.2s ease .3s forwards}
+@keyframes nvHint{0%,70%{opacity:1}100%{opacity:0}}
+html.nv-zooming,html.nv-zooming body{overflow:hidden}
+.nv-err{font-size:calc(13px*var(--fs));color:rgb(var(--c-danger));margin-top:.6em;text-align:left;line-height:1.45}
 .nv-off{font-size:calc(12.5px*var(--fs));color:var(--ink-3);margin-top:.5em;text-align:left}
 .nv-empty{color:var(--ink-3)}
 ::selection{background:color-mix(in srgb,var(--accent) 26%,transparent)}
@@ -4157,18 +4315,36 @@ sup.fnref a{text-decoration:none;font-weight:700;font-size:.95em;padding:0 .12em
 // Runs inside the frame. Kept self-contained: it is copied into the page as text.
 function nvRuntime(C) {
   const post = m => { try { parent.postMessage(Object.assign({nv: C.token}, m), '*'); } catch (e) {} };
-  const $$ = s => [...document.querySelectorAll(s)];
+  const $$ = (s, r) => [...(r || document).querySelectorAll(s)];
   const escT = s => String(s).replace(/[&<>]/g, c => ({'&': '&amp;', '<': '&lt;', '>': '&gt;'}[c]));
+  const calm = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const sleep = ms => new Promise(r => setTimeout(r, ms));
   document.addEventListener('click', e => {
     const a = e.target.closest('a[href]');
-    if (a) { const h = a.getAttribute('href') || ''; if (h[0] === '#') { e.preventDefault(); let el = null; try { el = document.getElementById(decodeURIComponent(h.slice(1))) || document.querySelector('[name="' + CSS.escape(decodeURIComponent(h.slice(1))) + '"]'); } catch (x) {} if (el) el.scrollIntoView({behavior: 'smooth', block: 'start'}); } return; }
+    if (a && !a.closest('.nv-diagram')) { const h = a.getAttribute('href') || ''; if (h[0] === '#') { e.preventDefault(); let el = null; try { el = document.getElementById(decodeURIComponent(h.slice(1))) || document.querySelector('[name="' + CSS.escape(decodeURIComponent(h.slice(1))) + '"]'); } catch (x) {} if (el) el.scrollIntoView({behavior: 'smooth', block: 'start'}); } return; }
     const cp = e.target.closest('.nv-copy');
     if (cp) { const code = cp.closest('figure').querySelector('pre').innerText; post({act: 'copy', text: code}); cp.textContent = 'Copied ✓'; setTimeout(() => { cp.textContent = 'Copy'; }, 1500); return; }
     const ck = e.target.closest('.nv-check');
-    if (ck) { if (!C.tasks) return; const on = ck.getAttribute('aria-checked') !== 'true'; ck.setAttribute('aria-checked', String(on)); ck.setAttribute('aria-label', on ? 'Done' : 'Not done'); ck.closest('li').classList.toggle('done', on); post({act: 'task', i: +ck.dataset.i, on}); }
+    if (ck) { if (!C.tasks) return; const on = ck.getAttribute('aria-checked') !== 'true'; ck.setAttribute('aria-checked', String(on)); ck.setAttribute('aria-label', on ? 'Done' : 'Not done'); ck.closest('li').classList.toggle('done', on); post({act: 'task', i: +ck.dataset.i, on}); return; }
+    const dg = e.target.closest('.nv-diagram.ok');
+    if (dg && !e.target.closest('a')) { e.preventDefault(); zoomOpen(dg); }
   });
   if (!C.tasks) $$('.nv-check').forEach(b => { b.disabled = true; });
-  // ASCII diagrams: shrink the type just enough for the widest line to fit (never below a readable size), else scroll.
+
+  /* ASCII diagrams, pinpoint: every character that is not plain ASCII sits in its own fixed cell (1 column, or 2 for
+     wide characters such as emoji and CJK), so a glyph borrowed from another font can never push the line out of
+     line. Then the type shrinks just enough for the widest line to fit (never below 9.5 px), else it scrolls. */
+  // two columns, as terminals and editors count them: emoji shown as emoji, and East Asian wide letters
+  const wide = ch => /\p{Emoji_Presentation}|\uFE0F|[\u1100-\u115F\u2E80-\u303E\u3041-\u33FF\u3400-\u4DBF\u4E00-\u9FFF\uA000-\uA4CF\uAC00-\uD7A3\uF900-\uFAFF\uFE30-\uFE4F\uFF00-\uFF60\uFFE0-\uFFE6]/u.test(ch);
+  function gridAscii() {
+    const seg = window.Intl && Intl.Segmenter ? new Intl.Segmenter(undefined, {granularity: 'grapheme'}) : null;
+    $$('pre.ascii code').forEach(code => {
+      if (code.dataset.grid) return; code.dataset.grid = '1';
+      const text = code.textContent; if (!/[^\x00-\x7F]/.test(text)) return;
+      const parts = seg ? [...seg.segment(text)].map(s => s.segment) : [...text];
+      code.innerHTML = parts.map(g => g === '\n' || /^[\x00-\x7F]$/.test(g) ? escT(g) : `<span class="g${wide(g) ? ' w' : ''}">${escT(g)}</span>`).join('');
+    });
+  }
   function fitAscii() {
     $$('pre.ascii').forEach(p => {
       p.style.fontSize = ''; const base = parseFloat(getComputedStyle(p).fontSize), cs = getComputedStyle(p), pad = parseFloat(cs.paddingLeft) + parseFloat(cs.paddingRight);
@@ -4176,51 +4352,214 @@ function nvRuntime(C) {
       if (need > have + 1) p.style.fontSize = Math.max(9.5, Math.floor(base * have / need * 100) / 100) + 'px';
     });
   }
-  fitAscii(); if (document.fonts) document.fonts.ready.then(fitAscii);
-  let rz; addEventListener('resize', () => { clearTimeout(rz); rz = setTimeout(fitAscii, 120); });
+  gridAscii(); fitAscii(); if (document.fonts) document.fonts.ready.then(fitAscii);
+  let rz; addEventListener('resize', () => { clearTimeout(rz); rz = setTimeout(() => { fitAscii(); sizeDiagrams(); }, 120); });
   function addScript(code) { const s = document.createElement('script'); s.textContent = code; document.head.appendChild(s); }
   function addStyle(css) { const s = document.createElement('style'); s.textContent = css; document.head.appendChild(s); }
+
+  /* Diagrams (Mermaid, Graphviz, SVG). Each sits in a card: a quiet title bar with "Expand", the drawing on a stage.
+     They are drawn at their true size with the bundled sans font already loaded, measured inside the stage itself,
+     so every label is exactly as wide as its box. A diagram wider than the screen keeps readable type and scrolls
+     sideways; tap it for the full-screen viewer (pinch, drag, double-tap, buttons). */
+  const KIND = {flowchart: 'Flowchart', graph: 'Flowchart', sequenceDiagram: 'Sequence', classDiagram: 'Class diagram', 'classDiagram-v2': 'Class diagram', stateDiagram: 'State diagram', 'stateDiagram-v2': 'State diagram',
+    erDiagram: 'Entity relationship', gantt: 'Gantt chart', pie: 'Pie chart', journey: 'User journey', gitGraph: 'Git graph', mindmap: 'Mind map', timeline: 'Timeline', quadrantChart: 'Quadrant chart',
+    'xychart-beta': 'XY chart', xychart: 'XY chart', 'sankey-beta': 'Sankey', sankey: 'Sankey', 'block-beta': 'Block diagram', block: 'Block diagram', C4Context: 'C4 context', C4Container: 'C4 container',
+    C4Component: 'C4 component', C4Dynamic: 'C4 dynamic', C4Deployment: 'C4 deployment', requirementDiagram: 'Requirements', 'architecture-beta': 'Architecture', architecture: 'Architecture', kanban: 'Kanban',
+    'packet-beta': 'Packet', packet: 'Packet', 'radar-beta': 'Radar chart', radar: 'Radar chart', 'treemap-beta': 'Treemap', treemap: 'Treemap', zenuml: 'Sequence'};
+  const kindOf = src => { const s = src.replace(/^\s*---[\s\S]*?\n---\s*\n/, '').replace(/^\s*(%%[^\n]*\n\s*)*/, ''); const m = s.match(/^\s*([\w-]+)/); return m ? (KIND[m[1]] || 'Diagram') : 'Diagram'; };
+  const IC = {expand: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 4h6v6M10 20H4v-6M20 4l-7 7M4 20l7-7"/></svg>',
+    close: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg>',
+    plus: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M12 6v12M6 12h12"/></svg>',
+    minus: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M6 12h12"/></svg>',
+    zoom: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6"/><path d="m15 15 5 5M10.5 8v5M8 10.5h5"/></svg>',
+    fit: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9V5a1 1 0 0 1 1-1h4M15 4h4a1 1 0 0 1 1 1v4M20 15v4a1 1 0 0 1-1 1h-4M9 20H5a1 1 0 0 1-1-1v-4"/></svg>'};
+  // Diagrams written straight into an HTML note (<pre class="mermaid">, <div class="mermaid">, <code class="language-mermaid">) get the same card.
+  $$('pre > code.language-mermaid, pre > code.language-dot, pre > code.language-graphviz').forEach(c => { const p = c.parentElement; const k = /mermaid/.test(c.className) ? 'mermaid' : 'dot'; p.className = k; p.textContent = c.textContent; });
+  $$('.mermaid, pre.dot').forEach(el => { if (el.closest('.nv-diagram')) return; const k = el.classList.contains('dot') ? 'dot' : 'mermaid';
+    const w = document.createElement('div'); w.className = 'nv-diagram' + (k === 'mermaid' ? ' nv-mermaid' : ''); w.dataset.kind = k; const st = document.createElement('div'); st.className = 'nv-dg-stage';
+    el.replaceWith(w); const pre = document.createElement('pre'); pre.className = k; pre.textContent = el.textContent; st.append(pre); w.append(st); });
+  $$('.nv-diagram').forEach(w => {
+    const pre = w.querySelector('pre'); w.dataset.src = pre ? pre.textContent : '';
+    const k = w.dataset.kind, label = k === 'mermaid' ? kindOf(w.dataset.src) : k === 'dot' ? 'Graph' : 'Drawing';
+    w.insertAdjacentHTML('afterbegin', `<div class="nv-dg-bar"><span class="nv-dg-k">${label}</span><button type="button" class="nv-dg-x" aria-label="Open the diagram full screen"><i class="i-ex">${IC.expand}</i><i class="i-zm">${IC.zoom}</i><span class="l-ex">Expand</span><span class="l-zm">Tap to zoom</span></button></div>`);
+    if (k === 'svg') w.classList.add('ok');
+  });
+  const svgOf = w => w.querySelector('.nv-dg-stage > svg');
+  // Readable size: true size when it fits; shrink to the card when that keeps text at 70% or more; else scroll.
+  function sizeDiagrams() {
+    $$('.nv-diagram.ok').forEach(w => {
+      const svg = svgOf(w), st = w.querySelector('.nv-dg-stage'); if (!svg || !st) return;
+      if (!w.dataset.nw) { const vb = svg.viewBox && svg.viewBox.baseVal; let nw = vb && vb.width, nh = vb && vb.height;
+        if (!nw) { const b = svg.getBBox ? svg.getBBox() : null; nw = parseFloat(svg.getAttribute('width')) || (b && b.width) || 300; nh = parseFloat(svg.getAttribute('height')) || (b && b.height) || 150; svg.setAttribute('viewBox', `0 0 ${nw} ${nh}`); }
+        w.dataset.nw = nw; w.dataset.nh = nh; svg.removeAttribute('width'); svg.removeAttribute('height'); svg.style.maxWidth = 'none'; }
+      if (!w.dataset.mf) { const fs = [...svg.querySelectorAll('text, tspan, foreignObject div, foreignObject span')].filter(e => (e.textContent || '').trim()).map(e => parseFloat(getComputedStyle(e).fontSize)).filter(x => x > 0); w.dataset.mf = fs.length ? Math.min(...fs) : 15; }
+      // the smallest text in the drawing never shows below 10.5 px (or its own size, if smaller is all it has at 1:1)
+      const nw = +w.dataset.nw, nh = +w.dataset.nh, cs = getComputedStyle(st), avail = st.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight);
+      // The whole drawing always shows, fitted to the card. When that makes its smallest text tiny, a "Tap to zoom"
+      // chip appears: the full-screen viewer shows every detail sharp.
+      const s = Math.min(1, avail / nw);
+      svg.style.width = Math.round(nw * s) + 'px'; svg.style.height = Math.round(nh * s) + 'px';
+      w.classList.toggle('small', s * +w.dataset.mf < 10.5);
+    });
+  }
+  const css = () => getComputedStyle(document.documentElement), v = n => css().getPropertyValue(n).trim();
+  async function fontsReady() {
+    if (!document.fonts) return;
+    try { await Promise.race([Promise.all(['400', '500', '600', '700'].map(wt => document.fonts.load(`${wt} 15px "NV Sans"`))), sleep(3000)]); await Promise.race([document.fonts.ready, sleep(3000)]); } catch (e) {}
+  }
+  let drawnWith = '';
+  async function drawMermaid(again) {
+    const M = window.mermaid, ws = $$('.nv-diagram[data-kind="mermaid"]'); if (!ws.length) return;
+    if (!M) { ws.forEach(w => { w.classList.add('bad'); if (!w.querySelector('.nv-off')) w.insertAdjacentHTML('beforeend', '<div class="nv-off">Shown as text. Diagrams are drawn once the app has been opened with a connection.</div>'); }); return; }
+    const font = '"NV Sans", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif';
+    M.initialize({startOnLoad: false, securityLevel: 'strict', theme: 'base', darkMode: C.dark, fontFamily: font, htmlLabels: true,
+      flowchart: {htmlLabels: true, useMaxWidth: false, padding: 14, nodeSpacing: 46, rankSpacing: 52, diagramPadding: 10},
+      sequence: {useMaxWidth: false, mirrorActors: true, actorMargin: 46, boxMargin: 10, noteMargin: 12, messageMargin: 34}, gantt: {useMaxWidth: false, useWidth: 820, barHeight: 26, barGap: 6, fontSize: 13, sectionFontSize: 13, leftPadding: 110, topPadding: 56, gridLineStartPadding: 40, axisFormat: '%e %b'},
+      class: {useMaxWidth: false}, state: {useMaxWidth: false}, er: {useMaxWidth: false}, pie: {useMaxWidth: false}, journey: {useMaxWidth: false}, gitGraph: {useMaxWidth: false}, mindmap: {useMaxWidth: false},
+      timeline: {useMaxWidth: false}, quadrantChart: {useMaxWidth: false}, xyChart: {useMaxWidth: false}, sankey: {useMaxWidth: false}, block: {useMaxWidth: false}, c4: {useMaxWidth: false},
+      requirement: {useMaxWidth: false}, architecture: {useMaxWidth: false}, packet: {useMaxWidth: false}, radar: {useMaxWidth: false}, treemap: {useMaxWidth: false}, kanban: {useMaxWidth: false},
+      themeVariables: Object.assign({fontFamily: font, fontSize: '15px', background: C.bg}, C.dark
+        ? {primaryColor: '#1d2a44', primaryBorderColor: '#5b7fd1', primaryTextColor: '#eef1f7', secondaryColor: '#173229', secondaryBorderColor: '#3f9b78', secondaryTextColor: '#eef1f7',
+          tertiaryColor: '#2f2417', tertiaryBorderColor: '#b98a45', tertiaryTextColor: '#eef1f7', lineColor: '#9aa4b8', textColor: '#e6e9f0', mainBkg: '#1d2a44', nodeBorder: '#5b7fd1', clusterBkg: '#151b28', clusterBorder: '#34405a',
+          edgeLabelBackground: '#1a2030', noteBkgColor: '#2f2a17', noteBorderColor: '#a58a3c', noteTextColor: '#f3ead0', actorBkg: '#1d2a44', actorBorder: '#5b7fd1', actorTextColor: '#eef1f7', actorLineColor: '#5b6b8c',
+          signalColor: '#c9d1e0', signalTextColor: '#e6e9f0', labelBoxBkgColor: '#1d2a44', labelBoxBorderColor: '#5b7fd1', labelTextColor: '#eef1f7', loopTextColor: '#e6e9f0', activationBkgColor: '#2a3a5c', activationBorderColor: '#5b7fd1',
+          sequenceNumberColor: '#0f1420', pie1: '#6b9cff', pie2: '#3fc59a', pie3: '#f2b35b', pie4: '#c78bff', pie5: '#ff8a8a', pie6: '#5fd0e6', pie7: '#e6d35f', pieStrokeColor: '#111318', pieOuterStrokeColor: '#34405a', pieSectionTextColor: '#0f1420', pieTitleTextColor: '#eef1f7', pieLegendTextColor: '#e6e9f0',
+          git0: '#6b9cff', git1: '#3fc59a', git2: '#f2b35b', git3: '#c78bff', gitBranchLabel0: '#0f1420', gitBranchLabel1: '#0f1420', gitBranchLabel2: '#0f1420', gitBranchLabel3: '#0f1420', commitLabelColor: '#e6e9f0', commitLabelBackground: '#1d2a44',
+          taskBkgColor: '#2a3a5c', taskBorderColor: '#5b7fd1', taskTextColor: '#eef1f7', taskTextOutsideColor: '#e6e9f0', activeTaskBkgColor: '#1f4f3d', activeTaskBorderColor: '#3fc59a', doneTaskBkgColor: '#2b2f3a', doneTaskBorderColor: '#5b6475',
+          critBkgColor: '#5a1f26', critBorderColor: '#ff8a8a', gridColor: '#2c3446', todayLineColor: '#f2b35b', sectionBkgColor: '#151b28', altSectionBkgColor: '#111318', sectionBkgColor2: '#171f2e',
+          xyChart: {backgroundColor: 'transparent', titleColor: '#eef1f7', xAxisLabelColor: '#c9d1e0', xAxisTitleColor: '#c9d1e0', xAxisTickColor: '#5b6b8c', xAxisLineColor: '#5b6b8c', yAxisLabelColor: '#c9d1e0', yAxisTitleColor: '#c9d1e0', yAxisTickColor: '#5b6b8c', yAxisLineColor: '#5b6b8c', plotColorPalette: '#6b9cff,#f2b35b,#3fc59a,#c78bff,#ff8a8a,#5fd0e6'}}
+        : {primaryColor: '#eef3ff', primaryBorderColor: '#7f9ee6', primaryTextColor: '#14161c', secondaryColor: '#ecfbf3', secondaryBorderColor: '#5fbf91', secondaryTextColor: '#14161c',
+          tertiaryColor: '#fff6e8', tertiaryBorderColor: '#e0ad5f', tertiaryTextColor: '#14161c', lineColor: '#6b7385', textColor: '#1f2430', mainBkg: '#eef3ff', nodeBorder: '#7f9ee6', clusterBkg: '#f7f8fb', clusterBorder: '#d6dbe6',
+          edgeLabelBackground: '#ffffff', noteBkgColor: '#fff8db', noteBorderColor: '#e2c45c', noteTextColor: '#3d3214', actorBkg: '#eef3ff', actorBorder: '#7f9ee6', actorTextColor: '#14161c', actorLineColor: '#a7b4cf',
+          signalColor: '#4b5263', signalTextColor: '#1f2430', labelBoxBkgColor: '#eef3ff', labelBoxBorderColor: '#7f9ee6', labelTextColor: '#14161c', loopTextColor: '#1f2430', activationBkgColor: '#dfe8ff', activationBorderColor: '#7f9ee6',
+          sequenceNumberColor: '#ffffff', pie1: '#4f7dff', pie2: '#22b07d', pie3: '#f0a33a', pie4: '#9b6bff', pie5: '#f06a6a', pie6: '#26b5d0', pie7: '#d6b72a', pieStrokeColor: '#ffffff', pieOuterStrokeColor: '#d6dbe6', pieSectionTextColor: '#ffffff', pieTitleTextColor: '#14161c', pieLegendTextColor: '#1f2430',
+          git0: '#4f7dff', git1: '#22b07d', git2: '#f0a33a', git3: '#9b6bff', commitLabelColor: '#1f2430', commitLabelBackground: '#eef3ff',
+          taskBkgColor: '#dfe8ff', taskBorderColor: '#7f9ee6', taskTextColor: '#14161c', taskTextOutsideColor: '#1f2430', activeTaskBkgColor: '#d5f5e6', activeTaskBorderColor: '#22b07d', doneTaskBkgColor: '#eceff4', doneTaskBorderColor: '#a3acbd',
+          critBkgColor: '#ffe1e1', critBorderColor: '#f06a6a', gridColor: '#e3e7ef', todayLineColor: '#f0a33a', sectionBkgColor: '#f7f8fb', altSectionBkgColor: '#ffffff', sectionBkgColor2: '#f0f3fa',
+          xyChart: {backgroundColor: 'transparent', titleColor: '#14161c', xAxisLabelColor: '#4b5263', xAxisTitleColor: '#4b5263', xAxisTickColor: '#a3acbd', xAxisLineColor: '#a3acbd', yAxisLabelColor: '#4b5263', yAxisTitleColor: '#4b5263', yAxisTickColor: '#a3acbd', yAxisLineColor: '#a3acbd', plotColorPalette: '#4f7dff,#f0a33a,#22b07d,#9b6bff,#f06a6a,#26b5d0'}})});
+    try { if (M.registerIconPacks) M.registerIconPacks([{name: 'logos', loader: () => fetch('https://unpkg.com/@iconify-json/logos@1/icons.json').then(r => r.json())}, {name: 'mdi', loader: () => fetch('https://unpkg.com/@iconify-json/mdi@1/icons.json').then(r => r.json())}]); } catch (e) {}
+    drawnWith = [...document.fonts].filter(f => f.status === 'loaded').map(f => f.family + f.weight).join();
+    for (let i = 0; i < ws.length; i++) {
+      const w = ws[i], st = w.querySelector('.nv-dg-stage'), src = w.dataset.src, id = 'nvm' + i + (again ? 'r' + Date.now() % 1e5 : '');
+      if (again && !w.classList.contains('ok')) continue;
+      // Measured off-screen in a wide stage with exactly the card's styles: a narrow box would shrink the drawing
+      // while Mermaid is still measuring its text, and labels would come out too small and overlap.
+      const ms = document.createElement('div'); ms.className = 'nv-dg-stage nv-measure'; ms.setAttribute('aria-hidden', 'true'); document.body.append(ms);
+      try {
+        const r = await M.render(id, src, ms);
+        st.innerHTML = r.svg; if (r.bindFunctions) r.bindFunctions(st); ms.remove();
+        delete w.dataset.nw; delete w.dataset.mf; w.classList.remove('bad'); w.classList.add('ok');
+      } catch (e) {
+        ms.remove(); const junk = document.getElementById('d' + id); if (junk) junk.remove();
+        w.classList.add('bad'); st.innerHTML = `<pre class="mermaid-src">${escT(src)}</pre>`;
+        if (!w.querySelector('.nv-err')) w.insertAdjacentHTML('beforeend', '<div class="nv-err">This diagram has a mistake, so it is shown as text: ' + escT(String(e && (e.message || e.str) || e).split('\n').filter(Boolean).slice(0, 2).join(' ').slice(0, 220)) + '</div>');
+      }
+    }
+  }
+  async function drawDot() {
+    const ws = $$('.nv-diagram[data-kind="dot"]'); if (!ws.length) return;
+    let viz = null; try { viz = window.Viz && await window.Viz.instance(); } catch (e) {}
+    const ink = C.dark ? '#e6e9f0' : '#1f2430', line = C.dark ? '#9aa4b8' : '#6b7385', fill = C.dark ? '#1d2a44' : '#eef3ff', edge = C.dark ? '#5b7fd1' : '#7f9ee6';
+    ws.forEach(w => {
+      const st = w.querySelector('.nv-dg-stage');
+      if (!viz) { w.classList.add('bad'); if (!w.querySelector('.nv-off')) w.insertAdjacentHTML('beforeend', '<div class="nv-off">Shown as text. Graphs are drawn once the app has been opened with a connection.</div>'); return; }
+      try {
+        const svg = viz.renderSVGElement(w.dataset.src, {graphAttributes: {bgcolor: 'transparent', fontname: 'Arial', fontcolor: ink, pad: '0.2'},
+          nodeAttributes: {fontname: 'Arial', fontsize: '13', color: edge, fontcolor: ink, fillcolor: fill, style: 'filled,rounded', shape: 'box', penwidth: '1.2', margin: '0.18,0.08'},
+          edgeAttributes: {fontname: 'Arial', fontsize: '12', color: line, fontcolor: ink, arrowsize: '0.8'}});
+        st.innerHTML = ''; st.append(svg); w.classList.add('ok');
+      } catch (e) { w.classList.add('bad'); if (!w.querySelector('.nv-err')) w.insertAdjacentHTML('beforeend', '<div class="nv-err">This graph has a mistake, so it is shown as text: ' + escT(String(e && e.message || e).split('\n')[0].slice(0, 200)) + '</div>'); }
+    });
+  }
+
+  /* The full-screen viewer. Opens out of the diagram itself; pinch or wheel to zoom about the fingers or pointer,
+     drag to pan, double-tap to zoom in there (or back to fit); − Fit + and ✕ (or Esc) in a floating glass bar. */
+  let Z = null;
+  function zoomOpen(w) {
+    const svg = svgOf(w); if (!svg || Z) return;
+    const ov = document.createElement('div'); ov.className = 'nv-zoom'; ov.setAttribute('role', 'dialog'); ov.setAttribute('aria-label', 'Diagram, full screen');
+    ov.innerHTML = `<div class="nv-z-bg"></div><div class="nv-z-cv"><div class="nv-z-in"></div></div>
+      <div class="nv-z-bar"><span class="nv-z-k">${escT(w.querySelector('.nv-dg-k').textContent)}</span><span class="nv-z-pct">100%</span>
+        <button type="button" data-z="out" aria-label="Zoom out">${IC.minus}</button><button type="button" data-z="fit" aria-label="Fit to screen">${IC.fit}</button><button type="button" data-z="in" aria-label="Zoom in">${IC.plus}</button>
+        <button type="button" data-z="close" class="nv-z-close" aria-label="Close">${IC.close}</button></div><div class="nv-z-hint">Pinch or double-tap to zoom · drag to move</div>`;
+    const inner = ov.querySelector('.nv-z-in'), copy = svg.cloneNode(true), nw = +w.dataset.nw, nh = +w.dataset.nh;
+    copy.removeAttribute('style'); copy.style.width = nw + 'px'; copy.style.height = nh + 'px'; copy.style.maxWidth = 'none'; copy.style.display = 'block';
+    inner.append(copy); document.body.append(ov); document.documentElement.classList.add('nv-zooming');
+    const cv = ov.querySelector('.nv-z-cv'), pct = ov.querySelector('.nv-z-pct');
+    Z = {ov, inner, cv, w, nw, nh, s: 1, x: 0, y: 0, fit: 1, pts: new Map(), last: 0};
+    const W = () => cv.clientWidth, H = () => cv.clientHeight;
+    const fitT = () => { const s = Math.min((W() - 32) / nw, (H() - 32) / nh, 3); return {s, x: (W() - nw * s) / 2, y: (H() - nh * s) / 2}; };
+    const apply = (anim) => { inner.style.transition = anim && !calm ? 'transform .42s cubic-bezier(.2,.9,.25,1)' : 'none'; inner.style.transform = `translate3d(${Z.x}px,${Z.y}px,0) scale(${Z.s})`; pct.textContent = Math.round(Z.s * 100) + '%'; };
+    const set = (t, anim) => { Z.s = t.s; Z.x = t.x; Z.y = t.y; apply(anim); };
+    const clampS = s => Math.max(Z.fit * 0.5, Math.min(8, s));
+    const zoomAt = (k, cx, cy, anim) => { const s = clampS(Z.s * k), r = s / Z.s; set({s, x: cx - (cx - Z.x) * r, y: cy - (cy - Z.y) * r}, anim); };
+    // Open out of the diagram's place on the page
+    const from = svg.getBoundingClientRect(), cvr = cv.getBoundingClientRect(), f = fitT(); Z.fit = f.s;
+    set({s: from.width / nw, x: from.left - cvr.left, y: from.top - cvr.top}, false);
+    requestAnimationFrame(() => { ov.classList.add('on'); requestAnimationFrame(() => set(f, true)); });
+    const rel = e => { const r = cv.getBoundingClientRect(); return [e.clientX - r.left, e.clientY - r.top]; };
+    cv.addEventListener('pointerdown', e => { cv.setPointerCapture(e.pointerId); Z.pts.set(e.pointerId, rel(e)); Z.moved = false; Z.start = rel(e);
+      if (Z.pts.size === 2) { const [a, b] = [...Z.pts.values()]; Z.pinch = {d: Math.hypot(a[0] - b[0], a[1] - b[1]), s: Z.s, x: Z.x, y: Z.y, cx: (a[0] + b[0]) / 2, cy: (a[1] + b[1]) / 2}; } });
+    cv.addEventListener('pointermove', e => { if (!Z.pts.has(e.pointerId)) return; const p = rel(e), q = Z.pts.get(e.pointerId); Z.pts.set(e.pointerId, p);
+      if (Math.hypot(p[0] - Z.start[0], p[1] - Z.start[1]) > 6) Z.moved = true;
+      if (Z.pts.size === 2 && Z.pinch) { const [a, b] = [...Z.pts.values()], d = Math.hypot(a[0] - b[0], a[1] - b[1]), cx = (a[0] + b[0]) / 2, cy = (a[1] + b[1]) / 2;
+        const s = clampS(Z.pinch.s * d / Z.pinch.d), r = s / Z.pinch.s; set({s, x: cx - (Z.pinch.cx - Z.pinch.x) * r, y: cy - (Z.pinch.cy - Z.pinch.y) * r}, false); }
+      else if (Z.pts.size === 1) { Z.x += p[0] - q[0]; Z.y += p[1] - q[1]; apply(false); } });
+    const up = e => { if (!Z || !Z.pts.has(e.pointerId)) return; const p = rel(e); Z.pts.delete(e.pointerId); if (Z.pts.size < 2) Z.pinch = null;
+      if (e.type === 'pointerup' && !Z.moved && Z.pts.size === 0) { const now = Date.now();
+        if (now - Z.last < 300) { Z.last = 0; if (Z.s > Z.fit * 1.15) set(fitT(), true); else zoomAt(2.4, p[0], p[1], true); } else Z.last = now; } };
+    cv.addEventListener('pointerup', up); cv.addEventListener('pointercancel', up);
+    cv.addEventListener('wheel', e => { e.preventDefault(); const [cx, cy] = rel(e); zoomAt(Math.exp(-e.deltaY * (e.ctrlKey ? 0.012 : 0.0025)), cx, cy, false); }, {passive: false});
+    ov.querySelector('.nv-z-bar').addEventListener('click', e => { const b = e.target.closest('[data-z]'); if (!b) return; const z = b.dataset.z;
+      if (z === 'close') zoomClose(); else if (z === 'fit') set(fitT(), true); else zoomAt(z === 'in' ? 1.5 : 1 / 1.5, W() / 2, H() / 2, true); });
+    Z.key = e => { if (e.key === 'Escape') zoomClose(); else if (e.key === '+' || e.key === '=') zoomAt(1.25, W() / 2, H() / 2, true); else if (e.key === '-') zoomAt(0.8, W() / 2, H() / 2, true); else if (e.key === '0') set(fitT(), true); };
+    addEventListener('keydown', Z.key); setTimeout(() => ov.querySelector('.nv-z-close').focus({preventScroll: true}), 60);
+    Z.back = () => { const to = svgOf(w).getBoundingClientRect(), c = cv.getBoundingClientRect(); return {s: to.width / nw, x: to.left - c.left, y: to.top - c.top}; };
+  }
+  function zoomClose() {
+    if (!Z) return; const z = Z; Z = null; removeEventListener('keydown', z.key);
+    z.ov.classList.remove('on'); const t = z.back();
+    z.inner.style.transition = calm ? 'none' : 'transform .34s cubic-bezier(.4,0,.2,1)'; z.inner.style.transform = `translate3d(${t.x}px,${t.y}px,0) scale(${t.s})`;
+    setTimeout(() => { z.ov.remove(); document.documentElement.classList.remove('nv-zooming'); }, calm ? 0 : 340);
+  }
+
+  let started = false;
   async function enhance(L) {
-    if (L.mono || L.monoB) addStyle((L.mono ? `@font-face{font-family:"NV Mono";src:url(${L.mono}) format("woff2");font-weight:400;font-display:swap}` : '') + (L.monoB ? `@font-face{font-family:"NV Mono";src:url(${L.monoB}) format("woff2");font-weight:700;font-display:swap}` : ''));
+    if (started) return; started = true;
     if (L.katexCss) addStyle(L.katexCss);
     try { if (L.katex) { addScript(L.katex); if (L.mhchem) addScript(L.mhchem); } } catch (e) {}
     if (window.katex) $$('.math').forEach(el => { try { window.katex.render(el.dataset.tex || el.textContent, el, {displayMode: el.classList.contains('display'), throwOnError: false, output: 'htmlAndMathml', strict: 'ignore', trust: false}); el.classList.add('ok'); } catch (e) {} });
     try { if (L.hljs) addScript(L.hljs); } catch (e) {}
-    if (window.hljs) $$('pre code[class*="language-"]').forEach(el => { if (/language-(mermaid|ascii)/.test(el.className)) return; try { window.hljs.highlightElement(el); } catch (e) {} });
-    const mm = $$('pre.mermaid');
-    if (mm.length) {
+    if (window.hljs) $$('pre code[class*="language-"]').forEach(el => { if (/language-(mermaid|ascii|dot)/.test(el.className)) return; try { window.hljs.highlightElement(el); } catch (e) {} });
+    if ($$('.nv-diagram').length) {
       try { if (L.mermaid) addScript(L.mermaid); } catch (e) {}
-      const M = window.mermaid;
-      if (!M) { mm.forEach(p => { if (!p.parentNode.querySelector('.nv-off')) p.insertAdjacentHTML('afterend', '<div class="nv-off">Diagram shown as text. It is drawn when the app has been opened once with a connection.</div>'); }); }
-      else {
-        const css = getComputedStyle(document.documentElement), v = n => css.getPropertyValue(n).trim();
-        M.initialize({startOnLoad: false, securityLevel: 'strict', theme: 'base', darkMode: C.dark, fontFamily: v('--font'), flowchart: {htmlLabels: true, curve: 'basis', useMaxWidth: true}, sequence: {useMaxWidth: true}, gantt: {useMaxWidth: true},
-          themeVariables: C.dark ? {background: C.bg, primaryColor: '#1d2a44', primaryBorderColor: '#5b7fd1', primaryTextColor: '#eef1f7', secondaryColor: '#173229', secondaryBorderColor: '#3f9b78', secondaryTextColor: '#eef1f7',
-            tertiaryColor: '#2f2417', tertiaryBorderColor: '#b98a45', tertiaryTextColor: '#eef1f7', lineColor: '#9aa4b8', textColor: '#e6e9f0', mainBkg: '#1d2a44', nodeBorder: '#5b7fd1', clusterBkg: '#151b28', clusterBorder: '#34405a',
-            edgeLabelBackground: '#151b28', noteBkgColor: '#2f2a17', noteBorderColor: '#a58a3c', noteTextColor: '#f3ead0', actorBkg: '#1d2a44', actorBorder: '#5b7fd1', actorTextColor: '#eef1f7', signalColor: '#c9d1e0', signalTextColor: '#e6e9f0', fontSize: '15px'}
-            : {background: C.bg, primaryColor: '#eef3ff', primaryBorderColor: '#7f9ee6', primaryTextColor: '#14161c', secondaryColor: '#ecfbf3', secondaryBorderColor: '#5fbf91', secondaryTextColor: '#14161c',
-            tertiaryColor: '#fff6e8', tertiaryBorderColor: '#e0ad5f', tertiaryTextColor: '#14161c', lineColor: '#6b7385', textColor: '#1f2430', mainBkg: '#eef3ff', nodeBorder: '#7f9ee6', clusterBkg: '#f7f8fb', clusterBorder: '#d6dbe6',
-            edgeLabelBackground: '#ffffff', noteBkgColor: '#fff8db', noteBorderColor: '#e2c45c', noteTextColor: '#3d3214', actorBkg: '#eef3ff', actorBorder: '#7f9ee6', actorTextColor: '#14161c', signalColor: '#4b5263', signalTextColor: '#1f2430', fontSize: '15px'}});
-        for (let i = 0; i < mm.length; i++) {
-          const p = mm[i], src = p.textContent, w = p.parentNode;
-          try { const r = await M.render('nvm' + i, src); w.innerHTML = r.svg; w.classList.add('ok'); if (r.bindFunctions) r.bindFunctions(w); }
-          catch (e) { const junk = document.getElementById('dnvm' + i); if (junk) junk.remove(); if (!w.querySelector('.nv-err')) p.insertAdjacentHTML('afterend', '<div class="nv-err">This diagram has a mistake, so it is shown as text: ' + escT(String(e && (e.message || e.str) || e).split('\n')[0].slice(0, 160)) + '</div>'); }
-        }
-      }
+      try { if (L.viz) addScript(L.viz); } catch (e) {}
+      await fontsReady();
+      await drawMermaid(false); await drawDot();
+      sizeDiagrams();
+      // If a font arrives after drawing (a slow phone), draw again so every label is measured in the font it shows in.
+      if (document.fonts) document.fonts.addEventListener('loadingdone', () => { const now = [...document.fonts].filter(f => f.status === 'loaded').map(f => f.family + f.weight).join(); if (now === drawnWith || !window.mermaid) return; clearTimeout(enhance.t); enhance.t = setTimeout(async () => { await drawMermaid(true); sizeDiagrams(); }, 150); });
     }
-    fitAscii();
+    sizeDiagrams(); fitAscii();
   }
+  sizeDiagrams();
   addEventListener('message', e => { const d = e.data; if (e.source !== parent || !d || d.nv !== C.token || d.act !== 'libs') return; enhance(d.libs || {}); });
-  if (C.needs) post({act: 'hello'}); else enhance({});
+  if (C.needs) { post({act: 'hello'}); setTimeout(() => { if (!started) enhance({}); }, 20000); } else enhance({});
 }
-// The page that goes into the frame.
-function nvDoc(body, kind, token, tasks, needs) {
+// The page that goes into the frame. The bundled fonts go in with it (as data), so the very first layout is in the
+// fonts the page shows in: nothing reflows when a font arrives, and diagrams measure their labels exactly.
+// A different reading font chosen in Text size comes from Google Fonts without holding the page up.
+function nvDoc(body, kind, token, tasks, needs, F) {
   const t = readText(), f = TEXT_FONTS.find(x => x.id === t.font) || TEXT_FONTS[0], dark = darkNow(), bg = nvVar('--sheet') || (dark ? '#111318' : '#fff');
   const C = {token, tasks, dark, bg, needs: Object.values(needs).some(Boolean)};
-  const fonts = 'family=Inter:opsz,wght@14..32,400..800' + (f.g ? '&family=' + f.g : '');
+  const face = (fam, url, wt, range) => url ? `@font-face{font-family:"${fam}";src:url(${url}) format("woff2");font-weight:${wt};font-style:normal;font-display:block${range ? ';unicode-range:' + range : ''}}` : '';
+  const fonts = face('NV Sans', F.sans, '100 900', 'U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD')
+    + face('NV Sans', F.sansX, '100 900', 'U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF')
+    + face('NV Mono', F.mono, 400) + face('NV Mono', F.monoB, 700);
+  const own = f.g ? `<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=${f.g}&display=swap" media="print" onload="this.media='all'">` : '';
   return `<!doctype html><html lang="en-GB" data-theme="${dark ? 'dark' : 'light'}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="color-scheme" content="${dark ? 'dark' : 'light'}">
-<base target="_blank"><link rel="stylesheet" href="https://fonts.googleapis.com/css2?${fonts}&display=swap">
-<style>:root{--fs:${+(t.size * (parseFloat(nvVar('--fsv')) || 1)).toFixed(3)};--font:${f.css === 'system-ui' ? '' : f.css + ','}"Inter",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;--bg:${bg};--ink:${nvVar('--ink') || (dark ? '#eceef3' : '#14161c')};--ink-2:${nvVar('--ink-2') || '#555'};--accent:${nvVar('--accent') || '#2563eb'};--good:${nvVar('--good') || '#16a34a'};color-scheme:${dark ? 'dark' : 'light'}}</style>
+<base target="_blank">${own}<style>${fonts}</style>
+<style>:root{--fs:${+(t.size * (parseFloat(nvVar('--fsv')) || 1)).toFixed(3)};--font:${f.g ? f.css + ',' : ''}"NV Sans",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;--bg:${bg};--ink:${nvVar('--ink') || (dark ? '#eceef3' : '#14161c')};--ink-2:${nvVar('--ink-2') || '#555'};--accent:${nvVar('--accent') || '#2563eb'};--good:${nvVar('--good') || '#16a34a'};color-scheme:${dark ? 'dark' : 'light'}}</style>
 <style>${NV_CSS}</style></head><body><article class="nv nv-${kind}">${body}</article><script>(${nvRuntime.toString()})(${JSON.stringify(C).replace(/</g, '\\u003c')})<\/script></body></html>`;
 }
 // A whole web page saved as a note: shown exactly as written. Links open outside; "#" links scroll inside.
@@ -4248,16 +4587,19 @@ async function nvMount() {
     else body = empty;
   } catch (e) { body = (o.type === 'html' ? nvTextToHtml(content) : mdToHtml(content)) || empty; needs = {}; } // marked could not load (offline, first time): the simple renderer
   if (my !== NV.seq || fr !== $('#nvFrame') || !N.open || N.open.id !== o.id) return;
+  const F = {};
+  if (!doc) await Promise.all(['sans', 'sansX'].concat(needs.mono ? ['mono', 'monoB'] : []).map(async n => { try { F[n] = await nvGet(n); } catch (e) {} }));
+  if (my !== NV.seq || fr !== $('#nvFrame') || !N.open || N.open.id !== o.id) return;
   NV.frame = doc ? null : {token, kind, tasks, needs, el: fr, id: o.id};
   fr.classList.toggle('page', !!doc);
   fr.addEventListener('load', () => fr.classList.add('on'), {once: true});
-  fr.srcdoc = doc || nvDoc(body, kind, token, tasks, needs);
+  fr.srcdoc = doc || nvDoc(body, kind, token, tasks, needs, F);
 }
 window.addEventListener('message', async e => {
   const F = NV.frame, d = e.data;
   if (!F || !d || d.nv !== F.token || !F.el.isConnected || e.source !== F.el.contentWindow) return;
   if (d.act === 'hello') {
-    const want = [].concat(F.needs.mono ? ['mono', 'monoB'] : [], F.needs.math ? ['katexCss', 'katex', 'mhchem'] : [], F.needs.code ? ['hljs'] : [], F.needs.mermaid ? ['mermaid'] : []), libs = {};
+    const want = [].concat(F.needs.math ? ['katexCss', 'katex', 'mhchem'] : [], F.needs.code ? ['hljs'] : [], F.needs.mermaid ? ['mermaid'] : [], F.needs.dot ? ['viz'] : []), libs = {};
     await Promise.all(want.map(async n => { try { libs[n] = await nvGet(n); } catch (er) {} }));
     if (F === NV.frame && F.el.contentWindow) F.el.contentWindow.postMessage({nv: F.token, act: 'libs', libs}, '*');
     return;
