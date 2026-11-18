@@ -1646,8 +1646,15 @@ html.tb-hide:not(.kb) .topbar{transform:translateY(-100%)}
 .ovx-meta>[data-act]{cursor:pointer;border-radius:8px;transition:color .2s}.ovx-meta>[data-act]:hover b{color:var(--ink)}
 .ovx-sep{width:3px;height:3px;border-radius:50%;background:var(--ink-3);opacity:.6}
 .ov-wx{margin-top:4px;gap:10px}
+/* hide/show amounts: a small quiet eye beside the floating buttons, on Overview only */
+.eyefab{position:fixed;right:calc(max(16px,env(safe-area-inset-right,0px)) + 134px);bottom:calc(var(--nbh) + 32px + env(safe-area-inset-bottom,0px));z-index:39;width:40px;height:40px;border-radius:14px;border:1px solid var(--glass-edge);display:grid;place-items:center;cursor:pointer;
+  color:var(--ink-2);background:var(--glass-2);-webkit-backdrop-filter:saturate(180%) blur(20px);backdrop-filter:saturate(180%) blur(20px);box-shadow:var(--shade-float);transition:transform .2s var(--spring)}
+.eyefab .ic{width:20px;height:20px}.eyefab:active{transform:scale(.9)}.eyefab[aria-pressed="true"]{color:var(--accent)}
+body:not([data-view="overview"]) .eyefab{display:none}
+html.hand-left .eyefab{right:auto;left:calc(max(16px,env(safe-area-inset-left,0px)) + 128px)}
+@media (min-width:1024px){.eyefab{bottom:calc(32px + env(safe-area-inset-bottom,0px))}}
 /* Overview → Wealth: an emerald doorway right under the key figures */
-.ovw{position:relative;isolation:isolate;overflow:hidden;display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:14px;padding:15px 14px 15px 15px;border-radius:24px;
+.ovw{position:relative;isolation:isolate;overflow:hidden;display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:12px 14px;padding:15px 14px 15px 15px;border-radius:24px;
   text-decoration:none;color:var(--wx-ink);border:1px solid var(--wx-line);cursor:pointer;-webkit-tap-highlight-color:transparent;
   background:radial-gradient(120% 140% at 100% 0%,var(--wx-g1),transparent 58%),radial-gradient(90% 110% at 0% 100%,var(--wx-g2),transparent 62%),linear-gradient(150deg,var(--wx-a) 0%,var(--wx-b) 52%,var(--wx-c) 100%);
   box-shadow:var(--wx-shadow);transition:transform .28s var(--spring),box-shadow .28s var(--ease)}
@@ -1656,21 +1663,28 @@ html.tb-hide:not(.kb) .topbar{transform:translateY(-100%)}
 .ovw:hover .ovw-go{transform:translateX(2px)}
 .ovw:active{transform:scale(.985)}
 .ovw:focus-visible{outline:2px solid var(--wx-up);outline-offset:3px}
-.ovw-ic{width:48px;height:48px;border-radius:16px;display:grid;place-items:center;color:#fff;background:linear-gradient(150deg,#34d399,#059669 70%,#047857);
+.ovw-ic{width:42px;height:42px;border-radius:14px;display:grid;place-items:center;color:#fff;background:linear-gradient(150deg,#34d399,#059669 70%,#047857);
   box-shadow:0 10px 20px -10px rgba(5,150,105,.75),inset 0 1px 0 rgba(255,255,255,.38)}
 .ovw-ic .ic{width:25px;height:25px;stroke-width:2.1}
 .ovw-m{display:flex;flex-direction:column;min-width:0}
 .ovw-l{display:flex;align-items:center;gap:8px;min-width:0;font-size:calc(12.5px*var(--fs,1));font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:var(--wx-ink-2)}
 .ovw-d{font-style:normal;letter-spacing:0;text-transform:none;font-size:calc(12px*var(--fs,1));font-weight:700;padding:2px 8px;border-radius:99px;background:var(--wx-panel-2);box-shadow:inset 0 0 0 1px var(--wx-line);white-space:nowrap;font-variant-numeric:tabular-nums}
 .ovw-d.up{color:var(--wx-up)}.ovw-d.down{color:var(--wx-down)}
-.ovw-v{display:block;margin-top:3px;font-family:var(--f-display);font-weight:760;font-size:calc(25px*var(--fs,1));letter-spacing:-.028em;line-height:1.15;white-space:nowrap;overflow:hidden;font-variant-numeric:tabular-nums}
-.ovw-v.none{font-size:calc(19px*var(--fs,1));letter-spacing:-.015em}
+.ovw-v{display:block;margin-top:2px;font-family:var(--f-display);font-weight:720;font-size:calc(19px*var(--fs,1));letter-spacing:-.028em;line-height:1.15;white-space:nowrap;overflow:hidden;font-variant-numeric:tabular-nums}
+.ovw-v.none{font-size:calc(16px*var(--fs,1));letter-spacing:-.01em;white-space:normal}
+.ovw-figs{grid-column:1/-1;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));border-radius:14px;background:var(--wx-panel);box-shadow:inset 0 0 0 1px var(--wx-line);overflow:hidden}
+.ovw-f{display:flex;flex-direction:column;gap:1px;min-width:0;padding:8px 10px}
+.ovw-f+.ovw-f{border-left:1px solid var(--wx-line)}
+.ovw-fl{font-size:calc(11.5px*var(--fs,1));font-weight:650;color:var(--wx-ink-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ovw-f b{font-family:var(--f-display);font-weight:700;font-size:calc(14.5px*var(--fs,1));letter-spacing:-.01em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-variant-numeric:tabular-nums}
+.ovw-f small{font-size:calc(11px*var(--fs,1));color:var(--wx-ink-2);line-height:1.25}
+@media (max-width:359px){.ovw-figs{grid-template-columns:1fr}.ovw-f+.ovw-f{border-left:0;border-top:1px solid var(--wx-line)}}
 .ovw-s{display:block;margin-top:2px;font-size:calc(13.5px*var(--fs,1));color:var(--wx-ink-2);line-height:1.35;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .ovw-go{width:38px;height:38px;border-radius:50%;display:grid;place-items:center;color:var(--wx-ink);background:var(--wx-panel-2);box-shadow:inset 0 0 0 1px var(--wx-line);transition:transform .25s var(--spring)}
 .ovw-go .ic{width:19px;height:19px;stroke-width:2.4}
 .ovw-spark{position:absolute;right:0;bottom:0;width:58%;height:46%;z-index:-1;pointer-events:none;color:var(--wx-up);opacity:.5;-webkit-mask-image:linear-gradient(90deg,transparent,#000 45%);mask-image:linear-gradient(90deg,transparent,#000 45%)}
 .ovw-spark .a{fill:currentColor;fill-opacity:.12}.ovw-spark .l{fill:none;stroke:currentColor;stroke-width:1.6;stroke-opacity:.55;stroke-linejoin:round;stroke-linecap:round}
-@media (min-width:1024px){.ovw{padding:18px 18px 18px 18px}.ovw-v{font-size:calc(28px*var(--fs,1))}}
+@media (min-width:1024px){.ovw{padding:18px}.ovw-v{font-size:calc(21px*var(--fs,1))}}
 @media (prefers-reduced-motion:reduce){.ovw,.ovw-go{transition:none}}
 /* Overview sections fold to a single line (closed by default, remembered on this phone): the label, the one figure
    that matters, a chevron. Open, the full card slides down; the figure moves from the line into the card. */
@@ -2073,6 +2087,7 @@ body[data-view="contacts"] main{padding:0}
 </main>
 
 <button class="fab" data-act="add" type="button" aria-label="Add entry"><svg class="ic" aria-hidden="true"><use href="#i-plus"/></svg></button>
+<button class="eyefab" id="eyeFab" data-act="money-eye" type="button" aria-pressed="false" aria-label="Show amounts"></button>
 <button class="ctfab" id="ctFab" data-act="ct-open" type="button" aria-label="Contacts" title="Contacts" hidden><svg class="ic" aria-hidden="true"><use href="#i-contacts"/></svg></button>
 <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
 
@@ -2852,6 +2867,7 @@ function renderOverview(X) {
   const spend = tiles ? ovSec('spend', 'ovx-spend', 'Spending', spendMeta[0], 'meta' + (spendMeta[1] ? ' ' + spendMeta[1] : ''), `<div class="hgrid">${tiles}</div>`) : '';
   paint($('#v-overview'), `${inst}${kpis}${wealthLinkHtml(X)}${tiles ? '' : '<div class="card empty">No entries in ' + cycleLabel(key) + ' yet.</div>'}
     ${(() => { const nt = netStripHtml(X), ls = leftStripHtml(X), cs = cardStripHtml(X), bs = bankStripHtml(X); return spend || nt || ls || cs || bs ? `<div class="wx ov-wx">${spend}${nt}${ls}${cs}${bs}</div>` : ''; })()}`);
+  maskMoney($('#v-overview')); fitNums($('#v-overview'));
   if ($('#v-overview').classList.contains('enter')) wcCount($('#v-overview'));
 }
 
@@ -2865,17 +2881,37 @@ function wealthLinkHtml(X) {
   let spark = '';
   if (ser.length >= 2) {
     const vs = ser.map(p => p.nw), lo = Math.min(...vs), hi = Math.max(...vs), span = hi - lo || 1;
-    const pts = vs.map((v, i) => [(i / (vs.length - 1)) * 100, 34 - ((v - lo) / span) * 26]);
-    const line = pts.map((p, i) => (i ? 'L' : 'M') + p[0].toFixed(1) + ' ' + p[1].toFixed(1)).join(' ');
+    const line = vs.map((v, i) => (i ? 'L' : 'M') + ((i / (vs.length - 1)) * 100).toFixed(1) + ' ' + (34 - ((v - lo) / span) * 26).toFixed(1)).join(' ');
     spark = `<svg class="ovw-spark" viewBox="0 0 100 36" preserveAspectRatio="none" aria-hidden="true"><path class="a" d="${line} L100 36 L0 36Z"/><path class="l" d="${line}" vector-effect="non-scaling-stroke"/></svg>`;
   }
   const dTxt = delta != null && Math.abs(delta) >= 1 ? `<em class="ovw-d ${delta >= 0 ? 'up' : 'down'}">${delta >= 0 ? '▲' : '▼'} ${rs(Math.abs(delta))}</em>` : '';
-  const val = has ? rs(W.nw) : 'See your net worth';
-  const sub = has ? `Net worth · Liquid ${rs(W.liquid)}` : 'Record your balances to see what you own and owe';
-  return `<a class="ovw" href="#wealth" aria-label="Open Wealth. ${has ? 'Net worth ' + esc(rs(W.nw)) : 'Net worth, balances and fixed deposits'}">
+  // The same figures as the Wealth hero, all together, at a calm size.
+  const cover = has && W.cover != null ? (W.cover >= 1 ? `${Math.floor(W.cover)} month${Math.floor(W.cover) === 1 ? '' : 's'} of spending` : 'Under a month of spending') : '';
+  const fig = (l, v, sub) => `<span class="ovw-f"><span class="ovw-fl">${l}</span><b class="num">${v}</b>${sub ? `<small>${sub}</small>` : ''}</span>`;
+  const figs = has ? `<span class="ovw-figs">${fig('Liquid money', rs(W.liquid), cover)}${fig('Liabilities', rs(-W.debts), '')}${fig('Gross assets', rs(W.liqAssets + W.nonLiq), '')}</span>` : '';
+  return `<a class="ovw" href="#wealth" aria-label="Open Wealth">
     ${spark}<span class="ovw-ic" aria-hidden="true"><svg class="ic"><use href="#i-wealth"/></svg></span>
-    <span class="ovw-m"><span class="ovw-l">Wealth${dTxt}</span><b class="ovw-v num${has ? ' fit' : ' none'}">${val}</b><span class="ovw-s">${sub}</span></span>
-    <span class="ovw-go" aria-hidden="true"><svg class="ic"><use href="#i-right"/></svg></span></a>`;
+    <span class="ovw-m"><span class="ovw-l">Net worth${dTxt}</span><b class="ovw-v num${has ? '' : ' none'}">${has ? rs(W.nw) : 'Record your balances to see it'}</b></span>
+    <span class="ovw-go" aria-hidden="true"><svg class="ic"><use href="#i-right"/></svg></span>${figs}</a>`;
+}
+
+/* Hide or show money on Overview (owner, Nov 2026): hidden unless you choose to show it. Every amount becomes ₹XXX. */
+const LS_SHOWMONEY = 'budgetTracker.showMoney';
+const moneyShown = () => { try { return localStorage.getItem(LS_SHOWMONEY) === '1'; } catch (e) { return false; } };
+const MONEY_RE = /[-−]?\s?₹\s?[\d,]+(?:\.\d+)?/g;
+function maskMoney(root) {
+  if (!root || moneyShown()) return;
+  const w = document.createTreeWalker(root, NodeFilter.SHOW_TEXT), ns = []; let n;
+  while ((n = w.nextNode())) if (n.nodeValue.includes('₹')) ns.push(n);
+  ns.forEach(t => { t.nodeValue = t.nodeValue.replace(MONEY_RE, '₹XXX'); });
+  root.querySelectorAll('[aria-label*="₹"],[title*="₹"]').forEach(el => ['aria-label', 'title'].forEach(a => { const v = el.getAttribute(a); if (v) el.setAttribute(a, v.replace(MONEY_RE, '₹XXX')); }));
+  root.querySelectorAll('[data-count]').forEach(el => el.removeAttribute('data-count'));
+}
+function eyeState() { const b = $('#eyeFab'); if (!b) return; const on = moneyShown(); b.setAttribute('aria-pressed', String(on)); b.setAttribute('aria-label', on ? 'Hide amounts' : 'Show amounts'); b.title = on ? 'Hide amounts' : 'Show amounts';
+  b.innerHTML = `<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12z"/><circle cx="12" cy="12" r="3"/>${on ? '' : '<path d="M4 4l16 16"/>'}</svg>`; }
+function toggleMoney() {
+  try { localStorage.setItem(LS_SHOWMONEY, moneyShown() ? '0' : '1'); } catch (e) {}
+  eyeState(); if (state.config) renderOverview(ctx()); toast(moneyShown() ? 'Amounts shown' : 'Amounts hidden');
 }
 
 /* ---------- entries ---------- */
@@ -4644,6 +4680,7 @@ function whyShow() {
   const same = box.dataset.k === k, open = same ? [...box.querySelectorAll('details')].map(x => x.open) : [], top = same ? box.scrollTop : 0;
   paint(box, h); box.dataset.k = k;
   if (same) { box.querySelectorAll('details').forEach((x, i) => { if (open[i]) x.open = true; }); box.scrollTop = top; } else box.scrollTop = 0;
+  if (state.view === 'overview') { maskMoney(box); box.dataset.k = moneyShown() ? k : ''; } // breakdowns opened from Overview hide amounts too
   $('#whyScrim').hidden = false; fitNums(box);
 }
 function openWhy(k, push) { if (!push) W$.stack = []; W$.stack.push(k); $('#whyBox').dataset.k = ''; whyShow(); }
@@ -7166,7 +7203,7 @@ function navTo(v) {
 function viewEntered(v, first) {
   const el = $('#v-' + v); if (!el) return;
   el.classList.remove('enter'); void el.offsetWidth; el.classList.add('enter');
-  if (v === 'overview') wcCount(el);
+  if (v === 'overview' && moneyShown()) wcCount(el);
   clearTimeout(viewEntered.t); viewEntered.t = setTimeout(() => el.classList.remove('enter'), 1200);
   if (!first && scrollY > 0) window.scrollTo(0, 0);
   setBarsHidden(false);
@@ -7335,8 +7372,9 @@ async function installNow() {
   toast('In Chrome: tap ⋮ (top right) → Add to home screen → Install. Then open Budget from your home screen.', '', 8000);
 }
 document.addEventListener('click', ev => {
-  const b = ev.target.closest('[data-act="more"],[data-act="more-go"],[data-act="more-theme"],[data-act="more-text"],[data-act="install-go"],[data-act="more-sync"],[data-act="more-hand"],[data-act="sync-info"],[data-act="inst-x"]'); if (!b) return;
+  const b = ev.target.closest('[data-act="money-eye"],[data-act="more"],[data-act="more-go"],[data-act="more-theme"],[data-act="more-text"],[data-act="install-go"],[data-act="more-sync"],[data-act="more-hand"],[data-act="sync-info"],[data-act="inst-x"]'); if (!b) return;
   const a = b.dataset.act;
+  if (a === 'money-eye') toggleMoney();
   if (a === 'more') openMore();
   else if (a === 'more-go') { skipTransition = true; closeMore(); } // the link itself changes the screen; the sheet sliding away is the motion
   else if (a === 'more-theme') { flipTheme(); setTimeout(() => { if (!$('#moreScrim').hidden) paint($('#moreBox'), moreHtml()); }, 20); }
@@ -7677,6 +7715,7 @@ function ctPreload() { if (CT.pre || CT.frame || !state.config || !signedIn()) r
 
 /* ---------- start ---------- */
 function start() {
+  eyeState();
   // One-tap set-up link: #connect=<base64 of {"url":…,"key":…}>. The part after # never reaches GitHub's server.
   const m = location.hash.match(/^#connect=([A-Za-z0-9_\-+/=]+)$/);
   if (m) {
