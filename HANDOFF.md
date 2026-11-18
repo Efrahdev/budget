@@ -166,3 +166,7 @@ Previous tests lived in the session scratchpad and are gone. Suites that existed
 - Owner may later decide where to add protection back to the vault.
 - Two ICICI EFRAH cards have no pay-by day (default ~20 days after the bill).
 - Older entries have no payment method recorded.
+
+## Overview round 7 (Nov 2026)
+- Wealth card (`wealthLinkHtml`): net worth at a calm 19 px plus the Wealth hero's other figures together: change since last record, Liquid money (with months of spending), Liabilities, Gross assets.
+- Hide/show amounts: small eye button `#eyeFab` beside the floating buttons, Overview only. **Hidden by default**; showing is remembered in localStorage `budgetTracker.showMoney` = '1'. `maskMoney()` replaces every ₹ amount in `#v-overview` (text, aria-label, title) with ₹XXX after each render, and in breakdown sheets opened from Overview; count-up animation is skipped while hidden. Toggle re-renders at once (`toggleMoney`).
