@@ -221,6 +221,7 @@ body[data-view="vault"] #cycBar{display:none!important}
 body[data-view="add"] .fab{display:none!important}
 @media (max-width:1023.98px){main .view{touch-action:pan-y}} /* sideways drags belong to the tab swipe */
 @media (max-width:1023.98px){html.role-entry .navbar{grid-template-columns:repeat(4,minmax(0,1fr));max-width:440px}html.role-entry .navbar .nv-ct{display:flex}}
+@media (max-width:1023.98px){html:not(.role-entry) .navbar:has(#vaultTab[hidden]){grid-template-columns:repeat(5,minmax(0,1fr));max-width:540px}} /* no Vault (family members): five tabs */
 html.role-entry body:not([data-view="entries"]) #cycBar{display:none!important}
 .addhome{display:flex;flex-direction:column;gap:14px}
 .addhome .hero-add{padding:22px 20px;display:flex;flex-direction:column;gap:14px;align-items:flex-start}
@@ -1175,6 +1176,12 @@ html.kb .sheet.note.writing:not(.showmeta) .nact,.sheet.note.writing.tight:not(.
 .mdview .box{display:inline-grid;place-items:center;width:18px;height:18px;border:1.5px solid var(--ink-3);border-radius:5px;font-size:12px;flex:0 0 auto}.mdview .box.on{background:var(--good);border-color:var(--good);color:#fff}
 .mdview table{font-size:calc(15px*var(--fs,1))}
 .htmlview{flex:1 1 auto;width:100%;min-height:320px;border:1px solid var(--rule);border-radius:14px;background:#fff}
+/* Markdown and HTML notes, formatted: one sandboxed frame that fills the writing area and scrolls by itself */
+.nedit.frame{padding:0;overflow:hidden;background:var(--sheet)}
+.nvframe{display:block;flex:1 1 auto;width:100%;height:100%;min-height:0;border:0;margin:0;background:transparent;opacity:0;transition:opacity .2s ease}
+.nvframe.on{opacity:1}
+.nvframe.page{background:#fff}
+@media (prefers-reduced-motion:reduce){.nvframe{transition:none}}
 .jsonview{margin:0;padding:12px;background:var(--sheet-2);border:1px solid var(--rule);border-radius:12px;overflow:auto;white-space:pre;line-height:1.5}
 .jsonview .jk{color:var(--accent)}.jsonview .js{color:var(--good-ink)}.jsonview .jn{color:var(--pur-ink)}.jsonview .jl{color:var(--warn-ink);font-weight:600}
 .jsonok,.jsonbad{display:flex;align-items:baseline;margin-bottom:8px;font-weight:600}.jsonbad{color:var(--bad-ink)}
@@ -1639,6 +1646,32 @@ html.tb-hide:not(.kb) .topbar{transform:translateY(-100%)}
 .ovx-meta>[data-act]{cursor:pointer;border-radius:8px;transition:color .2s}.ovx-meta>[data-act]:hover b{color:var(--ink)}
 .ovx-sep{width:3px;height:3px;border-radius:50%;background:var(--ink-3);opacity:.6}
 .ov-wx{margin-top:4px;gap:10px}
+/* Overview → Wealth: an emerald doorway right under the key figures */
+.ovw{position:relative;isolation:isolate;overflow:hidden;display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:14px;padding:15px 14px 15px 15px;border-radius:24px;
+  text-decoration:none;color:var(--wx-ink);border:1px solid var(--wx-line);cursor:pointer;-webkit-tap-highlight-color:transparent;
+  background:radial-gradient(120% 140% at 100% 0%,var(--wx-g1),transparent 58%),radial-gradient(90% 110% at 0% 100%,var(--wx-g2),transparent 62%),linear-gradient(150deg,var(--wx-a) 0%,var(--wx-b) 52%,var(--wx-c) 100%);
+  box-shadow:var(--wx-shadow);transition:transform .28s var(--spring),box-shadow .28s var(--ease)}
+.ovw::after{content:"";position:absolute;inset:0;z-index:-1;pointer-events:none;background:radial-gradient(55% 60% at 12% -10%,var(--wx-shine),transparent 70%)}
+.ovw:hover{box-shadow:var(--wx-shadow),0 0 0 1px var(--wx-line)}
+.ovw:hover .ovw-go{transform:translateX(2px)}
+.ovw:active{transform:scale(.985)}
+.ovw:focus-visible{outline:2px solid var(--wx-up);outline-offset:3px}
+.ovw-ic{width:48px;height:48px;border-radius:16px;display:grid;place-items:center;color:#fff;background:linear-gradient(150deg,#34d399,#059669 70%,#047857);
+  box-shadow:0 10px 20px -10px rgba(5,150,105,.75),inset 0 1px 0 rgba(255,255,255,.38)}
+.ovw-ic .ic{width:25px;height:25px;stroke-width:2.1}
+.ovw-m{display:flex;flex-direction:column;min-width:0}
+.ovw-l{display:flex;align-items:center;gap:8px;min-width:0;font-size:calc(12.5px*var(--fs,1));font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:var(--wx-ink-2)}
+.ovw-d{font-style:normal;letter-spacing:0;text-transform:none;font-size:calc(12px*var(--fs,1));font-weight:700;padding:2px 8px;border-radius:99px;background:var(--wx-panel-2);box-shadow:inset 0 0 0 1px var(--wx-line);white-space:nowrap;font-variant-numeric:tabular-nums}
+.ovw-d.up{color:var(--wx-up)}.ovw-d.down{color:var(--wx-down)}
+.ovw-v{display:block;margin-top:3px;font-family:var(--f-display);font-weight:760;font-size:calc(25px*var(--fs,1));letter-spacing:-.028em;line-height:1.15;white-space:nowrap;overflow:hidden;font-variant-numeric:tabular-nums}
+.ovw-v.none{font-size:calc(19px*var(--fs,1));letter-spacing:-.015em}
+.ovw-s{display:block;margin-top:2px;font-size:calc(13.5px*var(--fs,1));color:var(--wx-ink-2);line-height:1.35;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ovw-go{width:38px;height:38px;border-radius:50%;display:grid;place-items:center;color:var(--wx-ink);background:var(--wx-panel-2);box-shadow:inset 0 0 0 1px var(--wx-line);transition:transform .25s var(--spring)}
+.ovw-go .ic{width:19px;height:19px;stroke-width:2.4}
+.ovw-spark{position:absolute;right:0;bottom:0;width:58%;height:46%;z-index:-1;pointer-events:none;color:var(--wx-up);opacity:.5;-webkit-mask-image:linear-gradient(90deg,transparent,#000 45%);mask-image:linear-gradient(90deg,transparent,#000 45%)}
+.ovw-spark .a{fill:currentColor;fill-opacity:.12}.ovw-spark .l{fill:none;stroke:currentColor;stroke-width:1.6;stroke-opacity:.55;stroke-linejoin:round;stroke-linecap:round}
+@media (min-width:1024px){.ovw{padding:18px 18px 18px 18px}.ovw-v{font-size:calc(28px*var(--fs,1))}}
+@media (prefers-reduced-motion:reduce){.ovw,.ovw-go{transition:none}}
 /* Overview sections fold to a single line (closed by default, remembered on this phone): the label, the one figure
    that matters, a chevron. Open, the full card slides down; the figure moves from the line into the card. */
 .ovx.ovsec{padding:0;interpolate-size:allow-keywords;
@@ -1989,8 +2022,9 @@ body[data-view="contacts"] main{padding:0}
 <nav class="navbar" id="navbar" aria-label="Sections">
   <a class="nv" href="#add" data-v="add" hidden><span class="nvi"><svg class="ic" aria-hidden="true"><use href="#i-plus"/></svg></span><span>Add entry</span></a>
   <a class="nv" href="#entries" data-v="entries"><span class="nvi"><svg class="ic" aria-hidden="true"><use href="#i-entries"/></svg></span><span>Entries</span></a>
+  <a class="nv" href="#vault" data-v="vault" id="vaultTab" hidden><span class="nvi"><svg class="ic" aria-hidden="true"><use href="#i-vault"/></svg></span><span>Vault</span></a>
   <a class="nv" href="#overview" data-v="overview"><span class="nvi"><svg class="ic" aria-hidden="true"><use href="#i-home"/></svg></span><span>Overview</span></a>
-  <a class="nv" href="#wealth" data-v="wealth"><span class="nvi"><svg class="ic" aria-hidden="true"><use href="#i-wealth"/></svg></span><span>Wealth</span></a>
+  <a class="nv nv-2" href="#wealth" data-v="wealth"><span class="nvi"><svg class="ic" aria-hidden="true"><use href="#i-wealth"/></svg></span><span>Wealth</span></a>
   <a class="nv nv-2" href="#cards" data-v="cards"><span class="nvi"><svg class="ic" aria-hidden="true"><use href="#i-card"/></svg></span><span>Card bills</span></a>
   <a class="nv" href="#notes" data-v="notes"><span class="nvi"><svg class="ic" aria-hidden="true"><use href="#i-notes"/></svg></span><span>Notes</span></a>
   <a class="nv" href="#read" data-v="read"><span class="nvi"><svg class="ic" aria-hidden="true"><use href="#i-read"/></svg></span><span>Reader</span></a>
@@ -1998,7 +2032,6 @@ body[data-view="contacts"] main{padding:0}
   <a class="nv nv-2" href="#trend" data-v="trend"><span class="nvi"><svg class="ic" aria-hidden="true"><use href="#i-trend"/></svg></span><span>Trend</span></a>
   <a class="nv nv-2" href="#disc" data-v="disc"><span class="nvi"><svg class="ic" aria-hidden="true"><use href="#i-spark"/></svg></span><span>Discretionary</span></a>
   <a class="nv nv-2" href="#setup" data-v="setup"><span class="nvi"><svg class="ic" aria-hidden="true"><use href="#i-sliders"/></svg></span><span>Setup</span></a>
-  <a class="nv nv-2" href="#vault" data-v="vault" id="vaultTab" hidden><span class="nvi"><svg class="ic" aria-hidden="true"><use href="#i-vault"/></svg></span><span>Vault</span></a>
   <button class="nv nv-more" type="button" data-act="more" id="navMore" aria-haspopup="dialog"><span class="nvi"><svg class="ic" aria-hidden="true"><use href="#i-more"/></svg></span><span>More</span></button>
 </nav>
 </div>
@@ -2817,9 +2850,32 @@ function renderOverview(X) {
   const nOver = stc.filter(x => x === 'bad').length, nFast = stc.filter(x => x === 'warn').length;
   const spendMeta = nOver ? [nOver + ' over', 'bad'] : nFast ? [nFast + ' running fast', 'warn'] : [stc.length + (stc.length === 1 ? ' category' : ' categories'), ''];
   const spend = tiles ? ovSec('spend', 'ovx-spend', 'Spending', spendMeta[0], 'meta' + (spendMeta[1] ? ' ' + spendMeta[1] : ''), `<div class="hgrid">${tiles}</div>`) : '';
-  paint($('#v-overview'), `${inst}${kpis}${tiles ? '' : '<div class="card empty">No entries in ' + cycleLabel(key) + ' yet.</div>'}
+  paint($('#v-overview'), `${inst}${kpis}${wealthLinkHtml(X)}${tiles ? '' : '<div class="card empty">No entries in ' + cycleLabel(key) + ' yet.</div>'}
     ${(() => { const nt = netStripHtml(X), ls = leftStripHtml(X), cs = cardStripHtml(X), bs = bankStripHtml(X); return spend || nt || ls || cs || bs ? `<div class="wx ov-wx">${spend}${nt}${ls}${cs}${bs}</div>` : ''; })()}`);
   if ($('#v-overview').classList.contains('enter')) wcCount($('#v-overview'));
+}
+
+/* The way into Wealth from Overview (Wealth left the bottom bar for the Vault, Nov 2026). It sits right under the
+   key figures and wears Wealth's own emerald: net worth, its last change, liquid money and a faint line of its
+   history, so it reads as a doorway, not a button. The whole card is one link. */
+function wealthLinkHtml(X) {
+  let W = null; try { W = wealthCalc(X); } catch (e) {}
+  const has = !!(W && W.hasAny), ser = has ? W.series.slice(-12) : [];
+  const last = ser[ser.length - 1], prev = ser[ser.length - 2], delta = last && prev ? last.nw - prev.nw : null;
+  let spark = '';
+  if (ser.length >= 2) {
+    const vs = ser.map(p => p.nw), lo = Math.min(...vs), hi = Math.max(...vs), span = hi - lo || 1;
+    const pts = vs.map((v, i) => [(i / (vs.length - 1)) * 100, 34 - ((v - lo) / span) * 26]);
+    const line = pts.map((p, i) => (i ? 'L' : 'M') + p[0].toFixed(1) + ' ' + p[1].toFixed(1)).join(' ');
+    spark = `<svg class="ovw-spark" viewBox="0 0 100 36" preserveAspectRatio="none" aria-hidden="true"><path class="a" d="${line} L100 36 L0 36Z"/><path class="l" d="${line}" vector-effect="non-scaling-stroke"/></svg>`;
+  }
+  const dTxt = delta != null && Math.abs(delta) >= 1 ? `<em class="ovw-d ${delta >= 0 ? 'up' : 'down'}">${delta >= 0 ? '▲' : '▼'} ${rs(Math.abs(delta))}</em>` : '';
+  const val = has ? rs(W.nw) : 'See your net worth';
+  const sub = has ? `Net worth · Liquid ${rs(W.liquid)}` : 'Record your balances to see what you own and owe';
+  return `<a class="ovw" href="#wealth" aria-label="Open Wealth. ${has ? 'Net worth ' + esc(rs(W.nw)) : 'Net worth, balances and fixed deposits'}">
+    ${spark}<span class="ovw-ic" aria-hidden="true"><svg class="ic"><use href="#i-wealth"/></svg></span>
+    <span class="ovw-m"><span class="ovw-l">Wealth${dTxt}</span><b class="ovw-v num${has ? ' fit' : ' none'}">${val}</b><span class="ovw-s">${sub}</span></span>
+    <span class="ovw-go" aria-hidden="true"><svg class="ic"><use href="#i-right"/></svg></span></a>`;
 }
 
 /* ---------- entries ---------- */
@@ -3099,7 +3155,7 @@ document.addEventListener('visibilitychange', () => { if (document.visibilitySta
 window.addEventListener('pagehide', writeNotes);
 const defaultLabel = () => { const p = readPref().noteCat; if (okLabel(p)) return p; const e = ((Sync.me || {}).email || '').toLowerCase(); return /aarhaan|arhaan/.test(e) ? 'arhaan' : /efrah|ifra/.test(e) ? 'efrah' : 'other'; };
 // Preview: the words only, without Markdown marks or HTML tags.
-const notePreview = c => String(c || '').replace(/<[^>]*>/g, ' ').replace(/```[^\n]*/g, ' ').replace(/^\s*\|?\s*:?-{3,}[\s|:-]*$/gm, ' ')
+const notePreview = c => String(c || '').replace(/<(style|script|head|template)\b[\s\S]*?<\/\1>/gi, ' ').replace(/<!--[\s\S]*?-->/g, ' ').replace(/<[^>]*>/g, ' ').replace(/```[^\n]*/g, ' ').replace(/^\s*\|?\s*:?-{3,}[\s|:-]*$/gm, ' ')
   .replace(/^\s{0,3}(#{1,6}|>|[-*+]|\d+[.)])\s+/gm, '').replace(/\[( |x|X)\]\s+/g, '').replace(/\[([^\]]+)\]\([^)]*\)/g, '$1')
   .replace(/(\*\*|__|~~|`)/g, '').replace(/(\s*\|\s*)+/g, ' · ').replace(/[ \t]*\n+[ \t]*/g, ' · ').replace(/( · )+/g, ' · ').replace(/\s+/g, ' ').replace(/^( · )+|( · )+$/g, '').trim().slice(0, 140);
 // The list: the sheet's list, with this phone's unsent changes on top.
@@ -3331,12 +3387,14 @@ async function openNote(id, fresh) {
   let c = fresh ? fresh.content : noteBody(id);
   const guest = s.mine === false; // someone else's Shared note: change the text and title; label, pin, share and delete stay theirs
   N.open = {id, title: s.title || '', type: s.type || 'txt', cat: s.cat || defaultLabel(), pinned: !!s.pinned, order: s.order || 0, shared: !!s.shared, guest, by: s.by || '', content: c == null ? '' : c, fileId: s.fileId || '', loading: c == null, fresh: !!fresh};
-  N.mode = 'edit'; N.kinds = false;
+  // Markdown and HTML notes open formatted (the page, not its code); Edit is one tap away.
+  const showAs = text => (N.open.type === 'md' || N.open.type === 'html') && String(text || '').trim() ? 'view' : 'edit';
+  N.mode = showAs(c); N.kinds = false;
   drawNote();
   if (c == null) {
     try { await noteFetch([id]); c = noteBody(id); } catch (e) {}
     if (!N.open || N.open.id !== id) return;
-    N.open.loading = false; if (c == null) N.open.failed = true; else N.open.content = c;
+    N.open.loading = false; if (c == null) N.open.failed = true; else { N.open.content = c; N.mode = showAs(c); }
     drawNote();
   }
 }
@@ -3346,7 +3404,7 @@ const NT_TASK = '<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="current
 function drawNote() {
   const o = N.open, k = NOTE_KINDS[o.type], fancy = o.type !== 'txt', ready = !o.loading && !o.failed;
   const rich = ready && N.mode === 'edit' && o.type === 'txt';
-  const ecls = !ready ? ' pad' : rich ? ' scroll' : N.mode === 'edit' ? '' : ' pad scroll';
+  const ecls = !ready ? ' pad' : rich ? ' scroll' : N.mode === 'edit' ? '' : o.type === 'md' || o.type === 'html' ? ' frame' : ' pad scroll';
   paint($('#noteBox'), `<div class="nhead">
       <button type="button" class="nback" data-act="n-close" aria-label="Back to all notes"><svg class="ic" aria-hidden="true"><use href="#i-left"/></svg><span>Notes</span></button>
       <button type="button" class="nttl" data-act="n-meta" aria-label="Title and label for this note"><b id="nTtl" class="${o.title ? '' : 'none'}">${esc(o.title || 'Untitled note')}</b><span class="nstate" id="nState"></span></button>
@@ -3369,7 +3427,7 @@ function drawNote() {
         ${o.guest ? '' : '<button type="button" class="nbtn ndel" data-act="n-del">Delete</button>'}<button type="button" class="nbtn nsave" data-act="n-save">✓ Done</button></div></div></div>`);
   $('#noteScrim').hidden = false; noteVV(); noteFit(); noteState();
   histReset(ready ? o.content : '');
-  richBox(); plainBox(); titleBox(); noteCount(); noteToolState();
+  richBox(); plainBox(); titleBox(); noteCount(); noteToolState(); nvMount();
   const ta = $('#nText'); if (ta && o.fresh && !o.content) { o.fresh = false; setTimeout(() => { if (!$('#noteBox').contains(document.activeElement) || document.activeElement === document.body) focusBox(ta); }, 60); }
 }
 // The writing toolbar. Undo and redo are our own, so Clear and the list buttons can always be taken back.
@@ -3387,8 +3445,7 @@ function noteBodyHtml() {
   const o = N.open;
   if (N.mode === 'edit' && o.type === 'txt') return `<div id="nText" class="ntext rich" role="textbox" aria-multiline="true" aria-label="Note" data-placeholder="Start typing…" inputmode="text" enterkeyhint="enter" autocorrect="on" autocapitalize="sentences" spellcheck="false">${textToRich(o.content)}</div>`;
   if (N.mode === 'edit') return `<textarea id="nText" class="ntext${o.type === 'html' || o.type === 'json' ? ' mono' : ''}" placeholder="${o.type === 'md' ? '# Heading\n\nWrite in **Markdown**…' : o.type === 'html' ? '<h1>Hello</h1>' : o.type === 'json' ? '{\n  "key": "value"\n}' : 'Start typing…'}" aria-label="Note">${esc(o.content)}</textarea>`;
-  if (o.type === 'md') return `<div class="mdview">${mdToHtml(o.content) || '<p class="muted">Nothing written yet.</p>'}</div>`;
-  if (o.type === 'html') return `<iframe class="htmlview" sandbox title="HTML preview" srcdoc="${esc(o.content || '<p style="font-family:sans-serif;color:#888">Nothing written yet.</p>')}"></iframe>`;
+  if (o.type === 'md' || o.type === 'html') return `<iframe class="nvframe" id="nvFrame" title="${o.type === 'md' ? 'Markdown' : 'HTML'} note, formatted" sandbox="allow-scripts allow-popups allow-popups-to-escape-sandbox allow-modals allow-forms allow-downloads" referrerpolicy="no-referrer"></iframe>`;
   if (o.type === 'json') { if (!o.content.trim()) return '<p class="muted">Nothing written yet.</p>';
     try { return `<div class="jsonok">${sdot('good')}Valid JSON</div><pre class="jsonview">${jsonHtml(JSON.parse(o.content))}</pre>`; }
     catch (e) { return `<div class="jsonbad">${sdot('bad')}Not valid JSON: ${esc(e.message)}</div><pre class="jsonview plain">${esc(o.content)}</pre>`; } }
@@ -3693,6 +3750,497 @@ function jsonHtml(v) {
     out += m[1] ? `<span class="${m[2] ? 'jk' : 'js'}">${esc(m[1])}</span>${m[2] || ''}` : m[3] ? `<span class="jl">${m[3]}</span>` : `<span class="jn">${m[4]}</span>`; }
   return out + esc(s.slice(last));
 }
+/* ---------- Notes: the rich viewer for Markdown and HTML notes (Nov 2026) ----------
+   Owner: an HTML note must show as the finished page, never as its code, and Markdown must be "GitHub Flavoured,
+   plus the structured look of Obsidian and Notion": callouts, toggles, checklists, tables, footnotes, maths,
+   Mermaid diagrams and ASCII diagrams that line up.
+   - Both kinds are drawn inside one sandboxed <iframe id="nvFrame"> (scripts on, NO allow-same-origin): the page is
+     a separate, opaque origin, so it can run its own scripts and styles but can never read the app's storage, the
+     sign-in or other notes, and can't move the app itself (no top navigation).
+   - Markdown is turned into HTML here with marked (GFM, reader/vendor), our extensions and a tidy pass (nvMarkdown).
+   - HTML: a whole page (<html>, <head> or <!doctype>) is shown exactly as written. A fragment gets our reading styles
+     around it. Text that is not HTML at all (or HTML pasted as &lt;escaped&gt; text, or wrapped in a ``` fence) is
+     cleaned up first, so the viewer never shows tags (nvHtmlSource).
+   - Code highlighting, KaTeX, Mermaid and the mono font are loaded only when a note uses them. The page asks for
+     them by postMessage ("hello"); the app reads them from reader/vendor (kept by the service worker, so they work
+     offline) and posts the text back. Messages carry a per-render token and must come from the frame itself.
+   - Ticking a checklist box in a Markdown preview ticks it in the note's text and saves (nvToggleTask). */
+const NV_V = 'reader/vendor/';
+const NV_FILES = {hljs: 'highlight-11.12.0/highlight.min.js', katex: 'katex-0.16.47/katex.min.js', mhchem: 'katex-0.16.47/mhchem.min.js',
+  katexCss: 'katex-0.16.47/katex.min.css', mermaid: 'mermaid-11.17.2/mermaid.min.js', mono: 'jetbrains-mono-1.0.6/JetBrainsMonoNL-Regular.woff2', monoB: 'jetbrains-mono-1.0.6/JetBrainsMonoNL-Bold.woff2'};
+const NV = {got: {}, marked: null, frame: null, seq: 0};
+const nvDataUrl = blob => new Promise((res, rej) => { const r = new FileReader(); r.onload = () => res(r.result); r.onerror = rej; r.readAsDataURL(blob); });
+function nvGet(name) {
+  if (!NV.got[name]) NV.got[name] = fetch(NV_V + NV_FILES[name]).then(r => { if (!r.ok) throw new Error('HTTP ' + r.status); return /woff2$/.test(NV_FILES[name]) ? r.blob().then(nvDataUrl) : r.text(); })
+    .then(t => name === 'katexCss' ? nvKatexFonts(t) : t).catch(e => { delete NV.got[name]; throw e; });
+  return NV.got[name];
+}
+// KaTeX's stylesheet names its fonts by relative path; the frame has no address of its own, so they go in as data.
+async function nvKatexFonts(css) {
+  const base = NV_V + 'katex-0.16.47/', names = [...new Set([...css.matchAll(/url\((fonts\/[\w-]+\.woff2)\)/g)].map(m => m[1]))], map = {};
+  await Promise.all(names.map(async n => { try { const r = await fetch(base + n); if (r.ok) map[n] = await nvDataUrl(await r.blob()); } catch (e) {} }));
+  return css.replace(/src:url\((fonts\/[\w-]+\.woff2)\) format\("woff2"\)[^;}]*/g, (m, n) => `src:url(${map[n] || new URL(base + n, location.href).href}) format("woff2")`);
+}
+
+/* Markdown → HTML */
+const NV_BOX = /[\u2500-\u259F\u25B2-\u25C4\u2190-\u21FF]/;           // box drawing, blocks, ▲▶▼◀, arrows
+const NV_ASCII_STRONG = l => NV_BOX.test(l) && /[\u2500-\u257F]/.test(l) || /(^|[\s|])\+[-=+]{2,}\+?/.test(l) || /\+[-=]{3,}/.test(l);
+const NV_ASCII_WEAK = l => /[|│┃║]|->|<-|=>|<=/.test(l) || /^\s{2,}\S/.test(l) || /^\s*[v^▼▲V]\s*$/.test(l) || NV_BOX.test(l);
+const NV_TABLE_SEP = /^\s*\|?\s*:?-{2,}:?\s*(\|\s*:?-{2,}:?\s*)+\|?\s*$/;
+const NV_FENCE = /^\s{0,3}(`{3,}|~{3,})/;
+// Walk the lines that are not inside a ``` fence. fn(line, index) returns the replacement (or undefined to keep it).
+function nvLines(src, fn) {
+  const L = src.split('\n'); let fence = null;
+  for (let i = 0; i < L.length; i++) {
+    const f = L[i].match(NV_FENCE);
+    if (f) { if (!fence) fence = f[1]; else if (f[1][0] === fence[0] && f[1].length >= fence.length && /^\s*[`~]+\s*$/.test(L[i])) fence = null; continue; }
+    if (fence) continue;
+    const r = fn(L[i], i, L); if (r !== undefined) L[i] = r;
+  }
+  return L.join('\n');
+}
+// ASCII and box diagrams typed straight into the text (not in a ``` block): find them and keep their spacing.
+function nvAsciiBlocks(src) {
+  const L = src.split('\n'), out = []; let fence = null, i = 0;
+  while (i < L.length) {
+    const l = L[i], f = l.match(NV_FENCE);
+    if (f || fence) { if (f) { if (!fence) fence = f[1]; else if (f[1][0] === fence[0] && /^\s*[`~]+\s*$/.test(l)) fence = null; } out.push(l); i++; continue; }
+    if (NV_ASCII_STRONG(l) && !/^\s*>/.test(l) && !NV_TABLE_SEP.test(l)) {
+      let a = i, b = i;
+      while (a > 0 && L[a - 1].trim() && !NV_TABLE_SEP.test(L[a - 1]) && !NV_FENCE.test(L[a - 1]) && (NV_ASCII_WEAK(L[a - 1]) || NV_ASCII_STRONG(L[a - 1]) || /^\S+\/?$/.test(L[a - 1].trim()) && L[a - 1].trim().length < 40) && out.length - (i - a) > 0) a--;
+      while (b + 1 < L.length && L[b + 1].trim() && !NV_TABLE_SEP.test(L[b + 1]) && !NV_FENCE.test(L[b + 1]) && (NV_ASCII_WEAK(L[b + 1]) || NV_ASCII_STRONG(L[b + 1]))) b++;
+      out.splice(out.length - (i - a), i - a);
+      out.push('```ascii', ...L.slice(a, b + 1), '```'); i = b + 1; continue;
+    }
+    out.push(l); i++;
+  }
+  return out.join('\n');
+}
+// ::: note Title … ::: (Docusaurus / VitePress style) becomes an Obsidian callout.
+function nvContainers(src) {
+  const out = []; let fence = null, box = false;
+  for (const l of src.split('\n')) {
+    const f = l.match(NV_FENCE);
+    if (fence) { if (f && /^\s*[`~]+\s*$/.test(l) && f[1][0] === fence[0]) fence = null; out.push(box ? '> ' + l : l); continue; }
+    if (f) { fence = f[1]; out.push(box ? '> ' + l : l); continue; }
+    const m = !box && l.match(/^\s{0,3}:{3,}\s*([a-zA-Z][\w-]*)\s*(.*)$/);
+    if (m) { box = true; out.push('', `> [!${m[1]}]${m[2] ? ' ' + m[2] : ''}`); continue; }
+    if (box && /^\s{0,3}:{3,}\s*$/.test(l)) { box = false; out.push(''); continue; }
+    out.push(box ? '> ' + l : l);
+  }
+  return out.join('\n');
+}
+// Footnotes: [^1] in the text, "[^1]: the note" anywhere (GitHub style). Numbered in order of first use.
+function nvFootnotes(src) {
+  const defs = {}; let L = src.split('\n'), fence = null; const keep = [];
+  for (let i = 0; i < L.length; i++) {
+    const l = L[i], f = l.match(NV_FENCE);
+    if (f) { fence = fence ? (/^\s*[`~]+\s*$/.test(l) ? null : fence) : f[1]; keep.push(l); continue; }
+    const d = !fence && l.match(/^\s{0,3}\[\^([^\]\s]+)\]:\s?(.*)$/);
+    if (d) { let t = d[2]; while (i + 1 < L.length && /^( {2,}|\t)\S/.test(L[i + 1])) t += '\n' + L[++i].trim(); defs[d[1]] = t; continue; }
+    keep.push(l);
+  }
+  if (!Object.keys(defs).length) return {src, notes: []};
+  const order = [], uses = {}, slug = id => String(id).replace(/[^\w-]/g, '_');
+  const body = nvLines(keep.join('\n'), l => l.includes('[^') ? l.split(/(`+[^`]*`+)/).map((seg, k) => k % 2 ? seg : seg.replace(/\[\^([^\]\s]+)\]/g, (m, id) => {
+    if (!(id in defs)) return m;
+    if (!order.includes(id)) order.push(id); uses[id] = (uses[id] || 0) + 1;
+    return `<sup class="fnref"><a href="#fn-${slug(id)}" id="fnref-${slug(id)}-${uses[id]}">${order.indexOf(id) + 1}</a></sup>`;
+  })).join('') : undefined);
+  return {src: body, notes: order.map(id => ({id: slug(id), text: defs[id]}))};
+}
+const NV_EMOJI = {smile: '😄', grin: '😁', joy: '😂', wink: '😉', blush: '😊', heart: '❤️', heart_eyes: '😍', thinking: '🤔', '+1': '👍', thumbsup: '👍', '-1': '👎', thumbsdown: '👎',
+  clap: '👏', pray: '🙏', ok_hand: '👌', wave: '👋', muscle: '💪', fire: '🔥', star: '⭐', sparkles: '✨', tada: '🎉', rocket: '🚀', bulb: '💡', memo: '📝', pushpin: '📌',
+  warning: '⚠️', x: '❌', white_check_mark: '✅', heavy_check_mark: '✔️', check: '✔️', question: '❓', exclamation: '❗', bell: '🔔', calendar: '📅', clock: '🕒', hourglass: '⏳',
+  moneybag: '💰', money_with_wings: '💸', dollar: '💵', credit_card: '💳', bank: '🏦', chart: '📈', chart_with_upwards_trend: '📈', chart_with_downwards_trend: '📉', bar_chart: '📊',
+  house: '🏠', car: '🚗', airplane: '✈️', shopping_cart: '🛒', gift: '🎁', book: '📖', books: '📚', link: '🔗', lock: '🔒', key: '🔑', phone: '📱', email: '📧', eyes: '👀',
+  point_right: '👉', point_left: '👈', arrow_right: '➡️', arrow_left: '⬅️', arrow_up: '⬆️', arrow_down: '⬇️', red_circle: '🔴', green_circle: '🟢', yellow_circle: '🟡', blue_circle: '🔵',
+  coffee: '☕', pizza: '🍕', sunny: '☀️', cloud: '☁️', zap: '⚡', snowflake: '❄️', bug: '🐛', wrench: '🔧', hammer: '🔨', gear: '⚙️', mag: '🔍', trophy: '🏆', medal: '🏅', 100: '💯'};
+const nvMathBlockExt = {name: 'nvMathBlock', level: 'block',
+  start: s => { const m = s.match(/^ {0,3}(\$\$|\\\[)/m); return m ? m.index : undefined; },
+  tokenizer(src) { const m = /^ {0,3}(?:\$\$([\s\S]+?)\$\$|\\\[([\s\S]+?)\\\])[ \t]*(?:\n+|$)/.exec(src); if (m) return {type: 'nvMathBlock', raw: m[0], text: (m[1] || m[2]).trim()}; },
+  renderer: t => `<div class="math display" data-tex="${esc(t.text)}">${esc(t.text)}</div>\n`};
+const nvMathInlineExt = {name: 'nvMath', level: 'inline',
+  start: s => { const m = s.match(/\$|\\\(/); return m ? m.index : undefined; },
+  tokenizer(src) {
+    let m = /^\$\$(?!\s)([^$]+?)\$\$/.exec(src); if (m) return {type: 'nvMath', raw: m[0], text: m[1], display: true};
+    m = /^\\\(([\s\S]+?)\\\)/.exec(src); if (m) return {type: 'nvMath', raw: m[0], text: m[1], display: false};
+    m = /^\$(?![\s$])((?:\\.|[^\\$\n])+?)(?<!\s)\$(?!\d)/.exec(src); if (m) return {type: 'nvMath', raw: m[0], text: m[1], display: false};
+  },
+  renderer: t => `<span class="math${t.display ? ' display' : ''}" data-tex="${esc(t.text)}">${esc(t.text)}</span>`};
+const nvMarkExt = {name: 'nvMark', level: 'inline', start: s => { const i = s.indexOf('=='); return i < 0 ? undefined : i; },
+  tokenizer(src) { const m = /^==(?=\S)([\s\S]*?\S)==(?!=)/.exec(src); if (m) return {type: 'nvMark', raw: m[0], tokens: this.lexer.inlineTokens(m[1])}; },
+  renderer(t) { return `<mark>${this.parser.parseInline(t.tokens)}</mark>`; }};
+const nvWikiExt = {name: 'nvWiki', level: 'inline', start: s => { const i = s.indexOf('[['); return i < 0 ? undefined : i; },
+  tokenizer(src) { const m = /^\[\[([^\]|\n]+)(?:\|([^\]\n]+))?\]\]/.exec(src); if (m) return {type: 'nvWiki', raw: m[0], to: m[1].trim(), text: (m[2] || m[1]).trim()}; },
+  renderer: t => `<span class="wikilink" title="${esc(t.to)}">${esc(t.text)}</span>`};
+const NV_ASCII_LANGS = ['ascii', 'asciiart', 'ascii-art', 'diagram', 'art', 'tree', 'box', 'svgbob', 'bob', 'goat', 'boxes'];
+function nvCode(t) {
+  const lang = String(t.lang || '').trim().split(/[\s{]/)[0].toLowerCase(), code = String(t.text || '').replace(/\n+$/, '');
+  if (lang === 'mermaid') return `<div class="nv-mermaid"><pre class="mermaid">${esc(code)}</pre></div>\n`;
+  if (lang === 'math' || lang === 'katex') return `<div class="math display" data-tex="${esc(code)}">${esc(code)}</div>\n`;
+  if (NV_ASCII_LANGS.includes(lang) || (!lang || ['text', 'txt', 'plain', 'plaintext', 'none'].includes(lang)) && code.split('\n').some(NV_ASCII_STRONG))
+    return `<div class="nv-ascii"><pre class="ascii"><code>${esc(code)}</code></pre></div>\n`;
+  const name = {js: 'JavaScript', javascript: 'JavaScript', ts: 'TypeScript', typescript: 'TypeScript', py: 'Python', python: 'Python', sh: 'Shell', bash: 'Bash', zsh: 'Shell', shell: 'Shell',
+    html: 'HTML', css: 'CSS', json: 'JSON', sql: 'SQL', md: 'Markdown', markdown: 'Markdown', yml: 'YAML', yaml: 'YAML', jsx: 'JSX', tsx: 'TSX', java: 'Java', kotlin: 'Kotlin', swift: 'Swift',
+    go: 'Go', rust: 'Rust', rs: 'Rust', c: 'C', cpp: 'C++', 'c++': 'C++', cs: 'C#', csharp: 'C#', php: 'PHP', rb: 'Ruby', ruby: 'Ruby', xml: 'XML', diff: 'Diff', gs: 'Apps Script'}[lang] || lang;
+  return `<figure class="code"><figcaption><span>${esc(name || 'Code')}</span><button type="button" class="nv-copy" aria-label="Copy this code">Copy</button></figcaption><pre><code${lang ? ` class="language-${esc(lang === 'gs' ? 'javascript' : lang)}"` : ' class="nohighlight"'}>${esc(code)}</code></pre></figure>\n`;
+}
+function nvMarked() {
+  if (!NV.marked) NV.marked = import('./' + NV_V + 'marked-18.1.3/marked.esm.js').then(mod => {
+    const M = new mod.Marked({gfm: true, breaks: true});
+    M.use({extensions: [nvMathBlockExt, nvMathInlineExt, nvMarkExt, nvWikiExt], renderer: {code: nvCode}});
+    return M;
+  }).catch(e => { NV.marked = null; throw e; });
+  return NV.marked;
+}
+const NV_CALLOUT = {note: 'note', info: 'note', todo: 'note', abstract: 'cyan', summary: 'cyan', tldr: 'cyan', tip: 'tip', hint: 'tip', success: 'tip', check: 'tip', done: 'tip',
+  important: 'important', example: 'important', question: 'question', help: 'question', faq: 'question', warning: 'warning', attention: 'warning',
+  caution: 'danger', danger: 'danger', error: 'danger', failure: 'danger', fail: 'danger', missing: 'danger', bug: 'danger', quote: 'quote', cite: 'quote'};
+const NV_CALLOUT_IC = {note: '<circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 7.5v.5"/>', cyan: '<path d="M8 6h12M8 12h12M8 18h12M4 6h.01M4 12h.01M4 18h.01"/>',
+  tip: '<path d="M9 18h6M10 21h4M12 3a6 6 0 0 0-3.6 10.8c.6.5 1.1 1.3 1.1 2.2h5c0-.9.5-1.7 1.1-2.2A6 6 0 0 0 12 3z"/>', important: '<path d="M4 5h16v11H8l-4 4z"/><path d="M12 8v3.5M12 14v.01"/>',
+  question: '<circle cx="12" cy="12" r="9"/><path d="M9.6 9.3a2.5 2.5 0 0 1 4.8.9c0 1.7-2.4 2.1-2.4 3.6M12 17v.01"/>', warning: '<path d="M12 3.5 2.5 20h19z"/><path d="M12 10v4.5M12 17.2v.01"/>',
+  danger: '<path d="M8.2 3h7.6L21 8.2v7.6L15.8 21H8.2L3 15.8V8.2z"/><path d="M12 8v5M12 16v.01"/>', quote: '<path d="M7 7h4v6H5V9a2 2 0 0 1 2-2zM15 7h4v6h-6V9a2 2 0 0 1 2-2zM5 13c0 2.5 1 4 4 4.5M13 13c0 2.5 1 4 4 4.5"/>'};
+const nvSvg = p => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${p}</svg>`;
+// The tidy pass, on an inert parsed copy: callouts, checklists, tables, heading anchors, contents, emoji; no scripts.
+function nvPolish(html, M, notes) {
+  const doc = new DOMParser().parseFromString('<!doctype html><body>' + html, 'text/html'), B = doc.body;
+  B.querySelectorAll('script,base,meta,link[rel="import"],object,embed').forEach(x => x.remove());
+  B.querySelectorAll('*').forEach(el => { [...el.attributes].forEach(a => { const n = a.name.toLowerCase(), v = a.value.replace(/[\s\u0000-\u001f]+/g, '').toLowerCase();
+    if (n.startsWith('on') || (n === 'href' || n === 'src' || n === 'xlink:href' || n === 'action' || n === 'formaction') && /^(javascript|vbscript):/.test(v) || n === 'srcdoc') el.removeAttribute(a.name); }); });
+  // Callouts: > [!NOTE] Title  (GitHub alerts and every Obsidian type; [!x]- starts folded, [!x]+ starts open)
+  B.querySelectorAll('blockquote').forEach(bq => {
+    const p = bq.firstElementChild; if (!p || p.tagName !== 'P') return;
+    const m = p.innerHTML.match(/^\s*\[!([\w-]+)\]([+-]?)[ \t]*([^\n<]*(?:<(?!br)[^>]*>[^\n<]*)*?)\s*(?:<br>\s*|\n|$)/i); if (!m) return;
+    const type = m[1].toLowerCase(), tone = NV_CALLOUT[type] || 'note', fold = m[2];
+    p.innerHTML = p.innerHTML.slice(m[0].length); if (!p.textContent.trim() && !p.querySelector('img')) p.remove();
+    const box = doc.createElement(fold ? 'details' : 'div'); box.className = 'callout t-' + tone; box.dataset.type = type; if (fold === '+') box.open = true;
+    const head = doc.createElement(fold ? 'summary' : 'div'); head.className = 'callout-t';
+    head.innerHTML = nvSvg(NV_CALLOUT_IC[tone]) + `<span>${m[3].trim() || esc(type[0].toUpperCase() + type.slice(1))}</span>`;
+    const body = doc.createElement('div'); body.className = 'callout-b'; while (bq.firstChild) body.appendChild(bq.firstChild);
+    box.append(head); if (body.childNodes.length && body.textContent.trim() || body.querySelector('img,table,pre,ul,ol')) box.append(body); else if (!fold) box.classList.add('solo');
+    bq.replaceWith(box);
+  });
+  // Checklists: real buttons that tick (and save) in the preview
+  let ti = 0;
+  B.querySelectorAll('li').forEach(li => {
+    const first = li.firstElementChild && li.firstElementChild.matches('p') && li.firstElementChild.firstChild && li.firstElementChild.firstChild.nodeName === 'INPUT' ? li.firstElementChild.firstChild : li.firstChild && li.firstChild.nodeName === 'INPUT' ? li.firstChild : null;
+    if (!first || first.type !== 'checkbox') return;
+    const on = first.hasAttribute('checked'), b = doc.createElement('button'); b.type = 'button'; b.className = 'nv-check'; b.setAttribute('role', 'checkbox'); b.setAttribute('aria-checked', String(on)); b.dataset.i = ti++; b.setAttribute('aria-label', on ? 'Done' : 'Not done');
+    first.remove(); const body = doc.createElement('div'); body.className = 'task-body'; while (li.firstChild) body.appendChild(li.firstChild);
+    if (body.firstChild && body.firstChild.nodeType === 3) body.firstChild.nodeValue = body.firstChild.nodeValue.replace(/^\s+/, '');
+    li.classList.add('task'); if (on) li.classList.add('done'); li.append(b, body);
+  });
+  B.querySelectorAll('ul,ol').forEach(l => { if ([...l.children].length && [...l.children].every(x => x.classList.contains('task'))) l.classList.add('tasks'); });
+  B.querySelectorAll('table').forEach(t => { if (t.parentElement && t.parentElement.classList.contains('nv-table')) return; const w = doc.createElement('div'); w.className = 'nv-table'; t.replaceWith(w); w.append(t); });
+  B.querySelectorAll('img').forEach(i => { i.setAttribute('loading', 'lazy'); i.setAttribute('decoding', 'async'); });
+  const walker = doc.createTreeWalker(B, NodeFilter.SHOW_TEXT), texts = []; let n;
+  while ((n = walker.nextNode())) if (/:[\w+-]+:/.test(n.nodeValue) && !n.parentElement.closest('code,pre,.math,a')) texts.push(n);
+  texts.forEach(t => { t.nodeValue = t.nodeValue.replace(/:([\w+-]+):/g, (m, k) => Object.hasOwn(NV_EMOJI, k) ? NV_EMOJI[k] : m); });
+  const seen = {}, heads = [];
+  B.querySelectorAll('h1,h2,h3,h4,h5,h6').forEach(h => { if (h.closest('.callout-t')) return; let s = (h.id || h.textContent).toLowerCase().trim().replace(/[^\p{L}\p{N}\s-]/gu, '').replace(/\s+/g, '-') || 'section';
+    if (seen[s] != null) s += '-' + (++seen[s]); else seen[s] = 0; h.id = s; heads.push(h); });
+  B.querySelectorAll('p').forEach(p => { if (!/^\s*\[(toc|\[_toc_\])\]\s*$/i.test(p.textContent)) return;
+    const nav = doc.createElement('nav'); nav.className = 'toc'; nav.innerHTML = '<div class="toc-t">Contents</div>' + heads.filter(h => /^H[1-3]$/.test(h.tagName)).map(h => `<a class="l${h.tagName[1]}" href="#${esc(h.id)}">${esc(h.textContent)}</a>`).join(''); p.replaceWith(nav); });
+  if (notes.length) {
+    const sec = doc.createElement('section'); sec.className = 'footnotes';
+    sec.innerHTML = '<ol>' + notes.map(f => `<li id="fn-${f.id}">${M.parseInline(f.text)} <a class="fnback" href="#fnref-${f.id}-1" aria-label="Back to the text">↩</a></li>`).join('') + '</ol>';
+    B.append(sec);
+  }
+  return {html: B.innerHTML, tasks: ti};
+}
+function nvNeeds(html) {
+  return {code: /class="language-(?!mermaid)/.test(html), math: /class="math/.test(html), mermaid: /class="mermaid"/.test(html), mono: /<(pre|code|kbd)\b/i.test(html)};
+}
+function nvMarkdown(M, src) {
+  let s = String(src || '').replace(/\r\n?/g, '\n').replace(/^\uFEFF/, '');
+  s = s.replace(/^---\n[\s\S]*?\n---\n/, m => '```yaml\n' + m.slice(4, -5) + '\n```\n'); // front matter: shown as a small data block, not a ruled line
+  s = nvContainers(s); s = nvAsciiBlocks(s);
+  const fn = nvFootnotes(s);
+  const r = nvPolish(M.parse(fn.src), M, fn.notes);
+  let srcTasks = 0; nvLines(s, l => { if (/^((?:\s*>)*\s*(?:[-*+]|\d+[.)])\s+)\[( |x|X)\](?=\s|$)/.test(l)) srcTasks++; });
+  return {html: r.html, tasks: r.tasks && r.tasks === srcTasks ? r.tasks : 0};
+}
+// HTML notes: whatever was saved, the viewer shows the page, not its code.
+function nvHtmlSource(s) {
+  let t = String(s || '').replace(/^\uFEFF/, '').trim();
+  const f = t.match(/^(`{3,}|~{3,})[ \t]*(?:html?|xhtml|xml|svg|markup)?[ \t]*\n([\s\S]*?)\n\1[ \t]*$/i); if (f) t = f[2].trim();
+  if (!/<[a-z!\/][^>]*>/i.test(t) && /&lt;\s*\/?\s*[a-z!][\s\S]*?&gt;/i.test(t)) t = (new DOMParser().parseFromString('<!doctype html><body><textarea>' + t.replace(/<\/textarea/gi, '') + '</textarea>', 'text/html').querySelector('textarea') || {}).value || t; // pasted as &lt;escaped&gt; text
+  return t.trim();
+}
+const nvIsHtml = t => /^\s*<(?:!doctype|!--|\?xml|[a-z][\w:-]*)(?:[\s>\/]|$)/i.test(t) || (t.match(/<\/?(?:div|p|h[1-6]|table|tr|td|ul|ol|li|section|article|header|footer|main|span|br|hr|img|style|svg|strong|em|b|i|a|body|html)\b[^>]*>/gi) || []).length >= 3;
+const nvIsPage = t => /^\s*(?:<!--[\s\S]*?-->\s*)*(?:<\?xml[^>]*>\s*)?(?:<!doctype\s+html|<html[\s>]|<head[\s>])/i.test(t) || /<body[\s>]/i.test(t) && /<\/body>/i.test(t);
+// A plain-text or Markdown note turned into an HTML note: its text becomes real HTML, so it shows formatted.
+function nvTextToHtml(t) {
+  const paras = String(t || '').replace(/\r\n?/g, '\n').split(/\n{2,}/).filter(p => p.trim());
+  return paras.map(p => { const L = p.split('\n');
+    if (L.every(l => /^\s*([-*•]|\d+[.)])\s+/.test(l))) { const ol = /^\s*\d/.test(L[0]); return `<${ol ? 'ol' : 'ul'}>\n${L.map(l => '  <li>' + esc(l.replace(/^\s*([-*•]|\d+[.)])\s+(\[( |x|X)\]\s+)?/, '')).replace(/\*\*([^*\n]+?)\*\*/g, '<strong>$1</strong>') + '</li>').join('\n')}\n</${ol ? 'ol' : 'ul'}>`; }
+    return '<p>' + L.map(l => esc(l).replace(/\*\*([^*\n]+?)\*\*/g, '<strong>$1</strong>')).join('<br>\n') + '</p>'; }).join('\n\n');
+}
+// An HTML note turned into plain text: the words as you would read them, with line breaks where the blocks were.
+function nvHtmlToText(h) {
+  const doc = new DOMParser().parseFromString(nvHtmlSource(h), 'text/html');
+  doc.querySelectorAll('script,style,noscript,template,head').forEach(x => x.remove());
+  let out = '';
+  const walk = el => el.childNodes.forEach(c => {
+    if (c.nodeType === 3) { const t = c.nodeValue.replace(/\s+/g, ' '); if (t.trim() || out && !out.endsWith('\n')) out += t; return; }
+    if (c.nodeType !== 1) return;
+    const tag = c.tagName, block = /^(P|DIV|H[1-6]|LI|TR|BLOCKQUOTE|PRE|SECTION|ARTICLE|HEADER|FOOTER|MAIN|NAV|ASIDE|UL|OL|TABLE|FIGURE|DL|DT|DD|HR|DETAILS|SUMMARY)$/.test(tag);
+    if (tag === 'BR') { out += '\n'; return; }
+    if (block && out && !out.endsWith('\n')) out += '\n';
+    if (tag === 'LI') out += '- ';
+    if (tag === 'PRE') { out += c.textContent; } else if (tag === 'STRONG' || tag === 'B') { const s = out.length; walk(c); const inner = out.slice(s); if (inner.trim()) out = out.slice(0, s) + '**' + inner.trim() + '**'; } else walk(c);
+    if (tag === 'TD' || tag === 'TH') out += '  ';
+    if (block && !out.endsWith('\n')) out += '\n';
+  });
+  walk(doc.body);
+  return out.replace(/[ \t]+\n/g, '\n').replace(/\n{3,}/g, '\n\n').trim();
+}
+const nvVar = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+// The reading styles inside the frame. Every size × --fs (the app's Text size), the app's font, day or night.
+const NV_CSS = `
+*,*::before,*::after{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%;text-size-adjust:100%;scroll-padding-top:12px}
+:root{--ink-3:color-mix(in srgb,var(--ink) 52%,var(--bg));--rule:color-mix(in srgb,var(--ink) 10%,transparent);--rule-2:color-mix(in srgb,var(--ink) 17%,transparent);
+  --fill:color-mix(in srgb,var(--ink) 4%,transparent);--fill-2:color-mix(in srgb,var(--ink) 7.5%,transparent);--card:color-mix(in srgb,var(--ink) 2.5%,var(--bg));--code-bg:color-mix(in srgb,var(--ink) 4%,var(--bg));
+  --mark:rgba(250,204,21,.42);--mono:"NV Mono","JetBrains Mono","Cascadia Mono","SF Mono",Menlo,Consolas,"Roboto Mono","Noto Sans Mono","DejaVu Sans Mono",monospace;
+  --c-note:37 99 235;--c-cyan:8 145 178;--c-tip:22 163 74;--c-important:124 58 237;--c-question:202 138 4;--c-warning:217 119 6;--c-danger:220 38 38;--c-quote:100 116 139;
+  --h-kw:#a626a4;--h-str:#2e7d32;--h-num:#b45309;--h-com:#8a8f98;--h-fn:#1d4ed8;--h-ty:#0e7490;--h-at:#b45309;--h-tag:#c2410c;--h-var:#be123c;--h-add:#15803d;--h-del:#b91c1c}
+:root[data-theme="dark"]{--mark:rgba(250,204,21,.3);--c-note:96 165 250;--c-cyan:34 211 238;--c-tip:74 222 128;--c-important:167 139 250;--c-question:250 204 21;--c-warning:251 146 60;--c-danger:248 113 113;--c-quote:148 163 184;
+  --h-kw:#d39bf0;--h-str:#9ad79a;--h-num:#f5b971;--h-com:#7d8592;--h-fn:#8ab4ff;--h-ty:#67d4e8;--h-at:#f5b971;--h-tag:#ff9e7a;--h-var:#ff8fa8;--h-add:#86efac;--h-del:#fca5a5}
+body{margin:0;background:var(--bg);color:var(--ink);font:400 calc(17px*var(--fs))/1.68 var(--font);-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;
+  font-feature-settings:"cv11","ss03";overflow-wrap:break-word;text-rendering:optimizeLegibility}
+.nv{max-width:780px;margin:0 auto;padding:20px 18px calc(56px + env(safe-area-inset-bottom,0px))}
+.nv>:first-child,.callout-b>:first-child,li>:first-child,td>:first-child,details>:not(summary):first-of-type{margin-top:0}
+.nv>:last-child,.callout-b>:last-child,li>:last-child,blockquote>:last-child,details>:last-child,td>:last-child{margin-bottom:0}
+h1,h2,h3,h4,h5,h6{color:var(--ink);font-weight:720;line-height:1.25;letter-spacing:-.018em;margin:1.7em 0 .55em;text-wrap:balance}
+h1{font-size:calc(29px*var(--fs));letter-spacing:-.026em;font-weight:780}
+h2{font-size:calc(23px*var(--fs));padding-bottom:.32em;border-bottom:1px solid var(--rule)}
+h3{font-size:calc(19.5px*var(--fs))}h4{font-size:calc(17.5px*var(--fs))}
+h5{font-size:calc(15px*var(--fs));text-transform:uppercase;letter-spacing:.06em;color:var(--ink-2)}h6{font-size:calc(14px*var(--fs));color:var(--ink-3);letter-spacing:.04em;text-transform:uppercase}
+.nv>h1:first-child,.nv>h2:first-child{margin-top:.1em}
+p,ul,ol,dl,pre,blockquote,figure,.callout,details,.nv-table,.nv-ascii,.nv-mermaid,.math.display,nav.toc{margin:0 0 1.05em}
+a{color:var(--accent);text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:.18em;text-decoration-color:color-mix(in srgb,var(--accent) 45%,transparent);overflow-wrap:anywhere}
+a:hover{text-decoration-color:currentColor}
+strong,b{font-weight:680}em{font-style:italic}del,s{color:var(--ink-3);text-decoration-thickness:1.5px}
+mark{background:var(--mark);color:inherit;border-radius:.25em;padding:.02em .18em;-webkit-box-decoration-break:clone;box-decoration-break:clone}
+small{font-size:.86em;color:var(--ink-2)}sub,sup{font-size:.72em;line-height:0}
+abbr[title]{text-decoration:underline dotted;text-underline-offset:.2em;cursor:help}
+ul,ol{padding-left:1.55em}li{margin:.28em 0;padding-left:.15em}li>p{margin:.3em 0}
+li::marker{color:var(--ink-3)}ol>li::marker{font-weight:650;font-variant-numeric:tabular-nums}
+ul ul{list-style-type:circle}ul ul ul{list-style-type:square}li>ul,li>ol{margin:.3em 0 .4em}
+ul.tasks,ol.tasks{list-style:none;padding-left:.1em}
+li.task{display:flex;align-items:flex-start;gap:.62em;padding-left:0}
+li.task::marker{content:none}
+.task-body{flex:1 1 auto;min-width:0}
+li.task.done>.task-body>:not(ul):not(ol),li.task.done>.task-body{color:var(--ink-3)}
+li.task.done>.task-body{text-decoration:line-through;text-decoration-color:color-mix(in srgb,var(--ink-3) 70%,transparent);text-decoration-thickness:1.5px}
+li.task.done>.task-body ul,li.task.done>.task-body ol{text-decoration:none}
+.nv-check{appearance:none;-webkit-appearance:none;flex:0 0 auto;width:1.2em;height:1.2em;margin:.25em 0 0;padding:0;border-radius:.38em;border:1.6px solid color-mix(in srgb,var(--ink) 38%,transparent);
+  background:var(--bg);display:grid;place-items:center;cursor:pointer;transition:background .15s,border-color .15s,transform .12s;-webkit-tap-highlight-color:transparent}
+.nv-check::after{content:"";width:.62em;height:.34em;border-left:2.2px solid #fff;border-bottom:2.2px solid #fff;transform:translateY(-.06em) rotate(-45deg) scale(.4);opacity:0;transition:transform .18s cubic-bezier(.3,1.6,.5,1),opacity .12s}
+.nv-check[aria-checked="true"]{background:var(--good);border-color:var(--good)}
+.nv-check[aria-checked="true"]::after{opacity:1;transform:translateY(-.06em) rotate(-45deg) scale(1)}
+.nv-check:active{transform:scale(.88)}
+.nv-check:disabled{cursor:default}
+blockquote{margin-left:0;margin-right:0;padding:.15em 0 .15em 1.05em;border-left:3px solid var(--rule-2);color:var(--ink-2)}
+hr{border:0;height:1px;margin:2.2em 0;background:linear-gradient(90deg,transparent,var(--rule-2) 18%,var(--rule-2) 82%,transparent)}
+code,kbd,samp,pre{font-family:var(--mono);font-variant-ligatures:none}
+:not(pre)>code{font-size:.86em;padding:.14em .42em;border-radius:.42em;background:var(--fill-2);border:1px solid var(--rule);white-space:break-spaces;overflow-wrap:anywhere}
+a>code{color:inherit}
+kbd{display:inline-block;font-size:.8em;line-height:1.35;padding:.08em .48em;border-radius:.42em;border:1px solid var(--rule-2);border-bottom-width:2.5px;background:var(--card);color:var(--ink);vertical-align:.08em;white-space:nowrap}
+pre{margin:0;overflow:auto;padding:14px 16px;font-size:calc(13.5px*var(--fs));line-height:1.62;tab-size:4;-webkit-overflow-scrolling:touch;overscroll-behavior-x:contain}
+figure.code{border:1px solid var(--rule);border-radius:16px;background:var(--code-bg);overflow:hidden}
+figure.code>pre{background:none;border:0;border-radius:0}
+figure.code figcaption{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:5px 6px 5px 14px;border-bottom:1px solid var(--rule);font-size:calc(12px*var(--fs));font-weight:650;letter-spacing:.05em;text-transform:uppercase;color:var(--ink-3)}
+.nv-copy{font:inherit;text-transform:none;letter-spacing:0;font-size:calc(12.5px*var(--fs));font-weight:600;color:var(--ink-2);background:var(--fill-2);border:0;border-radius:9px;padding:6px 11px;cursor:pointer}
+.nv-copy:active{transform:scale(.95)}
+.nv>pre,.callout-b>pre,li>pre,blockquote>pre{background:var(--code-bg);border:1px solid var(--rule);border-radius:16px}
+.nv-ascii{position:relative;border:1px solid var(--rule);border-radius:16px;background:var(--code-bg);overflow:hidden}
+pre.ascii{white-space:pre;line-height:1.24;letter-spacing:0;padding:14px 16px;font-size:calc(13.5px*var(--fs));font-kerning:none;color:var(--ink)}
+pre.ascii code{font:inherit;line-height:inherit;letter-spacing:0;white-space:pre}
+.nv-table{overflow-x:auto;border:1px solid var(--rule);border-radius:16px;background:var(--bg);-webkit-overflow-scrolling:touch;overscroll-behavior-x:contain}
+table{border-collapse:separate;border-spacing:0;width:100%;font-size:calc(15px*var(--fs));line-height:1.5;font-variant-numeric:tabular-nums}
+.nv>table,.nv-html table:not(.nv-table table){border:1px solid var(--rule);border-radius:14px;overflow:hidden}
+th,td{padding:.62em .9em;text-align:left;vertical-align:top;border-bottom:1px solid var(--rule)}
+th+th,td+td{border-left:1px solid var(--rule)}
+thead th{background:var(--fill);font-weight:680;color:var(--ink);white-space:nowrap;font-size:.92em;letter-spacing:.01em}
+tbody tr:last-child>td,tbody tr:last-child>th{border-bottom:0}
+tbody tr:nth-child(even)>td{background:color-mix(in srgb,var(--ink) 2%,transparent)}
+th[align="right"],td[align="right"]{text-align:right}th[align="center"],td[align="center"]{text-align:center}
+caption{caption-side:bottom;padding:.5em;color:var(--ink-3);font-size:.88em}
+img,video,svg{max-width:100%;height:auto}img{border-radius:12px}
+figure{margin-left:0;margin-right:0}figcaption{color:var(--ink-3);font-size:.88em}
+dt{font-weight:680;margin-top:.6em}dd{margin:0 0 .4em 1.1em;color:var(--ink-2)}
+details:not(.callout){border:1px solid var(--rule);border-radius:14px;padding:0 1em;background:var(--card)}
+details:not(.callout)[open]{padding-bottom:.8em}
+summary{cursor:pointer;list-style:none;font-weight:650;display:flex;align-items:center;gap:.55em;padding:.62em 0;-webkit-tap-highlight-color:transparent}
+summary::-webkit-details-marker{display:none}
+details:not(.callout)>summary::before{content:"";flex:none;width:.42em;height:.42em;margin:0 .15em 0 .05em;border-right:2px solid var(--ink-3);border-bottom:2px solid var(--ink-3);transform:rotate(-45deg);transition:transform .2s}
+details:not(.callout)[open]>summary::before{transform:rotate(45deg) translate(-.1em,-.1em)}
+.callout{--c:var(--c-note);border-radius:16px;padding:.8em 1em .85em;background:color-mix(in srgb,rgb(var(--c)) 8%,var(--bg));border:1px solid color-mix(in srgb,rgb(var(--c)) 22%,transparent);box-shadow:inset 3px 0 0 rgb(var(--c))}
+.callout.t-cyan{--c:var(--c-cyan)}.callout.t-tip{--c:var(--c-tip)}.callout.t-important{--c:var(--c-important)}.callout.t-question{--c:var(--c-question)}.callout.t-warning{--c:var(--c-warning)}.callout.t-danger{--c:var(--c-danger)}.callout.t-quote{--c:var(--c-quote)}
+.callout-t{display:flex;align-items:center;gap:.55em;font-weight:700;color:rgb(var(--c));line-height:1.35;padding:0}
+.callout-t svg{width:1.15em;height:1.15em;flex:none}
+.callout-t>span{min-width:0}
+details.callout>summary::after{content:"";margin-left:auto;flex:none;width:.45em;height:.45em;border-right:2px solid currentColor;border-bottom:2px solid currentColor;transform:rotate(45deg);transition:transform .2s;opacity:.8}
+details.callout[open]>summary::after{transform:rotate(-135deg)}
+.callout-b{margin-top:.5em;color:var(--ink)}
+.callout.t-quote .callout-b{color:var(--ink-2);font-style:italic}
+nav.toc{border:1px solid var(--rule);border-radius:16px;background:var(--card);padding:.8em 1em;display:flex;flex-direction:column;gap:0;line-height:1.4}
+nav.toc .toc-t{font-size:calc(12.5px*var(--fs));font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--ink-3);margin-bottom:.3em}
+nav.toc a{text-decoration:none;color:var(--ink-2);padding:.18em 0}nav.toc a.l2{padding-left:1em}nav.toc a.l3{padding-left:2em;font-size:.94em}
+.wikilink{color:var(--accent);background:color-mix(in srgb,var(--accent) 10%,transparent);border-radius:.35em;padding:0 .25em}
+sup.fnref a{text-decoration:none;font-weight:700;font-size:.95em;padding:0 .12em}
+.footnotes{margin-top:2.4em;padding-top:1em;border-top:1px solid var(--rule);font-size:.9em;color:var(--ink-2)}
+.footnotes .fnback{text-decoration:none}
+.footnotes li:target,:target{scroll-margin-top:12px}
+.math.display{display:block;overflow-x:auto;overflow-y:hidden;text-align:center;padding:.3em 0;-webkit-overflow-scrolling:touch}
+.math:not(.ok){font-family:var(--mono);font-size:.9em;color:var(--ink-2)}
+.katex{font-size:1.08em}.katex-display{margin:0}
+.nv-mermaid{border:1px solid var(--rule);border-radius:16px;background:var(--card);padding:16px 12px;overflow-x:auto;text-align:center;-webkit-overflow-scrolling:touch}
+.nv-mermaid pre.mermaid{text-align:left;margin:0;padding:0;font-size:calc(12.5px*var(--fs));color:var(--ink-3);white-space:pre-wrap;background:none;border:0}
+.nv-mermaid.ok svg{display:block;margin:0 auto;height:auto}
+.nv-err{font-size:calc(13px*var(--fs));color:rgb(var(--c-danger));margin-top:.6em;text-align:left}
+.nv-off{font-size:calc(12.5px*var(--fs));color:var(--ink-3);margin-top:.5em;text-align:left}
+.nv-empty{color:var(--ink-3)}
+::selection{background:color-mix(in srgb,var(--accent) 26%,transparent)}
+.hljs-keyword,.hljs-selector-tag,.hljs-literal,.hljs-doctag,.hljs-meta .hljs-keyword{color:var(--h-kw)}
+.hljs-string,.hljs-regexp,.hljs-meta .hljs-string,.hljs-char.escape_{color:var(--h-str)}
+.hljs-number,.hljs-symbol,.hljs-bullet{color:var(--h-num)}
+.hljs-comment,.hljs-quote{color:var(--h-com);font-style:italic}
+.hljs-title,.hljs-title.function_,.hljs-section{color:var(--h-fn)}
+.hljs-type,.hljs-built_in,.hljs-title.class_,.hljs-class .hljs-title{color:var(--h-ty)}
+.hljs-attr,.hljs-attribute,.hljs-property,.hljs-selector-attr,.hljs-selector-class,.hljs-selector-id,.hljs-params{color:var(--h-at)}
+.hljs-tag,.hljs-name,.hljs-selector-pseudo{color:var(--h-tag)}
+.hljs-variable,.hljs-template-variable,.hljs-link{color:var(--h-var)}
+.hljs-meta{color:var(--h-com)}.hljs-addition{color:var(--h-add);background:color-mix(in srgb,var(--h-add) 12%,transparent)}.hljs-deletion{color:var(--h-del);background:color-mix(in srgb,var(--h-del) 12%,transparent)}
+.hljs-emphasis{font-style:italic}.hljs-strong{font-weight:700}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;scroll-behavior:auto!important}}
+`;
+// Runs inside the frame. Kept self-contained: it is copied into the page as text.
+function nvRuntime(C) {
+  const post = m => { try { parent.postMessage(Object.assign({nv: C.token}, m), '*'); } catch (e) {} };
+  const $$ = s => [...document.querySelectorAll(s)];
+  const escT = s => String(s).replace(/[&<>]/g, c => ({'&': '&amp;', '<': '&lt;', '>': '&gt;'}[c]));
+  document.addEventListener('click', e => {
+    const a = e.target.closest('a[href]');
+    if (a) { const h = a.getAttribute('href') || ''; if (h[0] === '#') { e.preventDefault(); let el = null; try { el = document.getElementById(decodeURIComponent(h.slice(1))) || document.querySelector('[name="' + CSS.escape(decodeURIComponent(h.slice(1))) + '"]'); } catch (x) {} if (el) el.scrollIntoView({behavior: 'smooth', block: 'start'}); } return; }
+    const cp = e.target.closest('.nv-copy');
+    if (cp) { const code = cp.closest('figure').querySelector('pre').innerText; post({act: 'copy', text: code}); cp.textContent = 'Copied ✓'; setTimeout(() => { cp.textContent = 'Copy'; }, 1500); return; }
+    const ck = e.target.closest('.nv-check');
+    if (ck) { if (!C.tasks) return; const on = ck.getAttribute('aria-checked') !== 'true'; ck.setAttribute('aria-checked', String(on)); ck.setAttribute('aria-label', on ? 'Done' : 'Not done'); ck.closest('li').classList.toggle('done', on); post({act: 'task', i: +ck.dataset.i, on}); }
+  });
+  if (!C.tasks) $$('.nv-check').forEach(b => { b.disabled = true; });
+  // ASCII diagrams: shrink the type just enough for the widest line to fit (never below a readable size), else scroll.
+  function fitAscii() {
+    $$('pre.ascii').forEach(p => {
+      p.style.fontSize = ''; const base = parseFloat(getComputedStyle(p).fontSize), cs = getComputedStyle(p), pad = parseFloat(cs.paddingLeft) + parseFloat(cs.paddingRight);
+      const need = p.scrollWidth - pad, have = p.clientWidth - pad;
+      if (need > have + 1) p.style.fontSize = Math.max(9.5, Math.floor(base * have / need * 100) / 100) + 'px';
+    });
+  }
+  fitAscii(); if (document.fonts) document.fonts.ready.then(fitAscii);
+  let rz; addEventListener('resize', () => { clearTimeout(rz); rz = setTimeout(fitAscii, 120); });
+  function addScript(code) { const s = document.createElement('script'); s.textContent = code; document.head.appendChild(s); }
+  function addStyle(css) { const s = document.createElement('style'); s.textContent = css; document.head.appendChild(s); }
+  async function enhance(L) {
+    if (L.mono || L.monoB) addStyle((L.mono ? `@font-face{font-family:"NV Mono";src:url(${L.mono}) format("woff2");font-weight:400;font-display:swap}` : '') + (L.monoB ? `@font-face{font-family:"NV Mono";src:url(${L.monoB}) format("woff2");font-weight:700;font-display:swap}` : ''));
+    if (L.katexCss) addStyle(L.katexCss);
+    try { if (L.katex) { addScript(L.katex); if (L.mhchem) addScript(L.mhchem); } } catch (e) {}
+    if (window.katex) $$('.math').forEach(el => { try { window.katex.render(el.dataset.tex || el.textContent, el, {displayMode: el.classList.contains('display'), throwOnError: false, output: 'htmlAndMathml', strict: 'ignore', trust: false}); el.classList.add('ok'); } catch (e) {} });
+    try { if (L.hljs) addScript(L.hljs); } catch (e) {}
+    if (window.hljs) $$('pre code[class*="language-"]').forEach(el => { if (/language-(mermaid|ascii)/.test(el.className)) return; try { window.hljs.highlightElement(el); } catch (e) {} });
+    const mm = $$('pre.mermaid');
+    if (mm.length) {
+      try { if (L.mermaid) addScript(L.mermaid); } catch (e) {}
+      const M = window.mermaid;
+      if (!M) { mm.forEach(p => { if (!p.parentNode.querySelector('.nv-off')) p.insertAdjacentHTML('afterend', '<div class="nv-off">Diagram shown as text. It is drawn when the app has been opened once with a connection.</div>'); }); }
+      else {
+        const css = getComputedStyle(document.documentElement), v = n => css.getPropertyValue(n).trim();
+        M.initialize({startOnLoad: false, securityLevel: 'strict', theme: 'base', darkMode: C.dark, fontFamily: v('--font'), flowchart: {htmlLabels: true, curve: 'basis', useMaxWidth: true}, sequence: {useMaxWidth: true}, gantt: {useMaxWidth: true},
+          themeVariables: C.dark ? {background: C.bg, primaryColor: '#1d2a44', primaryBorderColor: '#5b7fd1', primaryTextColor: '#eef1f7', secondaryColor: '#173229', secondaryBorderColor: '#3f9b78', secondaryTextColor: '#eef1f7',
+            tertiaryColor: '#2f2417', tertiaryBorderColor: '#b98a45', tertiaryTextColor: '#eef1f7', lineColor: '#9aa4b8', textColor: '#e6e9f0', mainBkg: '#1d2a44', nodeBorder: '#5b7fd1', clusterBkg: '#151b28', clusterBorder: '#34405a',
+            edgeLabelBackground: '#151b28', noteBkgColor: '#2f2a17', noteBorderColor: '#a58a3c', noteTextColor: '#f3ead0', actorBkg: '#1d2a44', actorBorder: '#5b7fd1', actorTextColor: '#eef1f7', signalColor: '#c9d1e0', signalTextColor: '#e6e9f0', fontSize: '15px'}
+            : {background: C.bg, primaryColor: '#eef3ff', primaryBorderColor: '#7f9ee6', primaryTextColor: '#14161c', secondaryColor: '#ecfbf3', secondaryBorderColor: '#5fbf91', secondaryTextColor: '#14161c',
+            tertiaryColor: '#fff6e8', tertiaryBorderColor: '#e0ad5f', tertiaryTextColor: '#14161c', lineColor: '#6b7385', textColor: '#1f2430', mainBkg: '#eef3ff', nodeBorder: '#7f9ee6', clusterBkg: '#f7f8fb', clusterBorder: '#d6dbe6',
+            edgeLabelBackground: '#ffffff', noteBkgColor: '#fff8db', noteBorderColor: '#e2c45c', noteTextColor: '#3d3214', actorBkg: '#eef3ff', actorBorder: '#7f9ee6', actorTextColor: '#14161c', signalColor: '#4b5263', signalTextColor: '#1f2430', fontSize: '15px'}});
+        for (let i = 0; i < mm.length; i++) {
+          const p = mm[i], src = p.textContent, w = p.parentNode;
+          try { const r = await M.render('nvm' + i, src); w.innerHTML = r.svg; w.classList.add('ok'); if (r.bindFunctions) r.bindFunctions(w); }
+          catch (e) { const junk = document.getElementById('dnvm' + i); if (junk) junk.remove(); if (!w.querySelector('.nv-err')) p.insertAdjacentHTML('afterend', '<div class="nv-err">This diagram has a mistake, so it is shown as text: ' + escT(String(e && (e.message || e.str) || e).split('\n')[0].slice(0, 160)) + '</div>'); }
+        }
+      }
+    }
+    fitAscii();
+  }
+  addEventListener('message', e => { const d = e.data; if (e.source !== parent || !d || d.nv !== C.token || d.act !== 'libs') return; enhance(d.libs || {}); });
+  if (C.needs) post({act: 'hello'}); else enhance({});
+}
+// The page that goes into the frame.
+function nvDoc(body, kind, token, tasks, needs) {
+  const t = readText(), f = TEXT_FONTS.find(x => x.id === t.font) || TEXT_FONTS[0], dark = darkNow(), bg = nvVar('--sheet') || (dark ? '#111318' : '#fff');
+  const C = {token, tasks, dark, bg, needs: Object.values(needs).some(Boolean)};
+  const fonts = 'family=Inter:opsz,wght@14..32,400..800' + (f.g ? '&family=' + f.g : '');
+  return `<!doctype html><html lang="en-GB" data-theme="${dark ? 'dark' : 'light'}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="color-scheme" content="${dark ? 'dark' : 'light'}">
+<base target="_blank"><link rel="stylesheet" href="https://fonts.googleapis.com/css2?${fonts}&display=swap">
+<style>:root{--fs:${+(t.size * (parseFloat(nvVar('--fsv')) || 1)).toFixed(3)};--font:${f.css === 'system-ui' ? '' : f.css + ','}"Inter",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;--bg:${bg};--ink:${nvVar('--ink') || (dark ? '#eceef3' : '#14161c')};--ink-2:${nvVar('--ink-2') || '#555'};--accent:${nvVar('--accent') || '#2563eb'};--good:${nvVar('--good') || '#16a34a'};color-scheme:${dark ? 'dark' : 'light'}}</style>
+<style>${NV_CSS}</style></head><body><article class="nv nv-${kind}">${body}</article><script>(${nvRuntime.toString()})(${JSON.stringify(C).replace(/</g, '\\u003c')})<\/script></body></html>`;
+}
+// A whole web page saved as a note: shown exactly as written. Links open outside; "#" links scroll inside.
+function nvPage(src) {
+  const add = '<base target="_blank"><script>document.addEventListener("click",function(e){var a=e.target.closest&&e.target.closest("a[href^=\'#\']");if(!a)return;e.preventDefault();var id=decodeURIComponent(a.getAttribute("href").slice(1)),el=document.getElementById(id)||document.getElementsByName(id)[0];if(el)el.scrollIntoView({behavior:"smooth"});});<\/script>';
+  if (/<base[\s>]/i.test(src)) return src.replace(/<head(\s[^>]*)?>/i, m => m + add.replace('<base target="_blank">', ''));
+  if (/<head(\s[^>]*)?>/i.test(src)) return src.replace(/<head(\s[^>]*)?>/i, m => m + '<meta charset="utf-8">' + add);
+  if (/<html(\s[^>]*)?>/i.test(src)) return src.replace(/<html(\s[^>]*)?>/i, m => m + '<head><meta charset="utf-8">' + add + '</head>');
+  return '<meta charset="utf-8">' + add + src;
+}
+// Draw the open note's preview into #nvFrame.
+async function nvMount() {
+  const fr = $('#nvFrame'), o = N.open; if (!fr || !o) return;
+  const my = ++NV.seq, token = 'nv' + my + '.' + Math.random().toString(36).slice(2), content = o.content;
+  let doc = null, body = '', kind = o.type, tasks = 0, needs = {};
+  const empty = '<p class="nv-empty">Nothing written yet. Tap Edit to start.</p>';
+  try {
+    if (o.type === 'html' && content.trim()) {
+      const src = nvHtmlSource(content);
+      if (nvIsPage(src)) doc = nvPage(src);
+      else if (nvIsHtml(src) && /<(style|script|link)\b/i.test(src)) doc = nvPage('<!doctype html><html><head><meta name="viewport" content="width=device-width,initial-scale=1"></head><body>' + src + '</body></html>'); // styled by its author: shown as they made it
+      else if (nvIsHtml(src)) { body = src; needs = nvNeeds(src); }
+      else { const r = nvMarkdown(await nvMarked(), src); body = r.html; needs = nvNeeds(body); kind = 'html-md'; }
+    } else if (content.trim()) { const r = nvMarkdown(await nvMarked(), content); body = r.html; tasks = r.tasks; needs = nvNeeds(body); }
+    else body = empty;
+  } catch (e) { body = (o.type === 'html' ? nvTextToHtml(content) : mdToHtml(content)) || empty; needs = {}; } // marked could not load (offline, first time): the simple renderer
+  if (my !== NV.seq || fr !== $('#nvFrame') || !N.open || N.open.id !== o.id) return;
+  NV.frame = doc ? null : {token, kind, tasks, needs, el: fr, id: o.id};
+  fr.classList.toggle('page', !!doc);
+  fr.addEventListener('load', () => fr.classList.add('on'), {once: true});
+  fr.srcdoc = doc || nvDoc(body, kind, token, tasks, needs);
+}
+window.addEventListener('message', async e => {
+  const F = NV.frame, d = e.data;
+  if (!F || !d || d.nv !== F.token || !F.el.isConnected || e.source !== F.el.contentWindow) return;
+  if (d.act === 'hello') {
+    const want = [].concat(F.needs.mono ? ['mono', 'monoB'] : [], F.needs.math ? ['katexCss', 'katex', 'mhchem'] : [], F.needs.code ? ['hljs'] : [], F.needs.mermaid ? ['mermaid'] : []), libs = {};
+    await Promise.all(want.map(async n => { try { libs[n] = await nvGet(n); } catch (er) {} }));
+    if (F === NV.frame && F.el.contentWindow) F.el.contentWindow.postMessage({nv: F.token, act: 'libs', libs}, '*');
+    return;
+  }
+  if (F.kind === 'page' || !N.open || N.open.id !== F.id) return;
+  if (d.act === 'copy' && typeof d.text === 'string' && d.text.length < 2e6) { try { await navigator.clipboard.writeText(d.text); toast('Copied'); } catch (er) { showCopy('Code', d.text); } }
+  else if (d.act === 'task' && F.kind === 'md' && F.tasks) nvToggleTask(+d.i, !!d.on); // only a Markdown note's own checklist
+});
+// Tick or untick the i-th checklist item in the note's text, then save.
+function nvToggleTask(i, on) {
+  const o = N.open; if (!o || o.type !== 'md' || !(i >= 0)) return;
+  let k = 0, hit = false;
+  const next = nvLines(String(o.content).replace(/\r\n?/g, '\n'), l => {
+    if (hit) return; const m = l.match(/^((?:\s*>)*\s*(?:[-*+]|\d+[.)])\s+)\[( |x|X)\](?=\s|$)/); if (!m) return;
+    if (k++ !== i) return; hit = true; return m[1] + (on ? '[x]' : '[ ]') + l.slice(m[0].length);
+  });
+  if (!hit || next === o.content) return;
+  o.content = next; commitNote();
+}
 document.addEventListener('input', ev => {
   if (ev.target && ev.target.id === 'nQ') { N.q = ev.target.value; renderNoteList(); const d = document.querySelector('.nsearchb .ndot'); }
   else if (ev.target && (ev.target.id === 'nTitle' || ev.target.id === 'nText')) noteChanged();
@@ -3732,10 +4280,23 @@ document.addEventListener('click', async ev => {
   else if (a === 'n-kinds' || a === 'n-more') { const pop = b.parentElement.querySelector('.npop'), show = pop.hidden; document.querySelectorAll('#noteBox .npop').forEach(x => { x.hidden = true; }); pop.hidden = !show; b.setAttribute('aria-expanded', String(show)); }
   else if (a === 'n-save') { closeNote(); toast('Saved'); }
   else if (a === 'n-kind') { // show the note formatted for its new kind straight away
-    if (o.type === 'txt' && b.dataset.v !== 'txt' && $('#nText')) o.content = $('#nText').value;
-    o.type = b.dataset.v;
+    if (N.mode === 'edit' && $('#nText')) o.content = $('#nText').value;
+    const from = o.type, to = b.dataset.v, before = o.content; let msg = NOTE_KINDS[to].label;
+    if (from === to) { document.querySelectorAll('#noteBox .npop').forEach(x => { x.hidden = true; }); return; }
+    // The text follows the kind, so a note never shows up as raw code: to HTML, plain text and Markdown become real
+    // HTML; from HTML to plain text, the page becomes its words. Undo (in Edit) brings the earlier text back.
+    if (to === 'html' && o.content.trim() && !nvIsHtml(nvHtmlSource(o.content))) {
+      if (from === 'md') { try { o.content = nvPolish((await nvMarked()).parse(o.content), {parseInline: t => esc(t)}, []).html.replace(/ data-i="\d+"/g, ''); } catch (e) { o.content = nvTextToHtml(o.content); } }
+      else if (from === 'txt') o.content = nvTextToHtml(o.content);
+      if (o.content !== before) msg = 'HTML: the text is now a web page';
+    } else if (to === 'html' && from === 'html') {}
+    else if (from === 'html' && (to === 'txt' || to === 'json') && nvIsHtml(nvHtmlSource(o.content))) { o.content = nvHtmlToText(o.content); msg = 'Plain text: the page\u2019s words, without the code'; }
+    if (!N.open || N.open !== o) return;
+    o.type = to;
     if (o.type === 'json') { try { o.content = JSON.stringify(JSON.parse(o.content), null, 2); } catch (e) {} }
-    N.mode = o.type === 'txt' || !o.content.trim() ? 'edit' : 'view'; commitNote(); drawNote(); toast(NOTE_KINDS[o.type].label); }
+    N.mode = o.type === 'txt' || !o.content.trim() ? 'edit' : 'view'; commitNote(); drawNote();
+    if (o.content !== before) { histReset(before); histPush(o.content); }
+    toast(msg); }
   else if (a === 'n-label') { o.cat = b.dataset.v; writePref({noteCat: o.cat}); document.querySelectorAll('.nlab').forEach(x => x.setAttribute('aria-pressed', String(x.dataset.v === o.cat))); commitNote(); }
   else if (o && o.guest && /^n-(share|pin|label|del|addlabel)$/.test(a)) return;
   else if (a === 'n-share') { if (!canShare()) { shareNote(o.id, !o.shared); return; } o.shared = !o.shared; b.setAttribute('aria-pressed', String(o.shared)); b.title = o.shared ? 'Shared with everyone' : 'Share with everyone'; commitNote(); toast(o.shared ? 'Shared: everyone with the app sees this note' : 'Not shared: only you see this note'); }
@@ -6584,7 +7145,7 @@ document.addEventListener('click', ev => {
    four main screens and More. Laptops, desktops and TVs: the same pieces become a sidebar (CSS only).
    While the phone keyboard is up, every bar steps aside and the box you are typing in is kept in view. */
 const VIEW_TITLE = {add: 'Add entry', overview: 'Overview', entries: 'Entries', cards: 'Card bills', wealth: 'Wealth', notes: 'Notes', trend: 'Trend', setup: 'Setup', vault: 'Vault', disc: 'Discretionary', read: 'Reader', contacts: 'Contacts'};
-const PRIMARY_VIEWS = ['entries', 'overview', 'wealth', 'notes', 'read'];
+const PRIMARY_VIEWS = ['entries', 'vault', 'overview', 'notes', 'read']; // the phone bottom bar (Vault: owner only); Wealth opens from Overview
 const coarse = matchMedia('(pointer: coarse)');
 const reduceMotion = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
 const buzz = () => {}; // haptic feedback is switched off everywhere (owner's choice)
@@ -6685,10 +7246,10 @@ function swipeBlocked(el) {
 }
 // More (phones): the other screens and the settings, one tap away.
 function moreHtml() {
-  const isOwner = !!(Sync.me && Sync.me.role === 'Owner'), dark = darkNow(), size = (TEXT_SIZES.find(x => x.v === readText().size) || {}).l || '';
+  const dark = darkNow(), size = (TEXT_SIZES.find(x => x.v === readText().size) || {}).l || '';
   const tiles = [['cards', 'i-card', 'Card bills', 'What to pay, and by when', ''], ['trend', 'i-trend', 'Trend', 'Month by month', 'c2'],
     ['disc', 'i-spark', 'Discretionary', 'Spending outside the plan', 'c3'], ['setup', 'i-sliders', 'Setup', 'Budgets, accounts, cards', 'c4']]
-    .concat(isOwner ? [['vault', 'i-vault', 'Vault', 'Card and account details', 'c5']] : []).concat([['contacts', 'i-contacts', 'Contacts', 'Family phone book', 'c6']]);
+    .concat([['wealth', 'i-wealth', 'Wealth', 'Net worth and balances', 'c5'], ['contacts', 'i-contacts', 'Contacts', 'Family phone book', 'c6']]);
   return `<div class="more-h"><b>More</b><span class="hint">${esc(syncLabel())}</span></div>
     <div class="more-grid">${tiles.map(([v, ic, t, sub, c]) => `<a class="mtile${state.view === v ? ' on' : ''}" href="#${v}" data-act="more-go"><span class="mt-ic ${c}"><svg class="ic" aria-hidden="true"><use href="#${ic}"/></svg></span><b>${t}</b><small>${sub}</small></a>`).join('')}</div>
     <div class="more-set">
