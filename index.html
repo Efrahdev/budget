@@ -2621,7 +2621,7 @@ function takeReply(j) {
   if (j.same) return; // nothing changed on the sheet since our copy
   if (j.data) Sync.full = Date.now();
   fromServer(j.data);
-  notesReply(j);
+  try { notesReply(j); } catch (e) { console.error('notes', e); } // a notes problem must never stop the budget from syncing
   if (j.me) Sync.me = j.me;
   if (Sync.me && Sync.me.role === 'Owner' && !V.loaded && !V.loading && !V.err) setTimeout(() => { if (!V.loaded && !V.loading) loadVault(); }, 0);
   Sync.users = j.users || null;

@@ -99,8 +99,11 @@ function doPost(e) {
     if (who.session) reply.session = who.session;
     if (role === 'Owner') { reply.users = listUsers(ss); reply.entryLinks = listEntryLinks(props); reply.killCode = !!props.getProperty('KILL_CODE'); if (killErr) reply.killErr = killErr; }
     if (req.vault && who.user.role === 'Owner') reply.vault = readVault(ss);
-    reply.notes = readNotes(ss, who.user); reply.notesV = 5; // 3: notes can be Shared · 4: anyone can edit a Shared note · 5: shared with chosen people
-    reply.people = notePeople(ss).map(function (p) { return {id: p.id, name: p.name, me: p.key === noteOwner(who.user)}; });
+    // Notes can never stop the budget from syncing: if anything in them fails, the budget still goes through and the app is told.
+    try {
+      reply.notes = readNotes(ss, who.user); reply.notesV = 5; // 3: notes can be Shared · 4: anyone can edit a Shared note · 5: shared with chosen people
+      reply.people = notePeople(ss).map(function (p) { return {id: p.id, name: p.name, me: p.key === noteOwner(who.user)}; });
+    } catch (x) { delete reply.notes; delete reply.notesV; noteErrors.push({id: '', error: String(x && x.message || x)}); }
     if (noteErrors.length) reply.noteErrors = noteErrors;
     if (Array.isArray(req.noteIds) && req.noteIds.length) { try { reply.noteBodies = noteBodies(ss, req.noteIds, who.user); } catch (x) { reply.noteErrors = (reply.noteErrors || []).concat([{id: '', error: String(x && x.message || x)}]); } }
     return out(reply);
@@ -384,8 +387,14 @@ function notesHead(sh) { // older Notes tabs get the label/pin/shared columns ad
 function isYes(v) { return /^(yes|true|1)$/i.test(txt(v)); }
 // The people a note can be shared with: everyone on the Users tab and every entry link. The app sees a short id
 // for each (never the email), the sheet keeps the email / entry-<id>.
-function personId(key) {
-  return Utilities.computeDigest(Utilities.DigestAlgorithm.MD5, String(key)).map(function (b) { return ('0' + (b & 255).toString(16)).slice(-2); }).join('').slice(0, 10);
+function personId(key) { // plain JavaScript (two small string hashes), so it needs no Google service that could fail
+  key = String(key); var h1 = 2166136261, h2 = 5381;
+  for (var i = 0; i < key.length; i++) {
+    var c = key.charCodeAt(i);
+    h1 = ((h1 ^ c) * 16777619) >>> 0;
+    h2 = (((h2 << 5) + h2) ^ c) >>> 0;
+  }
+  return ('00000000' + h1.toString(16)).slice(-8) + ('00000000' + h2.toString(16)).slice(-8);
 }
 function notePeople(ss) {
   var list = [];
