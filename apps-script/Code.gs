@@ -38,6 +38,8 @@ var TABS = {
   Vault: ['ID', 'Encrypted data', 'Saved at'],
   // Notes live as real files in Drive (folder "Budget Tracker notes"); this tab is only the list.
   Notes: ['ID', 'Title', 'Type', 'Owner', 'Drive file ID', 'Updated at', 'Size', 'Preview', 'Label', 'Pinned', 'Pin order', 'Shared'],
+  // One row per person per shared note they did not write: that person's own label, pin and "removed from my list".
+  NotePrefs: ['Note ID', 'Person', 'Label', 'Pinned', 'Pin order', 'Hidden'],
   // Which entries came from an entry link, so that link can see and change only those.
   EntryLog: ['Entry ID', 'Link ID', 'Link name', 'Added at']
 };
@@ -101,7 +103,7 @@ function doPost(e) {
     if (req.vault && who.user.role === 'Owner') reply.vault = readVault(ss);
     // Notes can never stop the budget from syncing: if anything in them fails, the budget still goes through and the app is told.
     try {
-      reply.notes = readNotes(ss, who.user); reply.notesV = 5; // 3: notes can be Shared · 4: anyone can edit a Shared note · 5: shared with chosen people
+      reply.notes = readNotes(ss, who.user); reply.notesV = 6; // 3: notes can be Shared · 4: anyone can edit a Shared note · 5: shared with chosen people · 6: guests pin, label and remove for themselves
       reply.people = notePeople(ss).map(function (p) { return {id: p.id, name: p.name, me: p.key === noteOwner(who.user)}; });
     } catch (x) { delete reply.notes; delete reply.notesV; noteErrors.push({id: '', error: String(x && x.message || x)}); }
     if (noteErrors.length) reply.noteErrors = noteErrors;
@@ -356,7 +358,7 @@ function readVault(ss) {
 /* ---------- notes: one real file per note in Drive ----------
    Each person sees their own notes, plus every note someone shared with them. A note is shared with everyone
    who can open the app, or with chosen people (Users tab and entry links); anyone it is shared with can change
-   its text and title. Only its author can change who it is shared with, label, pin or delete it, and it stays
+   its text and title. Only its author can change who it is shared with or delete it for everyone; anyone can pin, label or remove it for themselves (NotePrefs tab), and it stays
    the author's (Owner column) whoever edits it. The Shared column holds Yes (everyone) or the chosen people,
    separated by commas (an email, or entry-<id> for an entry link). Files sit in the owner's Drive, folder "Budget Tracker notes".
    Run setupNotes() once from the editor after pasting this file: Google then asks to allow Drive access. */
@@ -429,23 +431,39 @@ function noteAuthors(ss) {
   listEntryLinks(PropertiesService.getScriptProperties()).forEach(function (L) { m['entry-' + L.id] = L.name || 'Entry link'; });
   return m;
 }
+// A person's own label, pin and "removed" mark for notes they did not write. Never changes the author's note.
+function prefsMap(ss, me) {
+  var m = {};
+  rows(ss.getSheetByName('NotePrefs')).forEach(function (r) { if (String(r[1]).toLowerCase() === me) m[String(r[0])] = r; });
+  return m;
+}
+function prefPut(ss, id, me, label, pinned, order, hidden) {
+  var sh = ss.getSheetByName('NotePrefs'), r = rows(sh), row = [id, me, label, pinned ? 'Yes' : '', order, hidden ? 'Yes' : ''];
+  for (var i = 0; i < r.length; i++) if (String(r[i][0]) === id && String(r[i][1]).toLowerCase() === me) { sh.getRange(i + 2, 1, 1, 6).setNumberFormat('@').setValues([row]); return; }
+  sh.getRange(sh.getLastRow() + 1, 1, 1, 6).setNumberFormat('@').setValues([row]);
+}
+function prefsDrop(ss, id) { deleteRowsWhere(ss.getSheetByName('NotePrefs'), function (row) { return String(row[0]) === id; }); }
 function noteOp(ss, op, user) {
   var sh = ss.getSheetByName('Notes'); notesHead(sh);
   var r = rows(sh), me = noteOwner(user);
   var id = String((op.t === 'nput' ? (op.note || {}).id : op.id) || '');
   if (op.t === 'nmeta') { // label, pin and pin order only: the file in Drive is untouched
     for (var k = 0; k < r.length; k++) if (String(r[k][0]) === id && String(r[k][3]).toLowerCase() === me) { sh.getRange(k + 2, 9, 1, 4).setNumberFormat('@').setValues([noteMeta(op, r[k], ss, me)]); return; }
+    var g = -1; for (var q = 0; q < r.length; q++) if (String(r[q][0]) === id) { g = q; break; }
+    if (g >= 0 && sharedWith(r[g], me)) prefPut(ss, id, me, okLabel(op.cat) || 'other', op.pinned, isFinite(+op.order) ? +op.order : 0, false); // someone else's note: only my own label and pin
     return;
   }
   if (!/^[A-Za-z0-9_\-]{1,64}$/.test(id)) return;
   var at = -1;
   for (var i = 0; i < r.length; i++) if (String(r[i][0]) === id) { at = i; break; }
   var guest = at >= 0 && String(r[at][3]).toLowerCase() !== me;
-  if (guest && (op.t === 'ndel' || !sharedWith(r[at], me))) return; // someone else's note: only its text, and only while it is shared with you
+  if (guest && !sharedWith(r[at], me)) return; // someone else's note: only while it is shared with you
+  if (guest && op.t === 'ndel') { prefPut(ss, id, me, '', false, 0, true); return; } // not the author: it leaves my list only, everyone else keeps it
   var oldFile = at >= 0 ? String(r[at][4] || '') : '';
   if (op.t === 'ndel') {
     if (oldFile) { try { DriveApp.getFileById(oldFile).setTrashed(true); } catch (e) {} }
     if (at >= 0) sh.deleteRow(at + 2);
+    prefsDrop(ss, id);
     return;
   }
   var n = op.note, type = NOTE_TYPES[n.type] ? n.type : 'txt', content = String(n.content == null ? '' : n.content), title = String(n.title || '').slice(0, 200);
@@ -465,16 +483,20 @@ function noteOp(ss, op, user) {
   else sh.getRange(sh.getLastRow() + 1, 1, 1, row.length).setNumberFormat('@').setValues([row]);
 }
 function readNotes(ss, user) {
-  var me = noteOwner(user), names = null, people = null;
-  return rows(ss.getSheetByName('Notes')).filter(function (r) { return r[0] && (String(r[3]).toLowerCase() === me || sharedWith(r, me)); }).map(function (r) {
+  var me = noteOwner(user), names = null, people = null, prefs = prefsMap(ss, me);
+  return rows(ss.getSheetByName('Notes')).filter(function (r) { return r[0] && (String(r[3]).toLowerCase() === me || (sharedWith(r, me) && !(prefs[String(r[0])] && isYes(prefs[String(r[0])][5])))); }).map(function (r) {
     var owner = String(r[3]).toLowerCase(), mine = owner === me, sl = sharedList(r[11]), n = {id: String(r[0]), title: txt(r[1]), type: NOTE_TYPES[r[2]] ? String(r[2]) : 'txt', fileId: txt(r[4]),
       updatedAt: Date.parse(txt(r[5])) || 0, size: +r[6] || 0, preview: txt(r[7]), cat: okLabel(txt(r[8])) || 'other', mine: mine,
-      pinned: mine && isYes(r[9]), order: mine ? +r[10] || 0 : 0}; // the author's pins are the author's own
+      pinned: mine && isYes(r[9]), order: mine ? +r[10] || 0 : 0}; // an author's pins are theirs; a guest's come from NotePrefs
     if (mine) { // who it is shared with: only the author is told
       people = people || notePeople(ss);
       n.all = sl === 'all'; n.with = n.all ? [] : people.filter(function (p) { return sl.indexOf(p.key) >= 0; }).map(function (p) { return p.id; });
       n.shared = n.all || n.with.length > 0;
-    } else { n.shared = true; names = names || noteAuthors(ss); n.by = names[owner] || owner.replace(/@.*/, ''); n.fileId = ''; }
+    } else {
+      n.shared = true; names = names || noteAuthors(ss); n.by = names[owner] || owner.replace(/@.*/, ''); n.fileId = '';
+      var pf = prefs[n.id]; // my own label and pin for someone else's note
+      if (pf) { n.cat = okLabel(txt(pf[2])) || n.cat; n.pinned = isYes(pf[3]); n.order = +pf[4] || 0; }
+    }
     return n;
   });
 }

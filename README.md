@@ -39,8 +39,9 @@ Each note is a real file in Google Drive (folder *Budget Tracker notes*). Your n
 
 - **Sharing a note, with chosen people (both ways):** open a note and tap the **people** button at the top, or press and hold the note and choose **Share with people…**. Tick **Everyone with the app**, or tick the people you want (everyone on the **Users** tab and every entry link is listed). Each tap is saved at once; **Done** closes the sheet. Anyone can share their own notes this way, including people on entry links, so you can share with them and they can share with you.
 - A shared note shows on the other person's phone within a minute of their next sync, with **From <name>** on it. Your own list says **Shared** (everyone) or **Shared with Efrah**. **All ▾ → Shared** lists the notes shared by you or with you.
-- **Everyone a note is shared with can edit it** (text, title and type), and the change goes straight into the author's Drive file. The note stays the author's: only the author can change who it is shared with, label, pin or delete it. If two people save the same note at the same moment, the last one saved wins.
-- Sharing with chosen people needs the latest Apps Script (it sets `notesV` to 5). The `Shared` column of the `Notes` tab holds `Yes` (everyone) or the chosen people, separated by commas.
+- **Everyone a note is shared with can edit it** (text, title and type), and the change goes straight into the author's Drive file. If two people save the same note at the same moment, the last one saved wins.
+- **On a note someone else wrote, you can pin it, label it and remove it, for yourself only.** Your pin and label are yours alone (the author's and everyone else's stay as they are). **Remove from my notes** takes it off your list only; the author and the others keep it. Only the author can change who it is shared with, or delete it for everyone (it then goes to the Drive bin). Stored in a new `NotePrefs` tab, which the script creates by itself.
+- Sharing with chosen people needs the latest Apps Script (it sets `notesV` to 6). The `Shared` column of the `Notes` tab holds `Yes` (everyone) or the chosen people, separated by commas.
 
 ## Reader
 

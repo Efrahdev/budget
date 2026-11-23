@@ -3260,6 +3260,7 @@ const allLabels = () => ['arhaan', 'efrah', 'other'].concat(extraLabels().filter
 const N = {local: {}, meta: {}, del: {}, bodies: {}, err: '', q: '', cat: '', open: null, mode: 'edit', timer: 0, kinds: false, hist: null};
 // Sharing with chosen people needs the Apps Script from Nov 2026 (notesV 5); an older script would never store it.
 const canShare = () => Sync.notesOk && Sync.notesV >= 5; // 5: shared with chosen people
+const canGuestMeta = () => Sync.notesOk && Sync.notesV >= 6; // the script that lets anyone pin, label and remove a note they did not write, for themselves
 const canGuestEdit = () => Sync.notesOk && Sync.notesV >= 4; // the script that lets anyone edit a Shared note
 const SHARED = '@shared'; // the "Shared" filter
 const SHARE_IC = '<svg class="ic" aria-hidden="true"><use href="#i-users"/></svg>';
@@ -3304,7 +3305,7 @@ const notePreview = c => String(c || '').replace(/<(style|script|head|template)\
   .replace(/(\*\*|__|~~|`)/g, '').replace(/(\s*\|\s*)+/g, ' · ').replace(/[ \t]*\n+[ \t]*/g, ' · ').replace(/( · )+/g, ' · ').replace(/\s+/g, ' ').replace(/^( · )+|( · )+$/g, '').trim().slice(0, 140);
 // The list: the sheet's list, with this phone's unsent changes on top.
 function noteList() {
-  const m = {}; (state.notes || []).forEach(n => { if (!N.del[n.id]) m[n.id] = Object.assign({cat: 'other', pinned: false, order: 0, shared: false}, n, {mine: n.mine !== false, preview: notePreview(n.preview)}, n.mine === false ? {pinned: false, order: 0} : {}); });
+  const m = {}; (state.notes || []).forEach(n => { if (!N.del[n.id]) m[n.id] = Object.assign({cat: 'other', pinned: false, order: 0, shared: false}, n, {mine: n.mine !== false, preview: notePreview(n.preview)}); });
   Object.values(N.local).forEach(l => { if (N.del[l.id]) return; m[l.id] = Object.assign({}, m[l.id] || {}, {id: l.id, title: l.title, type: l.type, cat: l.cat, pinned: !!l.pinned, order: l.order || 0, shared: l.share !== undefined && (!m[l.id] || m[l.id].mine !== false) ? sharedBool(l.share) : m[l.id] ? !!m[l.id].shared : !!l.shared, share: m[l.id] && m[l.id].mine === false ? undefined : l.share, mine: m[l.id] ? m[l.id].mine : true, by: m[l.id] ? m[l.id].by : '', updatedAt: l.updatedAt, preview: notePreview(l.content), size: l.content.length, dirty: true}); });
   Object.entries(N.meta).forEach(([id, mt]) => { if (m[id]) Object.assign(m[id], mt, {metaDirty: true}); });
   Object.values(m).forEach(n => { const body = N.local[n.id] ? N.local[n.id].content : N.bodies[n.id] && N.bodies[n.id].u === n.updatedAt ? N.bodies[n.id].c : null; if (body != null) n.preview = notePreview(body); });
@@ -3323,9 +3324,9 @@ function notesReply(j) {
   N.err = j.noteErrors && j.noteErrors.length ? j.noteErrors[0].error : '';
   if (!Sync.notesOk) return;
   let sent = false; const queued = (t, id) => Sync.outbox.some(o => o.t === t && (o.id || (o.note || {}).id) === id);
-  const theirs = id => { const s = state.notes.find(x => x.id === id); return !!s && s.mine === false; }; // someone else's Shared note: text yes, label/pin/share/delete no
+  const theirs = id => { const s = state.notes.find(x => x.id === id); return !!s && s.mine === false && !canGuestMeta(); }; // someone else's Shared note: text yes, label/pin/share/delete no
   const known = x => Array.isArray(x) ? x.filter(id => (state.people || []).some(p => p.id === id && !p.me)) : x; // a person removed since is not counted, or it would be sent for ever
-  const sameShare = (s, l) => !canShare() || shareKey(shareOf(s)) === shareKey(known(l.share !== undefined ? l.share : l.shared ? 'all' : ''));
+  const sameShare = (s, l) => s.mine === false || !canShare() || shareKey(shareOf(s)) === shareKey(known(l.share !== undefined ? l.share : l.shared ? 'all' : ''));
   Object.values(N.local).forEach(l => {
     const s = state.notes.find(x => x.id === l.id);
     if (s && s.mine === false && (!s.shared || !canGuestEdit())) { delete N.local[l.id]; return; } // unshared before our change went up: it can't be saved
@@ -3336,7 +3337,7 @@ function notesReply(j) {
   });
   Object.entries(N.meta).forEach(([id, mt]) => {
     const s = state.notes.find(x => x.id === id); if (!s) { if (!N.local[id]) delete N.meta[id]; return; }
-    if (s.mine === false) { delete N.meta[id]; return; }
+    if (s.mine === false && !canGuestMeta()) { delete N.meta[id]; return; }
     if (Sync.notesV < 2) return; // the sheet can't hold labels yet: keep them on the phone
     if (s.cat === mt.cat && !!s.pinned === !!mt.pinned && (+s.order || 0) === (+mt.order || 0) && sameShare(s, mt)) { delete N.meta[id]; return; }
     if (Sync.notesV >= 2 && !queued('nmeta', id)) { Sync.outbox.push(Object.assign({t: 'nmeta', id}, mt)); sent = true; }
@@ -3388,9 +3389,15 @@ function noteSave(n) {
 }
 // Label, pin and order changes: only the list changes, not the file.
 function noteSetMeta(id, patch) {
-  const cur = noteList().find(x => x.id === id); if (!cur || cur.mine === false) return;
-  const mt = {cat: cur.cat, pinned: !!cur.pinned, order: cur.order || 0, shared: !!cur.shared, share: shareOf(cur), ...patch};
-  if (patch.share !== undefined) mt.shared = sharedBool(patch.share);
+  const cur = noteList().find(x => x.id === id); if (!cur || (cur.mine === false && !canGuestMeta())) return;
+  let mt;
+  if (cur.mine === false) { // someone else's note: my own label, pin and order only
+    mt = {cat: cur.cat, pinned: !!cur.pinned, order: cur.order || 0};
+    ['cat', 'pinned', 'order'].forEach(k => { if (patch[k] !== undefined) mt[k] = patch[k]; });
+  } else {
+    mt = {cat: cur.cat, pinned: !!cur.pinned, order: cur.order || 0, shared: !!cur.shared, share: shareOf(cur), ...patch};
+    if (patch.share !== undefined) mt.shared = sharedBool(patch.share);
+  }
   if (N.local[id]) Object.assign(N.local[id], mt); else N.meta[id] = mt;
   saveNotes();
   if (Sync.notesOk) { if (N.local[id]) queueNote({t: 'nput', note: Object.assign({}, N.local[id])}); else if (Sync.notesV >= 2) queueNote(Object.assign({t: 'nmeta', id}, mt)); saveCache(); clearTimeout(N.flushT); N.flushT = setTimeout(flush, 600); }
@@ -3499,7 +3506,7 @@ document.addEventListener('pointermove', ev => { if (lp && Math.hypot(ev.clientX
 document.addEventListener('contextmenu', ev => { if (ev.target.closest('.ncard')) ev.preventDefault(); });
 function noteMenu(id) {
   const n = noteList().find(x => x.id === id); if (!n) return;
-  if (!n.mine) { // someone else's Shared note: read only
+  if (!n.mine && !canGuestMeta()) { // someone else's Shared note, with an older script: read only
     paint($('#noteMenuBox'), `<div class="nm-h"><span class="nav l-${esc(n.cat)}">${esc(labelName(n.cat)[0].toUpperCase())}</span><b>${esc(noteName(n))}</b></div>
       <p class="nm-note">${SHARE_IC}Shared by ${esc(n.by || 'someone')}. Open it to read or change the text; everyone it is shared with sees your changes. Only ${esc(n.by || 'they')} can change who sees it, or delete it.</p>
       <button type="button" class="btn ghost nm-close" data-act="n-m-close">Close</button>`);
@@ -3509,9 +3516,9 @@ function noteMenu(id) {
   paint($('#noteMenuBox'), `<div class="nm-h"><span class="nav l-${esc(n.cat)}">${esc(labelName(n.cat)[0].toUpperCase())}</span><b>${esc(noteName(n))}</b></div>
     <button type="button" class="nm-b" data-act="n-m-pin" data-id="${esc(id)}"><span><svg class="ic" aria-hidden="true"><use href="#i-pin"/></svg></span>${n.pinned ? 'Unpin' : 'Pin to the top'}</button>
     ${n.pinned && pins.length > 1 ? `<div class="nm-row"><button type="button" class="nm-b" data-act="n-m-move" data-d="-1" data-id="${esc(id)}"${pi <= 0 ? ' disabled' : ''}><span>↑</span>Move up</button><button type="button" class="nm-b" data-act="n-m-move" data-d="1" data-id="${esc(id)}"${pi >= pins.length - 1 ? ' disabled' : ''}><span>↓</span>Move down</button></div>` : ''}
-    <button type="button" class="nm-b" data-act="n-m-share" data-id="${esc(id)}" aria-pressed="${!!n.shared}"><span>${SHARE_IC}</span>${n.shared ? 'Shared with ' + esc(shareText(n)) + ' · change' : 'Share with people…'}</button>
+    ${n.mine ? `<button type="button" class="nm-b" data-act="n-m-share" data-id="${esc(id)}" aria-pressed="${!!n.shared}"><span>${SHARE_IC}</span>${n.shared ? 'Shared with ' + esc(shareText(n)) + ' · change' : 'Share with people…'}</button>` : `<p class="nm-note">${SHARE_IC}Shared by ${esc(n.by || 'someone')}. Your pin and label are yours alone.</p>`}
     <div class="nm-lbl">Label</div><div class="nm-row nm-wrap">${allLabels().map(k => [k, labelName(k)]).map(([k, v]) => `<button type="button" class="nm-b nm-c" data-act="n-m-cat" data-v="${esc(k)}" data-id="${esc(id)}" aria-pressed="${n.cat === k}">${v}</button>`).join('')}</div>
-    <button type="button" class="nm-b danger" data-act="n-m-del" data-id="${esc(id)}"><span><svg class="ic" aria-hidden="true"><use href="#i-trash"/></svg></span>Delete</button>
+    <button type="button" class="nm-b danger" data-act="n-m-del" data-id="${esc(id)}"><span><svg class="ic" aria-hidden="true"><use href="#i-trash"/></svg></span>${n.mine ? 'Delete' : 'Remove from my notes'}</button>
     <button type="button" class="btn ghost nm-close" data-act="n-m-close">Cancel</button>`);
   $('#noteMenu').hidden = false;
   document.querySelectorAll('.ncard.held').forEach(x => x.classList.remove('held'));
@@ -3520,7 +3527,9 @@ function closeNoteMenu() { N.sh = null; $('#noteMenu').hidden = true; }
 function deleteNote(id) {
   clearTimeout(N.timer); delete N.local[id]; delete N.meta[id]; const onServer = (state.notes || []).some(x => x.id === id);
   if (onServer) { N.del[id] = 1; if (Sync.notesOk) { Sync.outbox.push({t: 'ndel', id}); saveCache(); setTimeout(flush, 300); } }
-  saveNotes(); toast('Note deleted' + (onServer ? ' (it goes to the Drive bin)' : ''));
+  saveNotes();
+  const theirs = (state.notes || []).some(x => x.id === id && x.mine === false);
+  toast(theirs ? 'Removed from your notes. The person who wrote it, and anyone else, still has it' : 'Note deleted' + (onServer ? ' (it goes to the Drive bin)' : ''));
 }
 /* --- drag a pinned note by its grip --- */
 let dg = null;
@@ -3575,11 +3584,11 @@ function drawNote() {
       <button type="button" class="nttl" data-act="n-meta" aria-label="Title and label for this note"><b id="nTtl" class="${o.title ? '' : 'none'}">${esc(o.title || 'Untitled note')}</b><span class="nstate" id="nState"></span></button>
       ${o.guest ? `<span class="nro">${SHARE_IC}${esc(o.by || 'Shared')}</span>` : `<button type="button" class="npin nshare" data-act="n-share" aria-pressed="${o.shared}" aria-label="${o.shared ? 'Shared with ' + esc(shareText(o)) + '. Tap to change' : 'Share with people'}" title="${o.shared ? 'Shared with ' + esc(shareText(o)) : 'Share with people'}">${SHARE_IC}</button>`}
       ${fancy ? `<div class="seg nmode" role="group" aria-label="Mode"><button type="button" class="segb" data-act="n-mode" data-v="edit" aria-pressed="${N.mode === 'edit'}">Edit</button><button type="button" class="segb" data-act="n-mode" data-v="view" aria-pressed="${N.mode === 'view'}">${o.type === 'json' ? 'Check' : 'Preview'}</button></div>` : ''}
-      ${o.guest ? '' : `<button type="button" class="npin" data-act="n-pin" aria-pressed="${o.pinned}" aria-label="${o.pinned ? 'Unpin' : 'Pin'}" title="${o.pinned ? 'Unpin' : 'Pin'}"><svg class="ic" aria-hidden="true"><use href="#i-pin"/></svg></button>`}
+      ${o.guest && !canGuestMeta() ? '' : `<button type="button" class="npin" data-act="n-pin" aria-pressed="${o.pinned}" aria-label="${o.pinned ? 'Unpin' : 'Pin'}" title="${o.pinned ? 'Unpin' : 'Pin'}"><svg class="ic" aria-hidden="true"><use href="#i-pin"/></svg></button>`}
       ${ready && N.mode === 'edit' ? '<button type="button" class="ntool wide red nclr" data-tool="clear" aria-label="Clear the whole note" title="Clear the whole note">Clear</button>' : ''}</div>
     <div class="nmeta">
       <input id="nTitle" type="text" class="ntitle" placeholder="Title (optional)" aria-label="Title" value="${esc(o.title)}">
-      ${o.guest ? `<div class="nrotxt">Shared by ${esc(o.by || 'someone')} · your changes reach everyone it is shared with</div>` : `<div class="nlabels" role="group" aria-label="Label">${allLabels().map(k => [k, labelName(k)]).map(([kk, v]) => `<button type="button" class="nlab l-${esc(kk)}" data-act="n-label" data-v="${esc(kk)}" aria-pressed="${kk === o.cat}"><i>${esc(v[0].toUpperCase())}</i>${esc(v)}</button>`).join('')}<button type="button" class="nlab nlab-add" data-act="n-addlabel" data-for="note" aria-label="Add a person"><i>+</i></button></div>`}</div>
+      ${o.guest && !canGuestMeta() ? `<div class="nrotxt">Shared by ${esc(o.by || 'someone')} · your changes reach everyone it is shared with</div>` : `<div class="nlabels" role="group" aria-label="Label">${allLabels().map(k => [k, labelName(k)]).map(([kk, v]) => `<button type="button" class="nlab l-${esc(kk)}" data-act="n-label" data-v="${esc(kk)}" aria-pressed="${kk === o.cat}"><i>${esc(v[0].toUpperCase())}</i>${esc(v)}</button>`).join('')}<button type="button" class="nlab nlab-add" data-act="n-addlabel" data-for="note" aria-label="Add a person"><i>+</i></button></div>`}</div>
     <div class="nedit${ecls}" id="nEdit">${o.loading ? '<div class="empty">Opening from Google Drive…</div>' : o.failed ? '<div class="empty">Couldn\'t open this note from Google Drive. Check the connection and try again.</div>' : noteBodyHtml()}</div>
     <div class="nfoot">${noteToolsHtml()}
       <div class="nact"><div class="npopw"><button type="button" class="nkindb" data-act="n-kinds" aria-haspopup="true" aria-expanded="false">${k.label} ▾</button>
@@ -3589,7 +3598,7 @@ function drawNote() {
             <button type="button" class="npi" data-act="n-dl"><b>Download</b><small>Saves a .${NOTE_KINDS[o.type].ext} file to this phone</small></button>
             <button type="button" class="npi" data-act="n-dup"><b>Make a copy</b><small>Opens a new note with the same text</small></button>
             <button type="button" class="npi" data-act="n-read"><b>Read in Reader</b><small>Full screen, with themes and zoom</small></button></div></div>
-        ${o.guest ? '' : '<button type="button" class="nbtn ndel" data-act="n-del">Delete</button>'}<button type="button" class="nbtn nsave" data-act="n-save">✓ Done</button></div></div></div>`);
+        ${o.guest && !canGuestMeta() ? '' : `<button type="button" class="nbtn ndel" data-act="n-del">${o.guest ? 'Remove' : 'Delete'}</button>`}<button type="button" class="nbtn nsave" data-act="n-save">✓ Done</button></div></div></div>`);
   $('#noteScrim').hidden = false; noteVV(); noteFit(); noteState();
   histReset(ready ? o.content : '');
   richBox(); plainBox(); titleBox(); noteCount(); noteToolState(); nvMount();
@@ -4712,7 +4721,7 @@ document.addEventListener('click', async ev => {
     if (o.content !== before) { histReset(before); histPush(o.content); }
     toast(msg); }
   else if (a === 'n-label') { o.cat = b.dataset.v; writePref({noteCat: o.cat}); document.querySelectorAll('.nlab').forEach(x => x.setAttribute('aria-pressed', String(x.dataset.v === o.cat))); commitNote(); }
-  else if (o && o.guest && /^n-(share|pin|label|del|addlabel)$/.test(a)) return;
+  else if (o && o.guest && (a === 'n-share' || (!canGuestMeta() && /^n-(pin|label|del|addlabel)$/.test(a)))) return;
   else if (a === 'n-share') { commitNote(); sharePicker(o.id); }
   else if (a === 'n-pin') { if (!o.pinned) { const pins = sortNotes(noteList()).filter(n => n.pinned && n.id !== o.id); o.order = pins.length ? Math.min(...pins.map(n => n.order || 0)) - 1 : 0; } o.pinned = !o.pinned; b.setAttribute('aria-pressed', String(o.pinned)); commitNote(); toast(o.pinned ? 'Pinned to the top' : 'Unpinned'); }
   else if (a === 'n-tidy') { try { o.content = JSON.stringify(JSON.parse(o.content), null, 2); commitNote(); drawNote(); toast('JSON tidied'); } catch (e) { toast('Not valid JSON: ' + e.message, 'bad'); } }
