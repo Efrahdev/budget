@@ -37,10 +37,10 @@ Card, bank and personal details live in three tables in the app's **Vault** tab:
 
 Each note is a real file in Google Drive (folder *Budget Tracker notes*). Your notes follow you to every phone you sign in on. Nobody else sees them, unless you share one.
 
-- **Shared notes:** open a note and tap the **people** button at the top, or press and hold the note and choose **Share with everyone**. Everyone who can open the app (everyone on the **Users** tab, and anyone holding an entry link) then sees it on every phone, within a minute of their next sync. Tap again (or **Stop sharing**) to make it private again.
-- Shared notes carry a **Shared** mark on your list, and a **From <name>** mark on everyone else's. **All ▾ → Shared** lists only the shared ones.
-- **Everyone can edit a shared note** (text, title and type), and their changes reach everyone. The note stays the author's: only the author can label, pin, unshare or delete it. If two people edit the same note at the same moment, the last one saved wins.
-- Sharing needs the latest Apps Script (Nov 2026) (it adds a **Shared** column to the `Notes` tab by itself). With an older script, the app asks you to update it first.
+- **Sharing a note, with chosen people (both ways):** open a note and tap the **people** button at the top, or press and hold the note and choose **Share with people…**. Tick **Everyone with the app**, or tick the people you want (everyone on the **Users** tab and every entry link is listed). Each tap is saved at once; **Done** closes the sheet. Anyone can share their own notes this way, including people on entry links, so you can share with them and they can share with you.
+- A shared note shows on the other person's phone within a minute of their next sync, with **From <name>** on it. Your own list says **Shared** (everyone) or **Shared with Efrah**. **All ▾ → Shared** lists the notes shared by you or with you.
+- **Everyone a note is shared with can edit it** (text, title and type), and the change goes straight into the author's Drive file. The note stays the author's: only the author can change who it is shared with, label, pin or delete it. If two people save the same note at the same moment, the last one saved wins.
+- Sharing with chosen people needs the latest Apps Script (it sets `notesV` to 5). The `Shared` column of the `Notes` tab holds `Yes` (everyone) or the chosen people, separated by commas.
 
 ## Reader
 
