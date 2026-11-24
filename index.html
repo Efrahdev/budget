@@ -3314,8 +3314,16 @@ document.addEventListener('change', ev => {
    Shared note reaches everyone who can open the app, on every phone, and anyone can edit its text and title.
    Only its author can unshare, label, pin or delete it. */
 const LS_NOTES = 'budgetTracker.notes.v1';
-const NOTE_KINDS = {txt: {label: 'Plain text', short: 'TXT', mime: 'text/plain', ext: 'txt'}, md: {label: 'Markdown', short: 'MD', mime: 'text/markdown', ext: 'md'},
-  html: {label: 'HTML', short: 'HTML', mime: 'text/html', ext: 'html'}, json: {label: 'JSON', short: 'JSON', mime: 'application/json', ext: 'json'}};
+// Markdown first: it is the default, and it draws everything (diagrams, tables, callouts, maths, ASCII, SVG).
+const NOTE_KINDS = {md: {label: 'Markdown', short: 'MD', mime: 'text/markdown', ext: 'md', tip: 'Default. Text, tables and every diagram, drawn'},
+  txt: {label: 'Plain text', short: 'TXT', mime: 'text/plain', ext: 'txt', tip: 'Simple text, with bold and lists'},
+  mmd: {label: 'Mermaid', short: 'MMD', mime: 'text/plain', ext: 'mmd', tip: 'The whole note is one Mermaid diagram'},
+  ascii: {label: 'ASCII diagram', short: 'ASCII', mime: 'text/plain', ext: 'txt', tip: 'Box drawings, every character kept in place'},
+  svg: {label: 'SVG drawing', short: 'SVG', mime: 'image/svg+xml', ext: 'svg', tip: 'A drawing written as <svg>…</svg>'},
+  html: {label: 'HTML', short: 'HTML', mime: 'text/html', ext: 'html', tip: 'A web page, shown as made'}, json: {label: 'JSON', short: 'JSON', mime: 'application/json', ext: 'json', tip: 'Data, checked and tidied'}};
+const NOTE_FENCE = {mmd: 'mermaid', ascii: 'ascii', svg: 'svg'};
+// What the viewer draws for a note: Mermaid, ASCII and SVG notes are one diagram; plain text is read as Markdown.
+const noteMdSource = (type, c) => NOTE_FENCE[type] ? '````' + NOTE_FENCE[type] + '\n' + String(c).replace(/\n+$/, '') + '\n````\n' : c;
 const NOTE_LABELS = {arhaan: 'Arhaan', efrah: 'Efrah', other: 'Others'};
 // Labels: the three built in, plus any person or name added (kept on the phone, and on every note that uses it).
 const labelName = k => NOTE_LABELS[k] || String(k || 'Others');
@@ -3639,7 +3647,7 @@ async function openNote(id, fresh) {
   const guest = s.mine === false; // someone else's Shared note: change the text and title; label, pin, share and delete stay theirs
   N.open = {id, title: s.title || '', type: s.type || 'txt', cat: s.cat || defaultLabel(), pinned: !!s.pinned, order: s.order || 0, shared: !!s.shared, share: shareOf(s), ownerId: s.ownerId || '', guest, by: s.by || '', content: c == null ? '' : c, fileId: s.fileId || '', loading: c == null, fresh: !!fresh};
   // Markdown and HTML notes open formatted (the page, not its code); Edit is one tap away.
-  const showAs = text => (N.open.type === 'md' || N.open.type === 'html') && String(text || '').trim() ? 'view' : 'edit';
+  const showAs = text => String(text || '').trim() ? 'view' : 'edit'; // every note opens drawn; an empty one opens ready to type
   N.mode = showAs(c); N.kinds = false;
   drawNote();
   if (c == null) {
@@ -3653,9 +3661,9 @@ async function openNote(id, fresh) {
 const NT_BULLET = '<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><circle cx="4.5" cy="7" r="1.5" fill="currentColor" stroke="none"/><circle cx="4.5" cy="12" r="1.5" fill="currentColor" stroke="none"/><circle cx="4.5" cy="17" r="1.5" fill="currentColor" stroke="none"/><path d="M9.5 7h11M9.5 12h11M9.5 17h11"/></svg>';
 const NT_TASK = '<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><rect x="3" y="4" width="8.5" height="8.5" rx="2.4"/><path d="M5.3 8.3 7 10l2.4-2.8"/><rect x="3" y="14.5" width="8.5" height="6.5" rx="2.4"/><path d="M14.5 8h6.5M14.5 17.5h6.5"/></svg>';
 function drawNote() {
-  const o = N.open, k = NOTE_KINDS[o.type], fancy = o.type !== 'txt', ready = !o.loading && !o.failed;
+  const o = N.open, k = NOTE_KINDS[o.type] || NOTE_KINDS.md, fancy = true, ready = !o.loading && !o.failed;
   const rich = ready && N.mode === 'edit' && o.type === 'txt';
-  const ecls = !ready ? ' pad' : rich ? ' scroll' : N.mode === 'edit' ? '' : o.type === 'md' || o.type === 'html' ? ' frame' : ' pad scroll';
+  const ecls = !ready ? ' pad' : rich ? ' scroll' : N.mode === 'edit' ? '' : o.type !== 'json' ? ' frame' : ' pad scroll';
   paint($('#noteBox'), `<div class="nhead">
       <button type="button" class="nback" data-act="n-close" aria-label="Back to all notes"><svg class="ic" aria-hidden="true"><use href="#i-left"/></svg><span>Notes</span></button>
       <button type="button" class="nttl" data-act="n-meta" aria-label="Title and label for this note"><b id="nTtl" class="${o.title ? '' : 'none'}">${esc(o.title || 'Untitled note')}</b><span class="nstate" id="nState"></span></button>
@@ -3669,7 +3677,7 @@ function drawNote() {
     <div class="nedit${ecls}" id="nEdit">${o.loading ? '<div class="empty">Opening from Google Drive…</div>' : o.failed ? '<div class="empty">Couldn\'t open this note from Google Drive. Check the connection and try again.</div>' : noteBodyHtml()}</div>
     <div class="nfoot">${noteToolsHtml()}
       <div class="nact"><div class="npopw"><button type="button" class="nkindb" data-act="n-kinds" aria-haspopup="true" aria-expanded="false">${k.label} ▾</button>
-        <div class="npop nkpop" hidden role="menu">${Object.entries(NOTE_KINDS).map(([kk, v]) => `<button type="button" class="npi" role="menuitemradio" data-act="n-kind" data-v="${kk}" aria-checked="${kk === o.type}"><b>${v.label}</b><small>${{txt: 'Simple text, with bold', md: 'Headings, lists, tables', html: 'A web page', json: 'Data, checked and tidied'}[kk]}</small></button>`).join('')}</div></div>
+        <div class="npop nkpop" hidden role="menu">${Object.entries(NOTE_KINDS).map(([kk, v]) => `<button type="button" class="npi" role="menuitemradio" data-act="n-kind" data-v="${kk}" aria-checked="${kk === o.type}"><b>${v.label}</b><small>${esc(v.tip)}</small></button>`).join('')}</div></div>
       <div class="nbtns"><div class="npopw nmorew"><button type="button" class="nmoreb" data-act="n-more" aria-haspopup="true" aria-expanded="false" aria-label="More for this note">⋯</button>
           <div class="npop" hidden role="menu"><button type="button" class="npi" data-act="n-copy"><b>Copy the text</b><small>Puts the whole note on the clipboard</small></button>
             <button type="button" class="npi" data-act="n-dl"><b>Download</b><small>Saves a .${NOTE_KINDS[o.type].ext} file to this phone</small></button>
@@ -3695,8 +3703,8 @@ function noteToolsHtml() {
 function noteBodyHtml() {
   const o = N.open;
   if (N.mode === 'edit' && o.type === 'txt') return `<div id="nText" class="ntext rich" role="textbox" aria-multiline="true" aria-label="Note" data-placeholder="Start typing…" inputmode="text" enterkeyhint="enter" autocorrect="on" autocapitalize="sentences" spellcheck="false">${textToRich(o.content)}</div>`;
-  if (N.mode === 'edit') return `<textarea id="nText" class="ntext${o.type === 'html' || o.type === 'json' ? ' mono' : ''}" placeholder="${o.type === 'md' ? '# Heading\n\nWrite in **Markdown**…' : o.type === 'html' ? '<h1>Hello</h1>' : o.type === 'json' ? '{\n  "key": "value"\n}' : 'Start typing…'}" aria-label="Note">${esc(o.content)}</textarea>`;
-  if (o.type === 'md' || o.type === 'html') return `<iframe class="nvframe" id="nvFrame" title="${o.type === 'md' ? 'Markdown' : 'HTML'} note, formatted" sandbox="allow-scripts allow-popups allow-popups-to-escape-sandbox allow-modals allow-forms allow-downloads" referrerpolicy="no-referrer"></iframe>`;
+  if (N.mode === 'edit') return `<textarea id="nText" class="ntext${o.type === 'md' || o.type === 'txt' ? '' : ' mono'}" placeholder="${o.type === 'md' ? '# Heading\n\nWrite in **Markdown**. Paste a Mermaid diagram, an ASCII drawing or <svg> as it is: it is drawn.' : o.type === 'mmd' ? 'flowchart TD\n    A[Start] --> B[Finish]' : o.type === 'ascii' ? '┌──────┐\n│ Box  │\n└──────┘' : o.type === 'svg' ? '<svg viewBox="0 0 100 100">…</svg>' : o.type === 'html' ? '<h1>Hello</h1>' : o.type === 'json' ? '{\n  "key": "value"\n}' : 'Start typing…'}" aria-label="Note" spellcheck="${o.type === 'md' || o.type === 'txt'}" autocapitalize="${o.type === 'md' || o.type === 'txt' ? 'sentences' : 'off'}" autocorrect="${o.type === 'md' || o.type === 'txt' ? 'on' : 'off'}">${esc(o.content)}</textarea>`;
+  if (o.type !== 'json') return `<iframe class="nvframe" id="nvFrame" title="${esc((NOTE_KINDS[o.type] || NOTE_KINDS.md).label)} note, formatted" sandbox="allow-scripts allow-popups allow-popups-to-escape-sandbox allow-modals allow-forms allow-downloads" referrerpolicy="no-referrer"></iframe>`;
   if (o.type === 'json') { if (!o.content.trim()) return '<p class="muted">Nothing written yet.</p>';
     try { return `<div class="jsonok">${sdot('good')}Valid JSON</div><pre class="jsonview">${jsonHtml(JSON.parse(o.content))}</pre>`; }
     catch (e) { return `<div class="jsonbad">${sdot('bad')}Not valid JSON: ${esc(e.message)}</div><pre class="jsonview plain">${esc(o.content)}</pre>`; } }
@@ -4060,7 +4068,12 @@ function nvAsciiBlocks(src) {
     if (NV_ASCII_STRONG(l) && !/^\s*>/.test(l) && !NV_TABLE_SEP.test(l)) {
       let a = i, b = i;
       while (a > 0 && L[a - 1].trim() && !NV_TABLE_SEP.test(L[a - 1]) && !NV_FENCE.test(L[a - 1]) && (NV_ASCII_WEAK(L[a - 1]) || NV_ASCII_STRONG(L[a - 1]) || /^\S+\/?$/.test(L[a - 1].trim()) && L[a - 1].trim().length < 40) && out.length - (i - a) > 0) a--;
-      while (b + 1 < L.length && L[b + 1].trim() && !NV_TABLE_SEP.test(L[b + 1]) && !NV_FENCE.test(L[b + 1]) && (NV_ASCII_WEAK(L[b + 1]) || NV_ASCII_STRONG(L[b + 1]))) b++;
+      for (;;) {
+        while (b + 1 < L.length && L[b + 1].trim() && !NV_TABLE_SEP.test(L[b + 1]) && !NV_FENCE.test(L[b + 1]) && (NV_ASCII_WEAK(L[b + 1]) || NV_ASCII_STRONG(L[b + 1]))) b++;
+        // one blank line inside a drawing (between two boxes) does not split it in two
+        if (b + 2 < L.length && !L[b + 1].trim() && NV_ASCII_STRONG(L[b + 2]) && !/^\s*>/.test(L[b + 2])) { b += 2; continue; }
+        break;
+      }
       out.splice(out.length - (i - a), i - a);
       out.push('```ascii', ...L.slice(a, b + 1), '```'); i = b + 1; continue;
     }
@@ -4211,10 +4224,44 @@ function nvNeeds(html) {
   return {code: /class="language-(?!mermaid|dot|graphviz)/.test(html), math: /class="math/.test(html), mermaid: /class="[^"]*\bmermaid\b|language-mermaid/.test(html),
     dot: /data-kind="dot"|class="dot"|language-(dot|graphviz)/.test(html), mono: /<(pre|code|kbd)\b/i.test(html)};
 }
+/* Diagrams pasted with no ``` fence around them (how ChatGPT, Claude and most copy buttons hand them over) are found
+   and fenced, so they are drawn instead of shown as text:
+   - Mermaid: a line that is only a diagram's opening word (flowchart TD, sequenceDiagram, gantt…), and everything after it
+     until a blank line that is not followed by an indented line, "end" or a %% comment.
+   - SVG: from a line starting <svg (or <?xml) to the line holding </svg>.
+   Text inside existing fences is never touched. */
+const NV_MM_HEAD = /^(?:(?:graph|flowchart(?:-elk)?)(?:\s+(?:TB|TD|BT|RL|LR))?;?|sequenceDiagram|classDiagram(?:-v2)?|stateDiagram(?:-v2)?|erDiagram|gantt|pie(?:\s+showData)?(?:\s+title\s.*)?|journey|gitGraph(?:\s+(?:LR|TB|BT))?:?|mindmap|timeline|quadrantChart|xychart(?:-beta)?(?:\s+horizontal)?|sankey(?:-beta)?|block(?:-beta)?|packet(?:-beta)?|architecture(?:-beta)?|requirementDiagram|C4(?:Context|Container|Component|Dynamic|Deployment)|kanban|radar(?:-beta)?|treemap(?:-beta)?|zenuml)\s*$/;
+function nvBareBlocks(src) {
+  const L = src.split('\n'), out = []; let fence = null, i = 0;
+  while (i < L.length) {
+    const l = L[i], f = l.match(NV_FENCE);
+    if (f || fence) { if (f) { if (!fence) fence = f[1]; else if (f[1][0] === fence[0] && /^\s*[`~]+\s*$/.test(l)) fence = null; } out.push(l); i++; continue; }
+    const t = l.trim();
+    // Mermaid, optionally after its own "---" config block or %% comments
+    let a = i; if (t === '---') { let j = i + 1; while (j < L.length && L[j].trim() !== '---' && j - i < 40) j++; if (j < L.length && /^\s*(config|title)\s*:/m.test(L.slice(i + 1, j).join('\n'))) a = j + 1; }
+    while (a < L.length && /^\s*%%/.test(L[a])) a++;
+    if (a < L.length && NV_MM_HEAD.test(L[a].trim()) && (a === i ? !/^\s{4,}/.test(l) : true)) {
+      let b = a;
+      while (b + 1 < L.length) {
+        const nx = L[b + 1];
+        if (NV_FENCE.test(nx)) break;
+        if (!nx.trim()) { let k = b + 2; while (k < L.length && !L[k].trim()) k++; if (k < L.length && (/^\s+\S/.test(L[k]) || /^\s*(end|%%)/.test(L[k]))) { b = k; continue; } break; }
+        b++;
+      }
+      out.push('````mermaid', ...L.slice(i, b + 1), '````'); i = b + 1; continue;
+    }
+    if (/^\s*(<\?xml[^>]*>\s*)?<svg[\s>]/i.test(l)) {
+      let b = i; while (b < L.length && !/<\/svg>/i.test(L[b])) b++;
+      if (b < L.length && /<\/svg>\s*$/i.test(L[b])) { out.push('````svg', ...L.slice(i, b + 1).filter(x => x.trim()), '````'); i = b + 1; continue; }
+    }
+    out.push(l); i++;
+  }
+  return out.join('\n');
+}
 function nvMarkdown(M, src) {
   let s = String(src || '').replace(/\r\n?/g, '\n').replace(/^\uFEFF/, '');
   s = s.replace(/^---\n[\s\S]*?\n---\n/, m => '```yaml\n' + m.slice(4, -5) + '\n```\n'); // front matter: shown as a small data block, not a ruled line
-  s = nvContainers(s); s = nvAsciiBlocks(s);
+  s = nvBareBlocks(s); s = nvContainers(s); s = nvAsciiBlocks(s);
   const fn = nvFootnotes(s);
   const r = nvPolish(M.parse(fn.src), M, fn.notes);
   let srcTasks = 0; nvLines(s, l => { if (/^((?:\s*>)*\s*(?:[-*+]|\d+[.)])\s+)\[( |x|X)\](?=\s|$)/.test(l)) srcTasks++; });
@@ -4316,7 +4363,7 @@ figure.code figcaption{display:flex;align-items:center;justify-content:space-bet
 .nv-copy:active{transform:scale(.95)}
 .nv>pre,.callout-b>pre,li>pre,blockquote>pre{background:var(--code-bg);border:1px solid var(--rule);border-radius:16px}
 .nv-ascii{position:relative;border:1px solid var(--rule);border-radius:16px;background:var(--code-bg);overflow:hidden}
-pre.ascii{white-space:pre;line-height:1.24;letter-spacing:0;padding:14px 16px;font-size:calc(13.5px*var(--fs));font-kerning:none;color:var(--ink)}
+pre.ascii{white-space:pre;line-height:1.24;line-height:round(nearest,1.24em,1px);letter-spacing:0;padding:14px 16px;font-size:calc(13.5px*var(--fs));font-kerning:none;color:var(--ink)}
 pre.ascii code{font:inherit;line-height:inherit;letter-spacing:0;white-space:pre}
 .nv-table{overflow-x:auto;border:1px solid var(--rule);border-radius:16px;background:var(--bg);-webkit-overflow-scrolling:touch;overscroll-behavior-x:contain}
 table{border-collapse:separate;border-spacing:0;width:100%;font-size:calc(15px*var(--fs));line-height:1.5;font-variant-numeric:tabular-nums}
@@ -4433,6 +4480,9 @@ html.nv-zooming,html.nv-zooming body{overflow:hidden}
 `;
 // Runs inside the frame. Kept self-contained: it is copied into the page as text.
 function nvRuntime(C) {
+  // The viewer is sandboxed (no storage of its own). Libraries that peek at localStorage (Mermaid does) get a private,
+  // in-memory one instead of an error.
+  try { void window.localStorage; } catch (e) { const m = {}; try { Object.defineProperty(window, 'localStorage', {configurable: true, value: {getItem: k => (k in m ? m[k] : null), setItem: (k, v) => { m[k] = String(v); }, removeItem: k => { delete m[k]; }, clear: () => { Object.keys(m).forEach(k => delete m[k]); }, key: i => Object.keys(m)[i] ?? null, get length() { return Object.keys(m).length; }}}); } catch (x) {} }
   const post = m => { try { parent.postMessage(Object.assign({nv: C.token}, m), '*'); } catch (e) {} };
   const $$ = (s, r) => [...(r || document).querySelectorAll(s)];
   const escT = s => String(s).replace(/[&<>]/g, c => ({'&': '&amp;', '<': '&lt;', '>': '&gt;'}[c]));
@@ -4526,6 +4576,47 @@ function nvRuntime(C) {
     if (!document.fonts) return;
     try { await Promise.race([Promise.all(['400', '500', '600', '700'].map(wt => document.fonts.load(`${wt} 15px "NV Sans"`))), sleep(3000)]); await Promise.race([document.fonts.ready, sleep(3000)]); } catch (e) {}
   }
+  /* A top-down flowchart made of separate groups (subgraphs with no arrows between them) is laid out by Mermaid side by
+     side, last one first: unreadable on a phone and not what was meant. Invisible links (~~~) chain the groups in the
+     order they were written, so they stack top to bottom. Nothing visible is added. */
+  function mmLayout(src) {
+    const lines = src.split('\n'); let h = 0;
+    const skip = () => { while (h < lines.length && (!lines[h].trim() || /^\s*%%/.test(lines[h]))) h++; };
+    skip(); if (h < lines.length && lines[h].trim() === '---') { h++; while (h < lines.length && lines[h].trim() !== '---') h++; h++; skip(); }
+    if (h >= lines.length || !/^\s*(flowchart|graph)\s+(TD|TB)\b/i.test(lines[h])) return src;
+    const KW = new Set(['end', 'subgraph', 'style', 'classDef', 'class', 'click', 'linkStyle', 'direction', 'TB', 'TD', 'LR', 'RL', 'BT', 'graph', 'flowchart', 'call', 'href', 'default']);
+    const units = [], unitOf = {}, par = []; let depth = 0, top = -1;
+    const mk = id => { units.push(id); par.push(units.length - 1); return units.length - 1; };
+    const find = x => { while (par[x] !== x) x = par[x] = par[par[x]]; return x; };
+    const join = (a, b) => { a = find(a); b = find(b); if (a !== b) par[Math.max(a, b)] = Math.min(a, b); };
+    for (let i = h + 1; i < lines.length; i++) {
+      const t = lines[i].trim(); if (!t || /^%%/.test(t)) continue;
+      const sg = t.match(/^subgraph\b\s*([A-Za-z_][\w]*(?:-[\w]+)*)?/);
+      if (sg) { const id = sg[1] || null; if (depth === 0) top = mk(id); if (id) unitOf[id] = top; depth++; continue; }
+      if (/^end\b\s*;?$/.test(t)) { depth = Math.max(0, depth - 1); if (!depth) top = -1; continue; }
+      if (/^(style|classDef|class|click|linkStyle|direction|accTitle|accDescr)\b/.test(t)) continue;
+      const bare = t.replace(/"[^"]*"/g, '""').replace(/\|[^|]*\|/g, ' ').replace(/\[[^\]]*\]|\([^)]*\)|\{[^}]*\}/g, ' ').replace(/:::[\w-]+/g, ' ').replace(/@\{[^}]*\}/g, ' ');
+      const ids = (bare.match(/[A-Za-z_]\w*(?:-\w+)*/g) || []).filter(x => !KW.has(x));
+      const edge = /(--|==|-\.|~~~|<-->)/.test(bare);
+      const us = ids.map(id => { if (!(id in unitOf)) unitOf[id] = top >= 0 ? top : mk(id); return unitOf[id]; });
+      if (edge) for (let k = 1; k < us.length; k++) join(us[0], us[k]);
+    }
+    const reps = [], seen = new Set();
+    units.forEach((id, u) => { const r = find(u); if (seen.has(r)) return; seen.add(r); const named = units.findIndex((x, k) => x && find(k) === r); if (named >= 0) reps.push(units[named]); });
+    if (seen.size < 2 || reps.length !== seen.size) return src;
+    return src.replace(/\s*$/, '') + '\n    ' + reps.join(' ~~~ ') + '\n';
+  }
+  // The usual slips in diagrams written by hand or by an AI, mended so the diagram still draws (only tried if it fails as written).
+  function mmRepair(src) {
+    let s = src.replace(/[“”„″]/g, '"').replace(/[‘’′]/g, "'").replace(/[   ]/g, ' ').replace(/[​-‍⁠﻿]/g, '').replace(/\t/g, '    ')
+      .replace(/→/g, '-->').replace(/—|–/g, '-');
+    // Node text with brackets, colons, slashes and the like must be in quotes: A[Pay (card)] -> A["Pay (card)"]
+    s = s.replace(/(\b[A-Za-z_][\w-]*)\[(?!["\[(\/\\])([^\]\n"]*?[(){}<>;:#&|/\\@][^\]\n"]*?)\](?!\])/g, '$1["$2"]')
+      .replace(/(\b[A-Za-z_][\w-]*)\((?![("\[])([^()\n"]*?[\[\]{}<>;:#&|/\\@][^()\n"]*?)\)(?!\))/g, '$1("$2")')
+      .replace(/(\b[A-Za-z_][\w-]*)\{(?![{"])([^{}\n"]*?[()\[\]<>;:#&|/\\@][^{}\n"]*?)\}(?!\})/g, '$1{"$2"}')
+      .replace(/\|(?!")([^|\n"]*?[(){}\[\]<>;:#&/\\@][^|\n"]*?)\|/g, '|"$1"|');
+    return s;
+  }
   let drawnWith = '';
   async function drawMermaid(again) {
     const M = window.mermaid, ws = $$('.nv-diagram[data-kind="mermaid"]'); if (!ws.length) return;
@@ -4565,8 +4656,25 @@ function nvRuntime(C) {
       // while Mermaid is still measuring its text, and labels would come out too small and overlap.
       const ms = document.createElement('div'); ms.className = 'nv-dg-stage nv-measure'; ms.setAttribute('aria-hidden', 'true'); document.body.append(ms);
       try {
-        const r = await M.render(id, src, ms);
+        // As written (stacked if it is a set of separate groups); if that fails, with the usual slips mended.
+        const tries = [...new Set([mmLayout(src), src, mmLayout(mmRepair(src)), mmRepair(src)])];
+        let r = null, err = null;
+        for (const t of tries) { try { r = await M.render(id, t, ms); break; } catch (e) { err = err || e; const junk = document.getElementById('d' + id); if (junk) junk.remove(); ms.innerHTML = ''; } }
+        if (!r) throw err;
         st.innerHTML = r.svg; if (r.bindFunctions) r.bindFunctions(st); ms.remove();
+        // On a phone, a left-to-right flowchart too wide to read is drawn top to bottom instead (same boxes and arrows);
+        // only if that is clearly narrower. The full-screen viewer shows whichever is on the card.
+        const turn = /^(\s*(?:%%[^\n]*\n\s*)*(?:flowchart|graph)\s+)(LR|RL)\b/i;
+        if (turn.test(src) && innerWidth < 700) {
+          const s0 = st.querySelector('svg'), vb = s0 && s0.viewBox && s0.viewBox.baseVal, nw0 = vb && vb.width, avail = st.clientWidth - 24;
+          if (nw0 && avail > 0 && avail / nw0 * 15 < 10.5) {
+            const ms2 = document.createElement('div'); ms2.className = 'nv-dg-stage nv-measure'; ms2.setAttribute('aria-hidden', 'true'); document.body.append(ms2);
+            try { const r2 = await M.render(id + 't', mmLayout(mmRepair(src).replace(turn, '$1TB')), ms2), tmp = document.createElement('div'); tmp.innerHTML = r2.svg;
+              const v2 = tmp.querySelector('svg') && tmp.querySelector('svg').viewBox.baseVal;
+              if (v2 && v2.width && v2.width < nw0 * 0.75) { st.innerHTML = r2.svg; if (r2.bindFunctions) r2.bindFunctions(st); w.dataset.turned = '1'; } } catch (e) {}
+            ms2.remove(); const j2 = document.getElementById('d' + id + 't'); if (j2) j2.remove();
+          }
+        }
         delete w.dataset.nw; delete w.dataset.mf; w.classList.remove('bad'); w.classList.add('ok');
       } catch (e) {
         ms.remove(); const junk = document.getElementById('d' + id); if (junk) junk.remove();
@@ -4702,7 +4810,7 @@ async function nvMount() {
       else if (nvIsHtml(src) && /<(style|script|link)\b/i.test(src)) doc = nvPage('<!doctype html><html><head><meta name="viewport" content="width=device-width,initial-scale=1"></head><body>' + src + '</body></html>'); // styled by its author: shown as they made it
       else if (nvIsHtml(src)) { body = src; needs = nvNeeds(src); }
       else { const r = nvMarkdown(await nvMarked(), src); body = r.html; needs = nvNeeds(body); kind = 'html-md'; }
-    } else if (content.trim()) { const r = nvMarkdown(await nvMarked(), content); body = r.html; tasks = r.tasks; needs = nvNeeds(body); }
+    } else if (content.trim()) { const r = nvMarkdown(await nvMarked(), noteMdSource(o.type, content)); body = r.html; tasks = o.type === 'md' || o.type === 'txt' ? r.tasks : 0; needs = nvNeeds(body); kind = 'md'; }
     else body = empty;
   } catch (e) { body = (o.type === 'html' ? nvTextToHtml(content) : mdToHtml(content)) || empty; needs = {}; } // marked could not load (offline, first time): the simple renderer
   if (my !== NV.seq || fr !== $('#nvFrame') || !N.open || N.open.id !== o.id) return;
@@ -4729,7 +4837,7 @@ window.addEventListener('message', async e => {
 });
 // Tick or untick the i-th checklist item in the note's text, then save.
 function nvToggleTask(i, on) {
-  const o = N.open; if (!o || o.type !== 'md' || !(i >= 0)) return;
+  const o = N.open; if (!o || (o.type !== 'md' && o.type !== 'txt') || !(i >= 0)) return;
   let k = 0, hit = false;
   const next = nvLines(String(o.content).replace(/\r\n?/g, '\n'), l => {
     if (hit) return; const m = l.match(/^((?:\s*>)*\s*(?:[-*+]|\d+[.)])\s+)\[( |x|X)\](?=\s|$)/); if (!m) return;
@@ -4746,7 +4854,7 @@ document.addEventListener('click', async ev => {
   const b = ev.target.closest('[data-act^="n-"]'); if (!b) return;
   if (Date.now() - lpFired < 600 && b.dataset.act === 'n-open') return; // the tap that ended a press-and-hold
   const a = b.dataset.act, o = N.open;
-  if (a === 'n-new') { const id = 'n' + newId(); openNote(id, {id, title: '', type: 'txt', cat: N.cat || defaultLabel(), content: ''}); }
+  if (a === 'n-new') { const id = 'n' + newId(); openNote(id, {id, title: '', type: 'md', cat: N.cat || defaultLabel(), content: ''}); }
   else if (a === 'n-open') openNote(b.dataset.id);
   else if (a === 'n-qcopy') { // copy a note straight from its tile, without opening it
     const id = b.dataset.id, n = noteList().find(x => x.id === id); let t = noteBody(id);
@@ -4795,7 +4903,7 @@ document.addEventListener('click', async ev => {
     if (!N.open || N.open !== o) return;
     o.type = to;
     if (o.type === 'json') { try { o.content = JSON.stringify(JSON.parse(o.content), null, 2); } catch (e) {} }
-    N.mode = o.type === 'txt' || !o.content.trim() ? 'edit' : 'view'; commitNote(); drawNote();
+    N.mode = !o.content.trim() ? 'edit' : 'view'; commitNote(); drawNote();
     if (o.content !== before) { histReset(before); histPush(o.content); }
     toast(msg); }
   else if (a === 'n-label') { o.cat = b.dataset.v; writePref({noteCat: o.cat}); document.querySelectorAll('.nlab').forEach(x => x.setAttribute('aria-pressed', String(x.dataset.v === o.cat))); commitNote(); }

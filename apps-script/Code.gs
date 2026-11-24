@@ -367,7 +367,8 @@ function readVault(ss) {
    the author's (Owner column) whoever edits it. The Shared column holds Yes (everyone) or the chosen people,
    separated by commas (an email, or entry-<id> for an entry link). Files sit in the owner's Drive, folder "Budget Tracker notes".
    Run setupNotes() once from the editor after pasting this file: Google then asks to allow Drive access. */
-var NOTE_TYPES = {md: ['md', 'text/markdown'], html: ['html', 'text/html'], txt: ['txt', 'text/plain'], json: ['json', 'application/json']};
+var NOTE_TYPES = {md: ['md', 'text/markdown'], html: ['html', 'text/html'], txt: ['txt', 'text/plain'], json: ['json', 'application/json'],
+  mmd: ['mmd', 'text/plain'], ascii: ['txt', 'text/plain'], svg: ['svg', 'image/svg+xml']}; // Mermaid, ASCII diagram and SVG notes (Nov 2026)
 var NOTES_FOLDER = 'Budget Tracker notes';
 function setupNotes() {
   var ss = SpreadsheetApp.getActiveSpreadsheet(); ensureTabs(ss);
