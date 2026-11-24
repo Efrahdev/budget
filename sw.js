@@ -1,6 +1,6 @@
 // Budget Tracker service worker: keeps the app itself available offline.
 // Money data never passes through here; it goes straight to Google Sheets.
-const CACHE = 'budget-tracker-v103';
+const CACHE = 'budget-tracker-v104';
 // The Reader's pinned third-party files (pdf.js, marked) live in their own cache. Their paths carry the version, so
 // they never change: fetched once, on first use, and kept across budget app updates (which replace CACHE).
 const VENDOR = 'reader-vendor-v1';
@@ -55,3 +55,88 @@ self.addEventListener('fetch', e => {
     e.respondWith(caches.match(req).then(hit => hit || fetch(req).then(r => { if (r.ok || r.type === 'opaque') { const c = r.clone(); caches.open(CACHE).then(x => x.put(req, c)); } return r; })));
   }
 });
+
+/* ---------- reminders (Nov 2026) ----------
+   The script wakes this worker with an empty push at 9 am, 3 pm and 9 pm when something is due. The details come
+   from the app's own copy (IndexedDB budget-app / kv / "rem"), written every time the app checks its reminders.
+   One notification per reminder: it stays until you act on it, and the app icon shows how many are waiting.
+   Pay opens Add entry filled in; Snooze hides it for 6 hours (sent straight to the sheet, or by the app later). */
+const REM_WIN = 72 * 36e5, REM_KEEP = 45 * 864e5, REM_SNOOZE = 6 * 36e5;
+function kv(mode, fn) {
+  return new Promise((res, rej) => {
+    const r = indexedDB.open('budget-app', 1);
+    r.onupgradeneeded = () => { if (!r.result.objectStoreNames.contains('kv')) r.result.createObjectStore('kv'); };
+    r.onerror = () => rej(r.error);
+    r.onsuccess = () => { const db = r.result; let out; const t = db.transaction('kv', mode), q = fn(t.objectStore('kv'));
+      if (q) q.onsuccess = () => { out = q.result; }; t.oncomplete = () => { db.close(); res(out); }; t.onerror = t.onabort = () => { db.close(); rej(t.error); }; };
+  });
+}
+const kvGet = k => kv('readonly', s => s.get(k)).catch(() => null);
+const kvPut = (k, v) => kv('readwrite', s => s.put(v, k)).catch(() => {});
+function remPending(snap, now) {
+  const st = (snap && snap.st) || {};
+  return ((snap && snap.list) || []).filter(r => { const left = r.dueMs - now, s = st[r.key] || {};
+    return left <= REM_WIN && left > -REM_KEEP && !s.done && !s.dis && !(s.snooze > now); }).sort((a, b) => a.dueMs - b.dueMs);
+}
+const MON = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+function remWhen(dueMs, now) {
+  const h = (dueMs - now) / 36e5, d = new Date(dueMs);
+  const day = d.getDate() + ' ' + MON[d.getMonth()];
+  const t = new Date(now), days = Math.round((new Date(d.getFullYear(), d.getMonth(), d.getDate()) - new Date(t.getFullYear(), t.getMonth(), t.getDate())) / 864e5);
+  if (h < 0) return 'Overdue since ' + day;
+  if (days === 0) return 'Due today · ' + Math.max(1, Math.round(h)) + ' h left';
+  if (days === 1) return 'Due tomorrow, ' + day + ' · in ' + Math.round(h) + ' h';
+  return 'Due ' + day + ' · in ' + Math.round(h) + ' h';
+}
+const rupees = v => '₹' + new Intl.NumberFormat('en-IN', {maximumFractionDigits: 0}).format(Math.round(v));
+async function remShow(renotify) {
+  const snap = await kvGet('rem'), now = Date.now(), list = remPending(snap, now), reg = self.registration;
+  const old = await reg.getNotifications();
+  const want = new Set(list.map(r => 'rem:' + r.key));
+  old.forEach(n => { if (n.tag && n.tag.startsWith('rem:') && !want.has(n.tag) && n.tag !== 'rem:any') n.close(); });
+  if (!list.length) {
+    // The sheet says something is due but this phone's copy has nothing: still say so (Chrome needs a notification).
+    const test = await kvGet('remtest');
+    if (renotify && test && now - test < 10 * 60000) { await kvPut('remtest', 0); await reg.showNotification('Alerts work on this phone', {tag: 'rem:any', body: 'Nothing is due right now. Payment alerts will look like this.', icon: 'icons/icon-192.png', renotify: true}); }
+    else if (renotify) await reg.showNotification('Payment reminder', {tag: 'rem:any', body: 'Something is due soon. Open the app to see it.', icon: 'icons/icon-192.png', requireInteraction: true, renotify: true});
+  } else {
+    old.forEach(n => { if (n.tag === 'rem:any') n.close(); });
+    for (const r of list) await reg.showNotification(r.title, {tag: 'rem:' + r.key, renotify: !!renotify, silent: !renotify, requireInteraction: true,
+      body: remWhen(r.dueMs, now) + (r.amount > 0 ? ' · ' + rupees(r.amount) : ''), icon: 'icons/icon-192.png', timestamp: r.dueMs, data: {key: r.key},
+      actions: [{action: 'pay', title: 'Pay'}, {action: 'snooze', title: 'Snooze 6 h'}]});
+  }
+  try { if (navigator.setAppBadge) list.length ? navigator.setAppBadge(list.length) : navigator.clearAppBadge(); } catch (e) {}
+}
+self.addEventListener('push', e => e.waitUntil(remShow(true)));
+// A snooze from the notification: kept on the phone at once, sent to the sheet now if possible, else by the app later.
+async function remSnooze(key) {
+  const v = {snooze: Date.now() + REM_SNOOZE}, snap = (await kvGet('rem')) || {list: [], st: {}};
+  snap.st = snap.st || {}; snap.st[key] = v; await kvPut('rem', snap);
+  const q = (await kvGet('remq')) || []; q.push({key, v}); await kvPut('remq', q);
+  try {
+    const c = (await kvGet('conn')) || {};
+    if (snap.api && (c.session || c.key)) {
+      const r = await fetch(snap.api, {method: 'POST', redirect: 'follow', body: JSON.stringify({session: c.session || undefined, key: c.session ? undefined : c.key, remOnly: true, ops: [{t: 'remst', key, v}]})});
+      const j = await r.json();
+      if (j && j.ok) { const left = ((await kvGet('remq')) || []).filter(x => !(x.key === key && x.v.snooze === v.snooze)); await kvPut('remq', left); }
+    }
+  } catch (e) {}
+  const all = await self.clients.matchAll({type: 'window', includeUncontrolled: true});
+  all.forEach(w => w.postMessage({src: 'budget-sw', type: 'rem-sync'}));
+  await remShow(false);
+}
+async function remOpen(act, key) {
+  const scope = self.registration.scope, all = await self.clients.matchAll({type: 'window', includeUncontrolled: true});
+  const w = all.find(x => x.url.startsWith(scope) && !x.url.includes('/reader/') && !x.url.includes('/contacts/'));
+  if (w) { w.postMessage({src: 'budget-sw', type: 'rem', act, key}); return w.focus().catch(() => {}); }
+  return self.clients.openWindow(scope + '?rem=' + act + '&k=' + encodeURIComponent(key || '') + '#overview');
+}
+self.addEventListener('notificationclick', e => {
+  const n = e.notification, key = (n.data || {}).key || '';
+  if (!n.tag || !n.tag.startsWith('rem:')) return;
+  n.close();
+  if (e.action === 'snooze' && key) e.waitUntil(remSnooze(key));
+  else e.waitUntil(remOpen(e.action === 'pay' && key ? 'pay' : 'open', key));
+});
+// Swiped away: it comes back (quietly) the next time the app or a push checks, so the icon count stays true.
+self.addEventListener('message', e => { if (e.data && e.data.type === 'rem-refresh') e.waitUntil(remShow(false)); });

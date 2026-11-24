@@ -2000,6 +2000,49 @@ body[data-view="contacts"] main{padding:0}
   html.hand-left .fab,html.hand-left .nfab{right:auto;left:max(16px,env(safe-area-inset-left,0px))}
   html.hand-left .ctfab{right:auto;left:calc(max(16px,env(safe-area-inset-left,0px)) + 64px)}
 }
+/* ---------- reminders (Nov 2026) ---------- */
+.erem .ck-line>span{display:inline-flex;align-items:center;gap:6px}
+.erem .ck-line .ic{width:18px;height:18px;flex:none}
+#eRemBox{margin-top:8px;display:grid;gap:2px}
+.erem-g{display:flex;flex-wrap:wrap;gap:10px}
+.erem-g>label{display:grid;flex:1 1 150px;min-width:0}
+.erem-g select,.erem-g input[type=date]{width:100%}
+#eRemShow{color:var(--ink-2);font-size:calc(13.5px*var(--fs,1));margin-top:4px}
+.sheet.rems{gap:10px}
+.rem-h{display:flex;align-items:center;gap:10px}
+.rem-h .rem-bell{flex:none;width:40px;height:40px;border-radius:14px;display:grid;place-items:center;background:var(--bad-soft);color:var(--bad-ink)}
+.rem-h .rem-bell .ic{width:22px;height:22px}
+.rem-h h3{margin:0;font-size:calc(19px*var(--fs,1))}
+.rem-h small{display:block;color:var(--ink-2);font-size:calc(13.5px*var(--fs,1))}
+.rml{display:grid;gap:8px}
+.rmr{display:flex;align-items:center;gap:10px;padding:10px 10px 10px 12px;border-radius:16px;background:var(--fill);box-shadow:inset 3px 0 0 var(--rc,var(--accent))}
+.rmr.t2{--rc:var(--warn)}.rmr.t3,.rmr.late{--rc:var(--bad)}
+.rmr.late{background:var(--bad-soft)}
+.rm-tx{flex:1;min-width:0;display:grid;gap:1px}
+.rm-tx b{font-size:calc(15.5px*var(--fs,1));overflow-wrap:anywhere}
+.rm-tx small{color:var(--ink-2);font-size:calc(13.5px*var(--fs,1))}
+.rm-tx .rm-amt{font-weight:700;color:var(--ink);font-variant-numeric:tabular-nums}
+.rm-tx .rm-tag{justify-self:start;font-size:calc(13px*var(--fs,1));padding:1px 8px;border-radius:99px;background:var(--accent-soft);color:var(--accent-ink)}
+.rm-acts{display:flex;gap:4px;flex:none}
+.rmb{width:34px;height:34px;border-radius:11px;border:0;display:grid;place-items:center;background:var(--sheet);color:var(--ink-2);box-shadow:inset 0 0 0 1px var(--rule);cursor:pointer;padding:0}
+.rmb .ic{width:17px;height:17px}
+.rmb.pay{background:var(--accent);color:#fff;box-shadow:none}
+.rmb.ok{color:var(--good)}
+.rmb:active{transform:scale(.92)}
+.rem-foot{display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:space-between;color:var(--ink-3);font-size:calc(13px*var(--fs,1))}
+.rem-legend{display:flex;flex-wrap:wrap;gap:4px 12px}
+.rem-legend span{display:inline-flex;align-items:center;gap:4px}.rem-legend .ic{width:14px;height:14px}
+.rem-empty{color:var(--ink-2);font-size:calc(14.5px*var(--fs,1));padding:6px 0}
+.rem-set{display:grid;gap:12px}
+.rem-stat{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.rem-stat .pill{font-size:calc(13.5px*var(--fs,1));padding:3px 10px;border-radius:99px;background:var(--fill-2);color:var(--ink-2)}
+.rem-stat .pill.on{background:var(--good-soft);color:var(--good)}
+.rem-stat .pill.off{background:var(--warn-soft);color:var(--warn-ink)}
+.vrem-l{display:flex;align-items:center;gap:6px;font-size:calc(13.5px*var(--fs,1));font-weight:600}
+.vrem-l .ic{width:15px;height:15px}
+.vrem-f{display:grid;gap:6px;padding:10px 12px;border-radius:14px;background:var(--fill)}
+.vrem-f .two{display:flex;flex-wrap:wrap;gap:10px}.vrem-f .two>label{flex:1 1 150px;min-width:0;display:grid}
+.vrem-f input[type=date]{width:100%}
 </style>
 </head>
 <body>
@@ -2025,6 +2068,9 @@ body[data-view="contacts"] main{padding:0}
   <symbol id="i-down" viewBox="0 0 24 24"><path d="M6 9.5l6 6 6-6"/></symbol>
   <symbol id="i-x" viewBox="0 0 24 24"><path d="M6.5 6.5l11 11M17.5 6.5l-11 11"/></symbol>
   <symbol id="i-check" viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></symbol>
+  <symbol id="i-bell" viewBox="0 0 24 24"><path d="M6 16.5V11a6 6 0 0 1 12 0v5.5l1.5 2h-15z"/><path d="M10 20.5a2.2 2.2 0 0 0 4 0"/></symbol>
+  <symbol id="i-rupee" viewBox="0 0 24 24"><path d="M7 4.5h10M7 9h10M7 4.5h3.5a4.5 4.5 0 0 1 0 9H7l7.5 7"/></symbol>
+  <symbol id="i-snooze" viewBox="0 0 24 24"><circle cx="12" cy="13" r="7.5"/><path d="M12 9.5V13l2.5 1.6M4.5 4.5 7 2.5M19.5 4.5 17 2.5"/></symbol>
   <symbol id="i-cal" viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="15.5" rx="3"/><path d="M3.5 10h17M8 3v4M16 3v4"/></symbol>
   <symbol id="i-pin" viewBox="0 0 24 24"><path d="M9 3.5h6l-.8 5.2 3.3 3.3H6.5l3.3-3.3z"/><path d="M12 12v8.5"/></symbol>
   <symbol id="i-trash" viewBox="0 0 24 24"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 12.2A2 2 0 0 0 9 21h6a2 2 0 0 0 2-1.8L18 7M9 7V4h6v3"/></symbol>
@@ -2183,6 +2229,16 @@ body[data-view="contacts"] main{padding:0}
       <input id="eDate" type="hidden"><input id="eDatePick" type="date" class="pick" tabindex="-1" aria-hidden="true">
     </div>
     <div class="field" data-focus="eNote"><span id="eNoteLbl">Note</span><div id="eNote" class="tbox" role="textbox" aria-labelledby="eNoteLbl" inputmode="text" enterkeyhint="done" data-placeholder="What was it? (optional)"></div></div>
+    <div class="field erem" id="eRemF"><label class="ck-line"><input id="eRemOn" type="checkbox"> <span><svg class="ic" aria-hidden="true"><use href="#i-bell"/></svg> Remind me</span></label>
+      <div id="eRemBox" hidden>
+        <div class="erem-g">
+          <label class="erem-w"><span class="sublbl">When</span><select id="eRemWhen" aria-label="When to remind">
+            <option value="7">In 7 days</option><option value="15">In 15 days</option><option value="30">In 30 days</option><option value="60" selected>In 60 days</option><option value="90">In 90 days</option><option value="180">In 180 days</option><option value="365">In 365 days</option><option value="date">On a date…</option></select></label>
+          <label class="erem-d" id="eRemDateF" hidden><span class="sublbl">Date</span><input id="eRemDate" type="date" aria-label="Reminder date"></label>
+        </div>
+        <span class="sublbl" id="eRemTagLbl">Reminder tag</span><div id="eRemTag" class="tbox" role="textbox" aria-labelledby="eRemTagLbl" inputmode="text" enterkeyhint="done" data-placeholder="Electricity, insurance…"></div>
+        <small id="eRemShow" aria-live="polite"></small>
+      </div></div>
     <details class="emore" id="eMore"><summary>More: for whom, tag, refund</summary>
       <div class="two" style="margin-top:10px">
         <div class="field" data-focus="eMember"><span id="eMemberLbl">For whom</span><div id="eMember" class="tbox" role="textbox" aria-labelledby="eMemberLbl" inputmode="text" enterkeyhint="done" data-placeholder=""></div></div>
@@ -2261,6 +2317,11 @@ body[data-view="contacts"] main{padding:0}
 <!-- More (phones): the other screens and settings -->
 <div class="scrim" id="moreScrim" hidden>
   <div class="sheet more" id="moreBox" role="dialog" aria-label="More"></div>
+</div>
+
+<!-- Reminders that are due: closes only by dragging it down, or by acting on every row -->
+<div class="scrim" id="remScrim" hidden>
+  <div class="sheet rems" id="remBox" role="alertdialog" aria-label="Payments due"></div>
 </div>
 
 <!-- Copy sheet (fallback when downloads are unavailable) -->
@@ -2533,7 +2594,7 @@ async function bootStore() {
   keepStorage();
 }
 function saveCache() {
-  try { localStorage.setItem(LS_CACHE, JSON.stringify({mine: Object.keys(state.mine || {}), config: state.config, cycles: state.cycles, balances: state.balances, cardfix: state.cardfix, last: Sync.last})); } catch (e) { storageFull(); }
+  try { localStorage.setItem(LS_CACHE, JSON.stringify({mine: Object.keys(state.mine || {}), config: state.config, cycles: state.cycles, balances: state.balances, cardfix: state.cardfix, rem: state.rem || null, last: Sync.last})); } catch (e) { storageFull(); }
   stampOps();
   try { localStorage.setItem(LS_OUT, JSON.stringify(Sync.outbox)); } catch (e) { storageFull(); }
 }
@@ -2549,7 +2610,7 @@ window.addEventListener('storage', e => {
 });
 function loadCache() {
   try { const d = JSON.parse(localStorage.getItem(LS_CACHE) || 'null');
-    if (d) { state.mine = {}; (d.mine || []).forEach(id => { state.mine[id] = 1; }); state.config = d.config || null; state.cycles = d.cycles || {}; state.balances = d.balances || {}; state.cardfix = d.cardfix || {}; Sync.last = d.last || 0; } } catch (e) {}
+    if (d) { state.mine = {}; (d.mine || []).forEach(id => { state.mine[id] = 1; }); state.config = d.config || null; state.cycles = d.cycles || {}; state.balances = d.balances || {}; state.cardfix = d.cardfix || {}; state.rem = remNorm(d.rem); Sync.last = d.last || 0; } } catch (e) {}
   try { Sync.outbox = JSON.parse(localStorage.getItem(LS_OUT) || '[]') || []; } catch (e) { Sync.outbox = []; }
   stampOps();
 }
@@ -2563,6 +2624,8 @@ function applyLocal(op) {
   else if (op.t === 'deltxn') dropTxn(op.id);
   else if (op.t === 'bal') state.balances[op.date] = {date: op.date, values: clone(op.values)};
   else if (op.t === 'delbal') delete state.balances[op.date];
+  else if (op.t === 'remput') { const R = remState(); if (Array.isArray(op.items)) R.items = clone(op.items); if (Array.isArray(op.auto)) R.auto = clone(op.auto); }
+  else if (op.t === 'remst') { const R = remState(); if (op.v) R.st[op.key] = clone(op.v); else delete R.st[op.key]; }
   else if (op.t === 'fix') { const f = state.cardfix[op.card] || (state.cardfix[op.card] = {card: op.card, fix: {}}); f.fix = f.fix || {}; if (op.v === null) delete f.fix[op.sd]; else f.fix[op.sd] = op.v; }
   else if (op.t === 'replace') {
     state.config = clone(op.config); state.cycles = {}; op.txns.forEach(placeTxn);
@@ -2621,6 +2684,8 @@ function takeReply(j) {
   if (j.same) return; // nothing changed on the sheet since our copy
   if (j.data) Sync.full = Date.now();
   fromServer(j.data);
+  if (j.rem) state.rem = remNorm(j.rem); // an older script sends none: the phone's own copy is kept
+  remSoon();
   try { notesReply(j); } catch (e) { console.error('notes', e); } // a notes problem must never stop the budget from syncing
   if (j.me) Sync.me = j.me;
   if (Sync.me && Sync.me.role === 'Owner' && !V.loaded && !V.loading && !V.err) setTimeout(() => { if (!V.loaded && !V.loading) loadVault(); }, 0);
@@ -2639,7 +2704,7 @@ function forgetSignIn(reason) {
   state.connErr = reason === 'not_allowed' ? 'This Google account is no longer on the family list.' : reason === 'bad_key' ? 'That set-up link has been switched off. Sign in with Google.' : wasEntry ? 'This entry link has been switched off. Ask the owner for a new one.' : '';
   if (wasEntry) { keepUnsent(Sync.outbox); Sync.outbox = []; } // never sent under someone else's sign-in without asking
   // Hide the saved copy of the family's data until someone signs in again.
-  state.config = null; state.cycles = {}; state.balances = {}; state.cardfix = {}; state.got.config = false; state.dirty = false; state.draft = null;
+  state.config = null; state.cycles = {}; state.balances = {}; state.cardfix = {}; state.got.config = false; state.dirty = false; state.draft = null; state.rem = remNorm(); remBadge(0);
   if (reason === 'not_allowed') Sync.outbox = [];
   state.notes = []; N.bodies = {}; saveNotes();
   try { localStorage.removeItem(LS_CACHE); } catch (e) {}
@@ -5358,6 +5423,7 @@ function renderSetup(X) {
     <section class="card"><div class="sec-h"><h2>Credit cards</h2><span class="hint">One list for the Vault, Add entry and Card bills. New Vault cards appear here; your edits here stay.</span></div>
       <div class="ed srl" id="cardEd">${(d.cards || []).map((k, i) => cardRowHtml(k, i)).join('') || '<div class="empty">No cards yet. Add them in the Vault\'s Credit cards table.</div>'}</div></section>
     ${adjustHtml(X)}
+    ${remSetupHtml(X)}
     ${accountHtml()}
     <section class="card"><div class="sec-h"><h2>Backup</h2><span class="hint">Your data lives in Google Sheets. A backup file is a spare copy.</span></div>
       <div class="bk">
@@ -5385,6 +5451,7 @@ const STP = [
   {k: 'accts', t: 'Accounts', chip: 'Accounts', ic: 'i-bank', g: 0},
   {k: 'cards', t: 'Credit cards', chip: 'Cards', ic: 'i-card', g: 0},
   {k: 'adjust', t: 'Credit card adjustments', chip: 'Card adjustments', ic: 'i-adjust', g: 0},
+  {k: 'rem', t: 'Reminders', chip: 'Reminders', ic: 'i-bell', g: 1},
   {k: 'sync', t: 'Account and sync', chip: 'Sync', ic: 'i-sync', g: 1},
   {k: 'family', t: 'Family access', chip: 'Family', ic: 'i-users', g: 1},
   {k: 'links', t: 'Entry-only links', chip: 'Entry links', ic: 'i-link', g: 1},
@@ -5426,6 +5493,7 @@ function stpSummary(k, X) {
   if (k === 'accts') return n((d.accounts || []).filter(a => !a.pay).length, 'account');
   if (k === 'cards') { const ks = d.cards || []; return ks.length ? n(ks.length, 'card') + ' · ' + ks.map(c => c.name).join(', ') : 'No cards yet'; }
   if (k === 'adjust') { const a = X.txns.filter(t => t.tag === ADJ_TAG).length; return a ? n(a, 'adjustment') : 'None yet'; }
+  if (k === 'rem') return remSummary(X);
   if (k === 'sync') return syncLabel();
   if (k === 'family') { const u = Array.isArray(Sync.users) ? Sync.users.length : 0; return n(u, 'person', 'people') + ' can sign in'; }
   if (k === 'links') { const l = (Sync.entryLinks || []).length; return l ? n(l, 'link') + ' on' : 'No links'; }
@@ -6488,7 +6556,7 @@ function openEntry(t) {
   $('#eCat').value = startCat; $('#eCatText').value = '';
   ['#eCatChips', '#ePayChips', '#ePayCardChips', '#eInvChips'].forEach(sel => { $(sel).scrollLeft = 0; delete $(sel).dataset.mode; });
   $('#entryScrim').hidden = false; // shown first so the rows can measure themselves
-  setCat(startCat); setEntryDate(t ? t.date : todayStr());
+  setCat(startCat); setEntryDate(t ? t.date : todayStr()); remFillFor(t);
   $('#eDel').hidden = !t; $('#eDel').classList.remove('armed'); $('#eDel').textContent = 'Delete';
   $('#eAgain').hidden = !!t; $('#eErr').hidden = true;
   $('#entryForm').scrollTop = 0;
@@ -6529,13 +6597,14 @@ async function saveEntry(again) {
   const wasEditing = editing, oldT = wasEditing ? (X.txns.find(x => x.id === wasEditing.id) || wasEditing) : null;
   if (isEntry()) state.mine[t.id] = 1;
   try { await API.putTxn(t, wasEditing ? wasEditing._doc : null); } catch (e) { return fail(writeErr(e)); }
+  try { remAfterSave(t, X); } catch (e) { console.error('reminder', e); }
   const pref = readPref();
   writePref({cat, bank: (payMode === 'bank' || pay || inv) && payAcct ? payAcct : pref.bank || '', card: card || pref.card || '', inv: invTo || pref.inv || ''});
   const k = cycleKeyOf(date);
   impactToast(k === state.cur ? 'Saved' : 'Saved in ' + cycleLabel(k), oldT, t, X); buzz(12);
   // Save & add another: the cursor goes back to Amount only if you were typing (keyboard up) or have a mouse. A phone whose
   // keyboard you already put away stays quiet.
-  if (again) { $('#eAmt').value = ''; $('#eAmtCalc').textContent = ''; $('#eNote').value = ''; $('#eRefund').checked = false; err.hidden = true; renderPay(); if (keyboardUp() || !coarse.matches) focusBox($('#eAmt')); else dropKeyboard(); }
+  if (again) { $('#eAmt').value = ''; $('#eAmtCalc').textContent = ''; $('#eNote').value = ''; $('#eRefund').checked = false; err.hidden = true; remFill({on: false}); renderPay(); if (keyboardUp() || !coarse.matches) focusBox($('#eAmt')); else dropKeyboard(); }
   else closeEntry();
 }
 
@@ -6704,7 +6773,7 @@ $('#eAgain').addEventListener('click', () => saveEntry(true));
 $('#eDel').addEventListener('click', async () => {
   const b = $('#eDel'); if (!editing) return;
   if (!delArmed) { delArmed = true; b.classList.add('armed'); b.textContent = 'Tap again to delete'; return; }
-  try { const X0 = ctx(), oldT = X0.txns.find(x => x.id === editing.id) || editing; await API.delTxn(editing.id, editing._doc); impactToast('Entry deleted', oldT, null, X0); buzz(18); closeEntry(); } catch (e) { $('#eErr').textContent = writeErr(e); $('#eErr').hidden = false; }
+  try { const X0 = ctx(), oldT = X0.txns.find(x => x.id === editing.id) || editing; await API.delTxn(editing.id, editing._doc); remDropEntry(oldT.id); impactToast('Entry deleted', oldT, null, X0); buzz(18); closeEntry(); } catch (e) { $('#eErr').textContent = writeErr(e); $('#eErr').hidden = false; }
 });
 $('#balForm').addEventListener('submit', ev => { ev.preventDefault(); saveBalances(); });
 ['entryScrim', 'balScrim', 'impScrim', 'copyScrim', 'vaultScrim', 'whyScrim', 'textScrim', 'noteScrim', 'noteMenu', 'moreScrim'].forEach(id => $('#' + id).addEventListener('click', ev => { if (ev.target.id === id) { if (id === 'noteScrim') { closeNote(); return; } $('#' + id).hidden = true; if (id === 'whyScrim') W$.stack = []; if (id === 'entryScrim') editing = null; } }));
@@ -6943,10 +7012,11 @@ async function vDecryptAll() {
   if (V.enc._schema) { try { V.schema = (await vOpen(V.key, '_schema', V.enc._schema)).cols || null; } catch (e) {} }
   for (const [id, data] of Object.entries(V.enc)) {
     if (id === '_schema') continue;
-    try { const r = await vOpen(V.key, id, data); V.rows.push(vMigrate({id, t: r.t, c: Array.isArray(r.c) ? r.c : [], at: r.at || 0, L: r.L})); }
+    try { const r = await vOpen(V.key, id, data); V.rows.push(vMigrate({id, t: r.t, c: Array.isArray(r.c) ? r.c : [], at: r.at || 0, L: r.L, rem: r.rem && r.rem.date ? r.rem : undefined})); }
     catch (e) { V.rows.push({id, t: 'broken', c: [], at: 0}); }
   }
   try { syncPayMethods(); } catch (e) {}
+  try { remSyncVault(); } catch (e) {}
 }
 async function loadVault() {
   if (!signedIn()) return;
@@ -7038,7 +7108,7 @@ function vDetails(r, t) { // every filled field, with a copy button
   return `<div class="vdet">${cols.map((c, i) => { const v = String(r.c[i] || ''); if (!v) return '';
       const shown = isOpenMode() || V.open[r.id] ? (/(cc number|card no|^acc$)/i.test(c) ? vGroup(v) : v) : '••••';
       return `<div class="vf"><span class="vl">${esc(c)}</span><span class="vv${mono.test(c) ? ' mono' : ''}">${esc(shown)}</span><button class="vcp" type="button" data-act="v-copy" data-id="${r.id}" data-i="${i}" aria-label="Copy ${esc(c)}">${COPY_ICON}</button></div>`; }).join('')}
-    <div class="vdact"><button class="btn sm" type="button" data-act="v-edit" data-id="${r.id}">✎ Edit</button></div></div>`;
+    ${vRemHtml(r)}<div class="vdact"><button class="btn sm" type="button" data-act="v-edit" data-id="${r.id}">✎ Edit</button></div></div>`;
 }
 // Details shown on the card itself: every filled field, label + value (selectable) + copy. Values are exactly as saved;
 // card/account numbers are only spaced in fours for reading, and copy as digits only (what payment pages expect).
@@ -7048,7 +7118,7 @@ function vOnCard(r, t, skip) {
   return `<div class="vonc">${cols.map((c, i) => { const v = String(r.c[i] || ''); if (!v || (skip || []).includes(i)) return '';
       const shown = vIsNum(c) && vDigits(v).length >= 8 && /^[\d\s-]+$/.test(v) ? vGroup(v) : v, wide = vIsNum(c) || v.length > 10 || /note/i.test(c);
       return `<div class="vf2${wide ? ' wide' : ''}"><span class="vl2">${esc(c)}</span><span class="vv2${mono.test(c) ? ' mono' : ''}">${esc(shown)}</span><button class="vcp2" type="button" data-act="v-copy" data-id="${r.id}" data-i="${i}" aria-label="Copy ${esc(c)}">${COPY_ICON}</button></div>`; }).join('')}
-    <div class="vonc-act"><button class="vedit" type="button" data-act="v-edit" data-id="${r.id}">✎ Edit</button><span>Tap the card to close</span></div></div>`;
+    ${vRemHtml(r)}<div class="vonc-act"><button class="vedit" type="button" data-act="v-edit" data-id="${r.id}">✎ Edit</button><span>Tap the card to close</span></div></div>`;
 }
 /* Credit card face (Nov 2026 redesign): built to be read at a glance, from a distance. Everything on it is what you
    reach for: the bank, the last four digits (large), the name, and the statement and pay-by dates (large, with "in N days").
@@ -7139,6 +7209,7 @@ function vEditRow(tk, id) {
   vForm(`<h3>${r ? 'Edit' : 'Add'} ${esc(t.one)}</h3>
     <input type="hidden" id="vfT" value="${tk}"><input type="hidden" id="vfId" value="${r ? r.id : ''}">
     ${cols.map((c, i) => `<label class="field"><span>${esc(c)}${i === 0 ? ' (required)' : ''}</span><input id="vf${i}" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" data-lpignore="true" value="${r ? esc(r.c[i] || '') : ''}"></label>`).join('')}
+    ${vRemForm(r)}
     <div class="err" id="vfErr" hidden></div>
     <div class="sheet-actions">${r ? `<button type="button" class="btn danger left" data-act="v-del" data-id="${r.id}">Delete</button>` : ''}<button type="button" class="btn ghost" data-act="v-close">Cancel</button>
       ${r ? '' : '<button type="button" class="btn" data-act="v-save-again">Save &amp; add another</button>'}
@@ -7149,7 +7220,9 @@ async function vSaveRow(again) {
   const c = Array.from({length: n}, (_, i) => $('#vf' + i).value.trim());
   if (!c[0]) { err.textContent = 'Fill in the first box (a name for this row).'; err.hidden = false; return; }
   err.hidden = true;
-  const data = await vSeal(V.key, id, {t: tk, c, at: Date.now(), L: vLayout(tk)});
+  const rd = ($('#vfRemD') || {}).value || '', rn = (($('#vfRemN') || {}).value || '').trim(), row = {t: tk, c, at: Date.now(), L: vLayout(tk)};
+  if (/^\d{4}-\d{2}-\d{2}$/.test(rd)) row.rem = {date: rd, note: rn.slice(0, 120)};
+  const data = await vSeal(V.key, id, row);
   if (again) vEditRow(tk, null); else { $('#vaultScrim').hidden = true; paint($('#vaultForm'), ''); }
   toast('Saved');
   await vQueue([{t: 'vput', id, data}]);
@@ -7186,7 +7259,7 @@ async function vUnlock(ev) {
     go.textContent = 'Removing protection…';
     const open = await vOpenKey(), ops = [];
     if (V.schema) ops.push({t: 'vput', id: '_schema', data: await vSeal(open, '_schema', {cols: V.schema})});
-    for (const r of V.rows) if (r.t !== 'broken') ops.push({t: 'vput', id: r.id, data: await vSeal(open, r.id, {t: r.t, c: r.c, at: r.at, L: r.L})});
+    for (const r of V.rows) if (r.t !== 'broken') ops.push({t: 'vput', id: r.id, data: await vSeal(open, r.id, {t: r.t, c: r.c, at: r.at, L: r.L, rem: r.rem})});
     ops.push({t: 'vput', id: '_meta', data: OPEN_META});
     try { await vCall(ops); } catch (e) { err.textContent = "Unlocked, but couldn't remove the protection yet. Check the connection; it will try again next time."; err.hidden = false; renderVault(); return; }
     if (!isOpenMode()) { renderVault(); return; }
@@ -7566,7 +7639,7 @@ document.addEventListener('click', ev => {
     lockVault('', true); V.loaded = false; V.meta = null; V.enc = {};
     Sync.key = ''; Sync.session = ''; Sync.me = null; Sync.users = null; Sync.outbox = []; Sync.last = 0; Sync.rev = ''; Sync.full = 0;
     saveConn(); // an empty sign-in, newer than any saved copy, in both stores
-    state.config = null; state.cycles = {}; state.balances = {}; state.cardfix = {}; state.got.config = false; state.dirty = false; state.draft = null;
+    state.config = null; state.cycles = {}; state.balances = {}; state.cardfix = {}; state.got.config = false; state.dirty = false; state.draft = null; state.rem = remNorm(); remBadge(0);
     state.notes = []; N.bodies = {}; saveNotes();
     render();
   }
@@ -7933,7 +8006,7 @@ function wipeForKill() {
   state.killed = true;
   lockVault('', true); V.loaded = false; V.meta = null; V.enc = {}; V.pending = [];
   Object.assign(N, {local: {}, meta: {}, del: {}, bodies: {}, open: null}); state.notes = [];
-  state.config = null; state.cycles = {}; state.balances = {}; state.cardfix = {}; state.got.config = false; state.dirty = false; state.draft = null;
+  state.config = null; state.cycles = {}; state.balances = {}; state.cardfix = {}; state.got.config = false; state.dirty = false; state.draft = null; state.rem = remNorm(); remBadge(0);
   Sync.outbox = []; Sync.users = null; Sync.entryLinks = null;
   closeMore(); try { closeEntry(); } catch (e) {}
   try { [LS_CACHE, LS_OUT, LS_VAULT, LS_NOTES].forEach(k => localStorage.removeItem(k)); } catch (e) {}
@@ -8113,6 +8186,291 @@ window.addEventListener('resize', () => { if (state.view === 'contacts' && CT.re
 // Load it quietly a few seconds after start, once signed in, so the first tap is instant.
 function ctPreload() { if (CT.pre || CT.frame || !state.config || !signedIn()) return; CT.pre = true; const go = () => { if (!CT.frame && state.config && signedIn()) ctFrame(); }; setTimeout(() => 'requestIdleCallback' in window ? requestIdleCallback(go, {timeout: 6000}) : go(), 3000); }
 
+/* ---------- reminders (Nov 2026) ----------
+   One engine for every reminder: card bills (worked out from the card maths, never typed), "Remind me" on any entry,
+   and a reminder date on any Vault row. Everything lives in the sheet (Config row "reminders": items, auto, st), so the
+   phone, the laptop and the script's 9 am / 3 pm / 9 pm check always agree.
+   - From 72 hours before the due day ends: an alert every 6 hours, every 4 from 48 hours, every 2 from 24 hours and
+     when overdue. The alert sheet closes only by dragging it down (it comes back at the next step) or by acting:
+     Pay (Add entry filled in; done once saved), Paid, Dismiss, Snooze 6 h.
+   - The app icon: Android counts the app's notifications, so each due reminder keeps one (quiet) notification.
+   - With the app closed, the script wakes the phone (sw.js shows the alerts from the copy written here). */
+const REM_WIN = 72 * 36e5, REM_KEEP = 45 * 864e5, REM_SNOOZE = 6 * 36e5;
+const LS_REMSEEN = 'budgetTracker.remSeen', LS_PUSH = 'budgetTracker.push';
+function remNorm(o) { o = o || {}; return {items: Array.isArray(o.items) ? o.items : [], auto: Array.isArray(o.auto) ? o.auto : [],
+  st: o.st && typeof o.st === 'object' && !Array.isArray(o.st) ? o.st : {}, ran: +o.ran || 0, sent: +o.sent || 0, due: +o.due || 0}; }
+function remState() { return state.rem || (state.rem = remNorm()); }
+const remOk = () => !!(state.config && signedIn() && !isEntry());
+const remKey = r => r.id + '@' + r.due;
+const remDueMs = due => { const d = parseYmd(due); d.setHours(23, 59, 59, 0); return d.getTime(); };
+const remSt = k => remState().st[k] || {};
+const remSig = list => JSON.stringify((list || []).map(x => [x.id, x.due, x.title, Math.round(+x.amount || 0), x.card || '', x.note || '', x.tag || '']).sort());
+const remEvery = h => h > 48 ? 6 : h > 24 ? 4 : 2;
+const remAt = ms => fmtDM(ymd(new Date(ms))) + ', ' + fmtTime(ms);
+// Card bills that are billed and not fully paid, from the same ledger as Card bills and Overview.
+function remCards(X) {
+  return cardList().flatMap(k => { const L = cardLedger(k, X);
+    return L.unpaid.filter(s => s.left > 0.5).map(s => ({id: 'card:' + k.id + ':' + s.sd, kind: 'card', title: k.name + ' bill', due: s.due, amount: Math.round(s.left), card: k.id})); });
+}
+function remAll(X) { const R = remState(); return R.items.concat(X ? remCards(X) : R.auto); }
+// Not done or dismissed, and not long past. Each carries its key, end-of-day time and hours left.
+function remActive(list, now) {
+  return list.filter(r => r && r.id && /^\d{4}-\d{2}-\d{2}$/.test(r.due || '')).map(r => { const dueMs = remDueMs(r.due); return Object.assign({}, r, {key: remKey(r), dueMs, h: (dueMs - now) / 36e5}); })
+    .filter(r => { const s = remSt(r.key); return !s.done && !s.dis && r.dueMs - now > -REM_KEEP; });
+}
+const remPending = (list, now) => remActive(list, now).filter(r => r.dueMs - now <= REM_WIN && !(remSt(r.key).snooze > now)).sort((a, b) => a.dueMs - b.dueMs);
+function remSeen() { try { return JSON.parse(localStorage.getItem(LS_REMSEEN) || '{}') || {}; } catch (e) { return {}; } }
+function remSeenW(o) { try { const cut = Date.now() - 60 * 864e5; Object.keys(o).forEach(k => { if (o[k] < cut) delete o[k]; }); localStorage.setItem(LS_REMSEEN, JSON.stringify(o)); } catch (e) {} }
+function remPutItems(items) {
+  const cut = addDays(todayStr(), -90);
+  queue({t: 'remput', items: items.filter(x => x.due >= cut || !(remSt(remKey(x)).done || remSt(remKey(x)).dis))});
+}
+const remSet = (key, v) => queue({t: 'remst', key, v});
+
+/* The check: cheap (runs on opening, on return to the app, after each sync and every 5 minutes on screen). */
+let remT = 0, remWant = null, remPaying = null, remSnapW = '';
+function remSoon(ms) { clearTimeout(remT); remT = setTimeout(() => remCheck().catch(e => console.error('reminders', e)), ms == null ? 800 : ms); }
+async function remCheck() {
+  if (!remOk()) { remBadge(0); return; }
+  await remDrainSW();
+  const X = ctx(), now = Date.now(), cards = remCards(X), R = remState();
+  // The sheet keeps the card bills too, so its morning check knows about them.
+  if (!state.dirty && remSig(cards) !== remSig(R.auto)) queue({t: 'remput', auto: cards});
+  const all = R.items.concat(cards), pend = remPending(all, now);
+  await remSnapshot(all, now);
+  remBadge(pend.length);
+  if (remWant) { const w = remWant; remWant = null; if (w.act === 'pay' && w.key && pend.concat(remActive(all, now)).some(r => r.key === w.key)) { remPay(w.key); return; } remOpen(); return; }
+  if (document.visibilityState !== 'visible' || !pend.length) { if (!pend.length && !$('#remScrim').hidden) $('#remScrim').hidden = true; return; }
+  const seen = remSeen(), due = pend.some(r => now - (seen[r.key] || 0) >= remEvery(r.h) * 36e5);
+  // Never in the middle of typing an entry, a Vault row or a note: it shows as soon as that closes.
+  const busy = ['entryScrim', 'vaultScrim', 'noteScrim', 'balScrim', 'impScrim'].some(id => !$('#' + id).hidden);
+  if (due && !busy && $('#remScrim').hidden) remOpen();
+}
+// The copy the service worker reads when a push arrives (the app may be closed then).
+async function remSnapshot(all, now) {
+  if (!IDB.db) return;
+  const snap = {api: API_URL, list: remActive(all, now).map(r => ({key: r.key, title: r.title, dueMs: r.dueMs, amount: +r.amount || 0})), st: remState().st};
+  const s = JSON.stringify(snap); if (s === remSnapW) return;
+  try { await idbPut('rem', Object.assign({t: Date.now()}, snap)); remSnapW = s; } catch (e) {}
+}
+// Snoozes tapped on a notification while the app was closed.
+async function remDrainSW() {
+  if (!IDB.db) return;
+  let q = null; try { q = await idbGet('remq'); } catch (e) { return; }
+  if (!Array.isArray(q) || !q.length) return;
+  try { await idbPut('remq', []); } catch (e) {}
+  q.forEach(x => { if (x && x.key && x.v && remSt(x.key).snooze !== x.v.snooze) remSet(x.key, x.v); });
+}
+// The number on the app icon: one quiet notification per due reminder (Android counts them), plus the Badging API where Chrome has it.
+let remBadgeN = -1;
+function remBadge(n) {
+  try { if (navigator.setAppBadge) n ? navigator.setAppBadge(n) : navigator.clearAppBadge(); } catch (e) {}
+  if (!('serviceWorker' in navigator) || !('Notification' in window) || Notification.permission !== 'granted') return;
+  remBadgeN = n;
+  navigator.serviceWorker.ready.then(reg => { if (reg.active) reg.active.postMessage({type: 'rem-refresh'}); }).catch(() => {});
+}
+
+/* The alert sheet */
+function remWhenText(r, now) {
+  const h = (r.dueMs - now) / 36e5, days = dayDiff(parseYmd(todayStr()), parseYmd(r.due));
+  if (h < 0) return days <= -1 ? 'Overdue by ' + (-days) + (days === -1 ? ' day' : ' days') : 'Overdue';
+  if (days === 0) return 'Due today · ' + Math.max(1, Math.round(h)) + ' h left';
+  if (days === 1) return 'Due tomorrow · in ' + Math.round(h) + ' h';
+  if (h <= REM_WIN) return 'Due ' + fmtDM(r.due) + ' · in ' + Math.round(h) + ' h';
+  return 'Due ' + fmtDate(r.due) + ' · in ' + days + ' days';
+}
+function remRowHtml(r, now) {
+  const tone = r.h < 0 ? 'late' : r.h <= 24 ? 't3' : r.h <= 48 ? 't2' : 't1', s = remSt(r.key), k = esc(r.key);
+  const snz = s.snooze > now ? ' · snoozed until ' + fmtTime(s.snooze) : '';
+  const b = (act, ic, label, cls) => `<button type="button" class="rmb${cls ? ' ' + cls : ''}" data-act="${act}" data-k="${k}" aria-label="${label}: ${esc(r.title)}" title="${label}"><svg class="ic" aria-hidden="true"><use href="#${ic}"/></svg></button>`;
+  return `<div class="rmr ${tone}"><div class="rm-tx"><b>${esc(r.title)}</b><small>${esc(remWhenText(r, now) + snz)}${+r.amount > 0 ? ' · <span class="rm-amt">' + rs(r.amount) + '</span>' : ''}</small>${r.tag ? `<span class="rm-tag">${esc(r.tag)}</span>` : ''}</div>
+    <div class="rm-acts">${b('rem-pay', 'i-rupee', 'Pay', 'pay')}${b('rem-paid', 'i-check', 'Mark as paid', 'ok')}${b('rem-dis', 'i-x', 'Dismiss')}${b('rem-snz', 'i-snooze', 'Snooze 6 hours')}</div></div>`;
+}
+const remLegend = '<span class="rem-legend"><span><svg class="ic"><use href="#i-rupee"/></svg>Pay</span><span><svg class="ic"><use href="#i-check"/></svg>Paid</span><span><svg class="ic"><use href="#i-x"/></svg>Dismiss</span><span><svg class="ic"><use href="#i-snooze"/></svg>Snooze 6 h</span></span>';
+function remOpen() {
+  if (!remOk()) return;
+  const now = Date.now(), pend = remPending(remAll(ctx()), now);
+  if (!pend.length) { $('#remScrim').hidden = true; return; }
+  const seen = remSeen(); pend.forEach(r => { seen[r.key] = now; }); remSeenW(seen);
+  const next = remEvery(Math.min(...pend.map(r => r.h)));
+  const perm = 'Notification' in window ? Notification.permission : 'denied';
+  paint($('#remBox'), `<div class="rem-h"><span class="rem-bell"><svg class="ic" aria-hidden="true"><use href="#i-bell"/></svg></span>
+      <div><h3>${pend.length === 1 ? '1 payment due' : pend.length + ' payments due'}</h3><small>Drag down to close · back in ${next} h</small></div></div>
+    <div class="rml">${pend.map(r => remRowHtml(r, now)).join('')}</div>
+    <div class="rem-foot">${remLegend}${perm !== 'granted' && perm !== 'denied' ? '<button type="button" class="btn sm primary" data-act="rem-on">Turn on phone alerts</button>' : ''}</div>`);
+  $('#remScrim').hidden = false;
+}
+// Pay: Add entry, filled in from the reminder. Saving it marks the reminder done.
+function remPay(key) {
+  const X = ctx(), now = Date.now(), r = remActive(remAll(X), now).find(x => x.key === key);
+  if (!r) { toast('That reminder is already done.'); return; }
+  $('#remScrim').hidden = true;
+  openEntry();
+  const cm = X.cm, cpc = state.config.categories.find(c => isCardPay(c.id, cm));
+  const cardId = r.kind === 'card' ? r.card : r.kind === 'vault' && r.vt === 'cards' && cardList().some(k => k.id === r.src) ? r.src : '';
+  if (cardId && cpc) { setCat(cpc.id); payMode = 'bank'; payCard = cardId; payAcct = ''; $('#eNote').value = r.title; }
+  else if (r.pay) {
+    const p = r.pay; if (p.cat && cm[p.cat]) setCat(p.cat);
+    payMode = p.mode || ''; payAcct = p.acct ? (X.res(p.acct) || p.acct) : ''; payCard = p.card || ''; payInv = p.inv || '';
+    $('#eNote').value = p.note || r.title; $('#eMember').value = p.member || ''; $('#eTag').value = p.tag || '';
+    $('#eMore').open = !!(p.member || p.tag);
+  } else $('#eNote').value = r.title;
+  if (+r.amount > 0) $('#eAmt').value = String(Math.round(r.amount));
+  // A repeating bill (Remind me in N days) is set up again for next time; untick it to stop.
+  if (r.kind === 'entry' && r.every) remFill({on: true, when: String(r.every), tag: r.tag || ''});
+  renderPay(); showCalc();
+  remPaying = key;
+  $('#entryTitle').textContent = 'Pay: ' + r.title;
+}
+function remAct(act, key) {
+  const now = Date.now();
+  if (act === 'rem-pay') return remPay(key);
+  if (act === 'rem-paid') { remSet(key, {done: now}); toast('Marked as paid'); }
+  else if (act === 'rem-dis') { remSet(key, {dis: now}); toast('Dismissed'); }
+  else if (act === 'rem-snz') { remSet(key, {snooze: now + REM_SNOOZE}); toast('Snoozed until ' + fmtTime(now + REM_SNOOZE)); }
+  if (!$('#remScrim').hidden) { const left = remPending(remAll(ctx()), now); if (left.length) remOpen(); else $('#remScrim').hidden = true; }
+  remSoon(200);
+}
+document.addEventListener('click', ev => {
+  const b = ev.target.closest('[data-act^="rem-"]'); if (!b) return;
+  const a = b.dataset.act;
+  if (a === 'rem-on') { remTurnOn(); return; }
+  if (a === 'rem-test') { remTest(); return; }
+  if (b.dataset.k) remAct(a, b.dataset.k);
+});
+
+/* "Remind me" on Add entry: in N days from the entry's date, or on a date, with its own tag. */
+function remPreview() {
+  const on = $('#eRemOn').checked, w = $('#eRemWhen').value;
+  $('#eRemBox').hidden = !on; $('#eRemDateF').hidden = w !== 'date';
+  if (on && w === 'date' && !$('#eRemDate').value) $('#eRemDate').value = addDays(todayStr(), 30);
+  const due = w === 'date' ? $('#eRemDate').value : addDays($('#eDate').value || todayStr(), +w);
+  $('#eRemShow').textContent = on && /^\d{4}-\d{2}-\d{2}$/.test(due) ? 'Reminder for ' + fmtDate(due) + ' · alerts start 72 hours before' : '';
+}
+function remFill(o) {
+  o = o || {}; const w = $('#eRemWhen');
+  $('#eRemOn').checked = !!o.on;
+  w.value = o.when && Array.from(w.options).some(x => x.value === o.when) ? o.when : (o.date ? 'date' : (readPref().remWhen || '60'));
+  $('#eRemDate').value = o.date || ''; $('#eRemTag').value = o.tag || '';
+  remPreview();
+}
+function remFillFor(t) {
+  $('#eRemF').hidden = isEntry(); remPaying = null;
+  const it = t && remState().items.find(x => x.id === 'e:' + t.id);
+  remFill(it ? {on: true, when: it.every ? String(it.every) : 'date', date: it.every ? '' : it.due, tag: it.tag} : {on: false});
+}
+function remAfterSave(t, X) {
+  if (isEntry()) return;
+  const id = 'e:' + t.id, R = remState(), had = R.items.some(x => x.id === id), on = $('#eRemOn').checked;
+  const items = R.items.filter(x => x.id !== id);
+  if (on) {
+    const w = $('#eRemWhen').value, due = w === 'date' ? $('#eRemDate').value : addDays(t.date, +w);
+    if (/^\d{4}-\d{2}-\d{2}$/.test(due)) {
+      const c = X.cm[t.cat] || {}, mode = t.card && !isCardPay(t.cat, X.cm) ? 'card' : t.acct === 'cash' ? 'cash' : t.acct ? 'bank' : '';
+      const it = {id, kind: 'entry', title: (t.note || c.name || 'Reminder').slice(0, 140), due, amount: t.amount, tag: $('#eRemTag').value.trim().slice(0, 40),
+        pay: {cat: t.cat, mode, acct: t.acct || '', card: t.card || '', inv: t.inv || '', note: t.note || '', member: t.member || '', tag: t.tag || ''}};
+      if (w !== 'date') { it.every = +w; writePref({remWhen: w}); }
+      items.push(it);
+    }
+  }
+  if (on || had) remPutItems(items);
+  if (remPaying) { remSet(remPaying, {done: Date.now(), paid: t.id}); remPaying = null; }
+  remSoon(300);
+}
+function remDropEntry(txnId) { const R = remState(); if (R.items.some(x => x.id === 'e:' + txnId)) remPutItems(R.items.filter(x => x.id !== 'e:' + txnId)); }
+makeTextBox($('#eRemTag'));
+$('#eRemTag').addEventListener('keydown', ev => { if (ev.key === 'Enter') { ev.preventDefault(); ev.currentTarget.blur(); } });
+['eRemOn', 'eRemWhen', 'eRemDate', 'eDatePick'].forEach(id => $('#' + id).addEventListener('change', () => requestAnimationFrame(remPreview)));
+$('#entryForm').addEventListener('click', ev => { if (ev.target.closest('[data-act="e-date"]')) requestAnimationFrame(remPreview); });
+
+/* Vault: any row can carry a reminder date (kept inside the encrypted row). Only its name, date and "what for" reach
+   the reminder list, never numbers or passwords. */
+function vRemHtml(r) {
+  if (!r.rem || !r.rem.date) return '';
+  return `<div class="vrem-l${r.rem.date < todayStr() ? ' bad' : ''}"><svg class="ic" aria-hidden="true"><use href="#i-bell"/></svg>Reminder ${esc(fmtDate(r.rem.date))}${r.rem.note ? ' · ' + esc(r.rem.note) : ''}</div>`;
+}
+function vRemForm(r) {
+  const m = (r && r.rem) || {};
+  return `<div class="vrem-f"><span class="vrem-l"><svg class="ic" aria-hidden="true"><use href="#i-bell"/></svg>Reminder</span>
+    <div class="two"><label><span class="sublbl">Remind me on</span><input id="vfRemD" type="date" value="${esc(m.date || '')}" aria-label="Reminder date"></label>
+    <label><span class="sublbl">What for</span><input id="vfRemN" type="text" value="${esc(m.note || '')}" placeholder="Renew, pay, update…" aria-label="What the reminder is for"></label></div></div>`;
+}
+function remSyncVault() {
+  if (!remOk() || !V.key || !(Sync.me && Sync.me.role === 'Owner') || state.dirty) return;
+  const vit = V.rows.filter(r => r.t !== 'broken' && r.rem && /^\d{4}-\d{2}-\d{2}$/.test(r.rem.date || '')).map(r => {
+    const name = String(r.c[0] || 'Vault item').trim(), it = {id: 'v:' + r.id, kind: 'vault', vt: r.t, src: r.id, title: (r.rem.note ? name + ': ' + r.rem.note : name).slice(0, 140), due: r.rem.date};
+    if (r.rem.note) it.note = String(r.rem.note).slice(0, 140); return it; });
+  const R = remState(), mine = R.items.filter(x => x.kind === 'vault');
+  if (remSig(mine) !== remSig(vit)) { remPutItems(R.items.filter(x => x.kind !== 'vault').concat(vit)); remSoon(300); }
+}
+
+/* Setup → Reminders: this phone's alerts, the sheet's last check, and everything coming up. */
+function remSetupHtml(X) {
+  if (isEntry()) return '';
+  const now = Date.now(), list = remActive(remAll(X), now).sort((a, b) => a.dueMs - b.dueMs), R = remState();
+  const perm = 'Notification' in window ? Notification.permission : 'denied', on = perm === 'granted' && !!remLs(LS_PUSH);
+  const ran = R.ran ? 'Sheet checked ' + remAt(R.ran) : 'Sheet has not checked yet';
+  return `<section class="card"><div class="sec-h"><h2>Reminders</h2><span class="hint">Card bills come in by themselves. Add your own with Remind me on an entry, or a reminder date on a Vault row. Alerts start 72 hours before: every 6 hours, every 4 from 48 hours, every 2 from 24 hours.</span></div>
+    <div class="rem-set"><div class="rem-stat"><span class="pill ${on ? 'on' : 'off'}">${on ? 'Alerts on for this phone' : perm === 'denied' ? 'Alerts blocked in Chrome' : 'Alerts off on this phone'}</span><span class="pill">${esc(ran)}</span></div>
+      <div class="row-actions" style="padding:0">${on ? '<button class="btn sm" type="button" data-act="rem-test">Send a test alert</button><button class="btn sm" type="button" data-act="rem-on">Connect again</button>' : '<button class="btn sm primary" type="button" data-act="rem-on">Turn on alerts</button>'}</div>
+      <div class="rml">${list.length ? list.map(r => remRowHtml(r, now)).join('') : '<div class="rem-empty">Nothing coming up.</div>'}</div>${list.length ? `<div class="rem-foot">${remLegend}</div>` : ''}</div></section>`;
+}
+function remSummary(X) {
+  const now = Date.now(), n = remPending(remAll(X), now).length, all = remActive(remAll(X), now).length;
+  return (n ? n + ' due now' : 'Nothing due') + ' · ' + all + ' coming up';
+}
+const remLs = k => { try { return localStorage.getItem(k) || ''; } catch (e) { return ''; } };
+const b64uBytes = s => { s = s.replace(/-/g, '+').replace(/_/g, '/'); while (s.length % 4) s += '='; return Uint8Array.from(atob(s), c => c.charCodeAt(0)); };
+const sameBytes = (a, b) => { if (!a || !b) return false; a = new Uint8Array(a); b = new Uint8Array(b); return a.length === b.length && a.every((x, i) => x === b[i]); };
+// Turn on alerts: permission, then this phone's push address goes to the sheet (it signs every wake-up with its own key).
+async function remTurnOn(quiet) {
+  if (!('Notification' in window) || !('serviceWorker' in navigator) || !('PushManager' in window)) { if (!quiet) toast("This browser can't show alerts. Use the installed app in Chrome.", 'bad', 6000); return; }
+  const p = quiet ? Notification.permission : await Notification.requestPermission();
+  if (p !== 'granted') { if (!quiet) toast('Alerts are blocked. Allow notifications for this app: Settings → Apps → Chrome → Notifications.', 'bad', 8000); render(); return; }
+  try {
+    const reg = await navigator.serviceWorker.ready;
+    const j = await call([], {pushKey: true}); takeReply(j);
+    if (!j.vapid) { if (!quiet) toast('Alerts work while the app is open. For alerts when it is closed, update the script (Setup steps).', 'warn', 8000); remSoon(100); render(); return; }
+    const want = b64uBytes(j.vapid);
+    let sub = await reg.pushManager.getSubscription();
+    if (sub && !sameBytes(sub.options && sub.options.applicationServerKey, want)) { await sub.unsubscribe().catch(() => {}); sub = null; }
+    if (!sub) sub = await reg.pushManager.subscribe({userVisibleOnly: true, applicationServerKey: want});
+    queue({t: 'pushsub', sub: sub.toJSON()});
+    try { localStorage.setItem(LS_PUSH, JSON.stringify({ep: sub.endpoint, at: Date.now()})); } catch (e) {}
+    if (!quiet) toast('Alerts are on for this phone');
+  } catch (e) { if (!quiet) toast("Couldn't turn on alerts (" + ((e && (e.message || e.code)) || 'error') + '). Try again on Wi-Fi or mobile data.', 'bad', 7000); }
+  remSoon(100); render();
+}
+async function remTest() {
+  try { if (IDB.db) await idbPut('remtest', Date.now()); } catch (e) {}
+  queue({t: 'pushtest'});
+  toast('Test sent. The alert arrives in a few seconds, even with the app closed.', '', 5000);
+}
+// Once a week (and if the phone's push address changed), tell the sheet again. Costs nothing.
+async function remKeepSub() {
+  if (!remOk() || !('serviceWorker' in navigator) || !('Notification' in window) || Notification.permission !== 'granted') return;
+  let was = null; try { was = JSON.parse(remLs(LS_PUSH) || 'null'); } catch (e) {}
+  if (!was) return;
+  try {
+    const reg = await navigator.serviceWorker.ready, sub = reg.pushManager && await reg.pushManager.getSubscription();
+    if (!sub || sub.endpoint !== was.ep || Date.now() - (was.at || 0) > 7 * 864e5) remTurnOn(true);
+  } catch (e) {}
+}
+if ('serviceWorker' in navigator) navigator.serviceWorker.addEventListener('message', ev => {
+  const m = ev.data || {}; if (m.src !== 'budget-sw') return;
+  if (m.type === 'rem') { remWant = {act: m.act, key: m.key || ''}; remSoon(0); }
+  else if (m.type === 'rem-sync') { remDrainSW().then(() => { if (signedIn()) flush(); }); }
+});
+function remInit() {
+  const q = new URLSearchParams(location.search);
+  if (q.get('rem')) { remWant = {act: q.get('rem'), key: q.get('k') || ''}; history.replaceState(null, '', location.pathname + location.hash); }
+  document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') remSoon(1200); });
+  setInterval(() => { if (document.visibilityState === 'visible') remSoon(0); }, 5 * 60000);
+  // An alert held back while you were typing shows as soon as that sheet closes.
+  ['entryScrim', 'vaultScrim', 'noteScrim', 'balScrim', 'impScrim'].forEach(id => new MutationObserver(() => { if ($('#' + id).hidden) remSoon(900); }).observe($('#' + id), {attributes: true, attributeFilter: ['hidden']}));
+  remSoon(1500); setTimeout(remKeepSub, 8000);
+}
+
 /* ---------- start ---------- */
 function start() {
   eyeState();
@@ -8144,6 +8502,7 @@ function start() {
   window.addEventListener('online', () => { if (signedIn()) flush(); });
   setInterval(() => { if (signedIn()) renderChrome(state.config ? ctx() : null); renderBanner(); }, 60000);
   if ('serviceWorker' in navigator && location.protocol === 'https:') navigator.serviceWorker.register('sw.js').catch(() => {});
+  remInit();
 }
 bootStore().then(start, start);
 })();

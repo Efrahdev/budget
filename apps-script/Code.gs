@@ -88,12 +88,15 @@ function doPost(e) {
       if (op.t === 'signout') { if (req.session) PropertiesService.getScriptProperties().deleteProperty('sess:' + req.session); return out({ok: true, signedOut: true}); }
       if (op.t === 'adduser' || op.t === 'deluser') { userOp(ss, op, who.user); continue; }
       if (op.t === 'vput' || op.t === 'vdel') { vaultOps.push(op); continue; }
+      if (REM_OPS[op.t]) { try { remOp(ss, props, op, who.user); } catch (x) { Logger.log('reminders: ' + x); } continue; }
       if (op.t === 'nput' || op.t === 'ndel' || op.t === 'ndelall' || op.t === 'nmeta') { try { noteOp(ss, op, who.user); } catch (x) { noteErrors.push({id: (op.note || op).id, error: String(x && x.message || x)}); } continue; }
       applyOp(ss, op);
     }
     vaultApply(ss, vaultOps, who.user);
     if (ops.length) { SpreadsheetApp.flush(); rev = Date.now().toString(36) + Math.random().toString(36).slice(2, 7); props.setProperty('REV', rev); }
     if (!rev) { rev = Date.now().toString(36); props.setProperty('REV', rev); }
+    // remOnly: the service worker sent a snooze from a notification; it needs nothing back but the reminders.
+    if (req.remOnly) return out({ok: true, rev: rev, rem: readRem(ss)});
     // lite: the app only wants notes (their list or text), so the budget data is not read or sent. Much faster.
     var lite = !!req.lite && !ops.length;
     var reply = {ok: true, applied: ops.length, rev: rev, me: who.user, at: Date.now()};
@@ -101,6 +104,8 @@ function doPost(e) {
     if (who.session) reply.session = who.session;
     if (role === 'Owner') { reply.users = listUsers(ss); reply.entryLinks = listEntryLinks(props); reply.killCode = !!props.getProperty('KILL_CODE'); if (killErr) reply.killErr = killErr; }
     if (req.vault && who.user.role === 'Owner') reply.vault = readVault(ss);
+    if (!lite && role !== 'Entry') { try { reply.rem = readRem(ss); } catch (x) {} }
+    if (req.pushKey && role !== 'Entry') { try { reply.vapid = vapidKeys(props).pub; } catch (x) { reply.vapidErr = String(x && x.message || x); } }
     // Notes can never stop the budget from syncing: if anything in them fails, the budget still goes through and the app is told.
     try {
       reply.notes = readNotes(ss, who.user); reply.notesV = 7; // 3: notes can be Shared · 4: anyone can edit a Shared note · 5: shared with chosen people · 6: guests pin, label and remove for themselves · 7: guests change who it is shared with, and delete for everyone
@@ -730,6 +735,190 @@ function selfTest() {
   Logger.log('Google client ID set: ' + !!configValue(ss, 'google client id') + ', users: ' + listUsers(ss).length);
   Logger.log('Config found: ' + !!d.config + ', entries: ' + d.txns.length + ', balance dates: ' + Object.keys(d.balances).length);
 }
+
+/* ---------- reminders (Nov 2026) ----------
+   The app keeps every reminder in one Config row ("reminders"): JSON {items, auto, st, ran, sent}.
+   - items: reminders you set (on an entry: "Remind me", or on a Vault row). auto: card bills still unpaid, worked out by the
+     app from the same card maths every screen uses. st: what you did with each one (done, dismissed, snoozed until),
+     keyed by "<id>@<due date>", so a new bill or a new date starts fresh.
+   - remindTick() runs at 9 am, 3 pm and 9 pm (run setupReminders() once to create those). If anything is due within 72
+     hours (or overdue), it wakes the phone with a Web Push message. The message is empty: the phone's service worker
+     shows the details from its own copy, so nothing about your money travels through the push service.
+   - Web Push needs the message signed (VAPID, ES256 on the P-256 curve). Apps Script has no tool for that, so it is done
+     below in plain JavaScript. The private key never leaves Script Properties. */
+var REM_OPS = {remput: 1, remst: 1, pushsub: 1, pushdel: 1, pushtest: 1};
+var REM_WINDOW_H = 72, REM_KEEP_DAYS = 45, REM_HOURS = [9, 15, 21];
+
+function readRem(ss) {
+  var r = rows(ss.getSheetByName('Config'));
+  for (var i = 0; i < r.length; i++) if (String(r[i][0]) === 'reminders') { try { return remClean(JSON.parse(String(r[i][1] || '{}'))); } catch (e) { break; } }
+  return remClean({});
+}
+function remClean(o) {
+  o = o || {};
+  return {items: Array.isArray(o.items) ? o.items : [], auto: Array.isArray(o.auto) ? o.auto : [],
+    st: o.st && typeof o.st === 'object' && !Array.isArray(o.st) ? o.st : {}, ran: +o.ran || 0, sent: +o.sent || 0, due: +o.due || 0};
+}
+function writeRem(ss, rem) {
+  remPrune(rem);
+  var sh = ss.getSheetByName('Config'), r = rows(sh), s = JSON.stringify(rem);
+  for (var i = 0; i < r.length; i++) if (String(r[i][0]) === 'reminders') { sh.getRange(i + 2, 2).setNumberFormat('@').setValue(s); return; }
+  sh.getRange(sh.getLastRow() + 1, 1, 1, 3).setNumberFormat('@').setValues([['reminders', s, 'Reminders and what you did with them. Set them in the app.']]);
+}
+// Old states go: anything due more than 90 days ago, so the cell stays small.
+function remPrune(rem) {
+  var cut = Utilities.formatDate(new Date(Date.now() - 90 * 864e5), tz(), 'yyyy-MM-dd');
+  Object.keys(rem.st).forEach(function (k) { var d = k.split('@').pop(); if (!/^\d{4}-\d{2}-\d{2}$/.test(d) || d < cut) delete rem.st[k]; });
+}
+function remStr(v, n) { return String(v == null ? '' : v).slice(0, n); }
+function remItem(x) {
+  x = x || {};
+  var o = {id: remStr(x.id, 120), kind: remStr(x.kind, 12), title: remStr(x.title, 140), due: dstr(x.due)};
+  if (isFinite(+x.amount) && x.amount !== null && x.amount !== '') o.amount = +x.amount;
+  ['tag', 'card', 'vt', 'note', 'src'].forEach(function (k) { if (x[k]) o[k] = remStr(x[k], 140); });
+  if (+x.every > 0) o.every = Math.min(3650, Math.round(+x.every));
+  if (x.pay && typeof x.pay === 'object') { var p = {}; Object.keys(x.pay).slice(0, 12).forEach(function (k) { var v = x.pay[k]; p[remStr(k, 20)] = typeof v === 'number' || typeof v === 'boolean' ? v : remStr(v, 200); }); o.pay = p; }
+  return o;
+}
+function remOp(ss, props, op, user) {
+  if (op.t === 'remput') {
+    var rem = readRem(ss);
+    if (Array.isArray(op.items)) rem.items = op.items.slice(0, 400).map(remItem).filter(function (x) { return x.id && x.due; });
+    if (Array.isArray(op.auto)) rem.auto = op.auto.slice(0, 100).map(remItem).filter(function (x) { return x.id && x.due; });
+    writeRem(ss, rem);
+  } else if (op.t === 'remst') {
+    var key = remStr(op.key, 200); if (!key) return;
+    var rm = readRem(ss);
+    if (!op.v) delete rm.st[key];
+    else { var v = {}; ['done', 'dis', 'snooze'].forEach(function (k) { if (+op.v[k] > 0) v[k] = +op.v[k]; }); if (op.v.paid) v.paid = remStr(op.v.paid, 60); rm.st[key] = v; }
+    writeRem(ss, rm);
+  } else if (op.t === 'pushsub') {
+    var sub = op.sub || {}; if (!/^https:\/\/[^\s/]+\//.test(String(sub.endpoint || ''))) return;
+    var list = pushSubs(props).filter(function (x) { return x.endpoint !== sub.endpoint; });
+    list.unshift({endpoint: String(sub.endpoint), who: String((user && user.email) || ''), at: Date.now()});
+    props.setProperty('PUSH_SUBS', JSON.stringify(list.slice(0, 8)));
+  } else if (op.t === 'pushdel') {
+    props.setProperty('PUSH_SUBS', JSON.stringify(pushSubs(props).filter(function (x) { return x.endpoint !== op.endpoint; })));
+  } else if (op.t === 'pushtest') {
+    pushAll(props);
+  }
+}
+function pushSubs(props) { try { var l = JSON.parse(props.getProperty('PUSH_SUBS') || '[]'); return Array.isArray(l) ? l : []; } catch (e) { return []; } }
+// The end of the due day, in the sheet's time zone: a bill due on the 5th can be paid until midnight.
+function remDueMs(due) { return Utilities.parseDate(due + ' 23:59:59', tz(), 'yyyy-MM-dd HH:mm:ss').getTime(); }
+function remDue(rem, now) {
+  return rem.items.concat(rem.auto).filter(function (r) {
+    if (!r || !r.id || !/^\d{4}-\d{2}-\d{2}$/.test(r.due || '')) return false;
+    var left = remDueMs(r.due) - now, st = rem.st[r.id + '@' + r.due] || {};
+    if (left > REM_WINDOW_H * 36e5 || left < -REM_KEEP_DAYS * 864e5) return false;
+    return !st.done && !st.dis && !(+st.snooze > now);
+  });
+}
+// Runs on its own at 9 am, 3 pm and 9 pm.
+function remindTick() {
+  var props = PropertiesService.getScriptProperties();
+  if (props.getProperty('KILLED')) return;
+  var lock = LockService.getScriptLock(); if (!lock.tryLock(30000)) return;
+  try {
+    var ss = SpreadsheetApp.getActiveSpreadsheet(), rem = readRem(ss), due = remDue(rem, Date.now());
+    var res = due.length ? pushAll(props) : {sent: 0, failed: 0};
+    rem.ran = Date.now(); rem.sent = res.sent; rem.due = due.length;
+    writeRem(ss, rem);
+    Logger.log(due.length + ' due; ' + res.sent + ' phone(s) told, ' + res.failed + ' failed.');
+  } finally { lock.releaseLock(); }
+}
+// Run this ONCE from the editor (choose setupReminders, then Run, and allow access). It creates the three daily checks.
+function setupReminders() {
+  ScriptApp.getProjectTriggers().forEach(function (t) { if (t.getHandlerFunction() === 'remindTick') ScriptApp.deleteTrigger(t); });
+  REM_HOURS.forEach(function (h) { ScriptApp.newTrigger('remindTick').timeBased().atHour(h).everyDays(1).inTimezone(tz()).create(); });
+  var props = PropertiesService.getScriptProperties(); vapidKeys(props);
+  Logger.log('Reminder checks set for ' + REM_HOURS.join(':00, ') + ':00 (' + tz() + '). Phones signed up for alerts: ' + pushSubs(props).length);
+}
+// Run from the editor to send a test alert to every phone that turned alerts on.
+function testReminder() { var r = pushAll(PropertiesService.getScriptProperties()); Logger.log('Sent to ' + r.sent + ', failed ' + r.failed); }
+
+/* Web Push without a payload: POST to each phone's push address with a signed VAPID token. */
+function pushAll(props) {
+  var list = pushSubs(props), keep = [], sent = 0, failed = 0, keys = vapidKeys(props);
+  list.forEach(function (sub) {
+    var code = 0;
+    try {
+      var aud = String(sub.endpoint).match(/^https:\/\/[^\/]+/)[0];
+      var jwt = vapidJwt(keys, aud);
+      var r = UrlFetchApp.fetch(sub.endpoint, {method: 'post', payload: '', muteHttpExceptions: true,
+        headers: {Authorization: 'vapid t=' + jwt + ', k=' + keys.pub, TTL: '43200', Urgency: 'high'}});
+      code = r.getResponseCode();
+    } catch (e) { code = -1; }
+    if (code >= 200 && code < 300) { sent++; keep.push(sub); }
+    else { failed++; if (code !== 404 && code !== 410) keep.push(sub); } // 404/410: that phone unsubscribed; forget it
+  });
+  if (keep.length !== list.length) props.setProperty('PUSH_SUBS', JSON.stringify(keep));
+  return {sent: sent, failed: failed};
+}
+function vapidKeys(props) {
+  var raw = props.getProperty('VAPID');
+  if (raw) { try { var k = JSON.parse(raw); if (k.d && k.pub) return k; } catch (e) {} }
+  var seed = [Utilities.getUuid(), Utilities.getUuid(), Utilities.getUuid(), Utilities.getUuid(), Date.now(), Math.random()].join('|');
+  var d = ecMod(bytesToBig(ecSha256(utf8Bytes(seed))), EC.n - BigInt(1)) + BigInt(1);
+  var Q = ecMul(d, EC.G);
+  var keys = {d: d.toString(16), pub: b64url([4].concat(bigToBytes(Q[0]), bigToBytes(Q[1])))};
+  props.setProperty('VAPID', JSON.stringify(keys));
+  return keys;
+}
+function vapidJwt(keys, aud) {
+  var enc = function (o) { return b64url(utf8Bytes(JSON.stringify(o))); };
+  var head = enc({typ: 'JWT', alg: 'ES256'}) + '.' + enc({aud: aud, exp: Math.floor(Date.now() / 1000) + 12 * 3600, sub: APP_URL});
+  var sig = ecSign(BigInt('0x' + keys.d), utf8Bytes(head));
+  return head + '.' + b64url(bigToBytes(sig[0]).concat(bigToBytes(sig[1])));
+}
+
+/* P-256 (secp256r1) in plain JavaScript with BigInt. Signing uses RFC 6979 (the random number k is worked out from the
+   key and the message), so a weak random source can never leak the key. */
+var EC = (function () {
+  var h = function (x) { return BigInt('0x' + x); };
+  return {p: h('ffffffff00000001000000000000000000000000ffffffffffffffffffffffff'), n: h('ffffffff00000000ffffffffffffffffbce6faada7179e84f3b9cac2fc632551'),
+    G: [h('6b17d1f2e12c4247f8bce6e563a440f277037d812deb33a0f4a13945d898c296'), h('4fe342e2fe1a7f9b8ee7eb4a7c0f9e162bce33576b315ececbb6406837bf51f5')]};
+})();
+function ecMod(a, m) { var r = a % m; return r < BigInt(0) ? r + m : r; }
+function ecInv(a, m) { // extended Euclid
+  var t = BigInt(0), nt = BigInt(1), r = m, nr = ecMod(a, m), q, x;
+  while (nr !== BigInt(0)) { q = r / nr; x = t - q * nt; t = nt; nt = x; x = r - q * nr; r = nr; nr = x; }
+  return ecMod(t, m);
+}
+function ecAdd(P, Q) { // affine; null is the point at infinity
+  if (!P) return Q; if (!Q) return P;
+  var p = EC.p, l;
+  if (P[0] === Q[0]) {
+    if (ecMod(P[1] + Q[1], p) === BigInt(0)) return null;
+    l = ecMod(BigInt(3) * P[0] * P[0] - BigInt(3), p) * ecInv(BigInt(2) * P[1], p) % p; // a = -3
+  } else l = ecMod(Q[1] - P[1], p) * ecInv(Q[0] - P[0], p) % p;
+  var x = ecMod(l * l - P[0] - Q[0], p);
+  return [x, ecMod(l * (P[0] - x) - P[1], p)];
+}
+function ecMul(k, P) { var R = null, A = P; while (k > BigInt(0)) { if (k & BigInt(1)) R = ecAdd(R, A); A = ecAdd(A, A); k >>= BigInt(1); } return R; }
+function ecSign(d, msg) {
+  var n = EC.n, hb = ecSha256(msg), e = ecMod(bytesToBig(hb), n), x = bigToBytes(d), h1 = bigToBytes(e);
+  var V = [], K = [], i; for (i = 0; i < 32; i++) { V.push(1); K.push(0); }
+  K = ecHmac(K, V.concat([0], x, h1)); V = ecHmac(K, V);
+  K = ecHmac(K, V.concat([1], x, h1)); V = ecHmac(K, V);
+  for (var guard = 0; guard < 100; guard++) {
+    V = ecHmac(K, V); var k = bytesToBig(V);
+    if (k > BigInt(0) && k < n) {
+      var R = ecMul(k, EC.G), r = ecMod(R[0], n);
+      if (r !== BigInt(0)) { var s = ecMod(ecInv(k, n) * (e + r * d), n); if (s !== BigInt(0)) return [r, s]; }
+    }
+    K = ecHmac(K, V.concat([0])); V = ecHmac(K, V);
+  }
+  throw new Error('sign failed');
+}
+function bytesToBig(b) { var h = '0x'; for (var i = 0; i < b.length; i++) h += ('0' + (b[i] & 255).toString(16)).slice(-2); return BigInt(h === '0x' ? '0' : h); }
+function bigToBytes(v) { var h = v.toString(16); while (h.length < 64) h = '0' + h; var o = []; for (var i = 0; i < 64; i += 2) o.push(parseInt(h.substr(i, 2), 16)); return o; }
+function signedBytes(b) { return b.map(function (x) { x &= 255; return x > 127 ? x - 256 : x; }); }
+function unsignedBytes(b) { var o = []; for (var i = 0; i < b.length; i++) o.push(b[i] & 255); return o; }
+function utf8Bytes(s) { return unsignedBytes(Utilities.newBlob(s).getBytes()); }
+function ecSha256(b) { return unsignedBytes(Utilities.computeDigest(Utilities.DigestAlgorithm.SHA_256, signedBytes(b))); }
+function ecHmac(key, data) { return unsignedBytes(Utilities.computeHmacSha256Signature(signedBytes(data), signedBytes(key))); }
+function b64url(b) { return Utilities.base64EncodeWebSafe(signedBytes(b)).replace(/=+$/, ''); }
 
 /* ---------- contacts (Nov 2026): the Contacts page (contacts/) keeps its people in their own spreadsheet ----------
    Same sign-in and the same kill switch as the budget: a contacts request arrives after both checks in doPost.
