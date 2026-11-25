@@ -3018,7 +3018,9 @@ function cycleOutlook(T, key) {
   const unl = Object.keys(T.byCat).filter(id => !state.config.categories.some(c => c.id === id)).reduce((a, id) => a + T.byCat[id], 0);
   proj += unl;
   const st = T.exp > budget + 0.5 ? 'bad' : e.f > 0 && e.f < 1 && proj > budget * 1.03 + 0.5 ? 'warn' : 'good';
-  return {budget, proj, st, f: e.f};
+  // Saved = income minus whichever is bigger, the budget or what is spent: the budget is money already set aside, so early in a month savings do not look inflated.
+  const held = Math.max(budget, T.exp);
+  return {budget, proj, st, f: e.f, held, saved: T.inc - held};
 }
 const sdot = st => st ? `<i class="sd ${st}" aria-hidden="true"></i>` : '';
 // A small icon for each category, picked from its ID and name (first match wins; order matters).
@@ -3037,7 +3039,7 @@ function renderOverview(X) {
   const key = state.cur, e = elapsed(key), list = X.byCycle[key] || [], T = cycleTotals(list, X);
   const cats = state.config.categories.filter(c => c.type === 'Expense');
   const budgetTotal = cats.reduce((a, c) => a + budgetOf(c, T.byCat[c.id]), 0);
-  const saved = T.inc - T.exp, rate = T.inc > 0 ? saved / T.inc : null, OL = cycleOutlook(T, key);
+  const OL = cycleOutlook(T, key), saved = OL.saved, rate = T.inc > 0 ? saved / T.inc : null;
   const unknown = Object.keys(T.byCat).filter(id => !X.cm[id]).reduce((a, id) => a + T.byCat[id], 0);
 
   // The banner: a compact graphite panel. Six figures, all one size, a short label over each; colour says good or bad.
@@ -5190,11 +5192,15 @@ function whyBuild(k) {
       {title: 'Against the budget', lines: [{label: 'Budget', sub: 'all categories' + (cats.some(c => c.unplanned) ? ' · Discretionary has no budget' : ''), v: budgetTotal}, {label: 'Spent', v: -T.exp}],
         total: {label: budgetTotal - T.exp >= 0 ? 'Left' : 'Over budget', v: budgetTotal - T.exp}}]};
   }
-  if (kind === 'ov-saved') return {title: 'Saved', head: cl, value: T.inc > 0 ? rs(T.inc - T.exp) : '—', sections: [{title: 'Income − spent', lines: [
-    {label: 'Income', v: T.inc, k: 'ov-inc' + sfx}, {label: 'Spent', v: -T.exp, k: 'ov-exp' + sfx}], total: {label: 'Saved', v: T.inc - T.exp}},
-    {title: 'Not counted as spending', lines: [{label: 'Moved between accounts', sub: 'card bill payments, ATM cash, savings, loans', text: rs(T.trf)}]}]};
-  if (kind === 'ov-rate') return {title: 'Savings rate', head: cl, value: pct(T.inc > 0 ? (T.inc - T.exp) / T.inc : null), sections: [{title: 'Saved ÷ income', lines: [
-    {label: 'Saved', text: rs(T.inc - T.exp), k: 'ov-saved' + sfx}, {label: 'Income', text: rs(T.inc), k: 'ov-inc' + sfx}], total: {label: 'Savings rate', text: T.inc > 0 ? rs(T.inc - T.exp) + ' ÷ ' + rs(T.inc) + ' = ' + pct((T.inc - T.exp) / T.inc) : 'No income yet'}}]};
+  if (kind === 'ov-saved' || kind === 'ov-rate') {
+    const O = cycleOutlook(T, key), held = O.held, sv = O.saved, byBudget = O.budget >= T.exp;
+    const heldLine = {label: byBudget ? 'Budget' : 'Spent', sub: byBudget ? 'higher than spent so far (' + rs(T.exp) + '), so the budget is set aside' : 'higher than the budget (' + rs(O.budget) + ')', v: -held, k: 'ov-exp' + sfx};
+    if (kind === 'ov-saved') return {title: 'Saved', head: cl, value: T.inc > 0 ? rs(sv) : '—', sections: [{title: 'Income − the higher of budget or spent', lines: [
+      {label: 'Income', v: T.inc, k: 'ov-inc' + sfx}, heldLine], total: {label: 'Saved', v: sv}},
+      {title: 'Not counted as spending', lines: [{label: 'Moved between accounts', sub: 'card bill payments, ATM cash, savings, loans', text: rs(T.trf)}]}]};
+    return {title: 'Savings rate', head: cl, value: pct(T.inc > 0 ? sv / T.inc : null), sections: [{title: 'Saved ÷ income', lines: [
+      {label: 'Saved', text: rs(sv), k: 'ov-saved' + sfx}, {label: 'Income', text: rs(T.inc), k: 'ov-inc' + sfx}], total: {label: 'Savings rate', text: T.inc > 0 ? rs(sv) + ' ÷ ' + rs(T.inc) + ' = ' + pct(sv / T.inc) : 'No income yet'}}]};
+  }
   if (kind === 'ov-cat' || kind === 'ov-unl') {
     const c = X.cm[arg], xs = list.filter(t => X.typeOf(t) === 'Expense' && (kind === 'ov-unl' ? !X.cm[t.cat] : t.cat === arg));
     if (kind === 'ov-cat' && !c) return null;
@@ -5211,14 +5217,14 @@ function whyBuild(k) {
     const mk = arg, T2 = cycleTotals(X.byCycle[mk], X), O = cycleOutlook(T2, mk), ml = cycleLabel(mk);
     const bycat = cats.filter(c => T2.byCat[c.id]).map(c => { const v = T2.byCat[c.id], st = catStatus(c, v, mk), b = budgetOf(c, v);
       return {label: c.name, sub: (STATUS_WORD[st] || '') + (b > 0 && !c.unplanned ? ' · budget ' + rs(b) : ''), v, k: 'ov-cat:' + c.id + '@' + mk}; });
-    return {title: ml, head: 'Saved', value: T2.inc > 0 ? rs(T2.inc - T2.exp) : '—', sub: T2.inc > 0 ? pct((T2.inc - T2.exp) / T2.inc) + ' of income kept' : '', sections: [
-      {title: 'Income − spent', lines: [{label: 'Income', v: T2.inc, k: 'ov-inc@' + mk}, {label: 'Spent', sub: STATUS_WORD[O.st] + ' · budget ' + rs(O.budget), v: -T2.exp, k: 'ov-exp@' + mk}], total: {label: 'Saved', v: T2.inc - T2.exp}},
+    return {title: ml, head: 'Saved', value: T2.inc > 0 ? rs(O.saved) : '—', sub: T2.inc > 0 ? pct(O.saved / T2.inc) + ' of income kept' : '', sections: [
+      {title: 'Income − the higher of budget or spent', lines: [{label: 'Income', v: T2.inc, k: 'ov-inc@' + mk}, {label: O.budget >= T2.exp ? 'Budget' : 'Spent', sub: STATUS_WORD[O.st] + ' · spent ' + rs(T2.exp) + ' of ' + rs(O.budget), v: -O.held, k: 'ov-exp@' + mk}], total: {label: 'Saved', v: O.saved}},
       {title: 'Where the money went', lines: bycat.length ? bycat : [{label: 'No spending', text: ''}], total: {label: 'Spent', v: T2.exp}}]};
   }
   if (kind === 't-saved' || kind === 't-avg' || kind === 't-within') {
     const rows = trendRows(X, trendN()), closed = rows.filter(r => !r.open), span = rows.length + ' month' + (rows.length === 1 ? '' : 's');
-    if (kind === 't-saved') return {title: 'Saved', head: 'Last ' + span, value: rs(rows.reduce((a, r) => a + r.saved, 0)), sections: [{title: 'Income − spent, each month',
-      lines: rows.slice().reverse().map(r => ({label: cycleLabel(r.k) + (r.open ? ' (so far)' : ''), sub: 'income ' + rs(r.inc) + ' − spent ' + rs(r.exp), v: r.saved, k: 'm:' + r.k})), total: {label: 'Saved', v: rows.reduce((a, r) => a + r.saved, 0)}}]};
+    if (kind === 't-saved') return {title: 'Saved', head: 'Last ' + span, value: rs(rows.reduce((a, r) => a + r.saved, 0)), sections: [{title: 'Income − the higher of budget or spent, each month',
+      lines: rows.slice().reverse().map(r => ({label: cycleLabel(r.k) + (r.open ? ' (so far)' : ''), sub: 'income ' + rs(r.inc) + ' − ' + (r.budget >= r.exp ? 'budget ' + rs(r.budget) : 'spent ' + rs(r.exp)), v: r.saved, k: 'm:' + r.k})), total: {label: 'Saved', v: rows.reduce((a, r) => a + r.saved, 0)}}]};
     if (kind === 't-avg') { const tot = closed.reduce((a, r) => a + r.exp, 0);
       return {title: 'Average spend', head: 'A month, closed months only', value: closed.length ? rs(tot / closed.length) : '—', sections: [{title: 'Spent each month', plain: true,
         lines: closed.length ? closed.slice().reverse().map(r => ({label: cycleLabel(r.k), sub: STATUS_WORD[r.st], v: r.exp, k: 'm:' + r.k})) : [{label: 'No month has closed yet', text: ''}],
@@ -5392,7 +5398,7 @@ function trendRows(X, n) {
   let k = have[0] || nowKey; const keys = []; let guard = 0;
   while (k <= nowKey && guard++ < 240) { keys.push(k); k = shiftKey(k, 1); }
   return (n ? keys.slice(-n) : keys).map(k => { const T = cycleTotals(X.byCycle[k], X), O = cycleOutlook(T, k);
-    return {k, T, inc: T.inc, exp: T.exp, saved: T.inc - T.exp, budget: O.budget, proj: O.proj, st: O.st, open: k === nowKey}; });
+    return {k, T, inc: T.inc, exp: T.exp, saved: O.saved, held: O.held, budget: O.budget, proj: O.proj, st: O.st, open: k === nowKey}; });
 }
 function trendN() { const n = readPref().trendN; return n === 0 || n === 12 ? n : 6; }
 // 1. Income and spending, month by month: the gap between the two is what was saved.
@@ -5470,7 +5476,7 @@ function renderTrend(X) {
   const range = `<div class="seg trange" role="group" aria-label="How far back">${[[6, '6 months'], [12, '12 months'], [0, 'All']].map(([v, l]) => `<button type="button" class="segb" data-act="t-range" data-v="${v}" aria-pressed="${n === v}">${l}</button>`).join('')}</div>`;
   const hero = `<section class="card thero">
       <div class="th-main"${whyAttr('t-saved')}><span class="lbl">Saved in ${rows.length === 1 ? 'this month' : 'these ' + rows.length + ' months'}</span><span class="v fit">${rs(saved)}</span>
-        <span class="sub">${inc > 0 ? pct(saved / inc) + ' of income kept · ' : ''}income ${rs(inc)} · spent ${rs(exp)}</span></div>
+        <span class="sub">${inc > 0 ? pct(saved / inc) + ' of income kept · ' : ''}income ${rs(inc)} · spent ${rs(exp)} · budget or spent, whichever is higher, is set aside</span></div>
       <div class="th-row">
         <div class="tstat"${whyAttr('t-avg')}><span class="lbl">Average spend</span><span class="v fit">${avgSpent == null ? '—' : rs(avgSpent)}</span><span class="sub">a month, closed months</span></div>
         <div class="tstat"${whyAttr('t-within')}><span class="lbl">Within budget</span><span class="v fit">${closed.length ? within + ' of ' + closed.length : '—'}</span><span class="sub">closed months</span></div>
@@ -5482,7 +5488,7 @@ function renderTrend(X) {
       <div class="ro-g">
         <div class="ro"${whyAttr('ov-inc@' + sel)}><span class="lbl">Income</span><span class="v">${rs(sT.inc)}</span></div>
         <div class="ro"${whyAttr('ov-exp@' + sel)}><span class="lbl">Spent</span><span class="v">${rs(sT.exp)}</span><span class="sub">of ${rs(sO.budget)}</span></div>
-        <div class="ro"${whyAttr('ov-saved@' + sel)}><span class="lbl">Saved</span><span class="v">${sT.inc > 0 ? rs(sT.inc - sT.exp) : '—'}</span><span class="sub">${sT.inc > 0 ? pct((sT.inc - sT.exp) / sT.inc) + ' of income' : ''}</span></div>
+        <div class="ro"${whyAttr('ov-saved@' + sel)}><span class="lbl">Saved</span><span class="v">${sT.inc > 0 ? rs(sO.saved) : '—'}</span><span class="sub">${sT.inc > 0 ? pct(sO.saved / sT.inc) + ' of income' : ''}</span></div>
       </div></div>`;
   const legend1 = `<div class="legend"><span><i class="sw inc"></i>Income</span><span><i class="sw spent good"></i>Spent: within budget</span><span><i class="sw spent warn"></i>running fast</span><span><i class="sw spent bad"></i>over budget</span><span><i class="sw budl"></i>Budget</span></div>`;
   const M = chartMonth(X, sel, W);
@@ -5501,7 +5507,7 @@ function renderTrend(X) {
       <div class="chart">${chartCycles(rows, sel, W)}</div>${legend1}${readout}</section>
     <section class="card"><div class="sec-h"><h2>${cycleLabel(sel)}, day by day</h2><span class="hint chipline">${sdot(M.O.st)}${STATUS_WORD[M.O.st]}</span></div>
       <div class="chart">${M.svg}</div>${legend2}</section>
-    <section class="card"><div class="sec-h"><h2>Savings building up</h2><span class="hint">Income − spent, added month after month</span></div>
+    <section class="card"><div class="sec-h"><h2>Savings building up</h2><span class="hint">Income − higher of budget or spent, added month after month</span></div>
       <div class="chart">${chartLine(cumPts, sel, W, 'Savings added up over time')}</div></section>
     ${nwPts.length >= 2 ? `<section class="card"><div class="sec-h"><h2>Net worth</h2><span class="hint">From the balances you record</span></div><div class="chart">${chartLine(nwPts, '', W, 'Net worth over time')}</div></section>` : ''}
     <section class="card"><div class="sec-h"><h2>Categories, month by month</h2><span class="hint">Tap a cell</span></div>${heat}</section>`);
