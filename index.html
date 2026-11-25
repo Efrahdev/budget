@@ -742,6 +742,9 @@ details.ct-hist[open] summary::after{transform:rotate(-135deg) translateY(-1px)}
 .dline{display:flex;gap:8px;align-items:center}
 .dline .tin,.dline input{flex:1 1 auto;min-width:0;width:auto}
 .dline .btn.sm{min-height:40px}
+.ck{display:flex;flex-direction:column;gap:10px;padding:4px 18px 16px}.ck-i{padding:12px 14px;border-radius:14px;background:var(--fill,rgba(127,127,127,.08))}
+.ck-t{font-weight:700}.ck-w{color:var(--ink-3);font-size:calc(14px*var(--fs,1));margin-top:2px}.ck-f{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px;align-items:center}.ck-f select{min-height:38px;max-width:100%}
+.cu-seg{display:flex}.cu-seg .segb{flex:1 1 0}.cu-ht{font-weight:700;margin:6px 0 4px;font-size:calc(14px*var(--fs,1));color:var(--ink-3)}
 .adjform{display:flex;flex-direction:column;gap:12px;padding:14px 18px 16px}
 .adjkind{align-self:stretch;display:grid;grid-template-columns:1fr 1fr}.adjkind .segb,.adjsign .segb{white-space:nowrap;padding:0 12px}.adjexp{margin:0}
 .adjgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px;align-items:end}
@@ -2365,6 +2368,29 @@ body[data-view="contacts"] main{padding:0}
   </form>
 </div>
 
+<!-- Update a card: set what you owe, or add / take off, with a note -->
+<div class="scrim" id="cuScrim" hidden>
+  <form class="sheet" id="cuForm" novalidate>
+    <h3 id="cuTitle">Update card</h3>
+    <p class="muted" id="cuNow" style="margin:0;font-size:calc(14.5px*var(--fs,1))"></p>
+    <div class="seg cu-seg" id="cuMode" role="group" aria-label="How to update">
+      <button type="button" class="segb" data-act="cu-mode" data-v="set" aria-pressed="true">Set owed to</button>
+      <button type="button" class="segb" data-act="cu-mode" data-v="add" aria-pressed="false">+ Add</button>
+      <button type="button" class="segb" data-act="cu-mode" data-v="sub" aria-pressed="false">− Take off</button>
+    </div>
+    <label class="field"><span id="cuAmtL">What you owe on this card now ₹</span><input id="cuAmt" type="text" inputmode="decimal" placeholder="0"></label>
+    <label class="field"><span>Lands on</span><select id="cuBill"></select></label>
+    <label class="field"><span>Note</span><input id="cuNote" type="text" placeholder="e.g. matched the bank app, EMI 3 of 6"></label>
+    <p class="hint" id="cuPrev" style="margin:0"></p>
+    <div class="err" id="cuErr" hidden></div>
+    <div id="cuHist"></div>
+    <div class="sheet-actions">
+      <button type="button" class="btn ghost" data-act="close-cu">Cancel</button>
+      <button type="submit" class="btn primary">Update card</button>
+    </div>
+  </form>
+</div>
+
 <!-- Import sheet -->
 <div class="scrim" id="impScrim" hidden>
   <div class="sheet">
@@ -2890,8 +2916,11 @@ const TIME_KEY = 'time:', isTimeKey = id => String(id).startsWith(TIME_KEY);
 // A loan is money you owe: its balance counts as a minus figure even if it was typed without the minus sign.
 const owedVal = (a, v) => a && a.cls === 'Loan' && v > 0 ? -v : v;
 const isLiveAcct = a => !!a && !a.pay && (a.cls === 'Bank' || a.cls === 'Cash');
+// Owner's rule (Nov 2026): a balance you type is an OVERRIDE. It is what the account holds at that moment, so every
+// entry that already exists (any date, even one dated later) is inside it; only entries ADDED after it move it.
+// A balance typed for an earlier day has no moment, so it stands for the end of that day (entries dated later count).
 // The sheet keeps an entry's "Created at" to the whole second, so the same second counts as after.
-function afterRecord(t, L) { return t.date > L.date || (t.date === L.date && !!L.at && Math.floor((+t.at || 0) / 1000) >= Math.floor(L.at / 1000)); }
+function afterRecord(t, L) { return L.at ? Math.floor((+t.at || 0) / 1000) >= Math.floor(L.at / 1000) : t.date > L.date; }
 // Which account an entry's money really sits in. Cash entries say 'cash' (the Cash account, whatever its id); a Bank
 // button from the Vault can be a stand-in ("pay") account linked to a Wealth account. Everything goes through this.
 function acctResolver(c) {
@@ -5144,7 +5173,8 @@ function whyCard(id, X) {
   if (L.credit > 0.004) split.push({label: 'Paid ahead', sub: 'reduces your next bill', v: -L.credit});
   return {title: card.name, head: 'Total owed', value: rs(L.owed), sections: [
     {title: 'Added and taken off', lines: lines.length ? lines : [{label: 'No spends or payments yet', text: ''}], total: {label: 'Total owed', v: L.owed}},
-    {title: 'Where the total owed sits', lines: split, total: {label: 'Total owed', v: L.owed}}]};
+    {title: 'Where the total owed sits', lines: split, total: {label: 'Total owed', v: L.owed}}],
+    btn: isEntry() ? null : {act: 'card-upd', id: card.id, label: 'Update card'}};
 }
 // A Wealth account: its balance is the figure you recorded. Shows the history and the entries since.
 function whyAcct(id, X) {
@@ -5631,7 +5661,7 @@ function renderSetup(X) {
       <div class="row-actions"><button class="sr-add" type="button" data-act="add-acct"><svg class="ic"><use href="#i-plus"/></svg>Add account</button></div>${payLinkHtml(d)}</section>
     <section class="card"><div class="sec-h"><h2>Credit cards</h2><span class="hint">One list for the Vault, Add entry and Card bills. New Vault cards appear here; your edits here stay.</span></div>
       <div class="ed srl" id="cardEd">${(d.cards || []).map((k, i) => cardRowHtml(k, i)).join('') || '<div class="empty">No cards yet. Add them in the Vault\'s Credit cards table.</div>'}</div></section>
-    ${adjustHtml(X)}
+    ${checkHtml(X)}
     ${remSetupHtml(X)}
     ${accountHtml()}
     <section class="card"><div class="sec-h"><h2>Backup</h2><span class="hint">Your data lives in Google Sheets. A backup file is a spare copy.</span></div>
@@ -5659,7 +5689,7 @@ const STP = [
   {k: 'cats', t: 'Categories and monthly budgets', chip: 'Budgets', ic: 'i-sliders', g: 0},
   {k: 'accts', t: 'Accounts', chip: 'Accounts', ic: 'i-bank', g: 0},
   {k: 'cards', t: 'Credit cards', chip: 'Cards', ic: 'i-card', g: 0},
-  {k: 'adjust', t: 'Credit card adjustments', chip: 'Card adjustments', ic: 'i-adjust', g: 0},
+  {k: 'check', t: 'Card and account check', chip: 'Check', ic: 'i-adjust', g: 0},
   {k: 'rem', t: 'Reminders', chip: 'Reminders', ic: 'i-bell', g: 1},
   {k: 'sync', t: 'Account and sync', chip: 'Sync', ic: 'i-sync', g: 1},
   {k: 'family', t: 'Family access', chip: 'Family', ic: 'i-users', g: 1},
@@ -5701,7 +5731,7 @@ function stpSummary(k, X) {
   if (k === 'cats') { const cs = (d.categories || []).filter(c => !c.unplanned), tot = stpBudget(d); return n(cs.length, 'category', 'categories') + ' · ' + rs(tot) + ' a month'; }
   if (k === 'accts') return n((d.accounts || []).filter(a => !a.pay).length, 'account');
   if (k === 'cards') { const ks = d.cards || []; return ks.length ? n(ks.length, 'card') + ' · ' + ks.map(c => c.name).join(', ') : 'No cards yet'; }
-  if (k === 'adjust') { const a = X.txns.filter(t => t.tag === ADJ_TAG).length; return a ? n(a, 'adjustment') : 'None yet'; }
+  if (k === 'check') { const c = cardCheck(X).length; return c ? n(c, 'thing', 'things') + ' to look at' : 'All clear'; }
   if (k === 'rem') return remSummary(X);
   if (k === 'sync') return syncLabel();
   if (k === 'family') { const u = Array.isArray(Sync.users) ? Sync.users.length : 0; return n(u, 'person', 'people') + ' can sign in'; }
@@ -5871,113 +5901,149 @@ function cardOpenPreview(k) {
    2. Card bill only: + or − on one card's bill (e.g. a no-cost EMI instalment already counted months ago).
       Changes what you owe on the card, never the month's spending. Uses the Transfer category "Card bill adjustment". */
 const ADJ_TAG = 'Adjustment';
-state.adj = state.adj || {kind: 'card', sign: 1, amt: '', date: '', cat: '', card: '', bill: '', note: '', miss: false};
-state.adjF = state.adjF || {from: '', to: ''}; state.adjOpen = state.adjOpen || {};
-const billLabel = sd => { const d = parseYmd(sd); return d.getDate() + ' ' + MON[d.getMonth()] + ' ' + String(d.getFullYear()).slice(2) + (sd >= todayStr() ? ' · coming' : ''); };
 const isCardAdj = (catId, cm) => !!(cm[catId] && cm[catId].role === 'cardadj');
-function adjBills(cardId, X) {
-  const card = cardList().find(k => k.id === cardId); if (!card) return [];
-  const L = cardLedger(card, X), S = dayOf(card.stmtDay, 1), have = new Set(L.stmts.map(s => s.sd)), list = L.stmts.slice(-7).map(s => s.sd);
-  let n = (L.nextSt || L.stmts[L.stmts.length - 1] || {sd: stmtFor(todayStr(), S)}).sd; for (let i = 0; i < 2; i++) { n = stepStmt(n, S, 1); if (!have.has(n)) list.push(n); }
-  return [...new Set(list)].sort().reverse();
+// The Transfer category that changes a card's bill and what you owe, never the month's spending. Made on first use.
+async function ensureCardAdjCat() {
+  let cat = state.config.categories.find(c => c.role === 'cardadj'); if (cat) return cat;
+  if (state.dirty) throw new Error('Save or discard your Setup changes first.');
+  const cfg = clone(state.config); cat = {id: 'cardadj', name: 'Card bill adjustment', type: 'Transfer', role: 'cardadj', group: '', budget: 0};
+  cfg.categories.push(cat); await API.saveConfig(cfg); return cat;
 }
-const adjDefaultBill = (cardId, X) => { const k = cardList().find(x => x.id === cardId); if (!k) return ''; const L = cardLedger(k, X); return L.nextSt ? L.nextSt.sd : adjBills(cardId, X)[0] || ''; };
-const adjRow = (t, X) => { const cardOnly = isCardAdj(t.cat, X.cm), c = X.cm[t.cat];
-  return `<div class="li adjrow"><div class="l"><div class="t1">${cardOnly ? 'Card bill only' : esc(c ? c.name : 'Unlisted')}${t.card ? ' · ' + esc(cardName(t.card)) : ''}</div>
-    <div class="t2">${cardOnly ? 'Stmt Date ' + fmtDate(t.date) : 'counts in ' + cycleLabel(cycleKeyOf(t.date)) + ' · ' + fmtDM(t.date)}${t.note && t.note !== ADJ_TAG ? ' · ' + esc(t.note) : ''}</div></div>
-    <div style="display:flex;gap:10px;align-items:center"><span class="amt num${t.refund ? ' neg' : ''}">${t.refund ? '− ' : '+ '}${rs(t.amount)}</span><button class="icon-btn" type="button" data-act="adj-del" data-id="${esc(t.id)}" data-doc="${esc(t._doc)}" aria-label="Delete adjustment">×</button></div></div>`; };
-// History: every adjustment in the date range, newest first, in the original flat list.
-function adjHistory(X) {
-  const F = state.adjF, all = X.txns.filter(t => t.tag === ADJ_TAG).sort((a, b) => a.date < b.date ? 1 : a.date > b.date ? -1 : (b.at || 0) - (a.at || 0));
-  const list = all.filter(t => (!F.from || t.date >= F.from) && (!F.to || t.date <= F.to));
-  const html = !all.length ? '<div class="empty">No adjustments yet.</div>' : !list.length ? '<div class="empty">No adjustments in these dates.</div>' : `<div class="list adjlist">${list.map(t => adjRow(t, X)).join('')}</div>`;
-  return {count: list.length, total: all.length, html};
+
+/* ---------- Update a card (owner's wish, Nov 2026) ----------
+   Tap any card, then Update card: set what you owe now (an override), or add / take off an amount, with a note.
+   It is saved as a "Card bill adjustment" entry for the difference, on the bill you choose, so the card's one ledger
+   (cardLedger) stays the only source: Overview, Card bills, Wealth and reminders all move together. */
+const CU = {id: '', mode: 'set', bill: ''};
+function cuBills(card, X) {
+  const L = cardLedger(card, X), S = L.S, today = todayStr(), out = [];
+  L.unpaid.forEach(s => out.push({sd: s.sd, label: 'Bill to pay · Stmt Date ' + fmtDM(s.sd) + ' · ' + rs(s.left) + ' left'}));
+  let n = L.nextSt ? L.nextSt.sd : stmtFor(today, S);
+  out.push({sd: n, label: 'Next bill · Stmt Date ' + fmtDM(n), next: true});
+  n = stepStmt(n, S, 1); out.push({sd: n, label: 'Bill after · Stmt Date ' + fmtDM(n)});
+  return {L, list: out.filter(o => !L.openDate || !(L.openB || L.openU) || o.sd >= L.openDate)};
 }
-const adjCount = H => H.total ? (H.count === H.total ? n2(H.total, 'adjustment') : H.count + ' of ' + H.total) : 'none yet';
-const n2 = (c, w) => c + ' ' + w + (c === 1 ? '' : 's');
-function adjustHtml(X) {
-  const A = state.adj, cats = state.config.categories.filter(c => c.type === 'Expense'), cards = cardList(), F = state.adjF;
-  if (!A.date) A.date = todayStr();
-  if (!A.cat || !cats.some(c => c.id === A.cat)) A.cat = (cats.find(c => c.id === 'misc') || cats[0] || {}).id || '';
-  if (!cards.some(k => k.id === A.card)) A.card = '';
-  const bills = adjBills(A.card, X); if (A.card && !bills.includes(A.bill)) A.bill = adjDefaultBill(A.card, X);
-  const seg = (act, v, cur, label) => `<button type="button" class="segb" data-act="${act}" data-v="${v}" aria-pressed="${String(v) === String(cur)}">${label}</button>`;
-  const H = adjHistory(X), bad = A.miss && !A.card;
-  return `<section class="card adjcard"><div class="sec-h"><h2>Credit card adjustments</h2></div>
-    <div class="adjform">
-      <div class="seg adjkind" role="group" aria-label="Kind">${seg('adj-kind', 'card', A.kind, 'Card bill only')}${seg('adj-kind', 'month', A.kind, 'Counts in the month')}</div>
-      <p class="hint adjexp">${A.kind === 'month' ? 'Adds to (or takes off) that month\'s spending, in the category you pick, on the card you choose.' : 'Changes one card\'s bill and what you owe on it. The month\'s spending and budget don\'t change (for example a no-cost EMI instalment for something already counted).'}</p>
-      <div class="adjgrid">
-        ${cards.length ? `<label class="f adjcardf${bad ? ' bad' : ''}"><span class="fl2">Card <b class="req">required</b></span><select id="adjCard" required aria-invalid="${bad}"><option value=""${A.card ? '' : ' selected'}>Select a card…</option>${cards.map(k => `<option value="${esc(k.id)}"${k.id === A.card ? ' selected' : ''}>${esc(k.name)}</option>`).join('')}</select>${bad ? '<span class="adjerr" role="alert">Select a card to post an adjustment.</span>' : ''}</label>` : '<p class="hint adjcardf">Add a credit card above before posting an adjustment.</p>'}
-        <div class="seg adjsign" role="group" aria-label="Add or take off">${seg('adj-sign', 1, A.sign, '+ Add')}${seg('adj-sign', -1, A.sign, '− Take off')}</div>
-        <label class="f"><span class="fl2">Amount ₹</span><input id="adjAmt" type="text" inputmode="decimal" value="${esc(A.amt)}" placeholder="0"></label>
-        ${A.kind === 'month' ? `
-        <label class="f"><span class="fl2">Date (counts in ${cycleLabel(cycleKeyOf(/^\d{4}-\d{2}-\d{2}$/.test(A.date) ? A.date : todayStr()))})</span><input id="adjDate" type="date" value="${esc(A.date)}"></label>
-        <label class="f"><span class="fl2">Category</span><select id="adjCat">${cats.map(c => `<option value="${esc(c.id)}"${c.id === A.cat ? ' selected' : ''}>${esc(c.name)}</option>`).join('')}</select></label>`
-        : `<label class="f"><span class="fl2">Stmt Date</span><select id="adjBill"${A.card ? '' : ' disabled'}>${A.card ? bills.map(sd => `<option value="${sd}"${sd === A.bill ? ' selected' : ''}>${billLabel(sd)}</option>`).join('') : '<option>Select a card first</option>'}</select></label>`}
-        <label class="f adjnote"><span class="fl2">Note</span><input id="adjNote" type="text" value="${esc(A.note)}" placeholder="${A.kind === 'month' ? 'e.g. one-off from June' : 'e.g. EMI 3 of 6, phone'}"></label>
-      </div>
-      <div class="row-actions" style="padding:0"><button class="btn primary" type="button" data-act="adj-add"${A.card ? '' : ' aria-disabled="true"'}>Add adjustment</button></div>
-    </div>
-    <details class="ct-hist adjhist" id="adjHist"${state.adjOpen.hist ? ' open' : ''}><summary>History <span class="ah-c" id="adjHistCnt">· ${adjCount(H)}</span></summary>
-      <div class="adjrange" role="group" aria-label="Date range"><label class="f"><span class="fl2">From</span><input id="adjFrom" type="date" value="${esc(F.from)}" max="${esc(F.to)}"></label><label class="f"><span class="fl2">To</span><input id="adjTo" type="date" value="${esc(F.to)}" min="${esc(F.from)}"></label><button class="btn ghost sm" type="button" data-act="adj-range-clear"${F.from || F.to ? '' : ' hidden'}>All dates</button></div>
-      <div id="adjHistList">${H.html}</details></section>`;
+function openCardUpd(id) {
+  const card = cardList().find(k => k.id === id); if (!card) { toast('That card is not in your list', 'bad'); return; }
+  CU.id = id; CU.mode = 'set'; CU.bill = '';
+  $('#cuAmt').value = ''; $('#cuNote').value = ''; $('#cuErr').hidden = true; $('#cuForm').scrollTop = 0;
+  cuFill(true); $('#cuScrim').hidden = false;
+  setTimeout(() => { const b = $('#cuAmt'); if (b && b.select) b.select(); }, 60);
 }
-// Picking From moves To to today (or to From, if From is later). From never ends up after To.
-function adjSetRange(which, v) {
-  const F = state.adjF, today = todayStr(); v = /^\d{4}-\d{2}-\d{2}$/.test(v) ? v : '';
-  if (which === 'from') { F.from = v; if (v) F.to = v > today ? v : today; }
-  else { F.to = v; if (v && F.from && F.from > v) F.from = v; }
-  adjHistRepaint();
+function cuFill(fresh) {
+  const card = cardList().find(k => k.id === CU.id); if (!card) { $('#cuScrim').hidden = true; return; }
+  const X = ctx(), B = cuBills(card, X), L = B.L;
+  if (!B.list.some(o => o.sd === CU.bill)) CU.bill = (B.list.find(o => o.next) || B.list[0] || {}).sd || '';
+  $('#cuTitle').textContent = 'Update ' + card.name;
+  $('#cuNow').textContent = 'Owed now ' + rs(L.owed) + ' · billed, to pay ' + rs(L.dueNow) + (L.nextSt ? ' · next bill ' + rs(L.nextSt.left) : '');
+  document.querySelectorAll('#cuMode .segb').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.v === CU.mode)));
+  $('#cuAmtL').textContent = CU.mode === 'set' ? 'What you owe on this card now ₹' : CU.mode === 'add' ? 'Amount to add ₹' : 'Amount to take off ₹';
+  if (fresh && CU.mode === 'set') $('#cuAmt').value = INR.format(Math.round(L.owed));
+  paint($('#cuBill'), B.list.map(o => `<option value="${o.sd}"${o.sd === CU.bill ? ' selected' : ''}>${esc(o.label)}</option>`).join(''));
+  cuPreview(L);
+  const hist = X.txns.filter(t => t.card === card.id && t.tag === ADJ_TAG).sort(byDateDesc).slice(0, 12);
+  paint($('#cuHist'), hist.length ? `<div class="cu-ht">Adjustments on this card</div><div class="list adjlist">${hist.map(t => `<div class="li adjrow"><div class="l"><div class="t1">${esc(t.note && t.note !== ADJ_TAG ? t.note : 'Adjustment')}</div>
+      <div class="t2">${isCardAdj(t.cat, X.cm) ? 'Stmt Date ' + fmtDate(t.date) : 'counts in ' + cycleLabel(cycleKeyOf(t.date)) + ' · ' + fmtDM(t.date)}${t.at > 1000 ? ' · made ' + fmtDM(new Date(t.at).toISOString().slice(0, 10)) : ''}</div></div>
+      <div style="display:flex;gap:10px;align-items:center"><span class="amt num${t.refund ? ' neg' : ''}">${t.refund ? '− ' : '+ '}${rs(t.amount)}</span><button class="icon-btn" type="button" data-act="cu-del" data-id="${esc(t.id)}" data-doc="${esc(t._doc)}" aria-label="Delete adjustment">×</button></div></div>`).join('')}</div>` : '');
 }
-function adjHistRepaint() {
-  const X = ctx(), H = adjHistory(X), l = $('#adjHistList'), c = $('#adjHistCnt'), clr = document.querySelector('[data-act="adj-range-clear"]');
-  if (l) paint(l, H.html); if (c) c.textContent = '· ' + adjCount(H);
-  if (clr) clr.hidden = !(state.adjF.from || state.adjF.to);
-  const fi = $('#adjFrom'), ti = $('#adjTo'), F = state.adjF;
-  if (fi) { fi.value = F.from; fi.max = F.to; } if (ti) { ti.value = F.to; ti.min = F.from; }
+// The change this update makes: the difference for "set", the amount itself for add / take off.
+function cuDiff(L) {
+  const raw = String($('#cuAmt').value || '').trim(); if (!raw) return null;
+  const v = CU.mode === 'set' ? parseSigned(raw) : parseAmount(raw);
+  if (v === null || isNaN(v) || (CU.mode !== 'set' && !(v > 0))) return NaN;
+  return r2(CU.mode === 'set' ? v - L.owed : CU.mode === 'add' ? Math.abs(v) : -Math.abs(v));
 }
-document.addEventListener('input', ev => {
-  const id = ev.target && ev.target.id, A = state.adj, map = {adjAmt: 'amt', adjDate: 'date', adjCat: 'cat', adjCard: 'card', adjBill: 'bill', adjNote: 'note'};
-  if (id === 'adjFrom' || id === 'adjTo') { adjSetRange(id === 'adjFrom' ? 'from' : 'to', ev.target.value); return; }
-  if (!map[id]) return; A[map[id]] = ev.target.value;
-  if (id === 'adjCard') { A.miss = false; A.bill = adjDefaultBill(A.card, ctx()); renderSetup(ctx()); return; }
-  if (id === 'adjDate') { const l = ev.target.closest('label').querySelector('.fl2'); if (l && /^\d{4}-\d{2}-\d{2}$/.test(A.date)) l.textContent = 'Date (counts in ' + cycleLabel(cycleKeyOf(A.date)) + ')'; }
-});
-document.addEventListener('change', ev => { const id = ev.target && ev.target.id; if (/^adj(Cat|Card|Bill|Date|From|To)$/.test(id || '')) ev.target.dispatchEvent(new Event('input', {bubbles: true})); });
-document.addEventListener('toggle', ev => {
-  const d = ev.target; if (!d || !d.matches) return;
-  if (d.matches('details.adjhist')) state.adjOpen.hist = d.open;
-}, true);
+function cuPreview(L) {
+  if (!L) { const card = cardList().find(k => k.id === CU.id); if (!card) return; L = cardLedger(card, ctx()); }
+  const d = cuDiff(L), p = $('#cuPrev');
+  p.textContent = d === null ? '' : isNaN(d) ? 'Type an amount, like 2500.' : Math.abs(d) < 0.005 ? 'No change: that is what you owe now.'
+    : 'Owed ' + rs(L.owed) + ' → ' + rs(L.owed + d) + ' (' + sgn(d) + ' on the bill with Stmt Date ' + fmtDM(CU.bill) + '). Spending and budgets do not change.';
+}
+document.addEventListener('input', ev => { if (ev.target && (ev.target.id === 'cuAmt')) cuPreview(); });
+$('#cuBill').addEventListener('change', ev => { CU.bill = ev.target.value; cuPreview(); });
 document.addEventListener('click', async ev => {
-  const b = ev.target.closest('[data-act^="adj-"]'); if (!b) return;
-  const A = state.adj, a = b.dataset.act;
-  if (a === 'adj-kind') { A.kind = b.dataset.v; renderSetup(ctx()); return; }
-  if (a === 'adj-sign') { A.sign = +b.dataset.v; document.querySelectorAll('.adjsign .segb').forEach(x => x.setAttribute('aria-pressed', String(x.dataset.v === b.dataset.v))); return; }
-  if (a === 'adj-range-clear') { state.adjF = {from: '', to: ''}; adjHistRepaint(); return; }
-  if (a === 'adj-del') { if (!arm(b, 'adj' + b.dataset.id, '✓')) return; try { await API.delTxn(b.dataset.id, b.dataset.doc); toast('Adjustment deleted'); } catch (e) { toast(writeErr(e), 'bad'); } return; }
-  if (a !== 'adj-add') return;
-  if (!A.card) { A.miss = true; toast('Select a card first', 'bad'); renderSetup(ctx()); const sel = $('#adjCard'); if (sel) { sel.focus(); sel.scrollIntoView({block: 'center', behavior: reduceMotion() ? 'auto' : 'smooth'}); } return; }
-  const amt = Math.abs(parseAmount(A.amt));
-  if (!(amt > 0)) { toast('Type the amount, like 2500', 'bad'); focusBox($('#adjAmt')); return; }
-  const base = {id: newId(), amount: amt, acct: '', member: '', tag: ADJ_TAG, at: Date.now(), refund: A.sign < 0, note: (A.note || '').trim() || ADJ_TAG};
-  if (A.kind === 'month') {
-    if (!/^\d{4}-\d{2}-\d{2}$/.test(A.date)) { toast('Choose a date', 'bad'); return; }
-    if (!state.config.categories.some(c => c.id === A.cat)) { toast('Choose a category', 'bad'); return; }
-    await API.putTxn(Object.assign(base, {date: A.date, cat: A.cat, card: A.card}));
-    toast((A.sign < 0 ? 'Taken off ' : 'Added to ') + cycleLabel(cycleKeyOf(A.date)));
-  } else {
-    if (!A.bill) { toast('Choose the bill', 'bad'); return; }
-    let cat = state.config.categories.find(c => c.role === 'cardadj');
-    if (!cat) {
-      if (state.dirty) { toast('Save or discard your Setup changes first', 'bad'); return; }
-      const cfg = clone(state.config); cat = {id: 'cardadj', name: 'Card bill adjustment', type: 'Transfer', role: 'cardadj', group: '', budget: 0};
-      cfg.categories.push(cat); await API.saveConfig(cfg);
-    }
-    await API.putTxn(Object.assign(base, {date: A.bill, cat: cat.id, card: A.card}));
-    toast((A.sign < 0 ? 'Taken off ' : 'Added to ') + cardName(A.card) + ' bill, Stmt Date ' + fmtDM(A.bill));
-  }
-  A.amt = ''; A.note = ''; A.sign = 1; renderSetup(ctx());
+  const b = ev.target.closest('[data-act^="cu-"], [data-act="card-upd"], [data-act="close-cu"]'); if (!b) return;
+  const a = b.dataset.act;
+  if (a === 'card-upd') { closeWhy(); openCardUpd(b.dataset.id); return; }
+  if (a === 'close-cu') { $('#cuScrim').hidden = true; return; }
+  if (a === 'cu-mode') { const was = CU.mode; CU.mode = b.dataset.v; if (was !== CU.mode) $('#cuAmt').value = ''; cuFill(CU.mode === 'set'); return; }
+  if (a === 'cu-del') { if (!arm(b, 'cu' + b.dataset.id, '✓')) return;
+    try { const X0 = ctx(), t = X0.txns.find(x => x.id === b.dataset.id); await API.delTxn(b.dataset.id, b.dataset.doc); impactToast('Adjustment deleted', t, null, X0); cuFill(false); } catch (e) { toast(writeErr(e), 'bad'); } }
+});
+$('#cuForm').addEventListener('submit', async ev => {
+  ev.preventDefault();
+  const err = $('#cuErr'), fail = m => { err.textContent = m; err.hidden = false; };
+  const card = cardList().find(k => k.id === CU.id); if (!card) return fail('That card is not in your list.');
+  const X0 = ctx(), L = cardLedger(card, X0), d = cuDiff(L);
+  if (d === null || isNaN(d)) return fail('Type the amount, like 2500.');
+  if (Math.abs(d) < 0.005) return fail('No change: that is already what you owe.');
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(CU.bill)) return fail('Choose the bill it lands on.');
+  const note = String($('#cuNote').value || '').trim(), what = CU.mode === 'set' ? 'Set owed to ' + rs(L.owed + d) : (d > 0 ? 'Added ' : 'Taken off ') + rs(Math.abs(d));
+  let cat; try { cat = await ensureCardAdjCat(); } catch (e) { return fail(e.message || writeErr(e)); }
+  const t = {id: newId(), date: CU.bill, amount: Math.abs(d), cat: cat.id, acct: '', card: card.id, member: '', tag: ADJ_TAG, at: Date.now(), refund: d < 0, note: note ? what + ' · ' + note : what};
+  try { await API.putTxn(t); } catch (e) { return fail(writeErr(e)); }
+  $('#cuScrim').hidden = true; impactToast('Card updated', null, t, X0);
+});
+
+/* ---------- Card and account check (Setup) ----------
+   Finds every entry that is not reaching the card or bank it should, says why, and offers a one-tap fix. */
+function cardCheck(X) {
+  const cards = cardList(), ids = new Set(cards.map(k => k.id)), ok = new Set(state.config.checkOk || []), out = [];
+  const es = n => n + (n === 1 ? ' entry' : ' entries');
+  // 1. Entries on a card that is not in the list: they move no card at all.
+  const orph = {}; X.txns.forEach(t => { if (t.card && !ids.has(t.card) && !String(t.card).startsWith(INV_PFX)) (orph[t.card] = orph[t.card] || []).push(t); });
+  Object.entries(orph).forEach(([cid, ts]) => out.push({k: 'orphan', cid, ts, title: es(ts.length) + ' on “' + cardName(cid) + '”', why: 'That card is not in your card list, so these entries change no card. Move them to the right card.'}));
+  // 2. Two cards with the same name: entries can land on either.
+  const byName = {}; cards.forEach(k => { const n = nkey(k.name); (byName[n] = byName[n] || []).push(k); });
+  Object.values(byName).filter(l => l.length > 1).forEach(l => out.push({k: 'dup', cards: l, title: 'Two cards called “' + l[0].name + '”', why: 'Entries may be split between them. Move the second card’s entries to the first, then remove it.'}));
+  // 3. A Transfer with a card that is not treated as a card payment.
+  const odd = {}; X.txns.forEach(t => { const c = X.cm[t.cat]; if (t.card && ids.has(t.card) && c && c.type === 'Transfer' && !isCardPay(t.cat, X.cm) && !isCardAdj(t.cat, X.cm) && !isInvest(t.cat, X.cm)) (odd[t.cat] = odd[t.cat] || []).push(t); });
+  // 4. Transfer categories that look like a card payment but are not treated as one.
+  X.txns.forEach(t => { const c = X.cm[t.cat]; if (!t.card && c && c.type === 'Transfer' && !c.role && !isCardPay(t.cat, X.cm) && /\bcc\b|credit/i.test(c.name)) (odd[t.cat] = odd[t.cat] || []).push(t); });
+  Object.entries(odd).forEach(([cat, ts]) => out.push({k: 'cat', cat, ts, title: '“' + X.cm[cat].name + '” is not treated as a card payment', why: es(ts.length) + ' in it ' + (ts.length === 1 ? 'takes' : 'take') + ' money from the bank but never ' + (ts.length === 1 ? 'lowers' : 'lower') + ' what you owe on a card.'}));
+  // 5. A card payment with no card chosen: the bank goes down, no card does.
+  X.txns.filter(t => isCardPay(t.cat, X.cm) && !t.card).sort(byDateDesc).forEach(t => out.push({k: 'nocard', t, title: 'Card payment ' + rs(t.amount) + ' on ' + fmtDM(t.date) + (t.note ? ' · ' + t.note : ''), why: 'No card is chosen, so no card shows it. Pick the card it paid.'}));
+  // 6. A payment dated before a card's starting figures: left out as already inside them.
+  cards.forEach(k => { const L = cardLedger(k, X); L.before.filter(t => isCardPay(t.cat, X.cm) && !ok.has('in:' + t.id)).forEach(t => out.push({k: 'before', card: k, t, title: k.name + ': payment ' + rs(t.amount) + ' on ' + fmtDM(t.date) + ' not counted', why: 'It is dated before ' + fmtDM(L.openDate) + ', the As of day of this card’s starting figures in Setup, so it is treated as already inside them. If those figures did not include it, count it.'})); });
+  // 7. Card payments whose bank side cannot move: the bank has no balance recorded, or is not linked to a Wealth account.
+  const bank = {}; X.txns.forEach(t => { if (!isCardPay(t.cat, X.cm)) return; const id = t._acct; if (!id) return;
+    const a = X.am[id]; if (a && isLiveAcct(a) && X.latest[id]) return; (bank[id] = bank[id] || []).push(t); });
+  Object.entries(bank).forEach(([id, ts]) => { const a = X.am[id]; if (a && !a.pay && ok.has('bank:' + id)) return;
+    out.push({k: 'bank', id, a, ts, title: (a ? a.name : 'An unknown bank') + ': ' + es(ts.length) + ' not moving the bank balance', why: !a ? 'That bank account is no longer in Setup.' : a.pay ? 'This Bank button is not linked to a Wealth account. Link it in Setup → Accounts → Bank buttons on Add entry.' : !isLiveAcct(a) ? 'It is not a Bank or Cash account, so its balance stays as you record it.' : 'No balance is recorded for it yet. Record one and every later entry moves it.'}); });
+  return out;
+}
+function checkHtml(X) {
+  const list = cardCheck(X), cards = cardList();
+  const pick = (attr, cur) => `<select ${attr}>${cards.map(k => `<option value="${esc(k.id)}"${k.id === cur ? ' selected' : ''}>${esc(k.name)}</option>`).join('')}</select>`;
+  const fix = c => c.k === 'orphan' ? (cards.length ? `${pick(`data-ck="${esc(c.cid)}"`, '')}<button class="btn sm" type="button" data-act="ck-move" data-cid="${esc(c.cid)}">Move ${c.ts.length === 1 ? 'it' : 'all'}</button>` : '')
+    : c.k === 'dup' ? `<button class="btn sm" type="button" data-act="ck-merge" data-keep="${esc(c.cards[0].id)}" data-drop="${esc(c.cards[1].id)}">Merge into the first</button>`
+    : c.k === 'cat' ? `<button class="btn sm" type="button" data-act="ck-catpay" data-cat="${esc(c.cat)}">Treat as card payment</button>`
+    : c.k === 'nocard' ? (cards.length ? `${pick(`data-ck="${esc(c.t.id)}"`, '')}<button class="btn sm" type="button" data-act="ck-link" data-id="${esc(c.t.id)}">Link</button>` : '')
+    : c.k === 'before' ? `<button class="btn sm" type="button" data-act="ck-incl" data-card="${esc(c.card.id)}" data-id="${esc(c.t.id)}">Count it</button><button class="btn ghost sm" type="button" data-act="ck-ok" data-key="in:${esc(c.t.id)}">It is inside</button>`
+    : c.k === 'bank' && c.a && !c.a.pay && isLiveAcct(c.a) ? `<button class="btn sm" type="button" data-act="set-one" data-id="${esc(c.id)}">Record balance</button><button class="btn ghost sm" type="button" data-act="ck-ok" data-key="bank:${esc(c.id)}">Ignore</button>` : '';
+  return `<section class="card ckcard"><div class="sec-h"><h2>Card and account check</h2><span class="hint">Every entry that is not reaching the card or bank it should, and why. Card adjustments now live on each card: tap a card, then Update card.</span></div>
+    <div class="ck">${list.length ? list.map(c => `<div class="ck-i"><div class="ck-t">${esc(c.title)}</div><div class="ck-w">${esc(c.why)}</div>${fix(c) ? `<div class="ck-f">${fix(c)}</div>` : ''}</div>`).join('') : '<div class="empty">All clear: every card payment reaches both the bank and the card.</div>'}</div></section>`;
+}
+async function ckConfig(fn) {
+  if (state.dirty) { toast('Save or discard your Setup changes first', 'bad'); return false; }
+  const cfg = clone(state.config); fn(cfg); await API.saveConfig(cfg); return true;
+}
+async function ckMove(ts, card) { for (const t of ts) await API.putTxn(Object.assign({}, t, {card}), t._doc); }
+document.addEventListener('click', async ev => {
+  const b = ev.target.closest('[data-act^="ck-"]'); if (!b) return;
+  const a = b.dataset.act, X = ctx(), sel = k => { const s = document.querySelector(`select[data-ck="${CSS.escape(k)}"]`); return s ? s.value : ''; };
+  try {
+    if (a === 'ck-move') { const to = sel(b.dataset.cid); if (!to) return; const ts = X.txns.filter(t => t.card === b.dataset.cid); await ckMove(ts, to); toast(ts.length + ' moved to ' + cardName(to)); }
+    else if (a === 'ck-link') { const to = sel(b.dataset.id), t = X.txns.find(x => x.id === b.dataset.id); if (!to || !t) return; await API.putTxn(Object.assign({}, t, {card: to}), t._doc); impactToast('Payment linked', t, Object.assign({}, t, {card: to}), X); }
+    else if (a === 'ck-merge') { if (!arm(b, 'ckm' + b.dataset.drop, 'Tap again to merge')) return;
+      const ts = X.txns.filter(t => t.card === b.dataset.drop); await ckMove(ts, b.dataset.keep);
+      await ckConfig(cfg => { const k = (cfg.cards || []).find(x => x.id === b.dataset.drop); cfg.cards = (cfg.cards || []).filter(x => x.id !== b.dataset.drop); if (k) cfg.cardsRemoved = (cfg.cardsRemoved || []).concat([{id: k.id, name: k.name}]); });
+      toast('Merged: ' + ts.length + ' moved'); }
+    else if (a === 'ck-catpay') { if (await ckConfig(cfg => { const c = cfg.categories.find(x => x.id === b.dataset.cat); if (c) c.role = 'cardpay'; })) toast('Now a card payment. Link each payment to its card below.'); }
+    else if (a === 'ck-incl') { if (await ckConfig(cfg => { const k = (cfg.cards || []).find(x => x.id === b.dataset.card); if (k) k.incl = [...new Set((k.incl || []).concat([b.dataset.id]))]; })) toast('Counted on ' + cardName(b.dataset.card)); }
+    else if (a === 'ck-ok') { if (await ckConfig(cfg => { cfg.checkOk = [...new Set((cfg.checkOk || []).concat([b.dataset.key]))]; })) toast('Hidden from the check'); }
+  } catch (e) { toast(writeErr(e), 'bad'); }
+  if (state.view === 'setup') renderSetup(ctx());
 });
 
 function renderSaveBar() {
@@ -6080,7 +6146,8 @@ function cardLedger(card, X) {
   X.txns.forEach(t => {
     if (t.card !== card.id) return;
     // What you owed when you started tracking already holds everything dated before that day.
-    if (openDate && (openB || openU) && t.date < openDate) { before.push(t); return; }
+    // Except an entry made after you typed those figures (openAt), or one you told the check to count (incl).
+    if (openDate && (openB || openU) && t.date < openDate && !(card.openAt && (+t.at || 0) >= card.openAt) && !(card.incl || []).includes(t.id)) { before.push(t); return; }
     if (isCardPay(t.cat, X.cm)) pays.push({date: t.date, v: t.amount, t});
     else { const credit = t.refund || X.typeOf(t) === 'Income'; charges.push({date: t.date, v: credit ? -t.amount : t.amount, t, sd: stmtFor(t.date, S)}); }
   });
@@ -6807,7 +6874,7 @@ async function saveEntry(again) {
   else if (payMode === 'card') { if (!payCard) return fail("Choose the card (add cards in the vault's Credit cards)."); card = payCard; }
   else { acct = editing ? editing.acct || '' : ''; card = editing ? editing.card || '' : ''; }
   const t = {id: editing ? editing.id : newId(), date, amount: amt, cat, acct, card, note: $('#eNote').value.trim(),
-    member: $('#eMember').value.trim(), tag: $('#eTag').value.trim(), at: editing ? editing.at : Date.now(), refund: inv ? false : refund};
+    member: $('#eMember').value.trim(), tag: $('#eTag').value.trim(), at: editing ? (editing.at || 1) : Date.now(), refund: inv ? false : refund}; // an old entry with no Created at stays old when edited
   if (invTo) t.inv = invTo;
   const wasEditing = editing, oldT = wasEditing ? (X.txns.find(x => x.id === wasEditing.id) || wasEditing) : null;
   if (isEntry()) state.mine[t.id] = 1;
@@ -6831,7 +6898,7 @@ function openBalances(only) {
   const one = balOnly ? state.config.accounts.find(a => a.id === balOnly) : null;
   $('#bDate').value = todayStr(); $('#bErr').hidden = true; $('#balForm').scrollTop = 0;
   $('#balForm h3').textContent = one ? 'Update ' + one.name : 'Record balances';
-  $('#balForm h3 + p').textContent = one ? 'Type what ' + one.name + ' holds now. Only this account changes.' : 'Change the figures you have checked. Only the ones you change are saved. A loan is saved as money you owe, with or without a minus sign.';
+  $('#balForm h3 + p').textContent = one ? 'Type what ' + one.name + ' holds right now. This overrides the balance: every entry already made is inside it, and only entries you add after this change it. Only this account changes.' : 'Change the figures you have checked. Only the ones you change are saved. A loan is saved as money you owe, with or without a minus sign.';
   balFill();
   $('#balScrim').hidden = false;
   if (one) setTimeout(() => { const b = $('#bal-' + one.id); if (b) b.select(); }, 60);
@@ -6991,8 +7058,8 @@ $('#eDel').addEventListener('click', async () => {
   try { const X0 = ctx(), oldT = X0.txns.find(x => x.id === editing.id) || editing; await API.delTxn(editing.id, editing._doc); remDropEntry(oldT.id); impactToast('Entry deleted', oldT, null, X0); buzz(18); closeEntry(); } catch (e) { $('#eErr').textContent = writeErr(e); $('#eErr').hidden = false; }
 });
 $('#balForm').addEventListener('submit', ev => { ev.preventDefault(); saveBalances(); });
-['entryScrim', 'balScrim', 'impScrim', 'copyScrim', 'vaultScrim', 'whyScrim', 'textScrim', 'noteScrim', 'noteMenu', 'moreScrim'].forEach(id => $('#' + id).addEventListener('click', ev => { if (ev.target.id === id) { if (id === 'noteScrim') { closeNote(); return; } $('#' + id).hidden = true; if (id === 'whyScrim') W$.stack = []; if (id === 'entryScrim') editing = null; } }));
-document.addEventListener('keydown', ev => { if (ev.key === 'Escape' && !$('#noteMenu').hidden) { closeNoteMenu(); return; } if (ev.key === 'Escape' && N.open) { closeNote(); return; } if (ev.key === 'Escape') ['entryScrim', 'balScrim', 'impScrim', 'copyScrim', 'vaultScrim', 'whyScrim', 'textScrim', 'moreScrim'].forEach(id => { $('#' + id).hidden = true; }); });
+['entryScrim', 'balScrim', 'cuScrim', 'impScrim', 'copyScrim', 'vaultScrim', 'whyScrim', 'textScrim', 'noteScrim', 'noteMenu', 'moreScrim'].forEach(id => $('#' + id).addEventListener('click', ev => { if (ev.target.id === id) { if (id === 'noteScrim') { closeNote(); return; } $('#' + id).hidden = true; if (id === 'whyScrim') W$.stack = []; if (id === 'entryScrim') editing = null; } }));
+document.addEventListener('keydown', ev => { if (ev.key === 'Escape' && !$('#noteMenu').hidden) { closeNoteMenu(); return; } if (ev.key === 'Escape' && N.open) { closeNote(); return; } if (ev.key === 'Escape') ['entryScrim', 'balScrim', 'cuScrim', 'impScrim', 'copyScrim', 'vaultScrim', 'whyScrim', 'textScrim', 'moreScrim'].forEach(id => { $('#' + id).hidden = true; }); });
 $('#cycPick').addEventListener('change', ev => { state.cur = ev.target.value; state.curPinned = state.cur !== cycleKeyOf(todayStr()); render(); });
 ['fCat', 'fType', 'fPay'].forEach(id => $('#' + id).addEventListener('change', () => renderEntries(ctx())));
 { const fs = $('#fSort'); fs.value = readPref().entSort === 'date' ? 'date' : 'added'; fs.addEventListener('change', () => { writePref({entSort: fs.value}); renderEntries(ctx()); }); }
@@ -7014,6 +7081,7 @@ $('#main').addEventListener('input', ev => {
   item[k] = ev.target.type === 'checkbox' ? ev.target.checked : ev.target.value;
   if (k === 'type' || k === 'group') { state.dirty = true; renderSetup(ctx()); return; }
   markDirty();
+  if (row.classList.contains('card-row') && /^(openBilled|openUnbilled|openDate)$/.test(k)) item.openAt = Date.now(); // entries made after this are never inside the starting figures
   if (row.classList.contains('card-row') && /^(openBilled|openUnbilled|openDate|stmtDay|dueDay)$/.test(k)) { const pv = row.querySelector('.k-pv'); if (pv) pv.textContent = cardOpenPreview(item); }
 });
 $('#main').addEventListener('change', ev => {
@@ -8467,7 +8535,7 @@ async function remCheck() {
   if (document.visibilityState !== 'visible' || !pend.length) { if (!pend.length && !$('#remScrim').hidden) $('#remScrim').hidden = true; return; }
   const seen = remSeen(), due = pend.some(r => now - (seen[r.key] || 0) >= remEvery(r.h) * 36e5);
   // Never in the middle of typing an entry, a Vault row or a note: it shows as soon as that closes.
-  const busy = ['entryScrim', 'vaultScrim', 'noteScrim', 'balScrim', 'impScrim'].some(id => !$('#' + id).hidden);
+  const busy = ['entryScrim', 'vaultScrim', 'noteScrim', 'balScrim', 'cuScrim', 'impScrim'].some(id => !$('#' + id).hidden);
   if (due && !busy && $('#remScrim').hidden) remOpen();
 }
 // The copy the service worker reads when a push arrives (the app may be closed then).
@@ -8691,7 +8759,7 @@ function remInit() {
   document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') remSoon(1200); });
   setInterval(() => { if (document.visibilityState === 'visible') remSoon(0); }, 5 * 60000);
   // An alert held back while you were typing shows as soon as that sheet closes.
-  ['entryScrim', 'vaultScrim', 'noteScrim', 'balScrim', 'impScrim'].forEach(id => new MutationObserver(() => { if ($('#' + id).hidden) remSoon(900); }).observe($('#' + id), {attributes: true, attributeFilter: ['hidden']}));
+  ['entryScrim', 'vaultScrim', 'noteScrim', 'balScrim', 'cuScrim', 'impScrim'].forEach(id => new MutationObserver(() => { if ($('#' + id).hidden) remSoon(900); }).observe($('#' + id), {attributes: true, attributeFilter: ['hidden']}));
   remSoon(1500); setTimeout(remKeepSub, 8000);
 }
 
