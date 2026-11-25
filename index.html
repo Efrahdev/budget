@@ -660,6 +660,30 @@ td.from{white-space:normal;min-width:180px;color:var(--ink-2)}
 .ct-box .lbl{font-size:calc(13px*var(--fs,1));color:var(--ink-3);font-weight:600}
 .ct-box .v{font-family:var(--f-display);font-weight:700;font-size:calc(25px*var(--fs,1));line-height:1.1;letter-spacing:-.02em}
 .ct-box .s{font-size:calc(13.5px*var(--fs,1));color:var(--ink-2)}
+.cbh{position:relative;overflow:hidden;border-radius:26px;padding:22px 20px 18px;margin-bottom:16px;color:#fff;background:radial-gradient(120% 140% at 100% 0%,#4f46e5 0%,transparent 55%),linear-gradient(135deg,#0f172a 0%,#1e293b 55%,#312e81 100%);box-shadow:0 18px 40px -18px rgba(15,23,42,.55),0 2px 6px rgba(15,23,42,.18)}
+.cbh.tone-bad{background:radial-gradient(120% 140% at 100% 0%,#dc2626 0%,transparent 55%),linear-gradient(135deg,#0f172a 0%,#1e293b 55%,#4c1d1d 100%)}
+.cbh.tone-warn{background:radial-gradient(120% 140% at 100% 0%,#d97706 0%,transparent 55%),linear-gradient(135deg,#0f172a 0%,#1e293b 55%,#4a3313 100%)}
+.cbh-top{display:flex;flex-wrap:wrap;justify-content:space-between;gap:16px;align-items:flex-start}
+.cbh-l{display:block;font-size:calc(12px*var(--fs,1));letter-spacing:.08em;text-transform:uppercase;opacity:.72;font-weight:600}
+.cbh-v{display:block;font-size:calc(38px*var(--fs,1));font-weight:800;letter-spacing:-.02em;line-height:1.1;margin:4px 0 2px}
+.cbh-s{font-size:calc(13.5px*var(--fs,1));opacity:.7}
+.cbh-due{display:flex;flex-direction:column;gap:2px;padding:12px 14px;border-radius:18px;background:rgba(255,255,255,.1);backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,.16);min-width:150px}
+.cbh-due b{font-size:calc(22px*var(--fs,1))}.cbh-due span:not(.cbh-l){font-size:calc(13.5px*var(--fs,1));opacity:.85}
+.cbh-pill{margin-top:4px;align-self:flex-start;padding:3px 10px;border-radius:999px;background:rgba(255,255,255,.18);font-weight:600;font-size:calc(12.5px*var(--fs,1))!important;opacity:1!important}
+.cbh-bar{display:flex;gap:3px;height:10px;margin:18px 0 14px;border-radius:999px;overflow:hidden;background:rgba(255,255,255,.12)}.cbh-bar i{display:block;min-width:4px}
+.b1{background:#fb7185}.b2{background:#a5b4fc}.b3{background:#67e8f9}.b0{background:#fde68a}
+.cbh-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}@media(min-width:720px){.cbh-grid{grid-template-columns:repeat(4,minmax(0,1fr))}}
+.cbh-k{position:relative;padding:12px 14px 12px 14px;border-radius:16px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);display:flex;flex-direction:column;gap:2px;min-width:0;cursor:default}
+.cbh-k[data-act]{cursor:pointer}.cbh-k b{font-size:calc(20px*var(--fs,1));font-weight:700}.cbh-k small{opacity:.68;font-size:calc(12.5px*var(--fs,1))}
+.cbh-k .dot{position:absolute;top:14px;right:14px;width:9px;height:9px;border-radius:50%}
+.ct-ent{border-top:1px solid var(--rule)}.ct-ent>summary{cursor:pointer;padding:14px 18px;font-weight:700;display:flex;justify-content:space-between;gap:10px}
+.ct-ent .muted{font-weight:500}.ce-g{padding:0 12px 10px}
+.ce-h{display:grid;grid-template-columns:1fr auto auto;gap:10px;align-items:center;padding:10px 8px 6px;font-weight:600;font-size:calc(14px*var(--fs,1));color:var(--ink-2);border-bottom:1px dashed var(--rule)}
+.ce-g ul{list-style:none;margin:0;padding:0}
+.ce-r{display:flex;justify-content:space-between;gap:12px;align-items:center;padding:10px 8px;border-radius:12px}.ce-r[data-act]{cursor:pointer}.ce-r[data-act]:hover{background:var(--fill)}
+.ce-r.adj{background:color-mix(in srgb,var(--accent) 7%,transparent);margin:4px 0}
+.ce-d{display:flex;flex-direction:column;min-width:0}.ce-d b{font-weight:600;overflow-wrap:anywhere}.ce-d small{color:var(--ink-3);font-size:calc(12.5px*var(--fs,1))}
+.ce-v{font-weight:700;white-space:nowrap}.ce-v.neg{color:var(--good)}
 .ct-acts{display:flex;flex-wrap:wrap;gap:8px;padding:12px 18px;border-top:1px solid var(--rule)}.ck-flag{color:var(--bad)}
 .ct-extra{padding:12px 18px;border-top:1px solid var(--rule);font-size:calc(14.5px*var(--fs,1));color:var(--ink-2)}
 details.ct-hist{border-top:1px solid var(--rule)}
@@ -6477,11 +6501,30 @@ function tileHtml(L) {
     ${L.laterAmt > 0.005 ? `<div class="ct-extra">Later bills: <b>${rs(L.laterAmt)}</b>, from entries dated after ${fmtDM(n.sd)}.</div>` : ''}
     ${L.credit > 0.005 ? `<div class="ct-extra">You have paid <b>${rs(L.credit)}</b> more than you owe. It will reduce your next bill.</div>` : ''}
     ${isEntry() ? '' : `<div class="ct-acts"><button class="btn sm" type="button" data-act="card-upd" data-id="${esc(c.id)}">Update card</button><button class="btn ghost sm" type="button" data-act="card-upd" data-tab="conf" data-id="${esc(c.id)}">Card settings</button></div>`}
+    ${ctEntries(L)}
     <details class="ct-hist" data-card="${esc(c.id)}"${state.openHist[c.id] ? ' open' : ''}><summary>Bills and what is on them</summary>
       <div class="tscroll"><table class="rt"><thead><tr><th>Stmt Date</th><th>Spends</th><th>Pay By</th><th class="n">Calculated</th><th class="n">Your figure</th><th class="n">Paid</th><th class="n">Left</th><th>Status</th><th>From budget cycles</th></tr></thead><tbody>${hist}</tbody></table></div>
       <p class="hint" style="margin:0;padding:8px 16px 12px">Type in Your figure if your bank's bill shows a different amount, for example because of fees. Clear the box to use the calculated amount.</p></details>
   </article>`;
 }
+// Every entry on a card, bill by bill: what you spent, refunds, your adjustments (with their note) and payments.
+function ctEntries(L) {
+  const X = ctx(), c = L.card, open = (state.openEnt || {})[c.id];
+  const row = (t, v, kind) => { const cat = X.cm[t.cat], adj = t.tag === ADJ_TAG, desc = adj ? (t.note || 'Adjustment') : t.note || (cat ? cat.name : 'Unlisted');
+    const sub = [fmtDate(t.date), adj ? 'Manual adjustment' + (t.at > 1000 ? ' made ' + fmtDM(new Date(t.at).toISOString().slice(0, 10)) : '') : t.note && cat ? cat.name : '', kind, t.member || ''].filter(Boolean).join(' · ');
+    const edit = !adj && !isEntry() ? ` data-act="edit" data-id="${esc(t.id)}" data-doc="${esc(t._doc)}" role="button" tabindex="0"` : '';
+    return `<li class="ce-r${adj ? ' adj' : ''}"${edit}><span class="ce-d"><b>${esc(desc)}</b><small>${esc(sub)}</small></span><span class="ce-v num${v < 0 ? ' neg' : ''}">${v < 0 ? '− ' : ''}${rs(Math.abs(v))}</span></li>`; };
+  const groups = L.stmts.slice().reverse().filter(s => s.items.length || s.opening || s.own).map(s => { const st = stStatus(s);
+    const items = s.items.slice().sort((a, b) => byDateDesc(a.t, b.t)).map(i => row(i.t, i.v, i.v < 0 ? 'refund' : ''));
+    if (s.opening) items.push(`<li class="ce-r adj"><span class="ce-d"><b>Owed when you started tracking</b><small>Starting figure, as of ${fmtDate(L.openDate)}</small></span><span class="ce-v num">${rs(s.opening)}</span></li>`);
+    if (s.own && Math.abs(s.billed - s.calc) > 0.004) items.push(`<li class="ce-r adj"><span class="ce-d"><b>Your typed figure for this bill</b><small>Worked out ${rs(s.calc)}</small></span><span class="ce-v num${s.billed - s.calc < 0 ? ' neg' : ''}">${s.billed - s.calc < 0 ? '− ' : '+ '}${rs(Math.abs(s.billed - s.calc))}</span></li>`);
+    return `<div class="ce-g"><div class="ce-h"><span>${s.closed ? 'Bill · Stmt Date ' : 'Next bill · Stmt Date '}${fmtDM(s.sd)}</span>${s.closed ? `<span class="chip ${st.c}">${esc(st.t)}</span>` : '<span></span>'}<b class="num">${rs(s.billed)}</b></div><ul>${items.join('')}</ul></div>`; });
+  if (L.pays.length) groups.push(`<div class="ce-g"><div class="ce-h"><span>Payments made</span><span></span><b class="num">− ${rs(L.pays.reduce((a, p) => a + p.v, 0))}</b></div><ul>${L.pays.slice().sort((a, b) => byDateDesc(a.t, b.t)).map(p => row(p.t, -p.v, '')).join('')}</ul></div>`);
+  const n = L.charges.length + L.pays.length;
+  return `<details class="ct-ent" data-ent="${esc(c.id)}"${open ? ' open' : ''}><summary>Entries on this card <span class="muted">${n} ${n === 1 ? 'entry' : 'entries'}</span></summary>
+    ${groups.length ? groups.join('') : '<p class="hint" style="margin:0;padding:4px 18px 14px">No entries on this card yet.</p>'}</details>`;
+}
+document.addEventListener('toggle', ev => { const d = ev.target; if (d && d.classList && d.classList.contains('ct-ent')) { state.openEnt = state.openEnt || {}; state.openEnt[d.dataset.ent] = d.open; } }, true);
 function renderCards(X) {
   const ae = document.activeElement, focusId = ae && ae.id && ae.closest && ae.closest('#v-cards') ? ae.id : null;
   const cards = cardList();
@@ -6496,15 +6539,18 @@ function renderCards(X) {
   const laterAmt = Ls.reduce((a, L) => a + L.laterAmt, 0), owed = Ls.reduce((a, L) => a + L.owed, 0);
   const up = Ls.flatMap(L => L.unpaid.map(s => ({L, s}))).sort((a, b) => a.s.due < b.s.due ? -1 : a.s.due > b.s.due ? 1 : 0);
   const nx = up[0], nxSt = nx ? stStatus(nx.s) : null;
-  const lede = nx
-    ? `Pay <b>${rs(nx.s.left)}</b> on <b>${esc(nx.L.card.name)}</b> by <b>${fmtDate(nx.s.due)}</b> (${nxSt.t.toLowerCase()}). In all you owe <b>${rs(owed)}</b> on your cards: <b>${rs(dueNow)}</b> is already billed and <b>${rs(nextAmt + laterAmt)}</b> will be on the coming bills.`
-    : `No card bill is waiting to be paid. <b>${rs(nextAmt + laterAmt)}</b> will be on your coming bills.`;
-  const kpis = `<div class="card kpis">
-    <div class="kpi head"${whyAttr('c-due')}><span class="lbl">Billed, to pay</span><span class="val fit">${rs(dueNow)}</span><span class="sub">${up.length} bill${up.length === 1 ? '' : 's'} waiting</span></div>
-    <div class="kpi"${whyAttr('c-next')}><span class="lbl">On next bills</span><span class="val fit">${rs(nextAmt)}</span><span class="sub">${laterAmt > 0.005 ? rs(laterAmt) + ' more on later bills' : 'Spent since the last bills'}</span></div>
-    <div class="kpi"${whyAttr('c-owed')}><span class="lbl">Total owed on cards</span><span class="val fit">${rs(owed)}</span><span class="sub">Billed plus not yet billed</span></div>
-    <div class="kpi"><span class="lbl">Next payment</span><span class="val fit">${nx ? fmtDM(nx.s.due) : '—'}</span><span class="sub">${nx ? esc(nx.L.card.name) + ' · ' + nxSt.t : 'Nothing due'}</span></div>
-  </div>`;
+  const tone = !nx ? 'good' : nxSt.c || 'calm', seg = (v, cl) => v > 0.5 ? `<i class="${cl}" style="flex:${v}"></i>` : '';
+  const nextSd = Ls.map(L => L.nextSt && L.nextSt.sd).filter(Boolean).sort()[0];
+  const kpis = `<section class="cbh tone-${tone}">
+    <div class="cbh-top"><div><span class="cbh-l">Total owed on cards</span><span class="cbh-v num"${whyAttr('c-owed')}>${rs(owed)}</span><span class="cbh-s">${cards.length} card${cards.length === 1 ? '' : 's'} · billed plus not yet billed</span></div>
+      <div class="cbh-due">${nx ? `<span class="cbh-l">Pay next</span><b class="num">${rs(nx.s.left)}</b><span>${esc(nx.L.card.name)}</span><span class="cbh-pill">${esc(nxSt.t)} · ${fmtDM(nx.s.due)}</span>` : `<span class="cbh-l">Pay next</span><b>Nothing due</b><span>No bill is waiting</span>`}</div></div>
+    ${owed > 0.5 ? `<div class="cbh-bar" role="img" aria-label="Billed ${rs(dueNow)}, next statement ${rs(nextAmt)}, later ${rs(laterAmt)}">${seg(dueNow, 'b1')}${seg(nextAmt, 'b2')}${seg(laterAmt, 'b3')}</div>` : ''}
+    <div class="cbh-grid">
+      <div class="cbh-k"${whyAttr('c-due')}><span class="dot b1"></span><span class="cbh-l">Billed, to pay</span><b class="num">${rs(dueNow)}</b><small>${up.length} bill${up.length === 1 ? '' : 's'} waiting</small></div>
+      <div class="cbh-k"${whyAttr('c-next')}><span class="dot b2"></span><span class="cbh-l">Next statement</span><b class="num">${rs(nextAmt)}</b><small>${nextSd ? 'Stmt Date ' + fmtDM(nextSd) : 'Spent since the last bills'}</small></div>
+      <div class="cbh-k"><span class="dot b3"></span><span class="cbh-l">Following statements</span><b class="num">${rs(laterAmt)}</b><small>Dated after the next Stmt Date</small></div>
+      <div class="cbh-k"><span class="dot b0"></span><span class="cbh-l">Bills left to pay</span><b class="num">${up.length}</b><small>${up.length ? 'Oldest due ' + fmtDM(up[0].s.due) : 'All paid'}</small></div>
+    </div></section>`;
   const rowsB = []; let tot = 0;
   Ls.forEach(L => {
     const g = {}; L.charges.filter(ch => cycleKeyOf(ch.date) === state.cur).forEach(ch => { g[ch.sd] = (g[ch.sd] || 0) + ch.v; });
@@ -6515,7 +6561,7 @@ function renderCards(X) {
     ${rowsB.length ? `<div class="tscroll"><table class="rt"><thead><tr><th>Card</th><th>Stmt Date</th><th>Pay By</th><th class="n">Spent this budget cycle</th><th>Bill status</th></tr></thead>
       <tbody>${rowsB.join('')}<tr class="sum"><td colspan="3">Total on cards in ${cycleLabel(state.cur)}</td><td class="n">${rs(tot)}</td><td></td></tr></tbody></table></div>`
       : `<div class="empty">No card spends in ${cycleLabel(state.cur)} yet. Pick a card when you add an entry.</div>`}</section>`;
-  paint($('#v-cards'), `<a class="hint" href="#overview">‹ Back to Overview</a><p class="lede">${lede}</p>${isEntry() ? '' : checkHtml(X)}${kpis}<div class="ctiles">${Ls.map(tileHtml).join('')}</div>${bridge}
+  paint($('#v-cards'), `<a class="hint" href="#overview">‹ Back to Overview</a>${kpis}${isEntry() ? '' : checkHtml(X)}<div class="ctiles">${Ls.map(tileHtml).join('')}</div>${bridge}
     <p class="hint" style="margin:0">Your budget counts a card spend on the day you spend. Your bank collects it on the bill shown here. Paying a card bill is a transfer, not new spending, so nothing counts twice. Your cards come from the <a href="#vault">Vault</a>.</p>`);
   if (focusId) { const el = document.getElementById(focusId); if (el) { if (el.classList.contains('tin')) focusBox(el); else el.focus(); } }
 }
