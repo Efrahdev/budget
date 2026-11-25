@@ -950,8 +950,16 @@ details.srw[open]>.sr-h .sr-cv{transform:rotate(180deg);color:var(--s-acc)}
 .calcb{width:48px;height:40px;border:0;background:var(--fill);color:var(--ink);border-radius:12px;font-size:calc(21px*var(--fs,1));font-weight:700;cursor:pointer;line-height:1;transition:background .2s,transform .15s var(--spring)}
 .calcb:active{transform:scale(.92);background:var(--fill-3)}
 .calcb.eq{background:var(--accent-soft);color:var(--accent)}
-#eAmtCalc{margin-left:6px;font-size:calc(16.5px*var(--fs,1));font-weight:700;color:var(--ink-2)}
+#eAmtCalc{display:block;margin:6px 4px 0;font-size:calc(16.5px*var(--fs,1));font-weight:700;color:var(--ink-2)}
 #eAmtCalc.bad{color:var(--bad-ink);font-weight:600;font-size:calc(13.5px*var(--fs,1))}
+/* Add entry bottom bar (frozen): the operators on one row, then Cancel, Add another and a compact Save on one line. */
+.sheet-actions.entryfoot{justify-content:flex-end;gap:8px;padding-top:10px}
+.sheet-actions.entryfoot .calcrow{flex:1 0 100%;justify-content:space-between;gap:6px;flex-wrap:nowrap}
+.sheet-actions.entryfoot .calcrow .calcb{flex:1 1 0;width:auto;min-width:0;height:42px}
+.sheet-actions.entryfoot .btn{flex:0 0 auto;min-height:42px;padding:0 14px;font-size:calc(15px*var(--fs,1))}
+.sheet-actions.entryfoot .btn.primary{min-width:88px}
+.sheet-actions.entryfoot .btn.left{margin-right:auto}
+@media (max-width:360px){.sheet-actions.entryfoot{gap:6px}.sheet-actions.entryfoot .btn{padding:0 10px}.sheet-actions.entryfoot .btn.primary{min-width:0}}
 .amount-in{font-family:var(--f-display);font-size:calc(34px*var(--fs,1)) !important;font-weight:700;letter-spacing:-.02em;padding:10px 16px !important}
 #ePayHint{color:var(--ink-2);line-height:1.45}
 .emore summary{cursor:pointer;font-size:calc(14.5px*var(--fs,1));font-weight:600;color:var(--accent);list-style:none;display:inline-flex;align-items:center;gap:8px;padding:4px 0}
@@ -2201,10 +2209,7 @@ body[data-view="contacts"] main{padding:0}
     <h3 id="entryTitle">Add entry</h3>
     <div class="field" data-focus="eAmt"><span id="eAmtLbl">Amount (₹)</span>
       <div id="eAmt" class="tbox amount-in" role="textbox" aria-labelledby="eAmtLbl" inputmode="text" enterkeyhint="next" autocorrect="off" spellcheck="false" data-placeholder="0"></div>
-      <div class="calcrow" role="group" aria-label="Calculator">
-        <button type="button" class="calcb" data-calc="+" aria-label="Plus">+</button><button type="button" class="calcb" data-calc="-" aria-label="Minus">−</button><button type="button" class="calcb" data-calc="×" aria-label="Times">×</button><button type="button" class="calcb" data-calc="÷" aria-label="Divide">÷</button><button type="button" class="calcb eq" data-calc="=" aria-label="Work it out">=</button>
-        <small id="eAmtCalc" aria-live="polite"></small>
-      </div>
+      <small id="eAmtCalc" aria-live="polite"></small>
     </div>
     <div class="field"><span id="eCatLbl">Category</span>
       <div class="chips" id="eCatChips" role="group" aria-labelledby="eCatLbl"></div>
@@ -2247,10 +2252,13 @@ body[data-view="contacts"] main{padding:0}
       <label class="ck-line" style="margin-top:8px"><input id="eRefund" type="checkbox"> <span id="eRefundLbl">This is a refund (reduces spending in its category)</span></label>
     </details>
     <div class="err" id="eErr" hidden></div>
-    <div class="sheet-actions">
+    <div class="sheet-actions entryfoot">
+      <div class="calcrow" role="group" aria-label="Calculator">
+        <button type="button" class="calcb" data-calc="+" aria-label="Plus">+</button><button type="button" class="calcb" data-calc="-" aria-label="Minus">−</button><button type="button" class="calcb" data-calc="×" aria-label="Times">×</button><button type="button" class="calcb" data-calc="÷" aria-label="Divide">÷</button><button type="button" class="calcb eq" data-calc="=" aria-label="Work it out">=</button>
+      </div>
       <button type="button" class="btn danger left" id="eDel" hidden>Delete</button>
       <button type="button" class="btn ghost" data-act="close-entry">Cancel</button>
-      <button type="button" class="btn" id="eAgain">Save &amp; add another</button>
+      <button type="button" class="btn" id="eAgain">Add another</button>
       <button type="submit" class="btn primary" id="eSave">Save</button>
     </div>
   </form>
