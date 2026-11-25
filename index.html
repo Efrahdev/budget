@@ -242,7 +242,7 @@ html.role-entry body:not([data-view="entries"]) #cycBar{display:none!important}
 @media (max-width:460px){#cycRange,.cyc-sep{display:none}}
 @media (max-width:599px){.bigtext .filters{grid-template-columns:1fr}}
 @media (max-width:599px){.kpi:not(.head) .sub{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}}
-.cat-row select,.acc-row select,.card-row select{padding-right:28px;background-position:right 9px center;background-size:12px}
+.cat-row select,.acc-row select{padding-right:28px;background-position:right 9px center;background-size:12px}
 
 /* ---------- page ---------- */
 .wrap{width:100%;max-width:1180px;margin:0 auto;padding-left:max(var(--gut),env(safe-area-inset-left,0px));padding-right:max(var(--gut),env(safe-area-inset-right,0px))}
@@ -660,6 +660,7 @@ td.from{white-space:normal;min-width:180px;color:var(--ink-2)}
 .ct-box .lbl{font-size:calc(13px*var(--fs,1));color:var(--ink-3);font-weight:600}
 .ct-box .v{font-family:var(--f-display);font-weight:700;font-size:calc(25px*var(--fs,1));line-height:1.1;letter-spacing:-.02em}
 .ct-box .s{font-size:calc(13.5px*var(--fs,1));color:var(--ink-2)}
+.ct-acts{display:flex;flex-wrap:wrap;gap:8px;padding:12px 18px;border-top:1px solid var(--rule)}.ck-flag{color:var(--bad)}
 .ct-extra{padding:12px 18px;border-top:1px solid var(--rule);font-size:calc(14.5px*var(--fs,1));color:var(--ink-2)}
 details.ct-hist{border-top:1px solid var(--rule)}
 details.ct-hist summary{padding:14px 18px;cursor:pointer;font-weight:600;font-size:calc(14.5px*var(--fs,1));color:var(--accent);list-style:none;display:flex;align-items:center;gap:8px}
@@ -712,11 +713,6 @@ details.ct-hist[open] summary::after{transform:rotate(-135deg) translateY(-1px)}
 .edrow:first-child{border-top:0}
 .cat-row{grid-template-columns:minmax(0,2fr) minmax(0,1.1fr) minmax(0,1fr) minmax(0,1fr) auto}
 .acc-row{grid-template-columns:minmax(0,1.8fr) minmax(0,1fr) minmax(0,1fr) auto auto minmax(0,1.3fr) auto}
-.card-row{grid-template-columns:minmax(0,2fr) 130px 170px auto;align-items:end}
-.card-row .k-more{grid-column:1/-1}
-.card-row .k-more summary{cursor:pointer;padding:6px 0;color:var(--accent);font-weight:600}
-.card-row .k-how{margin:4px 0 0;line-height:1.45}.card-row .k-pv{margin:10px 0 2px;padding:9px 12px;border-radius:12px;background:var(--fill);color:var(--ink-2);line-height:1.45}
-.card-row .kgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;padding-top:8px}
 .edhead{font-size:calc(13px*var(--fs,1));color:var(--ink-3);font-weight:700;padding:10px 0 4px;border-top:0}
 .edrow input[type=text],.edrow input[type=number],.edrow select,.edrow .tin{width:100%;min-width:0}
 .edrow label.ck{display:inline-flex;align-items:center;gap:7px;font-size:calc(14px*var(--fs,1));color:var(--ink-2);white-space:nowrap;cursor:pointer}
@@ -744,6 +740,7 @@ details.ct-hist[open] summary::after{transform:rotate(-135deg) translateY(-1px)}
 .dline .btn.sm{min-height:40px}
 .ck{display:flex;flex-direction:column;gap:10px;padding:4px 18px 16px}.ck-i{padding:12px 14px;border-radius:14px;background:var(--fill,rgba(127,127,127,.08))}
 .ck-t{font-weight:700}.ck-w{color:var(--ink-3);font-size:calc(14px*var(--fs,1));margin-top:2px}.ck-f{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px;align-items:center}.ck-f select{min-height:38px;max-width:100%}
+.cu-conf{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding-top:8px}.cu-conf .f{display:block;min-width:0}.cu-conf .cu-wide{grid-column:1/-1}.cu-conf .fl2{display:block;font-size:calc(13px*var(--fs,1));color:var(--ink-3);font-weight:600;margin-bottom:4px}.cu-conf input,.cu-conf select{width:100%}.cu-rm{margin-top:12px;color:var(--bad)}.ck-wrap{margin-bottom:14px}
 .cu-seg{display:flex}.cu-seg .segb{flex:1 1 0}.cu-ht{font-weight:700;margin:6px 0 4px;font-size:calc(14px*var(--fs,1));color:var(--ink-3)}
 .adjform{display:flex;flex-direction:column;gap:12px;padding:14px 18px 16px}
 .adjkind{align-self:stretch;display:grid;grid-template-columns:1fr 1fr}.adjkind .segb,.adjsign .segb{white-space:nowrap;padding:0 12px}.adjexp{margin:0}
@@ -884,13 +881,6 @@ details.srw[open]>.sr-h .sr-cv{transform:rotate(180deg);color:var(--s-acc)}
 .sr-cf{position:relative;width:46px;height:30px;border-radius:7px;background:linear-gradient(135deg,var(--c1),var(--c2));box-shadow:inset 0 1px 0 rgba(255,255,255,.25),0 4px 10px -5px rgba(0,0,0,.45)}
 .sr-cf i{position:absolute;left:6px;top:7px;width:9px;height:7px;border-radius:2px;background:rgba(255,255,255,.55)}
 .sr-cf b{position:absolute;right:5px;bottom:3px;font-size:calc(9.5px*var(--fs,1));font-weight:700;color:#fff;letter-spacing:.04em;font-variant-numeric:tabular-nums}
-#v-setup .card-row .k-more{grid-column:1/-1}
-#v-setup .card-row .k-more>summary{list-style:none;display:flex;align-items:center;justify-content:space-between;gap:10px;min-height:46px;padding:0 14px;border-radius:12px;background:var(--fill-2);color:var(--ink-2);font-weight:600;font-size:calc(14.5px*var(--fs,1));cursor:pointer}
-#v-setup .card-row .k-more>summary::-webkit-details-marker{display:none}
-#v-setup .card-row .k-more>summary .ic{width:17px;height:17px;transition:transform .35s var(--spring)}
-#v-setup .card-row .k-more[open]>summary .ic{transform:rotate(180deg)}
-#v-setup .card-row .k-more[open]>summary{border-radius:12px 12px 0 0}
-#v-setup .card-row .k-more .k-how{margin:12px 2px 0}
 .sr-add{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;min-height:52px;border:1.5px dashed var(--rule-2);border-radius:16px;background:transparent;color:var(--s-acc);font:inherit;font-weight:600;font-size:calc(15px*var(--fs,1));cursor:pointer;transition:background .2s,border-color .2s,transform .15s var(--spring)}
 .sr-add .ic{width:19px;height:19px;stroke-width:2.2}
 @media (hover:hover){.sr-add:hover{background:var(--s-acc-soft);border-color:var(--s-focus)}}
@@ -1506,9 +1496,6 @@ html.tb-hide:not(.kb) .topbar{transform:translateY(-100%)}
   .acc-row{grid-template-columns:repeat(3,minmax(0,1fr));grid-template-areas:"name name del" "owner cls cls" "liq cnt cnt" "mat mat mat"}
   .c-del,.a-del{justify-self:end}
   .acc-row .a-name{grid-area:name}.acc-row .a-owner{grid-area:owner}.acc-row .a-cls{grid-area:cls}.acc-row .a-liq{grid-area:liq}.acc-row .a-cnt{grid-area:cnt}.acc-row .a-mat{grid-area:mat}.acc-row .a-del{grid-area:del}
-  .card-row{grid-template-columns:repeat(2,minmax(0,1fr)) auto;grid-template-areas:"name name del" "sd dd ."}
-  .card-row .k-name{grid-area:name}.card-row .k-sd{grid-area:sd}.card-row .k-dd{grid-area:dd}.card-row .k-del{grid-area:del;justify-self:end}
-  .card-row .k-more{grid-area:auto;grid-column:1/-1}
   .edrow .fl{display:block;font-size:calc(13px*var(--fs,1));color:var(--ink-3);font-weight:600;margin-bottom:4px}
   .heat td.good{background:color-mix(in srgb,var(--good) 34%,var(--sheet))}.heat td.warn{background:color-mix(in srgb,var(--warn) 40%,var(--sheet))}
   .heat td.bad{background:color-mix(in srgb,var(--bad) 36%,var(--sheet))}.heat td.pur{background:color-mix(in srgb,var(--pur) 34%,var(--sheet))}
@@ -2373,20 +2360,42 @@ body[data-view="contacts"] main{padding:0}
   <form class="sheet" id="cuForm" novalidate>
     <h3 id="cuTitle">Update card</h3>
     <p class="muted" id="cuNow" style="margin:0;font-size:calc(14.5px*var(--fs,1))"></p>
-    <div class="seg cu-seg" id="cuMode" role="group" aria-label="How to update">
-      <button type="button" class="segb" data-act="cu-mode" data-v="set" aria-pressed="true">Set owed to</button>
-      <button type="button" class="segb" data-act="cu-mode" data-v="add" aria-pressed="false">+ Add</button>
-      <button type="button" class="segb" data-act="cu-mode" data-v="sub" aria-pressed="false">− Take off</button>
+    <div class="seg cu-seg" id="cuTab" role="group" aria-label="What to change">
+      <button type="button" class="segb" data-act="cu-tab" data-v="bill" aria-pressed="true">Bills and amount owed</button>
+      <button type="button" class="segb" data-act="cu-tab" data-v="conf" aria-pressed="false">Card settings</button>
     </div>
-    <label class="field"><span id="cuAmtL">What you owe on this card now ₹</span><input id="cuAmt" type="text" inputmode="decimal" placeholder="0"></label>
-    <label class="field"><span>Lands on</span><select id="cuBill"></select></label>
-    <label class="field"><span>Note</span><input id="cuNote" type="text" placeholder="e.g. matched the bank app, EMI 3 of 6"></label>
-    <p class="hint" id="cuPrev" style="margin:0"></p>
+    <div id="cuBillPane">
+      <label class="field"><span>Which bill</span><select id="cuBill"></select></label>
+      <div class="seg cu-seg" id="cuMode" role="group" aria-label="How to update">
+        <button type="button" class="segb" data-act="cu-mode" data-v="set" aria-pressed="true">Set to</button>
+        <button type="button" class="segb" data-act="cu-mode" data-v="add" aria-pressed="false">+ Add</button>
+        <button type="button" class="segb" data-act="cu-mode" data-v="sub" aria-pressed="false">− Take off</button>
+      </div>
+      <label class="field"><span id="cuAmtL">What you owe on this card now ₹</span><input id="cuAmt" type="text" inputmode="decimal" placeholder="0"></label>
+      <label class="field"><span>Note</span><input id="cuNote" type="text" placeholder="e.g. matched the bank app, EMI 3 of 6"></label>
+      <p class="hint" id="cuPrev" style="margin:0"></p>
+      <div id="cuHist"></div>
+    </div>
+    <div id="cuConfPane" hidden>
+      <div class="kgrid cu-conf">
+        <label class="f cu-wide"><span class="fl2">Name</span><input id="cuName" type="text" data-cc="name"></label>
+        <label class="f"><span class="fl2">Stmt Date</span><select id="cuSd" data-cc="stmtDay"></select></label>
+        <label class="f"><span class="fl2">Pay By</span><select id="cuDd" data-cc="dueDay"></select></label>
+        <label class="f cu-wide"><span class="fl2">Limit ₹</span><input id="cuLim" type="text" inputmode="numeric" data-cc="limit" placeholder="—"></label>
+      </div>
+      <p class="hint" style="margin:6px 0 0">What you owed when you started tracking. Leave at 0 if every past spend is an entry. Entries dated before the As of day are treated as inside these figures; adjustments made here always count.</p>
+      <div class="kgrid cu-conf">
+        <label class="f"><span class="fl2">Billed, unpaid ₹</span><input id="cuOb" type="text" inputmode="numeric" data-cc="openBilled" placeholder="0"></label>
+        <label class="f"><span class="fl2">Not yet billed ₹</span><input id="cuOu" type="text" inputmode="numeric" data-cc="openUnbilled" placeholder="0"></label>
+        <label class="f cu-wide"><span class="fl2">As of (start of day)</span><input id="cuOd" type="date" data-cc="openDate"></label>
+      </div>
+      <p class="hint" id="cuConfPv" aria-live="polite" style="margin:0"></p>
+      <button class="btn ghost sm cu-rm" type="button" data-act="cu-remove">Remove this card</button>
+    </div>
     <div class="err" id="cuErr" hidden></div>
-    <div id="cuHist"></div>
     <div class="sheet-actions">
       <button type="button" class="btn ghost" data-act="close-cu">Cancel</button>
-      <button type="submit" class="btn primary">Update card</button>
+      <button type="submit" class="btn primary" id="cuGo">Update card</button>
     </div>
   </form>
 </div>
@@ -5656,12 +5665,9 @@ function renderSetup(X) {
     <section class="card"><div class="sec-h"><h2>Categories and monthly budgets</h2><span class="hint">Names show everywhere (tiles, entries, filters), in this order. The button label is the short name on the Add entry buttons; blank uses the full name.</span></div>
       <div class="ed srl" id="catEd">${catRows}</div>
       <div class="row-actions"><button class="sr-add" type="button" data-act="add-cat"><svg class="ic"><use href="#i-plus"/></svg>Add category</button></div></section>
-    <section class="card"><div class="sec-h"><h2>Accounts</h2><span class="hint">For net worth. Bank accounts and cards you pay with come from the Vault.</span></div>
+    <section class="card"><div class="sec-h"><h2>Accounts</h2><span class="hint">For net worth. Bank accounts you pay with come from the Vault. Cards are not kept here: each card's settings are on Card bills (tap a card, then Card settings).</span></div>
       <div class="ed srl" id="accEd">${accRows}</div>
       <div class="row-actions"><button class="sr-add" type="button" data-act="add-acct"><svg class="ic"><use href="#i-plus"/></svg>Add account</button></div>${payLinkHtml(d)}</section>
-    <section class="card"><div class="sec-h"><h2>Credit cards</h2><span class="hint">One list for the Vault, Add entry and Card bills. New Vault cards appear here; your edits here stay.</span></div>
-      <div class="ed srl" id="cardEd">${(d.cards || []).map((k, i) => cardRowHtml(k, i)).join('') || '<div class="empty">No cards yet. Add them in the Vault\'s Credit cards table.</div>'}</div></section>
-    ${checkHtml(X)}
     ${remSetupHtml(X)}
     ${accountHtml()}
     <section class="card"><div class="sec-h"><h2>Backup</h2><span class="hint">Your data lives in Google Sheets. A backup file is a spare copy.</span></div>
@@ -5688,8 +5694,6 @@ const STP = [
   {k: 'cycle', t: 'Cycle', chip: 'Cycle', ic: 'i-cal', g: 0},
   {k: 'cats', t: 'Categories and monthly budgets', chip: 'Budgets', ic: 'i-sliders', g: 0},
   {k: 'accts', t: 'Accounts', chip: 'Accounts', ic: 'i-bank', g: 0},
-  {k: 'cards', t: 'Credit cards', chip: 'Cards', ic: 'i-card', g: 0},
-  {k: 'check', t: 'Card and account check', chip: 'Check', ic: 'i-adjust', g: 0},
   {k: 'rem', t: 'Reminders', chip: 'Reminders', ic: 'i-bell', g: 1},
   {k: 'sync', t: 'Account and sync', chip: 'Sync', ic: 'i-sync', g: 1},
   {k: 'family', t: 'Family access', chip: 'Family', ic: 'i-users', g: 1},
@@ -5698,7 +5702,7 @@ const STP = [
   {k: 'app', t: 'Use it as an app', chip: 'App', ic: 'i-install', g: 1},
   {k: 'backup', t: 'Backup', chip: 'Backup', ic: 'i-archive', g: 2}];
 const STP_GROUPS = ['Money plan', 'People and access', 'Your data'];
-const STP_DRAFT = {cycle: 1, cats: 1, accts: 1, cards: 1};
+const STP_DRAFT = {cycle: 1, cats: 1, accts: 1};
 state.stpDirty = state.stpDirty || {};
 if (!state.stpOpen) { state.stpOpen = {}; try { Object.assign(state.stpOpen, JSON.parse(localStorage.getItem(LS_STP) || '{}') || {}); } catch (e) {} }
 function stpSave() { try { localStorage.setItem(LS_STP, JSON.stringify(state.stpOpen)); } catch (e) {} }
@@ -5710,9 +5714,9 @@ function stpRefresh() {
   root.querySelectorAll('details.stp').forEach(dt => { const el = dt.querySelector('.stp-s'), v = stpSummary(dt.dataset.stp, X); if (el && el.textContent !== v) el.textContent = v;
     const pv = dt.querySelector('.stp-pv'), ph = stpPreview(dt.dataset.stp); if (pv && pv.innerHTML !== ph) pv.innerHTML = ph; });
   const d = state.draft; if (d) root.querySelectorAll('details.srw').forEach(r => {
-    const list = r.classList.contains('cat-row') ? d.categories : r.classList.contains('card-row') ? d.cards || [] : d.accounts, it = list[+r.dataset.i]; if (!it) return;
-    const nm = r.querySelector('.sr-nm'), sb = r.querySelector('.sr-sub'), sub = r.classList.contains('cat-row') ? srCatSub(it) : r.classList.contains('card-row') ? srCardSub(it) : srAccSub(it);
-    const name = it.name || (r.classList.contains('card-row') ? 'New card' : 'Untitled'); if (nm && nm.textContent !== name) nm.textContent = name; if (sb && sb.textContent !== sub) sb.textContent = sub; });
+    const list = r.classList.contains('cat-row') ? d.categories : d.accounts, it = list[+r.dataset.i]; if (!it) return;
+    const nm = r.querySelector('.sr-nm'), sb = r.querySelector('.sr-sub'), sub = r.classList.contains('cat-row') ? srCatSub(it) : srAccSub(it);
+    const name = it.name || 'Untitled'; if (nm && nm.textContent !== name) nm.textContent = name; if (sb && sb.textContent !== sub) sb.textContent = sub; });
 }
 document.addEventListener('input', ev => { if (ev.target && ev.target.closest && ev.target.closest('#v-setup details.stp') && !stpRefRaf) stpRefRaf = requestAnimationFrame(stpRefresh); });
 document.addEventListener('change', ev => { if (ev.target && ev.target.closest && ev.target.closest('#v-setup details.stp') && !stpRefRaf) stpRefRaf = requestAnimationFrame(stpRefresh); });
@@ -5721,7 +5725,6 @@ function stpPreview(k) {
   const d = state.draft || state.config || {};
   if (k === 'cats') { const cs = (d.categories || []).filter(c => c.type === 'Expense' && !c.unplanned).map(c => Math.max(0, parseAmount(String(c.budget ?? '')) || 0)).filter(Boolean).sort((a, b) => b - a), tot = cs.reduce((a, b) => a + b, 0);
     return tot ? `<span class="pv-bar">${cs.map((v, i) => `<i style="flex:${v};--o:${Math.max(.28, 1 - i * .07).toFixed(2)}"></i>`).join('')}</span>` : ''; }
-  if (k === 'cards') return (d.cards || []).slice(0, 6).map(c => { const t = vTheme(c.name); return `<span class="pv-cf" style="--c1:${t[0]};--c2:${t[1]}"></span>`; }).join('');
   if (k === 'family' && Array.isArray(Sync.users)) return `<span class="pv-avs">${Sync.users.slice(0, 5).map(u => `<span>${esc(String(u.name || u.email || '?').trim()[0] || '?').toUpperCase()}</span>`).join('')}</span>`;
   return '';
 }
@@ -5730,8 +5733,6 @@ function stpSummary(k, X) {
   if (k === 'cycle') return 'Starts on the ' + ordinal(+d.cycleStartDay || 1) + ' of each month';
   if (k === 'cats') { const cs = (d.categories || []).filter(c => !c.unplanned), tot = stpBudget(d); return n(cs.length, 'category', 'categories') + ' · ' + rs(tot) + ' a month'; }
   if (k === 'accts') return n((d.accounts || []).filter(a => !a.pay).length, 'account');
-  if (k === 'cards') { const ks = d.cards || []; return ks.length ? n(ks.length, 'card') + ' · ' + ks.map(c => c.name).join(', ') : 'No cards yet'; }
-  if (k === 'check') { const c = cardCheck(X).length; return c ? n(c, 'thing', 'things') + ' to look at' : 'All clear'; }
   if (k === 'rem') return remSummary(X);
   if (k === 'sync') return syncLabel();
   if (k === 'family') { const u = Array.isArray(Sync.users) ? Sync.users.length : 0; return n(u, 'person', 'people') + ' can sign in'; }
@@ -5852,37 +5853,14 @@ document.addEventListener('click', ev => {
 // Mark the section you are changing (before renderSetup redraws, hence capture).
 function stpMark(ev) {
   const s = ev.target && ev.target.closest && ev.target.closest('#v-setup details.stp'); if (!s || !STP_DRAFT[s.dataset.stp]) return;
-  if (ev.type === 'click') { const a = ev.target.closest('[data-act]'); if (!a || !/^(add-cat|del-cat|add-acct|del-acct|del-cardrow)$/.test(a.dataset.act)) return; }
+  if (ev.type === 'click') { const a = ev.target.closest('[data-act]'); if (!a || !/^(add-cat|del-cat|add-acct|del-acct)$/.test(a.dataset.act)) return; }
   if (ev.type === 'click' && ev.target.closest('summary')) return;
   state.stpDirty[s.dataset.stp] = 1; s.classList.add('edited');
   const c = document.querySelector(`.stp-chip[data-k="${s.dataset.stp}"]`); if (c) c.classList.add('edited');
 }
 ['input', 'change', 'click'].forEach(t => document.addEventListener(t, stpMark, true));
-/* ---------- Setup: credit cards (one list for the Vault, Add entry and Card bills) ---------- */
-function cardRowHtml(k, i) {
-  const id = esc(k.id), days = (v, blank) => (blank ? `<option value=""${+v ? '' : ' selected'}>${blank}</option>` : '') + Array.from({length: 31}, (_, n) => `<option value="${n + 1}"${+v === n + 1 ? ' selected' : ''}>${ordinal(n + 1)}</option>`).join('');
-  const amt = v => (v === '' || v == null || !isFinite(+String(v).replace(/[,₹\s]/g, ''))) ? esc(v || '') : (+String(v).replace(/[,₹\s]/g, '') ? INR.format(Math.round(+String(v).replace(/[,₹\s]/g, ''))) : '');
-  const th = vTheme(k.name), last4 = (String(k.name || '').match(/(\d{4})\D*$/) || [])[1] || '';
-  if (!k.name) state.srOpen = Object.assign(state.srOpen || {}, {[k.id]: 1});
-  return `<details class="edrow card-row srw" data-i="${i}" data-sr="${id}"${(state.srOpen || {})[k.id] ? ' open' : ''}>
-      <summary class="sr-h"><span class="sr-cf" style="--c1:${th[0]};--c2:${th[1]}" aria-hidden="true"><i></i>${last4 ? `<b>${last4}</b>` : ''}</span><span class="sr-tx"><span class="sr-nm">${esc(k.name || 'New card')}</span><span class="sr-sub">${esc(srCardSub(k))}</span></span><span class="sr-cv" aria-hidden="true"><svg class="ic"><use href="#i-down"/></svg></span></summary>
-      <div class="sr-body">
-      <div class="sr-f sr-wide"><span class="sr-l">Name</span><input id="k-name-${id}" type="text" value="${esc(k.name)}" data-k="name" aria-label="Card name"></div>
-      <label class="sr-f"><span class="sr-l">Stmt Date</span><select id="k-sd-${id}" data-k="stmtDay" aria-label="Stmt Date">${days(k.stmtDay)}</select></label>
-      <label class="sr-f"><span class="sr-l">Pay By</span><select id="k-dd-${id}" data-k="dueDay" aria-label="Pay By">${days(k.dueDay, 'About 20 days later')}</select></label>
-      <details class="k-more sr-wide"><summary><span>Limit, and what you owed when you started</span><svg class="ic"><use href="#i-down"/></svg></summary>
-        <p class="hint k-how">Start in one of two ways, not both: type what you owed on a day here, <b>or</b> leave these at 0 and add every past spend as an entry. Entries dated <b>before</b> the As of day are treated as already inside these figures and left out; entries <b>on or after</b> it are added on top.</p><div class="kgrid">
-        <label class="f"><span class="fl2">Limit ₹</span><input id="k-lim-${id}" type="text" inputmode="numeric" value="${amt(k.limit)}" data-k="limit" placeholder="—"></label>
-        <label class="f"><span class="fl2">Billed, unpaid ₹</span><input id="k-ob-${id}" type="text" inputmode="numeric" value="${amt(k.openBilled)}" data-k="openBilled" placeholder="0"></label>
-        <label class="f"><span class="fl2">Not yet billed ₹</span><input id="k-ou-${id}" type="text" inputmode="numeric" value="${amt(k.openUnbilled)}" data-k="openUnbilled" placeholder="0"></label>
-        <label class="f"><span class="fl2">As of (start of day)</span><input id="k-od-${id}" type="date" value="${esc(k.openDate || '')}" data-k="openDate"></label>
-      </div><p class="hint k-pv" id="k-pv-${id}" aria-live="polite">${esc(cardOpenPreview(k))}</p></details>
-      <div class="sr-act"><button class="sr-del" type="button" data-act="del-cardrow" data-i="${i}" aria-label="Remove card ${esc(k.name)}"><svg class="ic"><use href="#i-trash"/></svg><span>Remove card</span></button></div>
-      </div></details>`;
-}
 const srCatSub = c => c.type + (c.short && c.short !== c.name ? ' · button “' + c.short + '”' : '');
 const srAccSub = a => [a.owner, a.cls, a.liquid ? 'liquid' : '', a.counted === false ? 'not counted' : ''].filter(Boolean).join(' · ');
-const srCardSub = k => 'Stmt Date ' + ordinal(+k.stmtDay || 1) + ' · Pay By ' + (+k.dueDay ? ordinal(+k.dueDay) : 'about 20 days later');
 // Live check under the starting figures: what the card will owe, and which entries are left out or added on top.
 function cardOpenPreview(k) {
   if (!state.config) return '';
@@ -5910,82 +5888,143 @@ async function ensureCardAdjCat() {
   cfg.categories.push(cat); await API.saveConfig(cfg); return cat;
 }
 
-/* ---------- Update a card (owner's wish, Nov 2026) ----------
-   Tap any card, then Update card: set what you owe now (an override), or add / take off an amount, with a note.
-   It is saved as a "Card bill adjustment" entry for the difference, on the bill you choose, so the card's one ledger
-   (cardLedger) stays the only source: Overview, Card bills, Wealth and reminders all move together. */
-const CU = {id: '', mode: 'set', bill: ''};
+/* ---------- The card sheet (owner's wish, Nov 2026) ----------
+   Tap any card (Overview, Card bills, Wealth), then Update card. Everything about a card except its Vault details
+   lives here: change any bill, past or coming (set it, add, take off, with a note), and the card's settings
+   (Stmt Date, Pay By, limit, starting figures). A bill change is saved as a "Card bill adjustment" entry dated on
+   that bill's Stmt Date, so the card's one ledger (cardLedger) stays the only source for every screen. */
+const CU = {id: '', tab: 'bill', mode: 'set', key: 'owed'};
 function cuBills(card, X) {
-  const L = cardLedger(card, X), S = L.S, today = todayStr(), out = [];
-  L.unpaid.forEach(s => out.push({sd: s.sd, label: 'Bill to pay · Stmt Date ' + fmtDM(s.sd) + ' · ' + rs(s.left) + ' left'}));
-  let n = L.nextSt ? L.nextSt.sd : stmtFor(today, S);
-  out.push({sd: n, label: 'Next bill · Stmt Date ' + fmtDM(n), next: true});
-  n = stepStmt(n, S, 1); out.push({sd: n, label: 'Bill after · Stmt Date ' + fmtDM(n)});
-  return {L, list: out.filter(o => !L.openDate || !(L.openB || L.openU) || o.sd >= L.openDate)};
+  const L = cardLedger(card, X), S = L.S, today = todayStr(), out = [], seen = new Set();
+  const nx = L.nextSt ? L.nextSt.sd : stmtFor(today, S);
+  const add = (o) => { if (seen.has(o.key)) return; seen.add(o.key); out.push(o); };
+  add({key: 'owed', sd: nx, label: 'Total owed now (lands on the next bill)'});
+  add({key: nx, sd: nx, label: 'Next bill · Stmt Date ' + fmtDate(nx) + (L.nextSt ? ' · ' + rs(L.nextSt.left) + ' so far' : '')});
+  const after = stepStmt(nx, S, 1); add({key: after, sd: after, label: 'Bill after · Stmt Date ' + fmtDate(after)});
+  L.stmts.filter(s => s.closed).slice().reverse().forEach(s => add({key: s.sd, sd: s.sd, label: 'Stmt Date ' + fmtDate(s.sd) + ' · bill ' + rs(s.billed) + ' · ' + (s.billed <= 0.005 ? 'nothing to pay' : s.left > 0.005 ? rs(s.left) + ' left' : 'paid')}));
+  let sd = L.stmts.length ? L.stmts[0].sd : nx;
+  for (let i = 0, n = out.length; i < 36 - n; i++) { sd = stepStmt(sd, S, -1); add({key: sd, sd, label: 'Stmt Date ' + fmtDate(sd) + ' · nothing on it'}); }
+  return {L, list: out};
 }
-function openCardUpd(id) {
-  const card = cardList().find(k => k.id === id); if (!card) { toast('That card is not in your list', 'bad'); return; }
-  CU.id = id; CU.mode = 'set'; CU.bill = '';
-  $('#cuAmt').value = ''; $('#cuNote').value = ''; $('#cuErr').hidden = true; $('#cuForm').scrollTop = 0;
-  cuFill(true); $('#cuScrim').hidden = false;
-  setTimeout(() => { const b = $('#cuAmt'); if (b && b.select) b.select(); }, 60);
-}
-function cuFill(fresh) {
-  const card = cardList().find(k => k.id === CU.id); if (!card) { $('#cuScrim').hidden = true; return; }
-  const X = ctx(), B = cuBills(card, X), L = B.L;
-  if (!B.list.some(o => o.sd === CU.bill)) CU.bill = (B.list.find(o => o.next) || B.list[0] || {}).sd || '';
-  $('#cuTitle').textContent = 'Update ' + card.name;
-  $('#cuNow').textContent = 'Owed now ' + rs(L.owed) + ' · billed, to pay ' + rs(L.dueNow) + (L.nextSt ? ' · next bill ' + rs(L.nextSt.left) : '');
-  document.querySelectorAll('#cuMode .segb').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.v === CU.mode)));
-  $('#cuAmtL').textContent = CU.mode === 'set' ? 'What you owe on this card now ₹' : CU.mode === 'add' ? 'Amount to add ₹' : 'Amount to take off ₹';
-  if (fresh && CU.mode === 'set') $('#cuAmt').value = INR.format(Math.round(L.owed));
-  paint($('#cuBill'), B.list.map(o => `<option value="${o.sd}"${o.sd === CU.bill ? ' selected' : ''}>${esc(o.label)}</option>`).join(''));
-  cuPreview(L);
-  const hist = X.txns.filter(t => t.card === card.id && t.tag === ADJ_TAG).sort(byDateDesc).slice(0, 12);
-  paint($('#cuHist'), hist.length ? `<div class="cu-ht">Adjustments on this card</div><div class="list adjlist">${hist.map(t => `<div class="li adjrow"><div class="l"><div class="t1">${esc(t.note && t.note !== ADJ_TAG ? t.note : 'Adjustment')}</div>
-      <div class="t2">${isCardAdj(t.cat, X.cm) ? 'Stmt Date ' + fmtDate(t.date) : 'counts in ' + cycleLabel(cycleKeyOf(t.date)) + ' · ' + fmtDM(t.date)}${t.at > 1000 ? ' · made ' + fmtDM(new Date(t.at).toISOString().slice(0, 10)) : ''}</div></div>
-      <div style="display:flex;gap:10px;align-items:center"><span class="amt num${t.refund ? ' neg' : ''}">${t.refund ? '− ' : '+ '}${rs(t.amount)}</span><button class="icon-btn" type="button" data-act="cu-del" data-id="${esc(t.id)}" data-doc="${esc(t._doc)}" aria-label="Delete adjustment">×</button></div></div>`).join('')}</div>` : '');
-}
-// The change this update makes: the difference for "set", the amount itself for add / take off.
-function cuDiff(L) {
+// What the chosen change does: d = the adjustment entry, base → nb = the bill (or what you owe) before and after.
+function cuDiff(L, o) {
   const raw = String($('#cuAmt').value || '').trim(); if (!raw) return null;
   const v = CU.mode === 'set' ? parseSigned(raw) : parseAmount(raw);
   if (v === null || isNaN(v) || (CU.mode !== 'set' && !(v > 0))) return NaN;
-  return r2(CU.mode === 'set' ? v - L.owed : CU.mode === 'add' ? Math.abs(v) : -Math.abs(v));
+  const by = CU.mode === 'add' ? Math.abs(v) : -Math.abs(v);
+  if (o.key === 'owed') { const nb = CU.mode === 'set' ? v : L.owed + by; return {d: r2(nb - L.owed), base: L.owed, nb: r2(nb), fold: false}; }
+  const st = L.stmts.find(x => x.sd === o.sd), base = st ? st.billed : 0, calc = st ? st.calc : 0, own = !!(st && st.own);
+  const nb = r2(CU.mode === 'set' ? v : base + by);
+  return {d: r2(nb - calc), base, nb, fold: own, own: own ? st.billed : 0};
+}
+const cuCard = () => cardList().find(k => k.id === CU.id);
+function cuOpt(B) { return B.list.find(o => o.key === CU.key) || B.list[0]; }
+function openCardUpd(id, tab) {
+  const card = cardList().find(k => k.id === id); if (!card) { toast('That card is not in your list', 'bad'); return; }
+  CU.id = id; CU.tab = tab || 'bill'; CU.mode = 'set'; CU.key = 'owed';
+  $('#cuAmt').value = ''; $('#cuNote').value = ''; $('#cuErr').hidden = true; $('#cuForm').scrollTop = 0;
+  cuConfFill(card); cuFill(true); $('#cuScrim').hidden = false;
+  if (CU.tab === 'bill') setTimeout(() => { const b = $('#cuAmt'); if (b && b.select) b.select(); }, 60);
+}
+function cuFill(fresh) {
+  const card = cuCard(); if (!card) { $('#cuScrim').hidden = true; return; }
+  const X = ctx(), B = cuBills(card, X), L = B.L, o = cuOpt(B); CU.key = o.key;
+  $('#cuTitle').textContent = card.name;
+  $('#cuNow').textContent = 'Owed now ' + rs(L.owed) + ' · billed, to pay ' + rs(L.dueNow) + (L.nextSt ? ' · next bill ' + rs(L.nextSt.left) : '');
+  document.querySelectorAll('#cuTab .segb').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.v === CU.tab)));
+  $('#cuBillPane').hidden = CU.tab !== 'bill'; $('#cuConfPane').hidden = CU.tab !== 'conf';
+  $('#cuGo').textContent = CU.tab === 'bill' ? 'Update card' : 'Save settings';
+  document.querySelectorAll('#cuMode .segb').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.v === CU.mode)));
+  const st = L.stmts.find(x => x.sd === o.sd);
+  $('#cuAmtL').textContent = CU.mode === 'set' ? (o.key === 'owed' ? 'What you owe on this card now ₹' : 'What this bill should be ₹') : CU.mode === 'add' ? 'Amount to add ₹' : 'Amount to take off ₹';
+  if (fresh && CU.mode === 'set') $('#cuAmt').value = INR.format(Math.round(o.key === 'owed' ? L.owed : st ? st.billed : 0));
+  paint($('#cuBill'), B.list.map(x => `<option value="${esc(x.key)}"${x.key === CU.key ? ' selected' : ''}>${esc(x.label)}</option>`).join(''));
+  cuPreview(L);
+  const hist = X.txns.filter(t => t.card === card.id && t.tag === ADJ_TAG).sort(byDateDesc).slice(0, 40);
+  const fixes = L.stmts.filter(s => s.own);
+  const row = (t1, t2, amt, neg, btn) => `<div class="li adjrow"><div class="l"><div class="t1">${t1}</div><div class="t2">${t2}</div></div><div style="display:flex;gap:10px;align-items:center"><span class="amt num${neg ? ' neg' : ''}">${amt}</span>${btn}</div></div>`;
+  paint($('#cuHist'), hist.length || fixes.length ? `<div class="cu-ht">Changes on this card</div><div class="list adjlist">${fixes.map(s => row('Your figure for this bill', 'Stmt Date ' + fmtDate(s.sd) + ' · worked out ' + rs(s.calc), rs(s.billed), false,
+      `<button class="icon-btn" type="button" data-act="cu-unfix" data-sd="${s.sd}" aria-label="Clear your figure">×</button>`)).join('')}${hist.map(t => row(esc(t.note && t.note !== ADJ_TAG ? t.note : 'Adjustment'),
+      (isCardAdj(t.cat, X.cm) ? 'Stmt Date ' + fmtDate(t.date) : 'counts in ' + cycleLabel(cycleKeyOf(t.date)) + ' · ' + fmtDM(t.date)) + (t.at > 1000 ? ' · made ' + fmtDM(new Date(t.at).toISOString().slice(0, 10)) : ''),
+      (t.refund ? '− ' : '+ ') + rs(t.amount), t.refund, `<button class="icon-btn" type="button" data-act="cu-del" data-id="${esc(t.id)}" data-doc="${esc(t._doc)}" aria-label="Delete adjustment">×</button>`)).join('')}</div>` : '');
 }
 function cuPreview(L) {
-  if (!L) { const card = cardList().find(k => k.id === CU.id); if (!card) return; L = cardLedger(card, ctx()); }
-  const d = cuDiff(L), p = $('#cuPrev');
-  p.textContent = d === null ? '' : isNaN(d) ? 'Type an amount, like 2500.' : Math.abs(d) < 0.005 ? 'No change: that is what you owe now.'
-    : 'Owed ' + rs(L.owed) + ' → ' + rs(L.owed + d) + ' (' + sgn(d) + ' on the bill with Stmt Date ' + fmtDM(CU.bill) + '). Spending and budgets do not change.';
+  const card = cuCard(); if (!card) return; const X = ctx(); const B = cuBills(card, X); L = B.L; const o = cuOpt(B);
+  const r = cuDiff(L, o), p = $('#cuPrev');
+  if (r === null) { p.textContent = ''; return; }
+  if (Number.isNaN(r)) { p.textContent = 'Type an amount, like 2500.'; return; }
+  const ch = r2(r.nb - r.base);
+  if (Math.abs(ch) < 0.005 && !(r.fold && Math.abs(r.d) > 0.005)) { p.textContent = 'No change: that is what it is now.'; return; }
+  p.textContent = (o.key === 'owed' ? 'Owed ' + rs(r.base) + ' → ' + rs(r.nb) + ' (on the bill with Stmt Date ' + fmtDM(o.sd) + ').'
+      : 'Bill with Stmt Date ' + fmtDate(o.sd) + ': ' + rs(r.base) + ' → ' + rs(r.nb) + '. Total owed ' + rs(L.owed) + ' → ' + rs(L.owed + ch) + '.')
+    + (r.fold ? ' Your typed figure for this bill is replaced by this change.' : '')
+    + (o.key !== 'owed' && L.openDate && (L.openB || L.openU) && o.sd < L.openDate ? ' This bill is before your starting figures (' + fmtDM(L.openDate) + '), so it is added on top of them.' : '')
+    + ' Spending and budgets do not change.';
 }
-document.addEventListener('input', ev => { if (ev.target && (ev.target.id === 'cuAmt')) cuPreview(); });
-$('#cuBill').addEventListener('change', ev => { CU.bill = ev.target.value; cuPreview(); });
+// Card settings (moved here from Setup): the card's own fields in config.cards.
+const cuDays = (v, blank) => (blank ? `<option value=""${+v ? '' : ' selected'}>${blank}</option>` : '') + Array.from({length: 31}, (_, n) => `<option value="${n + 1}"${+v === n + 1 ? ' selected' : ''}>${ordinal(n + 1)}</option>`).join('');
+const cuAmtTxt = v => +v ? INR.format(Math.round(+v)) : '';
+function cuConfFill(card) {
+  $('#cuName').value = card.name || ''; paint($('#cuSd'), cuDays(card.stmtDay || 1)); paint($('#cuDd'), cuDays(card.dueDay, 'About 20 days later'));
+  $('#cuLim').value = cuAmtTxt(card.limit); $('#cuOb').value = cuAmtTxt(card.openBilled); $('#cuOu').value = cuAmtTxt(card.openUnbilled); $('#cuOd').value = card.openDate || '';
+  cuConfPv();
+}
+function cuConfRead() {
+  const n = v => Math.max(0, Math.round(parseSigned(String(v || '')) || 0));
+  return {name: String($('#cuName').value || '').trim(), stmtDay: Math.min(31, Math.max(1, +$('#cuSd').value || 1)), dueDay: +$('#cuDd').value > 0 ? +$('#cuDd').value : null,
+    limit: n($('#cuLim').value) || null, openBilled: n($('#cuOb').value), openUnbilled: n($('#cuOu').value), openDate: /^\d{4}-\d{2}-\d{2}$/.test($('#cuOd').value || '') ? $('#cuOd').value : ''};
+}
+function cuConfPv() { const card = cuCard(); if (card) $('#cuConfPv').textContent = cardOpenPreview(Object.assign({}, card, cuConfRead())); }
+document.addEventListener('input', ev => { if (!ev.target || !ev.target.closest) return; if (ev.target.id === 'cuAmt') cuPreview(); else if (ev.target.closest('#cuConfPane')) cuConfPv(); });
+document.addEventListener('change', ev => { if (ev.target && ev.target.closest && ev.target.closest('#cuConfPane')) cuConfPv(); });
+$('#cuBill').addEventListener('change', ev => { CU.key = ev.target.value; if (CU.mode === 'set') $('#cuAmt').value = ''; cuFill(CU.mode === 'set'); });
 document.addEventListener('click', async ev => {
   const b = ev.target.closest('[data-act^="cu-"], [data-act="card-upd"], [data-act="close-cu"]'); if (!b) return;
   const a = b.dataset.act;
-  if (a === 'card-upd') { closeWhy(); openCardUpd(b.dataset.id); return; }
+  if (a === 'card-upd') { closeWhy(); openCardUpd(b.dataset.id, b.dataset.tab); return; }
   if (a === 'close-cu') { $('#cuScrim').hidden = true; return; }
+  if (a === 'cu-tab') { CU.tab = b.dataset.v; $('#cuErr').hidden = true; cuFill(false); return; }
   if (a === 'cu-mode') { const was = CU.mode; CU.mode = b.dataset.v; if (was !== CU.mode) $('#cuAmt').value = ''; cuFill(CU.mode === 'set'); return; }
   if (a === 'cu-del') { if (!arm(b, 'cu' + b.dataset.id, '✓')) return;
-    try { const X0 = ctx(), t = X0.txns.find(x => x.id === b.dataset.id); await API.delTxn(b.dataset.id, b.dataset.doc); impactToast('Adjustment deleted', t, null, X0); cuFill(false); } catch (e) { toast(writeErr(e), 'bad'); } }
+    try { const X0 = ctx(), t = X0.txns.find(x => x.id === b.dataset.id); await API.delTxn(b.dataset.id, b.dataset.doc); impactToast('Adjustment deleted', t, null, X0); cuFill(false); } catch (e) { toast(writeErr(e), 'bad'); } return; }
+  if (a === 'cu-unfix') { if (!arm(b, 'cuf' + b.dataset.sd, '✓')) return;
+    try { await API.putFix(CU.id, b.dataset.sd, null); toast('Using the worked-out amount for that bill'); cuFill(false); } catch (e) { toast(writeErr(e), 'bad'); } return; }
+  if (a === 'cu-remove') { if (!arm(b, 'curm' + CU.id, 'Tap again to remove')) return;
+    const card = cuCard(); if (!card) return;
+    try { if (await ckConfig(cfg => { cfg.cards = (cfg.cards || []).filter(x => x.id !== card.id); cfg.cardsRemoved = (cfg.cardsRemoved || []).filter(x => x.id !== card.id).concat([{id: card.id, name: card.name}]); })) { $('#cuScrim').hidden = true; toast(card.name + ' removed. Its entries stay, marked Removed card.'); } } catch (e) { toast(writeErr(e), 'bad'); } }
 });
 $('#cuForm').addEventListener('submit', async ev => {
   ev.preventDefault();
   const err = $('#cuErr'), fail = m => { err.textContent = m; err.hidden = false; };
-  const card = cardList().find(k => k.id === CU.id); if (!card) return fail('That card is not in your list.');
-  const X0 = ctx(), L = cardLedger(card, X0), d = cuDiff(L);
-  if (d === null || isNaN(d)) return fail('Type the amount, like 2500.');
-  if (Math.abs(d) < 0.005) return fail('No change: that is already what you owe.');
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(CU.bill)) return fail('Choose the bill it lands on.');
-  const note = String($('#cuNote').value || '').trim(), what = CU.mode === 'set' ? 'Set owed to ' + rs(L.owed + d) : (d > 0 ? 'Added ' : 'Taken off ') + rs(Math.abs(d));
-  let cat; try { cat = await ensureCardAdjCat(); } catch (e) { return fail(e.message || writeErr(e)); }
-  const t = {id: newId(), date: CU.bill, amount: Math.abs(d), cat: cat.id, acct: '', card: card.id, member: '', tag: ADJ_TAG, at: Date.now(), refund: d < 0, note: note ? what + ' · ' + note : what};
-  try { await API.putTxn(t); } catch (e) { return fail(writeErr(e)); }
-  $('#cuScrim').hidden = true; impactToast('Card updated', null, t, X0);
+  const card = cuCard(); if (!card) return fail('That card is not in your list.');
+  if (CU.tab === 'conf') {
+    const v = cuConfRead(); if (!v.name) return fail('The card needs a name.');
+    if (cardList().some(k => k.id !== card.id && nkey(k.name) === nkey(v.name))) return fail('Another card is already called “' + v.name + '”.');
+    if ((v.openBilled || v.openUnbilled) && !v.openDate) return fail('Pick the As of day for what you owed.');
+    if (!v.openDate) v.openDate = card.openDate || todayStr();
+    const moved = ['openBilled', 'openUnbilled', 'openDate'].some(k => String(card[k] || '') !== String(v[k] || ''));
+    try { if (await ckConfig(cfg => { const k = (cfg.cards || []).find(x => x.id === card.id); if (!k) return; Object.assign(k, v); if (moved) k.openAt = Date.now(); })) { $('#cuScrim').hidden = true; toast('Card settings saved'); } }
+    catch (e) { fail(e.message || writeErr(e)); }
+    return;
+  }
+  const X0 = ctx(), B = cuBills(card, X0), L = B.L, o = cuOpt(B), r = cuDiff(L, o);
+  if (r === null || Number.isNaN(r)) return fail('Type the amount, like 2500.');
+  if (Math.abs(r.nb - r.base) < 0.005 && !(r.fold && Math.abs(r.d) > 0.005)) return fail('No change: that is what it is now.');
+  const note = String($('#cuNote').value || '').trim();
+  const what = CU.mode === 'set' ? (o.key === 'owed' ? 'Set owed to ' + rs(r.nb) : 'Set bill of ' + fmtDM(o.sd) + ' to ' + rs(r.nb)) : (r.nb > r.base ? 'Added ' : 'Taken off ') + rs(Math.abs(r.nb - r.base));
+  try {
+    let t = null;
+    if (Math.abs(r.d) >= 0.005) {
+      const cat = await ensureCardAdjCat();
+      t = {id: newId(), date: o.sd, amount: Math.abs(r.d), cat: cat.id, acct: '', card: card.id, member: '', tag: ADJ_TAG, at: Date.now(), refund: r.d < 0, note: note ? what + ' · ' + note : what};
+      await API.putTxn(t);
+    }
+    if (r.fold) await API.putFix(card.id, o.sd, null);
+    $('#cuScrim').hidden = true; impactToast('Card updated', null, t, X0);
+  } catch (e) { return fail(e.message || writeErr(e)); }
 });
 
-/* ---------- Card and account check (Setup) ----------
+/* ---------- Card check (on Card bills) ----------
    Finds every entry that is not reaching the card or bank it should, says why, and offers a one-tap fix. */
 function cardCheck(X) {
   const cards = cardList(), ids = new Set(cards.map(k => k.id)), ok = new Set(state.config.checkOk || []), out = [];
@@ -6010,6 +6049,12 @@ function cardCheck(X) {
     const a = X.am[id]; if (a && isLiveAcct(a) && X.latest[id]) return; (bank[id] = bank[id] || []).push(t); });
   Object.entries(bank).forEach(([id, ts]) => { const a = X.am[id]; if (a && !a.pay && ok.has('bank:' + id)) return;
     out.push({k: 'bank', id, a, ts, title: (a ? a.name : 'An unknown bank') + ': ' + es(ts.length) + ' not moving the bank balance', why: !a ? 'That bank account is no longer in Setup.' : a.pay ? 'This Bank button is not linked to a Wealth account. Link it in Setup → Accounts → Bank buttons on Add entry.' : !isLiveAcct(a) ? 'It is not a Bank or Cash account, so its balance stays as you record it.' : 'No balance is recorded for it yet. Record one and every later entry moves it.'}); });
+  // 8. A card kept a second time as an account in Setup → Accounts: counted again in Wealth, its entries reach no card bill.
+  state.config.accounts.forEach(a => { if (a.pay || ok.has('acct:' + a.id)) return;
+    const twin = cards.find(k => nkey(k.name) === nkey(a.name));
+    if (!(a.cls === 'Card' || twin || /credit\s*card|\bcc\b/i.test(a.name))) return;
+    const ts = X.txns.filter(t => t.acct === a.id || t._acct === a.id);
+    out.push({k: 'oldacct', a, twin, ts, title: '“' + a.name + '” in Setup → Accounts is a second copy of a card', why: 'A card lives in one place: the card itself, from the Vault. This copy is counted again in Wealth' + (ts.length ? ', and its ' + es(ts.length) + ' never reach a card bill' : '') + '. Fold it into the card: its spends move onto the card and the copy goes.'}); });
   return out;
 }
 function checkHtml(X) {
@@ -6020,9 +6065,11 @@ function checkHtml(X) {
     : c.k === 'cat' ? `<button class="btn sm" type="button" data-act="ck-catpay" data-cat="${esc(c.cat)}">Treat as card payment</button>`
     : c.k === 'nocard' ? (cards.length ? `${pick(`data-ck="${esc(c.t.id)}"`, '')}<button class="btn sm" type="button" data-act="ck-link" data-id="${esc(c.t.id)}">Link</button>` : '')
     : c.k === 'before' ? `<button class="btn sm" type="button" data-act="ck-incl" data-card="${esc(c.card.id)}" data-id="${esc(c.t.id)}">Count it</button><button class="btn ghost sm" type="button" data-act="ck-ok" data-key="in:${esc(c.t.id)}">It is inside</button>`
+    : c.k === 'oldacct' ? `${cards.length ? pick(`data-ck="acct:${esc(c.a.id)}"`, c.twin ? c.twin.id : '') + `<button class="btn sm" type="button" data-act="ck-fold" data-id="${esc(c.a.id)}">Fold into the card</button>` : ''}<button class="btn ghost sm" type="button" data-act="ck-ok" data-key="acct:${esc(c.a.id)}">It is not a card</button>`
     : c.k === 'bank' && c.a && !c.a.pay && isLiveAcct(c.a) ? `<button class="btn sm" type="button" data-act="set-one" data-id="${esc(c.id)}">Record balance</button><button class="btn ghost sm" type="button" data-act="ck-ok" data-key="bank:${esc(c.id)}">Ignore</button>` : '';
-  return `<section class="card ckcard"><div class="sec-h"><h2>Card and account check</h2><span class="hint">Every entry that is not reaching the card or bank it should, and why. Card adjustments now live on each card: tap a card, then Update card.</span></div>
-    <div class="ck">${list.length ? list.map(c => `<div class="ck-i"><div class="ck-t">${esc(c.title)}</div><div class="ck-w">${esc(c.why)}</div>${fix(c) ? `<div class="ck-f">${fix(c)}</div>` : ''}</div>`).join('') : '<div class="empty">All clear: every card payment reaches both the bank and the card.</div>'}</div></section>`;
+  if (!list.length) return '';
+  return `<section class="card ckcard ck-wrap"><div class="sec-h"><h2>Card check · ${list.length} to fix</h2><span class="hint">Entries that are not reaching the card or bank they should, and why.</span></div>
+    <div class="ck">${list.map(c => `<div class="ck-i"><div class="ck-t">${esc(c.title)}</div><div class="ck-w">${esc(c.why)}</div>${fix(c) ? `<div class="ck-f">${fix(c)}</div>` : ''}</div>`).join('')}</div></section>`;
 }
 async function ckConfig(fn) {
   if (state.dirty) { toast('Save or discard your Setup changes first', 'bad'); return false; }
@@ -6041,9 +6088,14 @@ document.addEventListener('click', async ev => {
       toast('Merged: ' + ts.length + ' moved'); }
     else if (a === 'ck-catpay') { if (await ckConfig(cfg => { const c = cfg.categories.find(x => x.id === b.dataset.cat); if (c) c.role = 'cardpay'; })) toast('Now a card payment. Link each payment to its card below.'); }
     else if (a === 'ck-incl') { if (await ckConfig(cfg => { const k = (cfg.cards || []).find(x => x.id === b.dataset.card); if (k) k.incl = [...new Set((k.incl || []).concat([b.dataset.id]))]; })) toast('Counted on ' + cardName(b.dataset.card)); }
+    else if (a === 'ck-fold') { if (!arm(b, 'ckf' + b.dataset.id, 'Tap again to fold')) return; const to = sel('acct:' + b.dataset.id), id = b.dataset.id; if (!to) return;
+      const ts = X.txns.filter(t => t.acct === id && X.typeOf(t) !== 'Transfer'); for (const t of ts) await API.putTxn(Object.assign({}, t, {card: to, acct: ''}), t._doc);
+      const left = X.txns.filter(t => t.acct === id && X.typeOf(t) === 'Transfer').length;
+      if (!left) await ckConfig(cfg => { cfg.accounts = cfg.accounts.filter(x => x.id !== id); cfg.payBanks = (cfg.payBanks || []).filter(x => x !== id); });
+      toast(ts.length + ' moved to ' + cardName(to) + (left ? '. ' + left + ' transfer' + (left === 1 ? '' : 's') + ' still use the copy: change ' + (left === 1 ? 'it' : 'them') + ' in Entries, then fold again.' : '. Copy removed.')); }
     else if (a === 'ck-ok') { if (await ckConfig(cfg => { cfg.checkOk = [...new Set((cfg.checkOk || []).concat([b.dataset.key]))]; })) toast('Hidden from the check'); }
   } catch (e) { toast(writeErr(e), 'bad'); }
-  if (state.view === 'setup') renderSetup(ctx());
+  render();
 });
 
 function renderSaveBar() {
@@ -6147,7 +6199,7 @@ function cardLedger(card, X) {
     if (t.card !== card.id) return;
     // What you owed when you started tracking already holds everything dated before that day.
     // Except an entry made after you typed those figures (openAt), or one you told the check to count (incl).
-    if (openDate && (openB || openU) && t.date < openDate && !(card.openAt && (+t.at || 0) >= card.openAt) && !(card.incl || []).includes(t.id)) { before.push(t); return; }
+    if (openDate && (openB || openU) && t.date < openDate && t.tag !== ADJ_TAG && !(card.openAt && (+t.at || 0) >= card.openAt) && !(card.incl || []).includes(t.id)) { before.push(t); return; }
     if (isCardPay(t.cat, X.cm)) pays.push({date: t.date, v: t.amount, t});
     else { const credit = t.refund || X.typeOf(t) === 'Income'; charges.push({date: t.date, v: credit ? -t.amount : t.amount, t, sd: stmtFor(t.date, S)}); }
   });
@@ -6240,10 +6292,11 @@ function cardStripHtml(X) {
         ${lim ? `<span class="ovx-lim" title="${Math.round(lf * 100)}% of the limit used"><i class="${lf > 0.8 ? 'bad' : lf > 0.5 ? 'warn' : ''}" style="width:${Math.max(2, lf * 100).toFixed(1)}%"></i></span>` : ''}</span>
       <span class="ovx-v"><b class="num">${rs(amt)}</b><small>${lbl}</small></span></div>`;
   });
+  const ckN = isEntry() ? 0 : cardCheck(X).length;
   const upCards = Ls.filter(L => (L.nextSt ? L.nextSt.left : 0) + L.laterAmt > 0.5), firstStmt = upCards.map(L => L.nextSt && L.nextSt.sd).filter(Boolean).sort()[0];
   const nextSub = !upCards.length ? 'nothing building up' : firstStmt ? 'next Stmt ' + fmtDM(firstStmt) : upCards.length + ' card' + (upCards.length === 1 ? '' : 's');
   return ovSec('cards', 'ovx-cards tone-' + (tone || 'none'), 'Credit cards', rs(dueNow), tone === 'good' ? '' : tone, `
-    <div class="ovx-top"><span></span><a class="ovx-link" href="#cards">All cards<svg class="ic" aria-hidden="true"><use href="#i-right"/></svg></a></div>
+    <div class="ovx-top">${ckN ? `<a class="ovx-link ck-flag" href="#cards">${ckN} card ${ckN === 1 ? 'entry' : 'entries'} to fix</a>` : '<span></span>'}<a class="ovx-link" href="#cards">All cards<svg class="ic" aria-hidden="true"><use href="#i-right"/></svg></a></div>
     <div class="ovx-pair">
       <div class="ovx-bill ovx-hb cur t-${tone || 'calm'}"${whyAttr('c-due')}><span class="ovx-bl"><i></i>Current bills</span><b class="ovx-ba num" data-count="${r2(dueNow)}">${rs(dueNow)}</b><span class="ovx-hs">${esc(dueSub[0].toUpperCase() + dueSub.slice(1))}</span></div>
       <div class="ovx-bill ovx-hb nxt"${whyAttr('c-next')}><span class="ovx-bl"><i></i>Upcoming bills</span><b class="ovx-ba num" data-count="${r2(nextAmt)}">${rs(nextAmt)}</b><span class="ovx-hs">${esc(nextSub[0].toUpperCase() + nextSub.slice(1))}</span></div>
@@ -6423,6 +6476,7 @@ function tileHtml(L) {
     <div class="ct-grid"><div class="ct-box">${billBox}</div><div class="ct-box">${nextBox}</div></div>
     ${L.laterAmt > 0.005 ? `<div class="ct-extra">Later bills: <b>${rs(L.laterAmt)}</b>, from entries dated after ${fmtDM(n.sd)}.</div>` : ''}
     ${L.credit > 0.005 ? `<div class="ct-extra">You have paid <b>${rs(L.credit)}</b> more than you owe. It will reduce your next bill.</div>` : ''}
+    ${isEntry() ? '' : `<div class="ct-acts"><button class="btn sm" type="button" data-act="card-upd" data-id="${esc(c.id)}">Update card</button><button class="btn ghost sm" type="button" data-act="card-upd" data-tab="conf" data-id="${esc(c.id)}">Card settings</button></div>`}
     <details class="ct-hist" data-card="${esc(c.id)}"${state.openHist[c.id] ? ' open' : ''}><summary>Bills and what is on them</summary>
       <div class="tscroll"><table class="rt"><thead><tr><th>Stmt Date</th><th>Spends</th><th>Pay By</th><th class="n">Calculated</th><th class="n">Your figure</th><th class="n">Paid</th><th class="n">Left</th><th>Status</th><th>From budget cycles</th></tr></thead><tbody>${hist}</tbody></table></div>
       <p class="hint" style="margin:0;padding:8px 16px 12px">Type in Your figure if your bank's bill shows a different amount, for example because of fees. Clear the box to use the calculated amount.</p></details>
@@ -6461,7 +6515,7 @@ function renderCards(X) {
     ${rowsB.length ? `<div class="tscroll"><table class="rt"><thead><tr><th>Card</th><th>Stmt Date</th><th>Pay By</th><th class="n">Spent this budget cycle</th><th>Bill status</th></tr></thead>
       <tbody>${rowsB.join('')}<tr class="sum"><td colspan="3">Total on cards in ${cycleLabel(state.cur)}</td><td class="n">${rs(tot)}</td><td></td></tr></tbody></table></div>`
       : `<div class="empty">No card spends in ${cycleLabel(state.cur)} yet. Pick a card when you add an entry.</div>`}</section>`;
-  paint($('#v-cards'), `<a class="hint" href="#overview">‹ Back to Overview</a><p class="lede">${lede}</p>${kpis}<div class="ctiles">${Ls.map(tileHtml).join('')}</div>${bridge}
+  paint($('#v-cards'), `<a class="hint" href="#overview">‹ Back to Overview</a><p class="lede">${lede}</p>${isEntry() ? '' : checkHtml(X)}${kpis}<div class="ctiles">${Ls.map(tileHtml).join('')}</div>${bridge}
     <p class="hint" style="margin:0">Your budget counts a card spend on the day you spend. Your bank collects it on the bill shown here. Paying a card bill is a transfer, not new spending, so nothing counts twice. Your cards come from the <a href="#vault">Vault</a>.</p>`);
   if (focusId) { const el = document.getElementById(focusId); if (el) { if (el.classList.contains('tin')) focusBox(el); else el.focus(); } }
 }
@@ -6802,7 +6856,7 @@ function impactLines(oldT, newT, X0, X1) {
       return; }
     const u = uses.find(x => x.X === X1); if (!u) return;
     const L = cardLedger(k, X1);
-    if (L.before.some(t => t.id === u.t.id)) warn.push(k.name + ': dated before ' + fmtDM(L.openDate) + ', so it is inside what you owed when you started tracking (Setup → Credit cards).');
+    if (L.before.some(t => t.id === u.t.id)) warn.push(k.name + ': dated before ' + fmtDM(L.openDate) + ', so it is inside what you owed when you started tracking (Card bills → Card settings).');
     else { const st = L.stmts.find(s => s.own && s.items.some(i => i.t.id === u.t.id)); if (st) warn.push(k.name + ': you typed the bill for Stmt Date ' + fmtDM(st.sd) + ' yourself (' + rs(st.billed) + '), so it stays. Clear that figure in Card bills to use the entries.'); }
   });
   return {out, warn};
@@ -7001,12 +7055,6 @@ document.addEventListener('click', async ev => {
     if (!pc) { toast('Add a Transfer category called "Card bill payment" in Setup first', 'bad'); return; }
     openEntry(); payCard = b.dataset.card; payMode = 'bank'; setCat(pc.id); $('#eAmt').value = b.dataset.amt; $('#eNote').value = 'Card bill payment';
   }
-  else if (act === 'add-cardrow') {
-    const c = {id: newId(), name: '', stmtDay: 15, dueDay: 4, limit: null, openBilled: 0, openUnbilled: 0, openDate: todayStr()};
-    state.draft.cards = state.draft.cards || []; state.draft.cards.push(c); state.dirty = true; renderSetup(ctx());
-    const el = document.getElementById('k-name-' + c.id); if (el) focusBox(el);
-  }
-  else if (act === 'del-cardrow') { if (!arm(b, 'card' + b.dataset.i, '✓')) return; const k = state.draft.cards.splice(+b.dataset.i, 1)[0]; if (k) { state.draft.cardsRemoved = (state.draft.cardsRemoved || []).filter(x => x.id !== k.id).concat([{id: k.id, name: k.name}]); } state.dirty = true; renderSetup(ctx()); }
   else if (act === 'add') openEntry();
   else if (act === 'close-entry') closeEntry();
   else if (act === 'edit') { const X = ctx(); const t = X.txns.find(x => x.id === b.dataset.id && x._doc === b.dataset.doc);
@@ -7077,12 +7125,10 @@ $('#impGo').addEventListener('click', async () => {
 $('#main').addEventListener('input', ev => {
   const row = ev.target.closest('.edrow'); if (!row || !state.draft) return;
   const k = ev.target.dataset.k; if (!k) return;
-  const list = row.classList.contains('cat-row') ? state.draft.categories : row.classList.contains('card-row') ? (state.draft.cards = state.draft.cards || []) : state.draft.accounts; const item = list[+row.dataset.i]; if (!item) return;
+  const list = row.classList.contains('cat-row') ? state.draft.categories : state.draft.accounts; const item = list[+row.dataset.i]; if (!item) return;
   item[k] = ev.target.type === 'checkbox' ? ev.target.checked : ev.target.value;
   if (k === 'type' || k === 'group') { state.dirty = true; renderSetup(ctx()); return; }
   markDirty();
-  if (row.classList.contains('card-row') && /^(openBilled|openUnbilled|openDate)$/.test(k)) item.openAt = Date.now(); // entries made after this are never inside the starting figures
-  if (row.classList.contains('card-row') && /^(openBilled|openUnbilled|openDate|stmtDay|dueDay)$/.test(k)) { const pv = row.querySelector('.k-pv'); if (pv) pv.textContent = cardOpenPreview(item); }
 });
 $('#main').addEventListener('change', ev => {
   if (ev.target.id === 'sDay' && state.draft) { state.draft.cycleStartDay = +ev.target.value; state.dirty = true; renderSetup(ctx()); }
