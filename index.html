@@ -2500,6 +2500,9 @@ function parseAmount(raw) {
   try { const v = add(); return i === toks.length && isFinite(v) ? Math.round(v * 100) / 100 : NaN; } catch (e) { return NaN; }
 }
 const isPlainAmount = raw => /^\d+(\.\d+)?$/.test(normAmount(raw));
+// Add entry only: a plus with nothing after it yet ("450+", left by Next or the + key) counts as + 0, so it is just 450.
+// Other operators at the end still need a figure. parseAmount itself is unchanged, because budgets and adjustments use it too.
+const entryAmount = raw => { const s = normAmount(raw); return parseAmount(/\+$/.test(s) ? s + '0' : s); };
 function parseSigned(s) {
   s = String(s ?? '').replace(/[,\s₹]/g, '').replace('−', '-');
   if (s === '') return null;
@@ -6576,7 +6579,7 @@ document.querySelectorAll('#entryForm [data-focus]').forEach(f => f.addEventList
 function showCalc() {
   const raw = $('#eAmt').value, out = $('#eAmtCalc');
   if (!raw.trim() || isPlainAmount(raw)) { out.textContent = ''; out.className = ''; return; }
-  const v = parseAmount(raw);
+  const v = entryAmount(raw);
   if (isFinite(v)) { out.textContent = '= ' + rs(v); out.className = ''; }
   else { out.textContent = /[+\-*/(]$/.test(normAmount(raw)) ? '' : "Can't work this out"; out.className = 'bad'; }
 }
@@ -6586,8 +6589,12 @@ document.querySelectorAll('.calcb').forEach(b => {
   b.addEventListener('mousedown', ev => ev.preventDefault());
   b.addEventListener('click', () => {
     const box = $('#eAmt'), k = b.dataset.calc;
-    if (k === '=') { const v = parseAmount(box.value); if (isFinite(v)) { box.value = String(v); focusBox(box); } showCalc(); return; }
+    if (k === '=') { const v = entryAmount(box.value); if (isFinite(v)) { box.value = String(v); focusBox(box); } showCalc(); return; }
     if (document.activeElement !== box) focusBox(box);
+    // An operator replaces one still waiting at the end ("450+" then × gives "450×", then − gives "450−"), so they never stack
+    // up. Minus is kept after × or ÷, because "450×−3" means 450 times minus 3.
+    const waiting = box.value.match(/[-+×÷*\/−–]\s*$/);
+    if (waiting && (k !== '-' || waiting[0].indexOf('+') !== -1)) { box.value = box.value.slice(0, waiting.index); focusBox(box); }
     if (!document.execCommand('insertText', false, k)) { box.value = box.value + k; focusBox(box); }
     showCalc();
   });
@@ -6677,7 +6684,7 @@ function openEntry(t) {
 }
 function closeEntry() { $('#entryScrim').hidden = true; editing = null; }
 async function saveEntry(again) {
-  let amt = parseAmount($('#eAmt').value); const date = $('#eDate').value, cat = $('#eCat').value, err = $('#eErr'), X = ctx();
+  let amt = entryAmount($('#eAmt').value); const date = $('#eDate').value, cat = $('#eCat').value, err = $('#eErr'), X = ctx();
   const fail = (m, el) => { err.textContent = m; err.hidden = false; if (el) focusBox(el); };
   if (!isFinite(amt)) return fail('Type an amount, like 450, 220+260 or 3×150.', $('#eAmt'));
   if (amt === 0) return fail('The amount works out to zero.', $('#eAmt'));
@@ -6916,8 +6923,17 @@ $('#main').addEventListener('change', ev => {
 });
 $('#eCatText').addEventListener('input', ev => setCat(matchCategory(ev.target.value), true));
 $('#eDatePick').addEventListener('change', ev => { if (/^\d{4}-\d{2}-\d{2}$/.test(ev.target.value)) setEntryDate(ev.target.value); });
-// Enter on the amount or category box closes the keyboard (so the buttons are in view) instead of saving early.
-['eAmt', 'eCatText', 'eMember', 'eTag'].forEach(id => $('#' + id).addEventListener('keydown', ev => { if (ev.key === 'Enter') { ev.preventDefault(); ev.currentTarget.blur(); } }));
+// Enter on the category, member or tag box closes the keyboard (so the buttons are in view) instead of saving early. The amount box has its own Next key below.
+['eCatText', 'eMember', 'eTag'].forEach(id => $('#' + id).addEventListener('keydown', ev => { if (ev.key === 'Enter') { ev.preventDefault(); ev.currentTarget.blur(); } }));
+// Next (Enter) on the keyboard ends a figure: a plus is taken there and then, so the next figure is added with nothing to tap.
+// When a plus or other operator is already waiting (or the box is empty), Next closes the keyboard as it always did.
+$('#eAmt').addEventListener('keydown', ev => {
+  if (ev.key !== 'Enter') return;
+  ev.preventDefault();
+  const box = $('#eAmt');
+  if (/[\d)]$/.test(normAmount(box.value))) { box.value = box.value.replace(/[\s.]+$/, '') + '+'; focusBox(box); showCalc(); }
+  else box.blur();
+});
 $('#eNote').addEventListener('keydown', ev => { if (ev.key === 'Enter') { ev.preventDefault(); saveEntry(false); } });
 document.addEventListener('click', ev => {
   const b = ev.target.closest('[data-act^="e-"]'); if (!b) return;
