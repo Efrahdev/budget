@@ -945,34 +945,102 @@ details.srw[open]>.sr-h .sr-cv{transform:rotate(180deg);color:var(--s-acc)}
   @starting-style{.scrim:not([hidden]) .sheet{transform:translateY(18px) scale(.97);opacity:0}}
   .sheet-actions{border-radius:0 0 28px 28px}
 }
-/* entry form */
-.calcrow{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
-.calcb{width:48px;height:40px;border:0;background:var(--fill);color:var(--ink);border-radius:12px;font-size:calc(21px*var(--fs,1));font-weight:700;cursor:pointer;line-height:1;transition:background .2s,transform .15s var(--spring)}
-.calcb:active{transform:scale(.92);background:var(--fill-3)}
-.calcb.eq{background:var(--accent-soft);color:var(--accent)}
-#eAmtCalc{display:block;margin:6px 4px 0;font-size:calc(16.5px*var(--fs,1));font-weight:700;color:var(--ink-2)}
-#eAmtCalc.bad{color:var(--bad-ink);font-weight:600;font-size:calc(13.5px*var(--fs,1))}
-/* Add entry bottom bar (frozen): the operators on one row, then Cancel, Add another and a compact Save on one line. */
-.sheet-actions.entryfoot{justify-content:flex-end;gap:8px;padding-top:12px;background:var(--sheet);box-shadow:0 -1px 0 var(--rule),0 -16px 24px -16px rgba(0,0,0,.30)}
-.sheet-actions.entryfoot .calcrow .calcb{background:color-mix(in srgb,var(--ink) 7%,var(--sheet));color:var(--ink)}
-.sheet-actions.entryfoot .calcrow .calcb:active{background:color-mix(in srgb,var(--ink) 15%,var(--sheet))}
-.sheet-actions.entryfoot .calcrow .calcb.eq{background:color-mix(in srgb,var(--accent) 17%,var(--sheet));color:var(--accent)}
-.sheet-actions.entryfoot .calcrow .calcb.eq:active{background:color-mix(in srgb,var(--accent) 28%,var(--sheet))}
-.sheet-actions.entryfoot .btn.ghost{background:color-mix(in srgb,var(--ink) 7%,var(--sheet));color:var(--ink)}
-.sheet-actions.entryfoot .btn.ghost:hover{background:color-mix(in srgb,var(--ink) 12%,var(--sheet))}
-.sheet-actions.entryfoot #eAgain{background:color-mix(in srgb,var(--accent) 15%,var(--sheet));color:var(--accent);box-shadow:none}
-.sheet-actions.entryfoot #eAgain:hover{background:color-mix(in srgb,var(--accent) 24%,var(--sheet))}
-.sheet-actions.entryfoot .calcrow{flex:1 0 100%;justify-content:space-between;gap:6px;flex-wrap:nowrap}
-.sheet-actions.entryfoot .calcrow .calcb{flex:1 1 0;width:auto;min-width:0;height:42px}
-.sheet-actions.entryfoot .btn{flex:0 0 auto;min-height:42px;padding:0 14px;font-size:calc(15px*var(--fs,1))}
-.sheet-actions.entryfoot .btn.primary{min-width:88px}
-.sheet-actions.entryfoot .btn.left{margin-right:auto}
-/* Add entry tags: a little smaller; the bank, card and investment chips sit in an even grid. */
-#entryForm .chips .chipb{min-height:34px;padding:6px 12px;gap:5px;font-size:calc(14px*var(--fs,1))}
-#entryForm .chips:not([hidden]).gridchips{display:grid;grid-template-columns:repeat(auto-fill,minmax(100px,1fr));gap:6px}
-#entryForm .gridchips .chipb{justify-content:center;min-width:0;overflow:hidden;text-overflow:ellipsis}
-@media (max-width:360px){.sheet-actions.entryfoot{gap:6px}.sheet-actions.entryfoot .btn{padding:0 10px}.sheet-actions.entryfoot .btn.primary{min-width:0}}
-.amount-in{font-family:var(--f-display);font-size:calc(34px*var(--fs,1)) !important;font-weight:700;letter-spacing:-.02em;padding:10px 16px !important}
+/* ---------- Add entry: one quiet system ----------
+   SURFACE  every tile is a solid tint of the ink over the sheet (--e-s1 resting, --e-s2 hover, --e-s3 pressed): nothing
+            is see-through, so nothing leaks colour from behind it.
+   SHAPE    boxes, tags, keys, buttons and segments share one 12px radius.
+   DEPTH    a 1px hairline ring, never a glow or a drop shadow (the sheet has one soft lift, and that is all).
+   COLOUR   the one blue means "chosen" or "do this".
+   TYPE     11.5px caps labels, 13.5px tags, 15px values, 28px for the amount, nothing bigger.
+   GRID     16px at the sides, 14px between sections, 6px between tiles. Category tags are equal tiles, three across, one
+            line each, an ellipsis when a name is long. Account and card tags go two across (their names are longer).
+   MOTION   the chosen segment slides, tags and keys spring on press, the answer pill rises in. */
+#entryForm{--e-s1:color-mix(in srgb,var(--ink) 5%,var(--sheet));--e-s2:color-mix(in srgb,var(--ink) 9%,var(--sheet));--e-s3:color-mix(in srgb,var(--ink) 14%,var(--sheet));
+  --e-acc:color-mix(in srgb,var(--accent) 13%,var(--sheet));--e-acc-2:color-mix(in srgb,var(--accent) 22%,var(--sheet));--e-ring:inset 0 0 0 1px var(--rule);--e-r:12px;
+  padding:22px 16px calc(16px + env(safe-area-inset-bottom,0px));gap:14px;box-shadow:0 -1px 0 var(--rule-2),0 -24px 48px -28px rgba(16,24,40,.28)}
+html.kb #entryForm{padding-top:16px}
+#entryForm h3{font-size:calc(18px*var(--fs,1));font-weight:650;letter-spacing:-.015em;line-height:1.2}
+#entryForm .field{gap:6px}
+#entryForm .field>span,#entryForm .sublbl{margin:0;font-size:calc(11.5px*var(--fs,1));font-weight:650;letter-spacing:.07em;text-transform:uppercase;color:var(--ink-3)}
+#entryForm .sublbl{margin-top:6px}
+#entryForm .field small{font-size:calc(12.5px*var(--fs,1))}
+/* boxes */
+#entryForm .tbox{min-height:44px;padding:10px 14px;border-radius:var(--e-r);background:var(--e-s1);box-shadow:var(--e-ring);font-size:calc(15.5px*var(--fs,1));transition:background .2s var(--ease),box-shadow .25s var(--ease)}
+#entryForm .tbox:focus{background:var(--sheet);box-shadow:inset 0 0 0 1.5px var(--accent),0 0 0 4px var(--accent-soft)}
+#entryForm select,#entryForm input[type=date]{background-color:var(--e-s1);border-radius:var(--e-r);box-shadow:var(--e-ring)}
+/* amount: one row, ₹ · figure · answer */
+.amtbox{display:flex;align-items:center;gap:10px;min-height:56px;padding:0 10px 0 16px;border-radius:14px;background:var(--e-s1);box-shadow:var(--e-ring);cursor:text;transition:background .2s var(--ease),box-shadow .25s var(--ease)}
+.amtbox::before{content:"₹";flex:0 0 auto;font-size:calc(22px*var(--fs,1));font-weight:600;line-height:1;color:var(--ink-3)}
+.amtbox:focus-within{background:var(--sheet);box-shadow:inset 0 0 0 1.5px var(--accent),0 0 0 4px var(--accent-soft)}
+#entryForm .amtbox .amount-in,#entryForm .amtbox .amount-in:focus{flex:1 1 auto;min-width:0;width:auto;min-height:0;padding:0;border:0;border-radius:0;background:transparent;box-shadow:none;
+  font-family:var(--f-display);font-size:calc(28px*var(--fs,1));font-weight:700;letter-spacing:-.02em;line-height:1.25;font-variant-numeric:tabular-nums}
+#eAmtCalc{flex:0 0 auto;appearance:none;-webkit-appearance:none;border:0;cursor:pointer;font:inherit;font-size:calc(14px*var(--fs,1));font-weight:650;letter-spacing:-.005em;font-variant-numeric:tabular-nums;white-space:nowrap;
+  min-height:36px;padding:0 12px;border-radius:10px;color:var(--accent);background:var(--e-acc);transition:background .2s var(--ease),transform .2s var(--spring)}
+#eAmtCalc:hover{background:var(--e-acc-2)}
+#eAmtCalc:active{transform:scale(.95)}
+#eAmtCalc:empty{display:none}
+#eAmtCalc:not(:empty){animation:ePill .4s var(--spring) both}
+#eAmtCalc.bad{min-height:0;padding:0;background:none;color:var(--bad-ink);font-size:calc(12.5px*var(--fs,1));font-weight:600;cursor:default;white-space:normal;text-align:right;line-height:1.25}
+@keyframes ePill{from{opacity:0;transform:translateX(10px) scale(.9)}}
+/* tags: equal tiles on a grid */
+#entryForm .chips{gap:6px;padding:0}
+#entryForm .gridchips{grid-template-columns:repeat(3,minmax(0,1fr))}
+#entryForm .gridchips:not([hidden]){display:grid}
+#entryForm .gridchips.wide{grid-template-columns:repeat(2,minmax(0,1fr))}
+#entryForm .chipsep{grid-column:1/-1;margin:2px 0}
+#entryForm .chipb{display:block;min-width:0;padding:10px 8px;border-radius:var(--e-r);background:var(--e-s1);box-shadow:var(--e-ring);color:var(--ink);font-size:calc(13.5px*var(--fs,1));font-weight:600;line-height:1.25;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  transition:background .2s var(--ease),color .2s var(--ease),box-shadow .2s var(--ease),transform .2s var(--spring)}
+#entryForm .chipb:hover{background:var(--e-s2)}
+#entryForm .chip-new{background:transparent;box-shadow:none;outline:1.5px dashed var(--rule-2);outline-offset:-1.5px;color:var(--ink-2)}
+#entryForm .chip-new:hover{background:var(--e-s1)}
+#entryForm .chipb:active{transform:scale(.96);background:var(--e-s3)}
+#entryForm .chipb[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink);box-shadow:none;animation:eTagOn .4s var(--ease-out)}
+@keyframes eTagOn{0%{transform:scale(.93)}55%{transform:scale(1.025)}100%{transform:none}}
+@media (min-width:560px){#entryForm .gridchips{grid-template-columns:repeat(4,minmax(0,1fr))}#entryForm .gridchips.wide{grid-template-columns:repeat(3,minmax(0,1fr))}}
+/* segments: the chosen one is a blue thumb that slides */
+#entryForm .seg{padding:3px;gap:2px;border-radius:15px;background:var(--e-s1);box-shadow:var(--e-ring)}
+#entryForm .segb{position:relative;z-index:1;min-height:38px;border-radius:12px;color:var(--ink-2);font-size:calc(14px*var(--fs,1));font-weight:600}
+#entryForm .segb[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink);box-shadow:none}
+@supports selector(:has(a)){
+  #entryForm .seg3{position:relative;isolation:isolate;--i:0}
+  #entryForm .seg3::before{content:"";position:absolute;z-index:0;top:3px;bottom:3px;left:3px;width:calc((100% - 10px)/3);border-radius:12px;background:var(--accent);
+    transform:translateX(calc(var(--i)*(100% + 2px)));transition:transform .5s var(--spring),opacity .2s}
+  #entryForm .seg3:has(.segb:nth-child(2)[aria-pressed="true"]){--i:1}
+  #entryForm .seg3:has(.segb:nth-child(3)[aria-pressed="true"]){--i:2}
+  #entryForm .seg3:not(:has(.segb[aria-pressed="true"]))::before{opacity:0}
+  #entryForm .seg3 .segb[aria-pressed="true"]{background:transparent}
+}
+/* quiet option rows: Remind me (a switch) and More (a chevron) */
+#entryForm #eRemF>.ck-line,#entryForm .emore summary{min-height:44px;padding:0 14px;border-radius:var(--e-r);background:var(--e-s1);box-shadow:var(--e-ring);color:var(--ink);font-size:calc(14.5px*var(--fs,1));font-weight:600}
+#entryForm .emore summary{display:flex;align-items:center;justify-content:space-between;gap:10px}
+#entryForm .emore summary::after{margin-right:2px;color:var(--ink-3)}
+#entryForm #eRemF>.ck-line{justify-content:flex-start}
+#eRemOn{order:2;margin-left:auto;appearance:none;-webkit-appearance:none;position:relative;flex:0 0 auto;width:42px;height:26px;border-radius:999px;background:var(--e-s3);cursor:pointer;transition:background .25s var(--ease)}
+#eRemOn::before{content:"";position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;background:#fff;box-shadow:0 1px 2px rgba(0,0,0,.22);transition:transform .45s var(--spring)}
+#eRemOn:checked{background:var(--accent)}
+#eRemOn:checked::before{transform:translateX(16px)}
+#eRemOn:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+#entryForm .emore[open] summary{margin-bottom:2px}
+/* the frozen bar: solid, one hairline; ÷ + − × then Cancel, Add another, Save on one line */
+#entryForm .sheet-actions.entryfoot{bottom:calc(-16px - env(safe-area-inset-bottom,0px));margin:auto -16px calc(-16px - env(safe-area-inset-bottom,0px));padding:10px 16px calc(12px + env(safe-area-inset-bottom,0px));
+  gap:8px;justify-content:stretch;background:var(--sheet);box-shadow:0 -1px 0 var(--rule)}
+html.kb #entryForm .sheet-actions.entryfoot{padding-top:8px;padding-bottom:8px;gap:6px}
+.calcrow{flex:1 0 100%;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+.calcb{height:42px;border:0;border-radius:var(--e-r);background:var(--e-s1);box-shadow:var(--e-ring);color:var(--ink);font-size:calc(21px*var(--fs,1));font-weight:500;line-height:1;cursor:pointer;transition:background .2s var(--ease),transform .2s var(--spring)}
+.calcb:hover{background:var(--e-s2)}
+.calcb:active{transform:scale(.95);background:var(--e-s3)}
+.calcb[data-calc="+"]{background:var(--e-acc);color:var(--accent);font-weight:600}
+.calcb[data-calc="+"]:active{background:var(--e-acc-2)}
+html.kb .calcb{height:38px}
+#entryForm .sheet-actions.entryfoot .btn{flex:1 1 0;min-width:0;min-height:42px;padding:0 8px;border-radius:var(--e-r);font-size:calc(15px*var(--fs,1));font-weight:600;box-shadow:none}
+#entryForm .sheet-actions.entryfoot .btn.left{margin:0}
+#entryForm .sheet-actions.entryfoot .btn.ghost{background:var(--e-s1);box-shadow:var(--e-ring);color:var(--ink)}
+#entryForm .sheet-actions.entryfoot .btn.ghost:hover{background:var(--e-s2)}
+#entryForm .sheet-actions.entryfoot #eAgain{flex-grow:1.45;background:var(--e-acc);color:var(--accent)}
+#entryForm .sheet-actions.entryfoot #eAgain:hover{background:var(--e-acc-2)}
+#entryForm .sheet-actions.entryfoot .btn.danger{background:var(--bad-soft);color:var(--bad-ink)}
+#entryForm .sheet-actions.entryfoot .btn.primary{background:linear-gradient(175deg,var(--btn-a),var(--btn-b));color:#fff;box-shadow:inset 0 1px 0 rgba(255,255,255,.18)}
+@media (max-width:360px){#entryForm .sheet-actions.entryfoot .btn{font-size:calc(14px*var(--fs,1));padding:0 4px}#entryForm .chipb{font-size:calc(13px*var(--fs,1))}}
 #ePayHint{color:var(--ink-2);line-height:1.45}
 .emore summary{cursor:pointer;font-size:calc(14.5px*var(--fs,1));font-weight:600;color:var(--accent);list-style:none;display:inline-flex;align-items:center;gap:8px;padding:4px 0}
 .emore summary::-webkit-details-marker{display:none}
@@ -2219,27 +2287,29 @@ body[data-view="contacts"] main{padding:0}
 <div class="scrim" id="entryScrim" hidden>
   <form class="sheet" id="entryForm" novalidate>
     <h3 id="entryTitle">Add entry</h3>
-    <div class="field" data-focus="eAmt"><span id="eAmtLbl">Amount (₹)</span>
-      <div id="eAmt" class="tbox amount-in" role="textbox" aria-labelledby="eAmtLbl" inputmode="text" enterkeyhint="next" autocorrect="off" spellcheck="false" data-placeholder="0"></div>
-      <small id="eAmtCalc" aria-live="polite"></small>
+    <div class="field" data-focus="eAmt"><span id="eAmtLbl">Amount</span>
+      <div class="amtbox">
+        <div id="eAmt" class="tbox amount-in" role="textbox" aria-labelledby="eAmtLbl" inputmode="text" enterkeyhint="next" autocorrect="off" spellcheck="false" data-placeholder="0"></div>
+        <button type="button" id="eAmtCalc" data-calc="=" title="Work it out" aria-live="polite"></button>
+      </div>
     </div>
     <div class="field"><span id="eCatLbl">Category</span>
-      <div class="chips" id="eCatChips" role="group" aria-labelledby="eCatLbl"></div>
+      <div class="chips gridchips" id="eCatChips" role="group" aria-labelledby="eCatLbl"></div>
       <!-- Say or type a category (commented out): the optional Note now sits in this place.
       <div id="eCatText" class="tbox mini" role="textbox" aria-labelledby="eCatLbl" aria-describedby="eCatShow" inputmode="text" enterkeyhint="done" autocorrect="off" spellcheck="false" data-placeholder="…or say or type one"></div>
       -->
-      <div class="field" data-focus="eNote"><span id="eNoteLbl">Note</span><div id="eNote" class="tbox" role="textbox" aria-labelledby="eNoteLbl" inputmode="text" enterkeyhint="done" data-placeholder="What was it? (optional)"></div></div>
       <select id="eCat" hidden aria-hidden="true" tabindex="-1"></select>
       <small id="eCatShow"></small>
-      <div id="eDiscTagBox" hidden><span class="sublbl">Tag</span><div class="chips" id="eDiscTags" role="group" aria-label="Discretionary tag"></div></div>
+      <div id="eDiscTagBox" hidden><span class="sublbl">Tag</span><div class="chips gridchips" id="eDiscTags" role="group" aria-label="Discretionary tag"></div></div>
     </div>
+    <div class="field" data-focus="eNote"><span id="eNoteLbl">Note</span><div id="eNote" class="tbox" role="textbox" aria-labelledby="eNoteLbl" inputmode="text" enterkeyhint="done" data-placeholder="What was it? (optional)"></div></div>
     <div class="field"><span id="ePayLbl">Paid with</span>
       <div class="seg seg3" id="ePaySeg" role="group" aria-labelledby="ePayLbl">
         <button type="button" class="segb" data-act="e-pay" data-v="cash" aria-pressed="false">Cash</button><button type="button" class="segb" data-act="e-pay" data-v="bank" aria-pressed="true">Bank</button><button type="button" class="segb" data-act="e-pay" data-v="card" aria-pressed="false">Card</button>
       </div>
-      <div class="chips gridchips" id="ePayChips" role="group" aria-label="Which one" hidden></div>
-      <div id="ePayCardBox" hidden><span class="sublbl">Card being paid</span><div class="chips gridchips" id="ePayCardChips" role="group" aria-label="Card being paid"></div></div>
-      <div id="eInvBox" hidden><span class="sublbl">Into which investment</span><div class="chips gridchips" id="eInvChips" role="group" aria-label="Into which investment"></div></div>
+      <div class="chips gridchips wide" id="ePayChips" role="group" aria-label="Which one" hidden></div>
+      <div id="ePayCardBox" hidden><span class="sublbl">Card being paid</span><div class="chips gridchips wide" id="ePayCardChips" role="group" aria-label="Card being paid"></div></div>
+      <div id="eInvBox" hidden><span class="sublbl">Into which investment</span><div class="chips gridchips wide" id="eInvChips" role="group" aria-label="Into which investment"></div></div>
       <small id="ePayHint"></small>
     </div>
     <div class="field"><span id="eDateLbl">Date</span>
@@ -2268,7 +2338,7 @@ body[data-view="contacts"] main{padding:0}
     <div class="err" id="eErr" hidden></div>
     <div class="sheet-actions entryfoot">
       <div class="calcrow" role="group" aria-label="Calculator">
-        <button type="button" class="calcb" data-calc="+" aria-label="Plus">+</button><button type="button" class="calcb" data-calc="-" aria-label="Minus">−</button><button type="button" class="calcb" data-calc="×" aria-label="Times">×</button><button type="button" class="calcb" data-calc="÷" aria-label="Divide">÷</button><button type="button" class="calcb eq" data-calc="=" aria-label="Work it out">=</button>
+        <button type="button" class="calcb" data-calc="÷" aria-label="Divide">÷</button><button type="button" class="calcb" data-calc="+" aria-label="Plus">+</button><button type="button" class="calcb" data-calc="-" aria-label="Minus">−</button><button type="button" class="calcb" data-calc="×" aria-label="Times">×</button>
       </div>
       <button type="button" class="btn danger left" id="eDel" hidden>Delete</button>
       <button type="button" class="btn ghost" data-act="close-entry">Cancel</button>
@@ -6606,7 +6676,9 @@ function showCalc() {
   else { out.textContent = /[+\-*/(]$/.test(normAmount(raw)) ? '' : "Can't work this out"; out.className = 'bad'; }
 }
 $('#eAmt').addEventListener('input', showCalc);
-document.querySelectorAll('.calcb').forEach(b => {
+// The amount tile is one big target: a tap on its own surface (the ₹ or the padding) puts the cursor in the figure.
+$('#eAmt').parentElement.addEventListener('click', ev => { if (ev.target === ev.currentTarget) focusBox($('#eAmt')); });
+document.querySelectorAll('.calcb, #eAmtCalc').forEach(b => {
   b.addEventListener('pointerdown', ev => ev.preventDefault()); // keep the cursor (and keyboard) in the amount box
   b.addEventListener('mousedown', ev => ev.preventDefault());
   b.addEventListener('click', () => {
@@ -8091,7 +8163,7 @@ document.querySelectorAll('.scrim').forEach(sc => new MutationObserver(() => { i
 function errToFoot(root) { (root || document).querySelectorAll('.sheet .err').forEach(e => { const f = e.nextElementSibling; if (f && f.classList.contains('sheet-actions')) f.prepend(e); }); }
 function clearSheetErr(t) { const sh = t && t.closest && t.closest('.sheet'); if (sh && sh.id !== 'noteBox') sh.querySelectorAll('.err:not([hidden])').forEach(e => { e.hidden = true; }); }
 document.addEventListener('input', ev => clearSheetErr(ev.target), true);
-document.addEventListener('click', ev => { if (ev.target.closest && ev.target.closest('.chipb,.segb,.calcb,input[type=checkbox]')) clearSheetErr(ev.target); }, true);
+document.addEventListener('click', ev => { if (ev.target.closest && ev.target.closest('.chipb,.segb,.calcb,#eAmtCalc,input[type=checkbox]')) clearSheetErr(ev.target); }, true);
 errToFoot();
 if (window.visualViewport) window.visualViewport.addEventListener('resize', kbCheck);
 window.addEventListener('resize', kbCheck);
