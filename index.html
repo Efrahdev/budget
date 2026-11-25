@@ -953,12 +953,24 @@ details.srw[open]>.sr-h .sr-cv{transform:rotate(180deg);color:var(--s-acc)}
 #eAmtCalc{display:block;margin:6px 4px 0;font-size:calc(16.5px*var(--fs,1));font-weight:700;color:var(--ink-2)}
 #eAmtCalc.bad{color:var(--bad-ink);font-weight:600;font-size:calc(13.5px*var(--fs,1))}
 /* Add entry bottom bar (frozen): the operators on one row, then Cancel, Add another and a compact Save on one line. */
-.sheet-actions.entryfoot{justify-content:flex-end;gap:8px;padding-top:10px}
+.sheet-actions.entryfoot{justify-content:flex-end;gap:8px;padding-top:12px;background:var(--sheet);box-shadow:0 -1px 0 var(--rule),0 -16px 24px -16px rgba(0,0,0,.30)}
+.sheet-actions.entryfoot .calcrow .calcb{background:color-mix(in srgb,var(--ink) 7%,var(--sheet));color:var(--ink)}
+.sheet-actions.entryfoot .calcrow .calcb:active{background:color-mix(in srgb,var(--ink) 15%,var(--sheet))}
+.sheet-actions.entryfoot .calcrow .calcb.eq{background:color-mix(in srgb,var(--accent) 17%,var(--sheet));color:var(--accent)}
+.sheet-actions.entryfoot .calcrow .calcb.eq:active{background:color-mix(in srgb,var(--accent) 28%,var(--sheet))}
+.sheet-actions.entryfoot .btn.ghost{background:color-mix(in srgb,var(--ink) 7%,var(--sheet));color:var(--ink)}
+.sheet-actions.entryfoot .btn.ghost:hover{background:color-mix(in srgb,var(--ink) 12%,var(--sheet))}
+.sheet-actions.entryfoot #eAgain{background:color-mix(in srgb,var(--accent) 15%,var(--sheet));color:var(--accent);box-shadow:none}
+.sheet-actions.entryfoot #eAgain:hover{background:color-mix(in srgb,var(--accent) 24%,var(--sheet))}
 .sheet-actions.entryfoot .calcrow{flex:1 0 100%;justify-content:space-between;gap:6px;flex-wrap:nowrap}
 .sheet-actions.entryfoot .calcrow .calcb{flex:1 1 0;width:auto;min-width:0;height:42px}
 .sheet-actions.entryfoot .btn{flex:0 0 auto;min-height:42px;padding:0 14px;font-size:calc(15px*var(--fs,1))}
 .sheet-actions.entryfoot .btn.primary{min-width:88px}
 .sheet-actions.entryfoot .btn.left{margin-right:auto}
+/* Add entry tags: a little smaller; the bank, card and investment chips sit in an even grid. */
+#entryForm .chips .chipb{min-height:34px;padding:6px 12px;gap:5px;font-size:calc(14px*var(--fs,1))}
+#entryForm .chips:not([hidden]).gridchips{display:grid;grid-template-columns:repeat(auto-fill,minmax(100px,1fr));gap:6px}
+#entryForm .gridchips .chipb{justify-content:center;min-width:0;overflow:hidden;text-overflow:ellipsis}
 @media (max-width:360px){.sheet-actions.entryfoot{gap:6px}.sheet-actions.entryfoot .btn{padding:0 10px}.sheet-actions.entryfoot .btn.primary{min-width:0}}
 .amount-in{font-family:var(--f-display);font-size:calc(34px*var(--fs,1)) !important;font-weight:700;letter-spacing:-.02em;padding:10px 16px !important}
 #ePayHint{color:var(--ink-2);line-height:1.45}
@@ -2213,7 +2225,10 @@ body[data-view="contacts"] main{padding:0}
     </div>
     <div class="field"><span id="eCatLbl">Category</span>
       <div class="chips" id="eCatChips" role="group" aria-labelledby="eCatLbl"></div>
+      <!-- Say or type a category (commented out): the optional Note now sits in this place.
       <div id="eCatText" class="tbox mini" role="textbox" aria-labelledby="eCatLbl" aria-describedby="eCatShow" inputmode="text" enterkeyhint="done" autocorrect="off" spellcheck="false" data-placeholder="…or say or type one"></div>
+      -->
+      <div class="field" data-focus="eNote"><span id="eNoteLbl">Note</span><div id="eNote" class="tbox" role="textbox" aria-labelledby="eNoteLbl" inputmode="text" enterkeyhint="done" data-placeholder="What was it? (optional)"></div></div>
       <select id="eCat" hidden aria-hidden="true" tabindex="-1"></select>
       <small id="eCatShow"></small>
       <div id="eDiscTagBox" hidden><span class="sublbl">Tag</span><div class="chips" id="eDiscTags" role="group" aria-label="Discretionary tag"></div></div>
@@ -2222,9 +2237,9 @@ body[data-view="contacts"] main{padding:0}
       <div class="seg seg3" id="ePaySeg" role="group" aria-labelledby="ePayLbl">
         <button type="button" class="segb" data-act="e-pay" data-v="cash" aria-pressed="false">Cash</button><button type="button" class="segb" data-act="e-pay" data-v="bank" aria-pressed="true">Bank</button><button type="button" class="segb" data-act="e-pay" data-v="card" aria-pressed="false">Card</button>
       </div>
-      <div class="chips" id="ePayChips" role="group" aria-label="Which one" hidden></div>
-      <div id="ePayCardBox" hidden><span class="sublbl">Card being paid</span><div class="chips" id="ePayCardChips" role="group" aria-label="Card being paid"></div></div>
-      <div id="eInvBox" hidden><span class="sublbl">Into which investment</span><div class="chips" id="eInvChips" role="group" aria-label="Into which investment"></div></div>
+      <div class="chips gridchips" id="ePayChips" role="group" aria-label="Which one" hidden></div>
+      <div id="ePayCardBox" hidden><span class="sublbl">Card being paid</span><div class="chips gridchips" id="ePayCardChips" role="group" aria-label="Card being paid"></div></div>
+      <div id="eInvBox" hidden><span class="sublbl">Into which investment</span><div class="chips gridchips" id="eInvChips" role="group" aria-label="Into which investment"></div></div>
       <small id="ePayHint"></small>
     </div>
     <div class="field"><span id="eDateLbl">Date</span>
@@ -2233,7 +2248,6 @@ body[data-view="contacts"] main{padding:0}
       </div>
       <input id="eDate" type="hidden"><input id="eDatePick" type="date" class="pick" tabindex="-1" aria-hidden="true">
     </div>
-    <div class="field" data-focus="eNote"><span id="eNoteLbl">Note</span><div id="eNote" class="tbox" role="textbox" aria-labelledby="eNoteLbl" inputmode="text" enterkeyhint="done" data-placeholder="What was it? (optional)"></div></div>
     <div class="field erem" id="eRemF"><label class="ck-line"><input id="eRemOn" type="checkbox"> <span><svg class="ic" aria-hidden="true"><use href="#i-bell"/></svg> Remind me</span></label>
       <div id="eRemBox" hidden>
         <div class="erem-g">
@@ -6539,8 +6553,8 @@ function setCat(id, fromText) {
   const c = state.config.categories.find(x => x.id === id), show = $('#eCatShow');
   $('#eCat').value = c ? c.id : '';
   if (c && fromText) { show.textContent = '✓ ' + c.name; show.className = 'ok'; }
-  else if (c) { show.textContent = ''; show.className = ''; $('#eCatText').value = ''; }
-  else if (fromText && $('#eCatText').value.trim()) { show.textContent = 'No category matches that. Tap one below.'; show.className = 'bad'; }
+  else if (c) { show.textContent = ''; show.className = ''; }
+  // (Say-or-type box commented out: // else if (fromText && $('#eCatText').value.trim()) { show.textContent = 'No category matches that. Tap one below.'; show.className = 'bad'; })
   else { show.textContent = ''; show.className = ''; }
   document.querySelectorAll('#eCatChips .chipb').forEach(b => b.setAttribute('aria-pressed', String(!!c && b.dataset.id === c.id)));
   chipsShow($('#eCatChips'));
@@ -6577,7 +6591,7 @@ function focusBox(el) { // focus with the cursor at the end
   if (!el) return; el.focus();
   try { const r = document.createRange(); r.selectNodeContents(el); r.collapse(false); const s = getSelection(); s.removeAllRanges(); s.addRange(r); } catch (e) {}
 }
-['eAmt', 'eCatText', 'eNote', 'eMember', 'eTag'].forEach(id => makeTextBox($('#' + id)));
+['eAmt', 'eNote', 'eMember', 'eTag'].forEach(id => makeTextBox($('#' + id)));
 noAutofill(document.body); // the boxes already on the page (search, restore backup)
 // Tapping a box's label puts the cursor in the box, like a normal form. Only the label itself: a stray tap on the empty
 // space around the calculator keys or the "= ₹…" line must never bring the keyboard up.
@@ -6676,7 +6690,7 @@ function openEntry(t) {
   else if (t.acct === 'cash') payMode = 'cash';
   else if (t.acct) { payMode = 'bank'; payAcct = X.res(t.acct); }
   else payMode = ''; // older entry with no payment recorded: left as it is unless you pick one
-  $('#eCat').value = startCat; $('#eCatText').value = '';
+  $('#eCat').value = startCat; // $('#eCatText').value = '';  (say-or-type box commented out)
   ['#eCatChips', '#ePayChips', '#ePayCardChips', '#eInvChips'].forEach(sel => { $(sel).scrollLeft = 0; delete $(sel).dataset.mode; });
   $('#entryScrim').hidden = false; // shown first so the rows can measure themselves
   setCat(startCat); setEntryDate(t ? t.date : todayStr()); remFillFor(t);
@@ -6929,10 +6943,10 @@ $('#main').addEventListener('change', ev => {
   else if (ev.target.dataset && ev.target.dataset.pl && state.draft) { linkVaultBank(state.draft, ev.target.dataset.pl, ev.target.value); state.dirty = true; renderSetup(ctx()); }
   else if (ev.target.type === 'checkbox' && ev.target.closest('.edrow')) { /* handled by input */ }
 });
-$('#eCatText').addEventListener('input', ev => setCat(matchCategory(ev.target.value), true));
+// $('#eCatText').addEventListener('input', ev => setCat(matchCategory(ev.target.value), true));  (say-or-type box commented out)
 $('#eDatePick').addEventListener('change', ev => { if (/^\d{4}-\d{2}-\d{2}$/.test(ev.target.value)) setEntryDate(ev.target.value); });
 // Enter on the category, member or tag box closes the keyboard (so the buttons are in view) instead of saving early. The amount box has its own Next key below.
-['eCatText', 'eMember', 'eTag'].forEach(id => $('#' + id).addEventListener('keydown', ev => { if (ev.key === 'Enter') { ev.preventDefault(); ev.currentTarget.blur(); } }));
+['eMember', 'eTag'].forEach(id => $('#' + id).addEventListener('keydown', ev => { if (ev.key === 'Enter') { ev.preventDefault(); ev.currentTarget.blur(); } }));
 // Next (Enter) on the keyboard ends a figure: a plus is taken there and then, so the next figure is added with nothing to tap.
 // When a plus or other operator is already waiting (or the box is empty), Next closes the keyboard as it always did.
 $('#eAmt').addEventListener('keydown', ev => {
